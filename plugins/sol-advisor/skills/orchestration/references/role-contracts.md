@@ -47,6 +47,16 @@ INTERFACES
 CONSTRAINTS
 - <Repository conventions, safety boundaries, excluded scope, and settled decisions.>
 
+EFFICIENCY BOUNDARY
+- Minimum sufficient outcome: <smallest complete implementation and evidence>.
+- Token budget: <why Terra is cheaper than direct Sol work and what work is excluded>.
+- Time budget: <expected bounded effort and the point at which to stop and report>.
+- Checkpoint: <none for routine bounded work, or the exact first milestone to report
+  before an expensive, external, risky, or scope-expanding action>.
+- Stop and return partial before broadening scope, accessing an external system not
+  explicitly required above, adding a dependency, modifying unowned files, repeating
+  a failed approach, or exceeding the stated budget.
+
 VERIFICATION
 - Run: <exact command>
   Success: <concrete expected result>
@@ -67,6 +77,10 @@ GAPS: <unfinished work, ambiguity, or none>
 ~~~
 
 The primary session must inspect the diff and rerun verification itself.
+The primary must also apply the minimum-sufficient, token-budget, and time-budget
+checkpoints before delegation and at every worker checkpoint. It must not add a second
+Sol reviewer during implementation by default; use the primary adherence check from
+SKILL.md only when its triggers apply.
 
 ## Luna task lane - Sol-selected user-visible app tasks
 

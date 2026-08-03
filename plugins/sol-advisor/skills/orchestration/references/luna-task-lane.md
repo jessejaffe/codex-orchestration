@@ -104,6 +104,16 @@ CONSTRAINTS
 - Do not use native subagent routing, a companion-agent TOML, or an unapproved model or
   effort as a substitute.
 
+EFFICIENCY BOUNDARY
+- Minimum sufficient outcome: <smallest complete implementation and evidence>.
+- Token budget: <why this separate task costs less overall or supplies necessary
+  isolation/capability, plus explicitly excluded work>.
+- Time budget: <bounded expectation and the point at which to stop and report>.
+- Checkpoint: <none for routine bounded work, or the exact first milestone that must
+  be reported before expensive, external, risky, or scope-expanding work>.
+- Stop and report before adding scope, external access, dependencies, retries, or
+  unowned-file changes outside this packet.
+
 STARTING STATE / BASE
 - Project ID: <projectId>
 - Project repository: <isGitRepository true|false>

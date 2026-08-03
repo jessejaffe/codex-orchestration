@@ -106,7 +106,11 @@ for required in "$installer" "$runtime_inspector" "$manifest" "$skill" "$contrac
 done
 
 jq empty "$manifest"
-[ "$(jq -r '.version' "$manifest")" = 0.5.1 ] || fail "manifest version is not 0.5.1"
+manifest_version=$(jq -r '.version' "$manifest")
+case "$manifest_version" in
+  0.5.1|0.5.1+codex.*) ;;
+  *) fail "manifest version does not preserve the 0.5.1 base: $manifest_version" ;;
+esac
 grep -Fq 'on or off' "$manifest" || fail "manifest does not describe task activation state"
 grep -Fq 'automatically chooses' "$manifest" || fail "manifest does not describe Sol-selected routing"
 grep -Fqi 'GPT-5.6 Luna' "$manifest" || fail "manifest does not describe Luna routing"
@@ -342,6 +346,26 @@ forbidden_terra='sol_advisor_terra_'"max"
 forbidden_file='sol-advisor-terra-'"max"
 if rg -n "$forbidden_terra|$forbidden_file" "$readme" "$plugin_dir"; then fail "forbidden second Terra role remains"; fi
 pass "activation, automatic routing, reporting, and stale-claim checks"
+
+grep -Fq 'Principle one: minimum sufficient work' "$skill" || fail "skill does not make efficiency principle one"
+grep -Fq 'Minimum sufficient outcome' "$skill" || fail "skill omits minimum-sufficient gate"
+grep -Fq 'Token budget checkpoint' "$skill" || fail "skill omits token-budget gate"
+grep -Fq 'Time budget checkpoint' "$skill" || fail "skill omits time-budget gate"
+grep -Fq 'Direct answer / inspection' "$skill" || fail "skill omits no-delegation answer route"
+grep -Fq '“Be efficient”' "$skill" || fail "skill permits a budget without a concrete boundary"
+grep -Fq 'Do not spawn another Sol reviewer merely to watch Terra' "$skill" || fail "skill adds redundant implementation review"
+grep -Fq 'continue`, `correct`, or `stop' "$skill" || fail "skill omits primary checkpoint decisions"
+grep -Fq 'SOL ADVISOR: direct primary / no delegation' "$skill" || fail "skill omits compact direct-route reporting"
+for document in "$contracts" "$luna_contract"; do
+  grep -Fq 'EFFICIENCY BOUNDARY' "$document" || fail "$document omits worker efficiency boundary"
+  grep -Fq 'Minimum sufficient outcome' "$document" || fail "$document omits minimum-sufficient worker outcome"
+  grep -Fq 'Token budget:' "$document" || fail "$document omits worker token budget"
+  grep -Fq 'Time budget:' "$document" || fail "$document omits worker time budget"
+done
+grep -Fq 'first principle is the minimum sufficient answer or change' "$readme" || fail "README omits efficiency principle"
+grep -Fq 'minimum sufficient direct answer' "$manifest" || fail "manifest omits direct efficiency route"
+grep -Fq 'Minimize tokens and time' "$ui" || fail "skill UI omits efficiency goal"
+pass "minimum-sufficient, token, time, and checkpoint policy"
 
 sh -n "$installer"
 sh -n "$runtime_inspector"

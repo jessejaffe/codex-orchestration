@@ -1,12 +1,14 @@
 # Sol Advisor
 
-**Turn Sol Advisor on once. Sol / High chooses Terra / High or Luna / Max, announces
-the route before work starts, and reports the actual route with the final result.**
+**Turn Sol Advisor on once. Sol / High gives the minimum sufficient answer directly
+or chooses Terra / High or Luna / Max when delegation is worth its cost.**
 
-Sol Advisor is a Codex-native architect workflow for capability-routed software
-delivery. The primary session stays focused on requirements, architecture, specs, and
-verification while either native Codex custom-agent threads or separate Codex app
-tasks handle the bounded implementation work.
+Sol Advisor is a Codex-native architect workflow for cost-efficient software delivery.
+Its first principle is the minimum sufficient answer or change: minimize total token
+use and elapsed time across Sol, workers, monitoring, and review without sacrificing
+correctness. The primary session stays focused on requirements, architecture, specs,
+and verification while delegating only when delegation is cheaper or supplies a
+necessary capability or isolation boundary.
 
 ## Go deeper
 
@@ -14,14 +16,24 @@ I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=gi
 
 | Mode | Worker | Routing | Primary ownership |
 |---|---|---|---|
+| Direct answer or small action | None | GPT-5.6 Sol / High stays in the primary task | Minimum sufficient evidence/change, verification, and stopping without delegation overhead |
 | Native subagent (Sol-selected) | `sol_advisor_terra_implementer`, then `sol_advisor_sol_reviewer` | GPT-5.6 Terra / High, then fresh GPT-5.6 Sol / High | Architecture, parent verification, and acceptance after the fresh native review |
 | Luna task (Sol-selected) | User-visible Codex task created with app task tools | GPT-5.6 Luna / Max | Decomposition, task monitoring, actual diff review, corrections, PR authorization, dependent-stack ordering, and final acceptance |
 
 The primary session is GPT-5.6 Sol / High in either mode. Once Sol Advisor is active,
-Sol chooses the efficient capable lane for each work item; the user does not provide a
-second Luna opt-in. The native lane uses the separately installed Terra role and a
-fresh Sol reviewer. The Luna lane is outside native subagent V2 and does not use a
-Luna custom-agent TOML.
+Sol first decides whether any implementation lane is worth its total token and time
+overhead, then chooses the efficient capable route for each work item; the user does
+not provide a second Luna opt-in. Read-only answers and small inspections normally stay
+in the primary task. Terra is used when a settled implementation specification saves
+Sol tokens. The native lane then uses a fresh Sol reviewer at the end. The Luna lane
+is outside native subagent V2 and does not use a Luna custom-agent TOML.
+
+Before delegation, external access, or scope expansion, Sol records three checkpoints:
+the minimum sufficient outcome, the total-token comparison, and the total-time
+comparison. It repeats them after the first material evidence and before expensive or
+scope-expanding work. A second Sol agent does not watch Terra by default; for long,
+risky, ambiguous, expanding, externally connected, or over-budget work, the primary
+Sol task performs one concise adherence check and chooses continue, correct, or stop.
 
 Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
 for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as

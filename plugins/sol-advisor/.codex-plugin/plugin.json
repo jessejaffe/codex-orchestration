@@ -1,21 +1,34 @@
 {
   "name": "sol-advisor",
-  "version": "0.5.1",
-  "description": "Turn Sol-led orchestration on or off for one Codex chat, keep every new chat off by default, route active work to Terra / High or Luna / Max, and report the route.",
-  "author": {"name": "Daniel McAteer", "url": "https://github.com/DannyMac180"},
+  "version": "0.5.1+codex.20260803210828",
+  "description": "Turn cost-aware Sol-led orchestration on or off for one Codex chat, keep every new chat off by default, prefer the minimum sufficient direct answer, route justified implementation to Terra / High or Luna / Max, and report the route.",
+  "author": {
+    "name": "Daniel McAteer",
+    "url": "https://github.com/DannyMac180"
+  },
   "homepage": "https://github.com/DannyMac180/sol-advisor#readme",
   "repository": "https://github.com/DannyMac180/sol-advisor",
   "license": "MIT",
-  "keywords": ["codex", "orchestration", "multi-agent", "gpt-5.6"],
+  "keywords": [
+    "codex",
+    "orchestration",
+    "multi-agent",
+    "gpt-5.6"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Sol Advisor",
-    "shortDescription": "Turn on Sol-led routing across Terra / High and Luna / Max, with visible route reporting.",
-    "longDescription": "Activate Sol Advisor once for the current Codex chat in plain language or with the literal skill invocation. Direct ON/OFF markers in that chat preserve state across its later requests, while plugin state, memory, summaries, and every other chat are ignored. GPT-5.6 Sol / High keeps architecture, decomposition, verification, and acceptance, automatically chooses the efficient capable implementation route, announces it before work starts, and reports the actual route in the final output. Native work uses GPT-5.6 Terra / High plus a fresh Sol reviewer; app-task work uses a user-visible GPT-5.6 Luna / Max task through list_projects, list_threads, create_thread, wait_threads, read_thread, and send_message_to_thread.",
+    "shortDescription": "Minimize tokens and time, answering directly or routing justified work to Terra / High or Luna / Max.",
+    "longDescription": "Activate Sol Advisor once for the current Codex chat in plain language or with the literal skill invocation. Direct ON/OFF markers in that chat preserve state across its later requests, while plugin state, memory, summaries, and every other chat are ignored. GPT-5.6 Sol / High treats minimum sufficient outcome, total token cost, and total elapsed time as its first routing gates. It answers read-only or small requests directly and automatically chooses a justified implementation route only when delegation is cheaper or necessary. Native work uses GPT-5.6 Terra / High for a settled specification plus a fresh Sol reviewer; app-task work uses a user-visible GPT-5.6 Luna / Max task through list_projects, list_threads, create_thread, wait_threads, read_thread, and send_message_to_thread. One primary adherence checkpoint occurs during implementation only when risk, ambiguity, external access, scope growth, or budget overrun warrants it.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
-    "capabilities": ["Interactive", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
     "websiteURL": "https://github.com/DannyMac180/sol-advisor",
-    "defaultPrompt": ["Tell me “Turn Sol Advisor on” in this chat when you want Sol-led routing; otherwise it stays off."]
+    "defaultPrompt": [
+      "Tell me \u201cTurn Sol Advisor on\u201d in this chat when you want Sol-led routing; otherwise it stays off."
+    ]
   }
 }

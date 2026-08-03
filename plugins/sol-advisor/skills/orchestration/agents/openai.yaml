@@ -1,7 +1,7 @@
 interface:
   display_name: "Sol Advisor Orchestration"
-  short_description: "Turn on Sol-led model routing and review"
-  default_prompt: "Use $orchestration to manage chat-local state; activate only when my current message directly says “Turn Sol Advisor on.”"
+  short_description: "Minimize tokens and time with Sol-led routing"
+  default_prompt: "Use $orchestration to manage chat-local state and choose the minimum sufficient direct or delegated route; activate only when my current message directly says “Turn Sol Advisor on.”"
 
 policy:
   allow_implicit_invocation: true
