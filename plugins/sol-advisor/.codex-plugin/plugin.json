@@ -1,7 +1,7 @@
 {
   "name": "sol-advisor",
-  "version": "0.5.1+codex.20260803211859",
-  "description": "Turn cost-aware Sol-led orchestration on or off for one Codex chat, keep every new chat off by default, retain complex executive work in Sol / High, route routine bounded work to Terra / High, optionally use Luna / Max for super-simple work, and persist through budget replanning and user-directed rerouting.",
+  "version": "0.5.1+codex.20260803213339",
+  "description": "Turn cost-aware Sol-led orchestration on or off for one Codex chat, route by complexity, persist through replanning, keep accepted fork changes on main, and audit the original repository once daily without automatic merges.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "Sol Advisor",
     "shortDescription": "Minimize tokens and time by routing work according to complexity while preserving completion.",
-    "longDescription": "Activate Sol Advisor once for the current Codex chat in plain language or with the literal skill invocation. Direct ON/OFF markers in that chat preserve state across later requests, while plugin state, memory, summaries, and every other chat are ignored. GPT-5.6 Sol / High treats minimum sufficient outcome, total token cost, and total elapsed time as its first routing gates. Sol retains genuinely complex executive work; routine bounded read-only analysis and settled implementation normally route to GPT-5.6 Terra / High; super-simple fully determined work may route to a user-visible GPT-5.6 Luna / Max task when app-task overhead remains cheapest. Native implementation receives fresh Sol review, while primary Sol directly checks routine read-only Terra evidence. Budget checkpoints trigger redirect or escalation toward completion, not abandonment. If the user stops or changes direction during worker execution, the worker is interrupted or paused and Sol makes a fresh executive routing decision before work resumes. Luna tasks use list_projects, list_threads, create_thread, wait_threads, read_thread, and send_message_to_thread.",
+    "longDescription": "Activate Sol Advisor once for the current Codex chat in plain language or with the literal skill invocation. Direct ON/OFF markers in that chat preserve state across later requests, while plugin state, memory, summaries, and every other chat are ignored. GPT-5.6 Sol / High treats minimum sufficient outcome, total token cost, and total elapsed time as its first routing gates. Sol retains genuinely complex executive work; routine bounded read-only analysis and settled implementation normally route to GPT-5.6 Terra / High; super-simple fully determined work may route to a user-visible GPT-5.6 Luna / Max task when app-task overhead remains cheapest. Native implementation receives fresh Sol review, while primary Sol directly checks routine read-only Terra evidence. Budget checkpoints trigger redirect or escalation toward completion, not abandonment. If the user stops or changes direction during worker execution, the worker is interrupted or paused and Sol makes a fresh executive routing decision before work resumes. The first activation each local day audits DannyMac180/sol-advisor without delaying the requested task, summarizes pending activity, and recommends adopt unchanged, adapt, or skip without merging. Accepted changes to jessejaffe/sol-advisor must be merged and pushed to fork main. Luna tasks use list_projects, list_threads, create_thread, wait_threads, read_thread, and send_message_to_thread.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

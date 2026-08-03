@@ -1,0 +1,125 @@
+name: Upstream Review
+
+on:
+  schedule:
+    - cron: "17 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: upstream-review
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      UPSTREAM_REPOSITORY: DannyMac180/sol-advisor
+    steps:
+      - name: Check out fork main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Open or update an upstream review issue
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
+          git fetch --quiet upstream main
+          upstream_head=$(git rev-parse upstream/main)
+
+          open_issue=$(gh issue list --repo "$GITHUB_REPOSITORY" --label upstream-review \
+            --state open --limit 20 --json number,body,updatedAt | \
+            jq -c 'sort_by(.updatedAt) | last // empty')
+          latest_issue=$(gh issue list --repo "$GITHUB_REPOSITORY" --label upstream-review \
+            --state all --limit 100 --json number,body,updatedAt | \
+            jq -c 'sort_by(.updatedAt) | last // empty')
+
+          marker() {
+            printf '%s' "$1" | sed -n "s/.*<!-- $2:\([0-9a-f][0-9a-f]*\) -->.*/\1/p" | tail -1
+          }
+
+          baseline=''
+          original_base=''
+          issue_number=''
+          if [[ -n "$open_issue" ]]; then
+            issue_number=$(jq -r '.number' <<<"$open_issue")
+            body=$(jq -r '.body' <<<"$open_issue")
+            original_base=$(marker "$body" upstream-base)
+            baseline=$(marker "$body" upstream-head)
+          elif [[ -n "$latest_issue" ]]; then
+            body=$(jq -r '.body' <<<"$latest_issue")
+            baseline=$(marker "$body" upstream-head)
+          fi
+
+          if [[ -z "$baseline" ]] || ! git cat-file -e "${baseline}^{commit}" 2>/dev/null; then
+            baseline=$(git merge-base HEAD upstream/main)
+          fi
+          if ! git merge-base --is-ancestor "$baseline" upstream/main; then
+            baseline=$(git merge-base HEAD upstream/main)
+          fi
+
+          count=$(git rev-list --count "${baseline}..upstream/main")
+          if [[ "$count" -eq 0 ]]; then
+            echo "No new upstream commits."
+            exit 0
+          fi
+
+          if [[ -z "$original_base" ]]; then
+            original_base=$baseline
+          fi
+          if ! git merge-base --is-ancestor "$original_base" upstream/main; then
+            original_base=$(git merge-base HEAD upstream/main)
+          fi
+
+          gh label create upstream-review --repo "$GITHUB_REPOSITORY" \
+            --color D4C5F9 --description "Original Sol Advisor changes awaiting review" --force
+
+          report=$RUNNER_TEMP/upstream-review.md
+          {
+            echo "<!-- upstream-base:${original_base} -->"
+            echo "<!-- upstream-head:${upstream_head} -->"
+            echo "## New activity in ${UPSTREAM_REPOSITORY}"
+            echo
+            echo "The original repository has commits that have not yet received a decision in this fork. Nothing has been merged automatically."
+            echo
+            echo "- Baseline: \`${original_base}\`"
+            echo "- Current upstream head: \`${upstream_head}\`"
+            echo "- New commits awaiting review: $(git rev-list --count "${original_base}..upstream/main")"
+            echo "- [Compare upstream range](https://github.com/${UPSTREAM_REPOSITORY}/compare/${original_base}...${upstream_head})"
+            echo
+            echo "### Commits"
+            git log --reverse --format='- `%h` %s' "${original_base}..upstream/main"
+            echo
+            echo "### Changed files"
+            echo '```text'
+            git diff --name-status "${original_base}..upstream/main"
+            echo '```'
+            echo
+            echo "### Decision requested"
+            echo
+            echo "On the next Sol Advisor activation, summarize these changes and classify each as:"
+            echo
+            echo "- **Adopt unchanged** — compatible and useful."
+            echo "- **Adapt** — useful, but must preserve this fork's policies."
+            echo "- **Skip** — conflicting, redundant, or not useful."
+            echo
+            echo "Do not merge until the user approves the proposed decision."
+          } > "$report"
+
+          title="Review upstream Sol Advisor changes through ${upstream_head:0:7}"
+          if [[ -n "$issue_number" ]]; then
+            gh issue edit "$issue_number" --repo "$GITHUB_REPOSITORY" \
+              --title "$title" --body-file "$report" --add-label upstream-review
+            gh issue comment "$issue_number" --repo "$GITHUB_REPOSITORY" \
+              --body "Additional upstream activity was detected through \`${upstream_head:0:7}\`; the review summary has been refreshed."
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
+              --body-file "$report" --label upstream-review
+          fi

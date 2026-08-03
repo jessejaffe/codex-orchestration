@@ -55,6 +55,34 @@ When the user says “Turn Sol Advisor off,” respond `Sol Advisor: OFF for thi
 stop applying the workflow to later requests. Do not reinterpret an off request as a
 new activation merely because it names Sol Advisor.
 
+## Check upstream once per day on activation
+
+On the first Sol Advisor activation of each local calendar day, run the bundled
+`../../scripts/daily-upstream-audit.sh`. The script keeps a local date marker, compares
+`DannyMac180/sol-advisor` with `jessejaffe/sol-advisor`, reports any open upstream-review
+issue, and requests the fork's non-merging GitHub review workflow when new activity is
+present. A later activation that day must accept `already-checked-today` and avoid a
+duplicate network audit.
+
+Do not make this maintenance check replace or materially delay the user's requested
+task. Begin the requested route normally and run the independent audit alongside the
+first worker/tool opportunity when possible. If no task accompanied activation, run
+the audit before waiting. Audit failure is non-blocking: report the exact failure and
+continue the user's task.
+
+When the audit reports `new-activity` or `pending-review`, inspect the upstream commits
+and actual diff, then add a compact upstream review to the response:
+
+- summarize the behavior changed;
+- classify each coherent change as **adopt unchanged**, **adapt**, or **skip**;
+- explain compatibility with this fork's efficiency, routing, interruption, and
+  main-branch policies; and
+- suggest a decision without merging anything.
+
+Never merge upstream changes merely because the scheduled or activation audit found
+them. Wait for the user's decision. The scheduled GitHub workflow may only open or
+update an issue; it must not modify code or merge upstream.
+
 ## Principle one: minimum sufficient work
 
 Optimize total cost, not merely primary-Sol tokens. Count the task packet, worker
@@ -358,6 +386,21 @@ Apply observed native reviewer isolation:
   the broader sandbox and permission profile as residual risk.
 - If isolation is unobservable, hard isolation is required, or mutation occurs, stop
   the native review.
+
+## Keep the maintained fork on main
+
+For changes to Sol Advisor itself, treat `jessejaffe/sol-advisor` as the writable fork
+and `DannyMac180/sol-advisor` as read-only upstream, regardless of local remote names.
+Development may use a `codex/*` branch for isolation or concurrent work, but an accepted
+change is incomplete until it is committed, merged into the fork's `main`, and pushed
+to `jessejaffe/sol-advisor` in the same task. Never leave accepted Sol Advisor changes
+only on a feature branch. Never push to the original author's repository.
+
+Before updating fork `main`, fetch both repositories and inspect divergence. Use a
+fast-forward when possible; otherwise make a non-destructive merge after resolving and
+verifying conflicts. Do not overwrite or force-push fork `main`. Upstream review
+decisions follow the same rule after the user approves them: adopt, adapt, or skip on a
+review branch if useful, verify, then merge accepted work into fork `main`.
 
 ## Report the route in the final output
 

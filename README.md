@@ -44,6 +44,12 @@ is interrupted or paused immediately. Sol then rereads the newest instruction,
 inspects any partial state, and makes a fresh executive objective, scope, and routing
 decision before work resumes; stale worker plans never continue automatically.
 
+The first Sol Advisor activation on each local calendar day also runs a lightweight
+upstream audit. It compares this maintained fork with `DannyMac180/sol-advisor`, reports
+any pending review issue, and—when new activity exists—summarizes the diff, classifies
+changes as adopt unchanged, adapt, or skip, and recommends a decision. This audit does
+not delay or replace the user's requested task and never merges upstream automatically.
+
 Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
 for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as
 a fallback. Activation lasts only for the current chat, and every later request in
@@ -204,6 +210,33 @@ Terra / High. The Luna lane uses a complete task packet with
 objective, files and ownership, interfaces, constraints, starting state/base,
 verification, git/PR boundary, and a structured return. Read the full app-task
 contract in [the Luna task-lane reference](plugins/sol-advisor/skills/orchestration/references/luna-task-lane.md).
+
+## Fork main and upstream review
+
+Accepted changes to this maintained fork always finish on
+[`jessejaffe/sol-advisor` main](https://github.com/jessejaffe/sol-advisor/tree/main).
+A temporary `codex/*` branch may isolate work, but the same task must verify it, merge
+it into fork `main`, and push `main`. The original
+[`DannyMac180/sol-advisor`](https://github.com/DannyMac180/sol-advisor) repository is a
+read-only upstream source and is never a push target.
+
+The [Upstream Review workflow](.github/workflows/upstream-review.yml) runs daily at
+12:17 UTC and can also be dispatched manually. It detects upstream commits not yet
+represented by the latest review issue, then opens or updates an `upstream-review`
+issue containing commits, changed files, and a comparison link. It has read-only
+contents permission and issue-writing permission; it cannot merge or modify code.
+
+The activation audit uses
+[`daily-upstream-audit.sh`](plugins/sol-advisor/scripts/daily-upstream-audit.sh) and a
+local date marker to avoid duplicate daily network checks. When activity is pending,
+Sol inspects the actual upstream diff and proposes one of three decisions for each
+coherent change:
+
+- **Adopt unchanged** when it is compatible and useful.
+- **Adapt** when the idea is useful but must preserve this fork's policies.
+- **Skip** when it conflicts, duplicates existing behavior, or adds no useful value.
+
+Only the user's decision authorizes applying an upstream change.
 
 ### Luna task lane (Sol-selected)
 

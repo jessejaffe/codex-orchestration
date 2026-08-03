@@ -11,6 +11,7 @@ plugin_dir=$(CDPATH= cd "$script_dir/.." && pwd) || exit 1
 repo_dir=$(CDPATH= cd "$plugin_dir/../.." && pwd) || exit 1
 installer=$script_dir/install-agents.sh
 runtime_inspector=$script_dir/inspect-agent-runtime.sh
+daily_audit=$script_dir/daily-upstream-audit.sh
 templates=$plugin_dir/agents
 manifest=$plugin_dir/.codex-plugin/plugin.json
 skill=$plugin_dir/skills/orchestration/SKILL.md
@@ -18,6 +19,7 @@ contracts=$plugin_dir/skills/orchestration/references/role-contracts.md
 luna_contract=$plugin_dir/skills/orchestration/references/luna-task-lane.md
 readme=$repo_dir/README.md
 ui=$plugin_dir/skills/orchestration/agents/openai.yaml
+upstream_workflow=$repo_dir/.github/workflows/upstream-review.yml
 
 tmp_base=${TMPDIR:-/tmp}
 case "$tmp_base" in /*) ;; *) tmp_base=/tmp ;; esac
@@ -127,7 +129,7 @@ PREVIOUS_TERRA
   [ "$(shasum -a 256 "$target/$terra_file" | awk '{print $1}')" = "$previous_terra_sha256" ] || fail "previous Terra fixture digest drifted"
 }
 
-for required in "$installer" "$runtime_inspector" "$manifest" "$skill" "$contracts" "$luna_contract" "$readme" "$ui"; do
+for required in "$installer" "$runtime_inspector" "$daily_audit" "$manifest" "$skill" "$contracts" "$luna_contract" "$readme" "$ui" "$upstream_workflow"; do
   test -f "$required" || fail "required file missing: $required"
 done
 
@@ -372,6 +374,14 @@ grep -Fq 'Sol Advisor: OFF' "$skill" || fail "skill omits OFF acknowledgement"
 grep -Fq 'SOL ADVISOR ROUTING' "$skill" || fail "skill omits final route reporting"
 grep -Fq 'Execution:' "$skill" || fail "skill omits pre-execution route announcement"
 grep -Fq 'Do not ask for a second Luna opt-in' "$skill" || fail "skill requires a second Luna authorization"
+grep -Fq '../../scripts/daily-upstream-audit.sh' "$skill" || fail "skill omits daily upstream audit"
+grep -Fq 'first Sol Advisor activation of each local calendar day' "$skill" || fail "skill omits once-daily activation boundary"
+grep -Fq 'adopt unchanged' "$skill" || fail "skill omits upstream adoption classification"
+grep -Fq 'adapt' "$skill" || fail "skill omits upstream adaptation classification"
+grep -Fq 'skip' "$skill" || fail "skill omits upstream skip classification"
+grep -Fq 'must not modify code or merge upstream' "$skill" || fail "skill permits automatic upstream merge"
+grep -Fq 'merged into the fork' "$skill" || fail "skill does not require fork-main completion"
+grep -Fq 'Never push to the original author' "$skill" || fail "skill permits pushes to upstream"
 
 for document in "$readme" "$manifest" "$skill" "$contracts" "$ui"; do
   if grep -Eqi 'Terra / High is the sole implementation producer|one role-pinned .*handles all implementation|route all implementation through.*Terra|delegate all implementation to (the )?(native )?Terra' "$document"; then
@@ -414,8 +424,31 @@ grep -Fq 'fresh executive routing decision' "$manifest" || fail "manifest omits 
 grep -Fq 'Minimize tokens and time' "$ui" || fail "skill UI omits efficiency goal"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 
+grep -Fq '17 12 * * *' "$upstream_workflow" || fail "upstream workflow is not scheduled daily"
+grep -Fq 'contents: read' "$upstream_workflow" || fail "upstream workflow has wrong contents permission"
+grep -Fq 'issues: write' "$upstream_workflow" || fail "upstream workflow cannot open review issues"
+grep -Fq 'gh issue create' "$upstream_workflow" || fail "upstream workflow does not create review issues"
+grep -Fq 'gh issue edit' "$upstream_workflow" || fail "upstream workflow does not update an existing review issue"
+grep -Fq 'upstream-base:' "$upstream_workflow" || fail "upstream workflow omits baseline marker"
+grep -Fq 'upstream-head:' "$upstream_workflow" || fail "upstream workflow omits head marker"
+if grep -Eq 'git push|gh pr merge|git cherry-pick|git rebase' "$upstream_workflow"; then
+  fail "upstream workflow contains a code integration command"
+fi
+grep -Fq 'DannyMac180/sol-advisor' "$daily_audit" || fail "daily audit omits original repository"
+grep -Fq 'jessejaffe/sol-advisor' "$daily_audit" || fail "daily audit omits maintained fork"
+grep -Fq 'already-checked-today' "$daily_audit" || fail "daily audit omits same-day short circuit"
+grep -Fq 'workflow run upstream-review.yml' "$daily_audit" || fail "daily audit cannot request issue workflow"
+
+audit_state=$tmp_dir/audit-state
+mkdir -p "$audit_state"
+printf 'CHECKED_DATE: %s\nSTATUS: current\n' "$(date +%F)" > "$audit_state/upstream-audit.txt"
+SOL_ADVISOR_AUDIT_STATE_DIR="$audit_state" sh "$daily_audit" | \
+  grep -Fq 'STATUS: already-checked-today' || fail "daily audit repeated a same-day network check"
+pass "daily activation audit and non-merging upstream issue workflow"
+
 sh -n "$installer"
 sh -n "$runtime_inspector"
+sh -n "$daily_audit"
 sh -n "$script_dir/verify.sh"
 pass "shell syntax"
 
