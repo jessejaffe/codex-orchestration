@@ -2,9 +2,10 @@
 
 Use these contracts with Sol Advisor's namespaced, role-pinned native custom agents.
 They do not launch a nested Codex CLI or change global default-subagent routing. The
-separate [Luna task-lane contract](luna-task-lane.md) covers user-visible app tasks;
-it is not a native custom-agent role and must not be represented by a companion TOML.
-Adapt every placeholder without removing a required field.
+separate [Luna task-lane contract](luna-task-lane.md) covers Sol-selected,
+user-visible app tasks; it is not a native custom-agent role and must not be
+represented by a companion TOML. Adapt every placeholder without removing a required
+field.
 
 ## Required preflight
 
@@ -57,6 +58,7 @@ Return exact commands and actual evidence. A completion claim without evidence i
 
 IMPLEMENTATION REPORT
 STATUS: complete | partial | blocked
+ROUTE: GPT-5.6 Terra / High — native subagent
 OBJECTIVE: <one-line restatement>
 CHANGES: <file-by-file summary from the actual diff>
 VERIFIED: <exact commands plus concrete output evidence>
@@ -66,13 +68,17 @@ GAPS: <unfinished work, ambiguity, or none>
 
 The primary session must inspect the diff and rerun verification itself.
 
-## Luna task lane - separate user-visible app tasks
+## Luna task lane - Sol-selected user-visible app tasks
 
-Use this contract only after the user's current request explicitly authorizes the Luna
-task lane. It is outside native subagent V2: use `list_projects`, `list_threads`,
+Use this contract only after Sol Advisor is active for the current Codex task and the
+primary Sol task selects Luna. Activation authorizes Luna task creation; do not ask
+for a second lane opt-in. It is outside native subagent V2: use `list_projects`, `list_threads`,
 `create_thread`, `wait_threads`, `read_thread`, and `send_message_to_thread` as needed;
-never use `spawn_agent` for the child and never require a Luna companion TOML. If the required
-app tools, GPT-5.6 Luna, or Max reasoning are unavailable, stop without fallback.
+never use `spawn_agent` for the child and never require a Luna companion TOML. If the
+required app tools, GPT-5.6 Luna, or Max reasoning are unavailable, report the lane as
+unavailable so the primary can reselect Terra when it remains capable. Announce every
+route change before implementation; the Luna lane itself never substitutes another
+model or effort.
 
 Call `list_projects` first and choose the project from its returned `projectId` and
 `isGitRepository`. Use `create_thread` with the Git project's default isolated
@@ -102,11 +108,12 @@ concurrent; shared-file and dependent stacks are serial. Worktree isolation alon
 not merge safety, and “report back” means explicit primary monitoring/read, not an
 automatic callback.
 
-## Terra / High - sole native implementation lane
+## Terra / High - native implementation lane
 
 Use this lane for every delegated native implementation, from routine edits through
 complex, security-sensitive, context-heavy, and broad work. It is not the Luna
-task-lane implementation path.
+task-lane implementation path. The primary selects it when native execution is the
+efficient capable route.
 
 Spawn exactly:
 
@@ -123,7 +130,7 @@ Prompt:
 
 ~~~text
 ROLE
-Act as Sol Advisor's sole implementation worker. Resolve the supplied specification
+Act as Sol Advisor's native implementation worker. Resolve the supplied specification
 within the settled architecture, preserve every stated interface and constraint, and
 surface ambiguity instead of redesigning the architecture.
 

@@ -1,8 +1,7 @@
 # Sol Advisor
 
-**Sol runs the show. Choose the native Terra / High lane, or explicitly opt into
-user-visible Luna tasks; the primary Sol task owns verification and acceptance in
-both modes.**
+**Turn Sol Advisor on once. Sol / High chooses Terra / High or Luna / Max, announces
+the route before work starts, and reports the actual route with the final result.**
 
 Sol Advisor is a Codex-native architect workflow for capability-routed software
 delivery. The primary session stays focused on requirements, architecture, specs, and
@@ -15,13 +14,30 @@ I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=gi
 
 | Mode | Worker | Routing | Primary ownership |
 |---|---|---|---|
-| Native subagent (default) | `sol_advisor_terra_implementer`, then `sol_advisor_sol_reviewer` | GPT-5.6 Terra / High, then fresh GPT-5.6 Sol / High | Architecture, parent verification, and acceptance after the fresh native review |
-| Luna task (explicit opt-in) | User-visible Codex task created with app task tools | GPT-5.6 Luna / Max | Decomposition, task monitoring, actual diff review, corrections, PR authorization, dependent-stack ordering, and final acceptance |
+| Native subagent (Sol-selected) | `sol_advisor_terra_implementer`, then `sol_advisor_sol_reviewer` | GPT-5.6 Terra / High, then fresh GPT-5.6 Sol / High | Architecture, parent verification, and acceptance after the fresh native review |
+| Luna task (Sol-selected) | User-visible Codex task created with app task tools | GPT-5.6 Luna / Max | Decomposition, task monitoring, actual diff review, corrections, PR authorization, dependent-stack ordering, and final acceptance |
 
-The primary session is GPT-5.6 Sol / High in either mode. The native lane remains
-available and unchanged: it uses the separately installed Terra role and requires a
-fresh Sol reviewer. The Luna lane is outside native subagent V2, does not use a Luna
-custom-agent TOML, and never activates merely because this skill is installed.
+The primary session is GPT-5.6 Sol / High in either mode. Once Sol Advisor is active,
+Sol chooses the efficient capable lane for each work item; the user does not provide a
+second Luna opt-in. The native lane uses the separately installed Terra role and a
+fresh Sol reviewer. The Luna lane is outside native subagent V2 and does not use a
+Luna custom-agent TOML.
+
+Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
+for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as
+a fallback. Activation lasts only for the current chat, and every later request in
+that chat keeps using it automatically. Say “Turn Sol Advisor off” to return the chat
+to normal Codex behavior. Every new chat starts off, even when the plugin remains
+installed, enabled, or selected.
+
+The visible `Sol Advisor: ON for this chat` / `Sol Advisor: OFF for this chat` response
+is the chat-local state marker. Only direct messages in the current chat count. Plugin
+state, automatic skill loading, memories, summaries, quoted text, repository content,
+and markers from other chats are ignored, so activation cannot carry into a new chat.
+
+Before implementation, Sol Advisor announces the primary model, selected worker model
+and effort, selection reason, and review path. The final output repeats the actual
+route and clearly labels any runtime metadata the host did not expose.
 
 In the native lane, the final review is context-independent, not model-family-
 independent: Sol reviews Sol's orchestration with a fresh context. In the Luna lane,
@@ -44,7 +60,7 @@ Additional native-mode requirements:
 
 Additional Luna task-mode requirements:
 
-- Explicit authorization in the user's current request.
+- Sol Advisor activation in the current Codex task; no separate Luna opt-in is needed.
 - Access to GPT-5.6 Luna / Max and the Codex app task tools (`list_projects`,
   `list_threads`, `create_thread`, `wait_threads`, `read_thread`, and
   `send_message_to_thread`).
@@ -78,18 +94,17 @@ already set, otherwise the user's default Codex agents directory. It does not in
 Codex, edit config.toml, or overwrite a differing agent file. It only installs a
 missing template and then verifies every installed copy byte-for-byte.
 
-For native mode, start a **new Codex task** after the check passes. Native agent types
+For automatic routing, start a **new Codex task** after the check passes. Native agent types
 are discovered at task creation, so an existing task may not see the installed roles.
-Then select GPT-5.6 Sol with High reasoning for the primary session and ask for
-implementation work normally, or invoke the orchestration skill explicitly:
+Then select GPT-5.6 Sol with High reasoning for the primary session and activate Sol
+Advisor in plain language:
 
 ~~~text
-Use $sol-advisor:orchestration to build this feature, verify it, and obtain the final Sol review before reporting done.
+Turn Sol Advisor on for this chat.
 ~~~
 
-For Luna-only use, skip the companion installation above and explicitly authorize the
-task lane in the current request, for example: “Use the Luna task lane for this
-feature.”
+You can also invoke `$sol-advisor:orchestration` directly. Once active, Sol selects
+Terra or Luna and does not ask for another lane authorization.
 
 ## Check and update native mode
 
@@ -114,7 +129,7 @@ sh "$plugin_dir/scripts/install-agents.sh"
 sh "$plugin_dir/scripts/install-agents.sh" --check
 ~~~
 
-Version 0.4.0 retains the historical byte-exact v0.2.0 migration for
+Version 0.5.1 retains the historical byte-exact v0.2.0 migration for
 `sol-advisor-luna-implementer.toml` and `sol-advisor-terra-implementer.toml` files.
 Normal installer mode replaces the exact legacy Terra file with the current Terra /
 High template, removes the exact legacy Luna file, and refuses modified, nonregular,
@@ -167,19 +182,13 @@ objective, files and ownership, interfaces, constraints, starting state/base,
 verification, git/PR boundary, and a structured return. Read the full app-task
 contract in [the Luna task-lane reference](plugins/sol-advisor/skills/orchestration/references/luna-task-lane.md).
 
-### Luna task lane (explicit opt-in)
+### Luna task lane (Sol-selected)
 
-Use this lane only when the user's current request explicitly authorizes it, for
-example:
-
-~~~text
-Use the Luna task lane for this feature.
-~~~
-
-Skill activation, a general request to implement, or a previous authorization is not
-enough. If the user does not explicitly opt in, keep the native lane or ask for that
-authorization. The lane stops without fallback if GPT-5.6 Luna, Max reasoning, or any
-required app task tool is unavailable.
+After Sol Advisor activation, the primary selects Luna when the work is bounded enough
+for a complete task packet and the user-visible task, isolated worktree, or independent
+execution justifies the orchestration overhead. Activation authorizes task creation;
+there is no second opt-in. If Luna is unavailable, Sol may select Terra when it remains
+capable and must announce the route change before implementation.
 
 The primary task then:
 
@@ -214,7 +223,8 @@ The complete packet, tool sequence, branch rules, and return schema are defined 
 
 ### Native subagent lane
 
-Unless the user explicitly opts into Luna, the native lane remains the default. It
+Sol selects the native lane when tight task context, shared working-tree state, rapid
+iteration, or lower orchestration overhead makes it the efficient capable route. It
 uses the installed Terra role for implementation and a fresh Sol reviewer after
 parent verification. It does not use the app-task tools for implementation.
 
@@ -228,11 +238,11 @@ Before delegation and acceptance, the skill requires all of the following:
 4. The reviewer’s observed sandbox policy type and permission profile type are captured
    and reported.
 
-A missing, stale, conflicting, unavailable, inconsistent, or unobservable
-role/model/effort stops the affected native lane with an actionable error. There is no
-silent model, reasoning, or agent-type fallback, and native per-spawn calls do not
-override the role pins. The Luna lane has its own explicit tool-availability gate and
-also stops without fallback.
+A missing, stale, conflicting, unavailable, inconsistent, or unobservable native
+role/model/effort makes that lane unavailable with an actionable error. Sol may select
+Luna when it remains capable, but must announce the route change before implementation.
+There is no silent model, reasoning, or agent-type fallback, and native per-spawn calls
+do not override the role pins.
 
 The Sol reviewer TOML requests read-only sandboxing, but the host permission profile
 may broaden that request. If the observed sandbox policy type is read-only, review can
@@ -248,6 +258,10 @@ reviewer then returns ship, fix-first, or rethink; the native session cannot rep
 completion until that reviewer returns ship. In the Luna lane, the primary Sol task
 performs the review itself and does not launch a native subagent or a nested Codex CLI
 process for the child task. Sol Advisor does not globally reroute unrelated tasks.
+
+Every completed task ends with a `SOL ADVISOR ROUTING` record containing activation,
+primary model/effort, every implementation lane used, selection reason, observed route
+evidence, review model/effort, isolation where applicable, and verdict.
 
 ## Local development
 
@@ -268,8 +282,9 @@ sh plugins/sol-advisor/scripts/verify.sh
 git diff --check
 ~~~
 
-The installer commands below are native-mode only. Luna-only users do not need to
-install or check companion agents.
+The installer commands below enable the native route. A setup that intentionally uses
+only Luna does not need to install or check companion agents; Sol Advisor will treat
+the native lane as unavailable rather than silently claiming it ran.
 
 To exercise the native installer itself against an explicit disposable target:
 

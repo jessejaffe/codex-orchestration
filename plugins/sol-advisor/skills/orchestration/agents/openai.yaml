@@ -1,4 +1,7 @@
 interface:
   display_name: "Sol Advisor Orchestration"
-  short_description: "Use native Terra / High or explicitly opt into Luna tasks, then verify and accept"
-  default_prompt: "Use $orchestration for the native Terra / High lane and fresh Sol review; use the user-visible Luna task lane only when I explicitly authorize it, then use list_projects, list_threads, create_thread, wait_threads, read_thread, and send_message_to_thread to monitor, review, correct, and accept the task yourself."
+  short_description: "Turn on Sol-led model routing and review"
+  default_prompt: "Use $orchestration to manage chat-local state; activate only when my current message directly says “Turn Sol Advisor on.”"
+
+policy:
+  allow_implicit_invocation: true
