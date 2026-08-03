@@ -1,6 +1,6 @@
 {
   "name": "sol-advisor",
-  "version": "0.5.1+codex.20260803213539",
+  "version": "0.5.1+codex.20260803213559",
   "description": "Turn cost-aware Sol-led orchestration on or off for one Codex chat, route by complexity, persist through replanning, keep accepted fork changes on main, and audit the original repository once daily without automatic merges.",
   "author": {
     "name": "Daniel McAteer",

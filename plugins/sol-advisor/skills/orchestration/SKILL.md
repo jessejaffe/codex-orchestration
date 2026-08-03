@@ -49,8 +49,8 @@ deployment, approval, safety, or ownership boundaries.
 If activation arrives without an implementation request, respond `Sol Advisor: ON for
 this chat`, perform the daily audit when due, and then wait for the task. If the same
 message includes work, include that ON acknowledgement, continue immediately into route
-selection, and run the non-blocking daily audit as defined below. Every later user
-request in the same chat stays inside this workflow without another activation phrase.
+selection, and run the non-blocking daily audit as defined below. Every later user request
+in the same chat stays inside this workflow without another activation phrase.
 
 When the user says “Turn Sol Advisor off,” respond `Sol Advisor: OFF for this chat` and
 stop applying the workflow to later requests. Do not reinterpret an off request as a
