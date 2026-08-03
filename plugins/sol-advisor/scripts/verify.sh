@@ -38,6 +38,7 @@ sol_file=sol-advisor-sol-reviewer.toml
 luna_file=sol-advisor-luna-implementer.toml
 legacy_terra_sha256=4425a8c1f21ce8c6af93f96adc253bbc33ea301f1389b3fa8ce350be08584eca
 legacy_luna_sha256=fba1b42849d93737e83b094a2ab0b1611f87ac37db7438c8bbdf581f0813f8eb
+previous_terra_sha256=06c318e5e93f37452635906394e6ea69fb6a65ba9e6ad7172d37b444e0dc871d
 
 snapshot_files() {
   target=$1
@@ -101,6 +102,31 @@ LEGACY_LUNA
   [ "$(shasum -a 256 "$target/$luna_file" | awk '{print $1}')" = "$legacy_luna_sha256" ] || fail "legacy Luna fixture digest drifted"
 }
 
+write_previous_terra() {
+  target=$1
+  mkdir -p "$target"
+  cat > "$target/$terra_file" <<'PREVIOUS_TERRA'
+name = "sol_advisor_terra_implementer"
+description = "Sol Advisor's sole implementation lane for routine and complex work."
+model = "gpt-5.6-terra"
+model_reasoning_effort = "high"
+
+developer_instructions = """
+You are Sol Advisor's sole implementation worker for routine, context-heavy,
+higher-risk, and wider-blast-radius work. Execute the supplied five-part specification
+within the settled architecture. Preserve every stated interface and constraint, stay
+within the owned file set, and document material judgment calls.
+
+You are not alone in the codebase: preserve concurrent edits and do not revert
+unrelated work. Surface ambiguity, scope conflicts, or verification failures rather
+than redesigning the architecture without direction. Run the requested checks and
+report actual evidence. Do not silently substitute a different role, model, or
+reasoning level; this installed custom-agent profile is the only implementation lane.
+"""
+PREVIOUS_TERRA
+  [ "$(shasum -a 256 "$target/$terra_file" | awk '{print $1}')" = "$previous_terra_sha256" ] || fail "previous Terra fixture digest drifted"
+}
+
 for required in "$installer" "$runtime_inspector" "$manifest" "$skill" "$contracts" "$luna_contract" "$readme" "$ui"; do
   test -f "$required" || fail "required file missing: $required"
 done
@@ -112,7 +138,7 @@ case "$manifest_version" in
   *) fail "manifest version does not preserve the 0.5.1 base: $manifest_version" ;;
 esac
 grep -Fq 'on or off' "$manifest" || fail "manifest does not describe task activation state"
-grep -Fq 'automatically chooses' "$manifest" || fail "manifest does not describe Sol-selected routing"
+grep -Fq 'Sol retains genuinely complex executive work' "$manifest" || fail "manifest does not describe complexity-based Sol routing"
 grep -Fqi 'GPT-5.6 Luna' "$manifest" || fail "manifest does not describe Luna routing"
 grep -Fq 'create_thread' "$manifest" || fail "manifest does not describe app-task routing"
 grep -Fq 'fresh Sol' "$manifest" || fail "manifest does not preserve native fresh Sol review"
@@ -153,6 +179,7 @@ pass "exact two-role TOML inventory"
 
 grep -Fq "legacy_terra_sha256=$legacy_terra_sha256" "$installer" || fail "installer legacy Terra digest mismatch"
 grep -Fq "legacy_luna_sha256=$legacy_luna_sha256" "$installer" || fail "installer legacy Luna digest mismatch"
+grep -Fq "previous_terra_sha256=$previous_terra_sha256" "$installer" || fail "installer previous Terra digest mismatch"
 pass "immutable v0.2.0 migration fingerprints"
 
 clean_target=$tmp_dir/clean
@@ -191,6 +218,15 @@ cmp -s "$templates/$sol_file" "$migration_target/$sol_file" || fail "Sol changed
 test ! -e "$migration_target/$luna_file" || fail "exact legacy Luna was not removed"
 sh "$installer" --target-dir "$migration_target" --check
 pass "exact v0.2.0 Terra replacement and Luna retirement"
+
+previous_target=$tmp_dir/previous-terra
+write_previous_terra "$previous_target"
+cp "$templates/$sol_file" "$previous_target/$sol_file"
+sh "$installer" --target-dir "$previous_target"
+cmp -s "$templates/$terra_file" "$previous_target/$terra_file" || fail "previous Terra was not migrated"
+cmp -s "$templates/$sol_file" "$previous_target/$sol_file" || fail "previous-template migration changed Sol"
+sh "$installer" --target-dir "$previous_target" --check
+pass "exact previous Terra upgrade migration"
 
 modified_luna=$tmp_dir/modified-luna
 write_legacy_roles "$modified_luna"
@@ -334,7 +370,7 @@ grep -Fq 'stay OFF and handle the' "$skill" || fail "skill lacks inactive behavi
 grep -Fq 'Sol Advisor: ON' "$skill" || fail "skill omits initial ON acknowledgement"
 grep -Fq 'Sol Advisor: OFF' "$skill" || fail "skill omits OFF acknowledgement"
 grep -Fq 'SOL ADVISOR ROUTING' "$skill" || fail "skill omits final route reporting"
-grep -Fq 'Implementation:' "$skill" || fail "skill omits pre-implementation route announcement"
+grep -Fq 'Execution:' "$skill" || fail "skill omits pre-execution route announcement"
 grep -Fq 'Do not ask for a second Luna opt-in' "$skill" || fail "skill requires a second Luna authorization"
 
 for document in "$readme" "$manifest" "$skill" "$contracts" "$ui"; do
@@ -351,19 +387,30 @@ grep -Fq 'Principle one: minimum sufficient work' "$skill" || fail "skill does n
 grep -Fq 'Minimum sufficient outcome' "$skill" || fail "skill omits minimum-sufficient gate"
 grep -Fq 'Token budget checkpoint' "$skill" || fail "skill omits token-budget gate"
 grep -Fq 'Time budget checkpoint' "$skill" || fail "skill omits time-budget gate"
-grep -Fq 'Direct answer / inspection' "$skill" || fail "skill omits no-delegation answer route"
+grep -Fq 'Principle two: route by complexity and risk' "$skill" || fail "skill omits complexity-based routing principle"
+grep -Fq 'Routine bounded work' "$skill" || fail "skill omits routine Terra route"
+grep -Fq 'Read-only work is low mutation risk' "$skill" || fail "skill does not treat read-only work as a Terra candidate"
+grep -Fq 'Complex or executive work' "$skill" || fail "skill omits complex primary-Sol route"
+grep -Fq 'Super-simple work' "$skill" || fail "skill omits super-simple Luna route"
 grep -Fq '“Be efficient”' "$skill" || fail "skill permits a budget without a concrete boundary"
 grep -Fq 'Do not spawn another Sol reviewer merely to watch Terra' "$skill" || fail "skill adds redundant implementation review"
-grep -Fq 'continue`, `correct`, or `stop' "$skill" || fail "skill omits primary checkpoint decisions"
-grep -Fq 'SOL ADVISOR: direct primary / no delegation' "$skill" || fail "skill omits compact direct-route reporting"
+grep -Fq 'continue`, `redirect`, or `escalate' "$skill" || fail "skill omits primary replanning decisions"
+grep -Fq 'SOL ADVISOR: primary Sol / no worker' "$skill" || fail "skill omits compact primary-route reporting"
+grep -Fq 'interrupt_agent' "$skill" || fail "skill omits native-worker interruption"
+grep -Fq 'fresh executive decision' "$skill" || fail "skill omits fresh Sol decision after interruption"
+grep -Fq 'Never resume' "$skill" || fail "skill permits stale worker plans to resume automatically"
+grep -Fq 'do not spawn a fresh' "$skill" || fail "skill adds routine read-only reviewer overhead"
 for document in "$contracts" "$luna_contract"; do
   grep -Fq 'EFFICIENCY BOUNDARY' "$document" || fail "$document omits worker efficiency boundary"
   grep -Fq 'Minimum sufficient outcome' "$document" || fail "$document omits minimum-sufficient worker outcome"
   grep -Fq 'Token budget:' "$document" || fail "$document omits worker token budget"
   grep -Fq 'Time budget:' "$document" || fail "$document omits worker time budget"
+  grep -Fq 'Do not abandon' "$document" || fail "$document permits budget-based abandonment"
 done
 grep -Fq 'first principle is the minimum sufficient answer or change' "$readme" || fail "README omits efficiency principle"
-grep -Fq 'minimum sufficient direct answer' "$manifest" || fail "manifest omits direct efficiency route"
+grep -Fq 'routine bounded read-only analysis' "$manifest" || fail "manifest omits Terra read-only route"
+grep -Fq 'Budget checkpoints trigger' "$manifest" || fail "manifest permits budget-based abandonment"
+grep -Fq 'fresh executive routing decision' "$manifest" || fail "manifest omits user-interruption rerouting"
 grep -Fq 'Minimize tokens and time' "$ui" || fail "skill UI omits efficiency goal"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 

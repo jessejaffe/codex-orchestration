@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this same chat contains the latest ON state marker. Ignore plugin selection, enabled state, memories, summaries, and markers from every other chat. While ON, enforce minimum-sufficient, token, and time budgets; answer directly when delegation is not worth its cost; otherwise choose Terra / High or Luna / Max, verify, and report the route. Stay OFF when this chat has no direct activation evidence or its latest direct marker is OFF."
+description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this same chat contains the latest ON state marker. Ignore plugin selection, enabled state, memories, summaries, and markers from every other chat. While ON, enforce minimum-sufficient, token, and time budgets; keep complex executive work with Sol / High, route routine bounded work to Terra / High, and use Luna / Max for super-simple work when task overhead still makes it cheapest. Verify, persist to completion, and reroute after user interruptions. Stay OFF when this chat has no direct activation evidence or its latest direct marker is OFF."
 ---
 
 # Sol Advisor Orchestration
@@ -9,10 +9,11 @@ Act as the architect. Own the user's intent, architecture, decomposition, route
 selection, complete implementation specification, primary verification, and final
 acceptance. Principle one is efficiency: minimize total token use and elapsed time
 across the primary, workers, monitoring, and review while preserving correctness.
-First decide whether delegation is warranted at all. When it is, select the
-lowest-overhead capable implementation lane: native Terra / High or a user-visible
-Luna / Max Codex task. Announce the selection before implementation starts and report
-the observed route again in the final output.
+Choose the lowest-total-cost capable execution route by complexity: primary Sol / High
+for complex executive work, native Terra / High for routine bounded analysis or
+implementation, or a user-visible Luna / Max Codex task for super-simple fully
+determined work when its task overhead is still justified. Announce delegated routes
+before work starts and report the observed route again in the final output.
 
 Read [references/role-contracts.md](references/role-contracts.md) before the first
 native delegation in a session. Read the
@@ -58,8 +59,10 @@ new activation merely because it names Sol Advisor.
 
 Optimize total cost, not merely primary-Sol tokens. Count the task packet, worker
 context, monitoring, retries, tool calls, and final review when comparing routes.
-Terra exists to execute a settled implementation specification more cheaply than Sol;
-it is not a reason to delegate research, scope discovery, or a direct answer.
+Terra exists to execute routine, bounded analysis and settled implementation more
+cheaply than Sol. Read-only work is low mutation risk and is usually a strong Terra
+candidate; read-only status alone is not a reason to keep work with Sol. Complexity,
+material ambiguity, and executive judgment are reasons to keep work with Sol.
 
 Before any preflight, worker creation, task creation, external-system access, or scope
 expansion, perform all three gates:
@@ -71,7 +74,8 @@ expansion, perform all three gates:
 2. **Token budget checkpoint.** Compare the expected total tokens for direct primary
    work with every proposed delegated route. Delegate only when it is expected to save
    total tokens, provides necessary isolation/capability, or materially reduces risk.
-   If the comparison is unclear, use the direct route.
+   If the comparison is unclear, use the lowest-overhead capable route after weighing
+   task-creation and review cost; do not equate read-only work with direct Sol work.
 3. **Time budget checkpoint.** Include setup, preflight, task-packet construction,
    monitoring, retries, verification, and review. Reject a lane whose orchestration
    overhead is likely to cost more time than the minimum sufficient direct route.
@@ -79,26 +83,34 @@ expansion, perform all three gates:
 Make each budget concrete. Use a user-supplied numeric limit when present. Otherwise
 state an operational cap such as one focused inspection pass, one worker, an exact
 variant or retry limit, and a named checkpoint before additional work. “Be efficient”
-without a stopping boundary is not a budget.
+without an escalation or replanning boundary is not a budget. A budget checkpoint is
+never permission to abandon an incomplete user outcome: it triggers a new Sol decision
+about a cheaper approach, narrower method, corrected route, or genuine blocker.
+
+## Principle two: route by complexity and risk
 
 Classify the work before choosing a lane:
 
-- **Direct answer / inspection:** For explanation, audit, status, review, small
-  read-only inspection, or another request that does not require implementation, keep
-  the work in the primary Sol session. Do not preflight agents, delegate, create a
-  task, access unrelated external systems, or launch a fresh reviewer. Answer once the
-  minimum sufficient evidence is available.
-- **Direct small action:** When a tightly bounded action is cheaper for the primary
-  than the complete delegation-and-review cycle, perform it directly if current
-  permissions allow it. Keep the same verification and scope discipline.
-- **Delegated implementation:** Delegate only after the three gates show that a worker
-  is the efficient capable route.
+- **Complex or executive work:** Keep work with primary Sol / High when it requires
+  architecture, unresolved scope, high-level decisions, material ambiguity, or
+  complex reasoning that Terra should not own. Sol may answer, inspect, or implement
+  directly when its executive reasoning remains necessary throughout.
+- **Routine bounded work:** Prefer Terra / High for bounded read-only analysis,
+  research, audits, inspections, and settled implementation. Provide an exact
+  question or specification and an evidence boundary; primary Sol accepts the result.
+- **Super-simple work:** Luna / Max may handle a fully determined mechanical answer or
+  action when a complete task packet is tiny and task creation, context reconstruction,
+  monitoring, and review still cost less overall. Do not use Luna merely because the
+  task is simple when its app-task overhead would erase the saving.
 
 Repeat the three gates after the first material evidence, before any new external
 access or scope expansion, and when actual cost is materially exceeding the initial
 expectation. Ask: “Does current evidence already satisfy the request?”, “What exact
 uncertainty remains?”, and “Will the next action likely change the answer enough to
-justify its tokens and time?” Stop when the first answer is yes or the third is no.
+justify its tokens and time?” When the request is fully satisfied, stop adding work and
+deliver it. When the next action has poor value but the outcome is incomplete, replan
+the method or route and continue toward completion; do not return an avoidable partial
+result merely because an estimate was exceeded.
 
 ## Confirm the primary session
 
@@ -108,15 +120,23 @@ user to select Sol / High and stop before delegation. If the host omits either v
 continue but mark that field as `required, not exposed by host` in the initial route
 announcement and final routing report. Never claim unobserved metadata was verified.
 
-## Choose the implementation lane
+## Choose the execution route
 
-Reach this section only after the efficiency gates establish that delegated
-implementation is warranted. Sol makes the lane decision; the user does not need to
-choose Terra or Luna after activation.
+Reach this section after the efficiency gates. Sol makes the executive route decision;
+the user does not need to choose Sol, Terra, or Luna after activation.
+
+Keep work with primary Sol / High when:
+
+- the task is genuinely complex rather than routine and bounded;
+- architecture, scope, interfaces, or acceptance criteria remain materially unsettled;
+- high-stakes interpretation or executive judgment is the main work; or
+- delegating would transfer decisions the primary must own or cost more overall.
 
 Prefer native Terra / High when:
 
-- a settled specification lets Terra save total tokens relative to Sol implementing;
+- a bounded read-only question, inspection, audit, or research pass can be specified
+  precisely and answered from identified evidence;
+- a settled implementation specification lets Terra save total tokens relative to Sol;
 - the change benefits from the current task's tightly controlled specification;
 - implementation or correction should happen with low orchestration overhead;
 - shared working-tree state, rapid iteration, or context-heavy debugging matters; or
@@ -124,19 +144,20 @@ Prefer native Terra / High when:
 
 Prefer a Luna / Max Codex task when:
 
-- the work can be expressed as a complete, bounded task packet;
+- the work is super-simple, fully determined, and expressible as a tiny complete packet;
 - an isolated worktree and user-visible progress are useful;
-- the task is substantial enough to justify task-creation and monitoring overhead; or
+- task creation and monitoring overhead still leave Luna as the cheapest capable
+  route; or
 - an independent work stack can proceed safely without overlapping ownership.
 
 Choose Luna only when those benefits justify its task-creation, context-reconstruction,
 monitoring, and primary-review overhead. Otherwise prefer Terra or direct primary work.
 
-Check the selected lane's capabilities before announcing it. If the preferred lane is
-unavailable, select the other authorized lane only when it can still satisfy the work
-and all constraints. Announce the changed selection and the capability reason; never
-fall back silently. If neither lane is viable, report the exact missing capability and
-stop before implementation.
+Check the selected route's capabilities before announcing it. If a delegated lane is
+unavailable, reselect primary Sol or the other authorized lane only when it can still
+satisfy the work and all constraints. Announce the changed selection and capability
+reason; never fall back silently. A missing worker lane does not by itself justify
+leaving the user's task incomplete.
 
 For multiple independent work items, Sol may choose different lanes. Announce every
 route separately, keep ownership non-overlapping, and serialize shared-file or
@@ -150,7 +171,7 @@ concise user-visible update in this shape:
 ~~~text
 Sol Advisor: ON
 Primary: GPT-5.6 Sol / High — <observed | required, not exposed by host>
-Implementation: <none — direct primary work | GPT-5.6 Terra / High — native subagent | GPT-5.6 Luna / Max — Codex task>
+Execution: <primary GPT-5.6 Sol / High | GPT-5.6 Terra / High — native subagent | GPT-5.6 Luna / Max — Codex task>
 Why: <one sentence explaining why this is the efficient capable route>
 Review: <fresh GPT-5.6 Sol / High reviewer | primary GPT-5.6 Sol / High review>
 Budget: <minimum sufficient outcome plus token/time boundary>
@@ -158,8 +179,8 @@ Budget: <minimum sufficient outcome plus token/time boundary>
 
 Do not say implementation has started until the selected spawn or task creation is
 accepted. If routing changes later, announce the new route and reason before continuing.
-For direct answers or small direct actions, do not add a separate route-announcement
-message; the compact final direct-route line is sufficient.
+For primary Sol work, do not add a separate route-announcement message; the compact
+final primary-route line is sufficient.
 
 ## Preflight native custom agents
 
@@ -217,8 +238,10 @@ Keep these responsibilities in the primary session:
 - Judge reviewer feedback or Luna-task findings and accept the deliverable.
 
 Do not type implementation code, tests, boilerplate, or mechanical configuration in
-the primary session when a selected delegated lane can do it. Correct a native result
-with a revised Terra specification. Correct a Luna result in the same Luna task.
+the primary session when a selected delegated lane can do it. Primary Sol may implement
+directly when the work remains genuinely complex and executive reasoning cannot be
+separated safely from execution. Correct a native result with a revised Terra
+specification. Correct a Luna result in the same Luna task.
 
 ## Check implementation without duplicating it
 
@@ -232,10 +255,31 @@ When required, have the worker send a concise checkpoint after the first meaning
 unit or first verification result and before the expensive or scope-expanding action.
 The primary checks only objective, ownership, constraints, remaining token/time value,
 and whether current evidence is already sufficient; it does not reimplement or repeat
-the worker's investigation. Return `continue`, `correct`, or `stop`. A correction must
-narrow or change the specification; never repeat an unchanged prompt.
+the worker's investigation. Return `continue`, `redirect`, or `escalate`. A redirect
+must narrow or change the specification; never repeat an unchanged prompt. Escalation
+returns control to primary Sol for a fresh route decision and does not abandon the
+requested outcome.
 
-## Route native implementation through Terra / High
+## Handle interruption and changed direction
+
+The user's newest instruction always has priority over an active worker. If the user
+stops, cancels, replaces, or materially redirects the task while Terra is active,
+immediately call `interrupt_agent` for that worker before accepting more work. If Luna
+is active, use the available task interruption or pause mechanism; when none is
+available, send an explicit pause instruction and do not accept stale output.
+
+Primary Sol must then reread the newest request, decide whether it replaces or adds to
+the prior request, inspect any partial diff or state without blindly reverting it, and
+rerun the minimum-sufficient, token, and time gates. Make a fresh executive decision
+about objective, scope, route, and whether any prior work remains valid. Never resume
+the old worker automatically. Resume or correct it only after Sol confirms that its
+work still fits; otherwise issue a new specification or choose a different route.
+
+A user cancellation authorizes stopping the cancelled objective. A worker budget
+checkpoint does not: it requires replanning toward completion unless a genuine blocker
+or new user decision makes completion impossible.
+
+## Route routine native work through Terra / High
 
 Spawn exactly:
 
@@ -249,7 +293,7 @@ reasoning fields. Confirm the role, model, and effort before accepting work.
 
 - Give each worker one owned file set or bounded responsibility.
 - Put the minimum sufficient outcome, token/time boundary, checkpoint trigger, and
-  stop conditions in the implementation specification.
+  escalation/replanning conditions in the worker specification.
 - State that it must preserve concurrent edits and adapt to current state.
 - Run independent non-overlapping work concurrently only when useful.
 - Give a failed lane a corrected specification; never repeat an unchanged prompt.
@@ -281,7 +325,7 @@ concurrently; serialize shared-file and dependent stacks.
 If the Luna capability check or task creation fails, return to lane selection. Use
 Terra only when it remains capable and announce the route change before spawning it.
 
-## Verify every implementation
+## Verify every delegated result
 
 Treat worker reports as claims. Before acceptance:
 
@@ -290,11 +334,14 @@ Treat worker reports as claims. Before acceptance:
 3. Compare the evidence with the objective, interfaces, and constraints.
 4. Route corrections back to the same implementation lane and verify again.
 
-For native work, obtain a fresh Sol / High final review after primary verification.
-The reviewer must return exactly `ship`, `fix-first`, or `rethink`; any subsequent fix
-invalidates the verdict and requires a new review. For Luna work, the primary Sol task
-performs final review after monitoring, reading the handoff, inspecting the actual
-diff, and rerunning verification. Do not add a native Sol reviewer to the Luna lane.
+For native implementation, obtain a fresh Sol / High final review after primary
+verification. The reviewer must return exactly `ship`, `fix-first`, or `rethink`; any
+subsequent fix invalidates the verdict and requires a new review. For native read-only
+analysis, primary Sol inspects the evidence and accepts the answer; do not spawn a fresh
+reviewer unless high stakes or a specifically requested independent review justifies
+its cost. For Luna work, the primary Sol task performs final review after monitoring,
+reading the handoff, inspecting the actual result or diff, and rerunning verification.
+Do not add a native Sol reviewer to the Luna lane.
 
 Spawn the native reviewer exactly with no per-spawn model or effort override:
 
@@ -314,10 +361,10 @@ Apply observed native reviewer isolation:
 
 ## Report the route in the final output
 
-For direct primary work, append only this compact line:
+For primary Sol work, append only this compact line:
 
 ~~~text
-SOL ADVISOR: direct primary / no delegation — <minimum sufficient boundary and stopping reason>
+SOL ADVISOR: primary Sol / no worker — <complexity reason and minimum sufficient boundary>
 ~~~
 
 Every completed delegated task must include this routing record:

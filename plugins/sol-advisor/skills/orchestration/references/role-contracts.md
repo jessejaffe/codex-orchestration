@@ -18,14 +18,15 @@ complete steps 3-4 before accepting the result:
    `sol_advisor_sol_reviewer`.
 3. Observe the selected role, model, and effort through public spawn/details metadata
    first, using the local runtime inspector only for omitted fields. Accept only
-   Terra / High for implementation and Sol / High for review.
+   Terra / High for routine bounded work and Sol / High for implementation review.
 4. For the reviewer, capture actual sandbox policy and permission profile types.
 
 A missing, stale, unsafe, conflicting, unavailable, inconsistent, or unobservable
-role/model/effort stops the native lane. Never silently fall back. Model and effort are
+role/model/effort makes the native lane unavailable. Never silently fall back; primary
+Sol must reselect a capable route toward completion. Model and effort are
 pinned by custom-agent TOML, so omit native per-spawn overrides.
 
-## Shared implementation contract
+## Shared native worker contract
 
 Every Terra prompt must contain all five sections:
 
@@ -34,8 +35,10 @@ OBJECTIVE
 <Observable outcome and why it matters.>
 
 FILES AND OWNERSHIP
-You own only:
-- <exact file or module>
+You may inspect only:
+- <exact evidence sources, files, or modules>
+You may modify only:
+- <exact files or modules, or none for read-only work>
 
 You are not alone in the codebase. Other agents or the user may be editing concurrently.
 Preserve their edits, do not revert unrelated work, and adapt to changes already present.
@@ -48,14 +51,15 @@ CONSTRAINTS
 - <Repository conventions, safety boundaries, excluded scope, and settled decisions.>
 
 EFFICIENCY BOUNDARY
-- Minimum sufficient outcome: <smallest complete implementation and evidence>.
+- Minimum sufficient outcome: <smallest complete answer or implementation and evidence>.
 - Token budget: <why Terra is cheaper than direct Sol work and what work is excluded>.
-- Time budget: <expected bounded effort and the point at which to stop and report>.
+- Time budget: <expected bounded effort and the point at which to escalate for replanning>.
 - Checkpoint: <none for routine bounded work, or the exact first milestone to report
   before an expensive, external, risky, or scope-expanding action>.
-- Stop and return partial before broadening scope, accessing an external system not
+- Escalate to primary Sol before broadening scope, accessing an external system not
   explicitly required above, adding a dependency, modifying unowned files, repeating
-  a failed approach, or exceeding the stated budget.
+  a failed approach, or exceeding the stated budget. Do not abandon the objective or
+  return an avoidable partial result merely because a budget estimate was exceeded.
 
 VERIFICATION
 - Run: <exact command>
@@ -66,17 +70,20 @@ VERIFICATION
 RETURN
 Return exact commands and actual evidence. A completion claim without evidence is invalid.
 
-IMPLEMENTATION REPORT
-STATUS: complete | partial | blocked
+WORKER REPORT
+STATUS: complete | partial (only after user cancellation or primary-authorized scope change) | blocked
 ROUTE: GPT-5.6 Terra / High — native subagent
 OBJECTIVE: <one-line restatement>
-CHANGES: <file-by-file summary from the actual diff>
+RESULT: <answer with cited evidence, or file-by-file summary from the actual diff>
 VERIFIED: <exact commands plus concrete output evidence>
 JUDGMENT CALLS: <decisions the specification left open, or none>
 GAPS: <unfinished work, ambiguity, or none>
 ~~~
 
-The primary session must inspect the diff and rerun verification itself.
+A budget overrun alone never permits `partial` or `blocked`; escalate and await the
+primary's replanned route toward the complete objective.
+
+The primary session must inspect the evidence or diff and rerun verification itself.
 The primary must also apply the minimum-sufficient, token-budget, and time-budget
 checkpoints before delegation and at every worker checkpoint. It must not add a second
 Sol reviewer during implementation by default; use the primary adherence check from
@@ -122,12 +129,12 @@ concurrent; shared-file and dependent stacks are serial. Worktree isolation alon
 not merge safety, and “report back” means explicit primary monitoring/read, not an
 automatic callback.
 
-## Terra / High - native implementation lane
+## Terra / High - routine bounded native lane
 
-Use this lane for every delegated native implementation, from routine edits through
-complex, security-sensitive, context-heavy, and broad work. It is not the Luna
-task-lane implementation path. The primary selects it when native execution is the
-efficient capable route.
+Use this lane for routine bounded read-only analysis and settled implementation. Do
+not give Terra genuinely complex architecture, unresolved scope, or executive work;
+primary Sol retains that work. This is not the Luna task-lane path. The primary
+selects Terra when native execution is the efficient capable route.
 
 Spawn exactly:
 
@@ -144,16 +151,19 @@ Prompt:
 
 ~~~text
 ROLE
-Act as Sol Advisor's native implementation worker. Resolve the supplied specification
-within the settled architecture, preserve every stated interface and constraint, and
-surface ambiguity instead of redesigning the architecture.
+Act as Sol Advisor's native routine worker. Resolve the supplied question or
+specification within the stated evidence, ownership, and settled architecture;
+preserve every constraint and surface ambiguity instead of making executive decisions.
 
-<paste and complete the Shared implementation contract>
+<paste and complete the Shared native worker contract>
 ~~~
 
-## Fresh Sol - requested-read-only final reviewer
+## Fresh Sol - requested-read-only implementation reviewer
 
-After parent verification, spawn a new native thread exactly:
+After parent verification of native implementation, spawn a new native thread exactly.
+For routine read-only Terra analysis, primary Sol reviews the answer and evidence
+directly; add this fresh reviewer only when high stakes or an expressly requested
+independent review justifies the added cost.
 
 ~~~text
 agent_type: sol_advisor_sol_reviewer

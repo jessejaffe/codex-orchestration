@@ -8,7 +8,8 @@ authority, and final acceptor.
 ## Scope and authorization
 
 - Create a Luna task only after Sol Advisor is active for the current Codex task and
-  the primary Sol task selects Luna as the efficient capable implementation route.
+  the primary Sol task selects Luna for super-simple, fully determined work and its
+  app-task overhead still makes it the cheapest capable route.
   Activating Sol Advisor authorizes this user-visible task creation; do not request a
   separate Luna opt-in. An ordinary implementation request that does not name Sol
   Advisor is not activation.
@@ -70,6 +71,11 @@ authority, and final acceptor.
    `PR AUTHORIZED FOR <threadId>`. No child may create or push a PR before that
    authorization. Record the resulting branch, commit, and PR evidence before
    creating the next dependent task.
+11. If the user stops, replaces, or materially redirects the objective, use an
+   available task interruption or pause mechanism immediately. If none is exposed,
+   send an explicit pause with `send_message_to_thread` and do not accept stale work.
+   Primary Sol then rereads the latest request and makes a fresh executive route and
+   scope decision before any task resumes.
 
 ## Complete task packet
 
@@ -78,8 +84,8 @@ do not assume the child can inspect the parent task's conversation.
 
 ~~~text
 ROLE
-Act as the implementation worker in Sol Advisor's user-visible Luna task lane.
-Prepare the requested changes and evidence within this packet. Do not redesign the
+Act as the super-simple execution worker in Sol Advisor's user-visible Luna task lane.
+Prepare the requested answer, changes, and evidence within this packet. Do not redesign the
 architecture, broaden ownership, create a PR, or push changes without the explicit
 primary authorization stated below. You are not alone in the project; preserve edits
 you encounter and do not revert unrelated work.
@@ -88,8 +94,10 @@ OBJECTIVE
 <Observable outcome, why it matters, and the acceptance condition.>
 
 FILES AND OWNERSHIP
-You own only:
-- <Exact file or module paths.>
+You may inspect only:
+- <Exact evidence sources, files, or modules.>
+You may modify only:
+- <Exact file or module paths, or none for read-only work.>
 You do not own:
 - <Explicitly excluded paths, parent-owned files, or other stacks.>
 Preserve other edits and adapt to concurrent changes. Do not modify files outside this
@@ -105,14 +113,15 @@ CONSTRAINTS
   effort as a substitute.
 
 EFFICIENCY BOUNDARY
-- Minimum sufficient outcome: <smallest complete implementation and evidence>.
+- Minimum sufficient outcome: <smallest complete answer or implementation and evidence>.
 - Token budget: <why this separate task costs less overall or supplies necessary
   isolation/capability, plus explicitly excluded work>.
-- Time budget: <bounded expectation and the point at which to stop and report>.
+- Time budget: <bounded expectation and the point at which to escalate for replanning>.
 - Checkpoint: <none for routine bounded work, or the exact first milestone that must
   be reported before expensive, external, risky, or scope-expanding work>.
-- Stop and report before adding scope, external access, dependencies, retries, or
-  unowned-file changes outside this packet.
+- Escalate to primary Sol before adding scope, external access, dependencies, retries,
+  or unowned-file changes outside this packet. Do not abandon the objective or return
+  an avoidable partial result merely because a budget estimate was exceeded.
 
 STARTING STATE / BASE
 - Project ID: <projectId>
@@ -142,18 +151,21 @@ GIT / PR BOUNDARY
   isolated worktree makes concurrent edits merge-safe.
 
 STRUCTURED RETURN
-STATUS: complete | partial | blocked
+STATUS: complete | partial (only after user cancellation or primary-authorized scope change) | blocked
 ROUTE: GPT-5.6 Luna / Max — user-visible Codex task
 TASK ID: <threadId, hostId, and any app-provided clientThreadId history>
 OBJECTIVE: <one-line restatement>
 STARTING STATE: <project, environment, base, and observed branch/worktree>
-CHANGES: <file-by-file summary from the actual diff>
+RESULT: <answer with cited evidence, or file-by-file summary from the actual diff>
 VERIFIED: <exact commands plus concrete output evidence>
 GIT: <status, changed files, commit SHA, branch, and base>
 PR: <not authorized | authorized | URL and concrete creation evidence>
 JUDGMENT CALLS: <decisions the packet left open, or none>
 GAPS: <unfinished work, blockers, or none>
 ~~~
+
+A budget overrun alone never permits `partial` or `blocked`; escalate and await the
+primary's replanned route toward the complete objective.
 
 ## Worktree, branch, and stack rules
 
