@@ -475,7 +475,14 @@ grep -Fq 'Luna / Max (1.0–2.9)' "$skill" || fail "skill omits Luna route"
 grep -Fq '“Be efficient”' "$skill" || fail "skill permits a budget without a concrete boundary"
 grep -Fq 'Do not spawn another Sol reviewer merely to watch the implementation worker' "$skill" || fail "skill adds redundant implementation review"
 grep -Fq 'continue`, `redirect`, or `escalate' "$skill" || fail "skill omits primary replanning decisions"
-grep -Fq 'SOL ADVISOR: primary Sol / no worker' "$skill" || fail "skill omits compact primary-route reporting"
+grep -Fq 'Every activated request that asks for an answer, inspection, analysis, diagnosis' "$skill" || fail "skill does not score every deliverable"
+grep -Fq 'Read-only work is still scored' "$skill" || fail "skill permits a read-only routing bypass"
+grep -Fq 'never complete that task as primary-only' "$skill" || fail "skill permits direct primary scored work"
+for document in "$skill" "$readme" "$manifest" "$ui"; do
+  if grep -Eqi 'primary Sol / no worker|direct primary work|reselect primary Sol|For primary Sol work' "$document"; then
+    fail "direct-primary routing loophole remains in $document"
+  fi
+done
 grep -Fq 'interrupt_agent' "$skill" || fail "skill omits native-worker interruption"
 grep -Fq 'fresh executive decision' "$skill" || fail "skill omits fresh Sol decision after interruption"
 grep -Fq 'Never resume' "$skill" || fail "skill permits stale worker plans to resume automatically"
@@ -497,8 +504,10 @@ grep -Fq '8.0–10.0 a separate Sol / High implementer' "$readme" || fail "READM
 jq -r '.description + " " + .interface.shortDescription + " " + .interface.longDescription' "$manifest" | \
   grep -Fq '1.0–2.9 uses a user-visible GPT-5.6 Luna / Max task, 3.0–5.0 uses native GPT-5.6 Terra / Medium, 5.1–6.5 uses native GPT-5.6 Terra / High, 6.6–7.9 uses native GPT-5.6 Sol / Medium, and 8.0–10.0 uses a separate native GPT-5.6 Sol / High implementer' || fail "manifest omits numeric routing bands"
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'checkpoints shape scope without overriding' || fail "manifest permits budget-based abandonment"
+jq -r '.interface.longDescription' "$manifest" | grep -Fq 'mandatory for scored read-only and modifying work' || fail "manifest permits a read-only routing bypass"
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Worker interruptions force fresh primary routing' || fail "manifest omits user-interruption rerouting"
 grep -Fq '1.0–2.9 to Luna / Max, 3.0–5.0 to Terra / Medium, 5.1–6.5 to Terra / High, 6.6–7.9 to Sol / Medium, and 8.0–10.0 to a separate Sol / High implementer' "$ui" || fail "skill UI omits numeric routing bands"
+grep -Fq 'route every scored task, including read-only work' "$ui" || fail "skill UI permits a read-only routing bypass"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 
 grep -Fq '17 12 * * *' "$upstream_workflow" || fail "upstream workflow is not scheduled daily"

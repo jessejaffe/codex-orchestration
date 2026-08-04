@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this same chat contains the latest ON state marker. Ignore plugin selection, enabled state, memories, summaries, and markers from every other chat. While ON, primary Sol / High owns architecture, exact directions, verification, and acceptance. Score implementation complexity from 1 to 10 and route 1.0–2.9 to Luna / Max, 3.0–5.0 to Terra / Medium, 5.1–6.5 to Terra / High, 6.6–7.9 to Sol / Medium, and 8.0–10.0 to Sol / High. Verify, persist to completion, and reroute after user interruptions. Stay OFF when this chat has no direct activation evidence or its latest direct marker is OFF."
+description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this same chat contains the latest ON state marker. Ignore plugin selection, enabled state, memories, summaries, and markers from every other chat. While ON, primary Sol / High owns architecture, exact directions, verification, and acceptance. Score every request with a deliverable from 1 to 10 and require its implementation producer: 1.0–2.9 Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High, 6.6–7.9 Sol / Medium, and 8.0–10.0 Sol / High. Read-only work follows the same mandatory bands; never omit the mapped worker for a scored task. Verify, persist to completion, and reroute after user interruptions. Stay OFF when this chat has no direct activation evidence or its latest direct marker is OFF."
 ---
 
 # Sol Advisor Orchestration
@@ -15,7 +15,8 @@ Luna / Max for 1.0–2.9, Terra / Medium for 3.0–5.0, Terra / High for 5.1–6
 Sol / Medium for 6.6–7.9, or a separate Sol / High implementer for 8.0–10.0. After
 implementation, primary Sol verifies the result and a fresh Sol / High reviewer checks
 native work before final acceptance. Announce the route before work starts and report
-the observed route again in the final output.
+the observed route again in the final output. Every scored task must use its mapped
+producer; primary Sol is never a scored implementation lane.
 
 Read [references/role-contracts.md](references/role-contracts.md) before the first
 native delegation in a session. Read the
@@ -197,11 +198,17 @@ scope, interfaces, or acceptance remain materially unsettled, primary Sol / High
 settle them before scoring; do not inflate the implementation score with unresolved
 architect work or send an incomplete packet to a worker.
 
+Every activated request that asks for an answer, inspection, analysis, diagnosis,
+change, build, or other deliverable is a scored task. Read-only work is still scored.
+Once a score exists, run the mapped producer; never complete that task as primary-only.
+Only activation or deactivation acknowledgements and a genuinely blocking clarification
+before scoring have no worker.
+
 Check the selected route's capabilities before announcing it. If a delegated lane is
-unavailable, reselect primary Sol or the other authorized lane only when it can still
-satisfy the work and all constraints. Announce the changed selection and capability
-reason; never fall back silently. A missing worker lane does not by itself justify
-leaving the user's task incomplete.
+unavailable, reselect another authorized delegated lane only when it can still satisfy
+the work and all constraints. Announce the changed selection and capability reason;
+never fall back silently. If no delegated lane is capable, report the capability
+blocker rather than executing the scored work directly in primary Sol.
 
 For multiple independent work items, Sol may choose different lanes. Announce every
 route separately, keep ownership non-overlapping, and serialize shared-file or
@@ -226,8 +233,7 @@ Budget: <minimum sufficient outcome plus token/time boundary>
 
 Do not say implementation has started until the selected spawn or task creation is
 accepted. If routing changes later, announce the new route and reason before continuing.
-For primary Sol work, do not add a separate route-announcement message; the compact
-final primary-route line is sufficient.
+Never postpone a scored task's route announcement until the final response.
 
 ## Put the model in every visible worker label
 
@@ -451,19 +457,14 @@ review branch if useful, verify, then merge accepted work into fork `main`.
 
 ## Report the route in the final output
 
-For primary Sol work, append only this compact line:
-
-~~~text
-SOL ADVISOR: primary Sol / no worker — complexity <1.0–10.0>; <reason and minimum sufficient boundary>
-~~~
-
-Every completed delegated task must include this routing record:
+Activation/deactivation acknowledgements and blocking clarification before scoring have
+no routing record. Every completed scored task must include this routing record:
 
 ~~~text
 SOL ADVISOR ROUTING
 ACTIVATION: on for this chat
 PRIMARY: GPT-5.6 Sol / High — <observed | required, not exposed by host>
-IMPLEMENTATION: <direct primary work or every lane, model, effort, and task/agent identity used>
+IMPLEMENTATION: <every lane, model, effort, and task/agent identity used>
 LABELS: <Luna Max | Terra Medium | Terra High | Sol Medium | Sol High labels actually used>
 COMPLEXITY: <1.0–10.0 score and calibration reason for each work item>
 SELECTION REASON: <why each route was chosen>

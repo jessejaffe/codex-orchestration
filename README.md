@@ -8,8 +8,7 @@ Sol Advisor is a Codex-native architect workflow for cost-efficient software del
 Its first principle is the minimum sufficient answer or change: minimize total token
 use and elapsed time across Sol, workers, monitoring, and review without sacrificing
 correctness. The primary session stays focused on requirements, architecture, specs,
-and verification while delegating only when delegation is cheaper or supplies a
-necessary capability or isolation boundary.
+and verification while every scored request is executed by its mapped worker.
 
 ## Go deeper
 
@@ -17,7 +16,7 @@ I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=gi
 
 | Mode | Visible label | Worker | Routing | Primary ownership |
 |---|---|---|---|---|
-| Primary Sol | — | None | GPT-5.6 Sol / High in every band | Architecture, exact worker directions, verification, and acceptance |
+| Primary architect | — | Not an implementation lane | GPT-5.6 Sol / High for every routed task | Architecture, exact worker directions, verification, and acceptance |
 | Luna task | `Luna Max` | User-visible Codex task | GPT-5.6 Luna / Max for 1.0–2.9 implementation | Primary Sol / High review |
 | Native Terra / Medium | `Terra Medium` | `sol_advisor_terra_medium_implementer` | GPT-5.6 Terra / Medium for 3.0–5.0 | Fresh Sol / High review after primary verification |
 | Native Terra / High | `Terra High` | `sol_advisor_terra_implementer` | GPT-5.6 Terra / High for 5.1–6.5 | Fresh Sol / High review after primary verification |
@@ -31,6 +30,10 @@ implementation: 1.0–2.9 uses Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 T
 estimates shape scope and checkpoints; they do not override the numeric bands unless a
 lane is unavailable or incapable. Primary Sol / High verifies every result, and native
 implementation receives a fresh Sol / High final review before acceptance.
+Every request with a deliverable is scored, including read-only answers, inspections,
+analyses, and diagnoses. A score always launches the mapped producer; primary Sol never
+uses a no-worker route for scored work. Routine native read-only results return to
+primary Sol for acceptance without the extra final reviewer.
 The Luna lane remains outside native subagent V2 and does not use a Luna custom-agent TOML.
 Every delegated activity keeps its colored model icon and starts its visible label with
 the spelled-out model and effort: `Luna Max`, `Terra Medium`, `Terra High`, `Sol Medium`,
