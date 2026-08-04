@@ -146,17 +146,19 @@ accepted only when the user explicitly wants secondary chat context. Baselines,
 snapshots, and the completion ledger live under Codex state rather than the plugin
 cache, so plugin upgrades do not erase the experiment.
 
-Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
-for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as
-a fallback. Activation lasts only for the current chat, and every later request in
-that chat keeps using it automatically. Say “Turn Sol Advisor off” to return the chat
-to normal Codex behavior. Every new chat starts off, even when the plugin remains
-installed, enabled, or selected.
+Activate Sol Advisor in plain language with “Turn Orchestration on,” “Use
+Orchestration,” or “Use Orchestration for this chat.” The exact
+`$sol-advisor:orchestration` invocation remains available as a fallback. Activation
+lasts only for the current chat, and every later request in that chat keeps using it
+automatically. Say “Turn Orchestration off” to return the chat to normal Codex
+behavior. Every new chat starts off, even when the plugin remains installed, enabled,
+or selected.
 
-The visible `Sol Advisor: ON for this chat` / `Sol Advisor: OFF for this chat` response
-is the chat-local state marker. Only direct messages in the current chat count. Plugin
-state, automatic skill loading, memories, summaries, quoted text, repository content,
-and markers from other chats are ignored, so activation cannot carry into a new chat.
+The visible `Orchestration: ON for this chat` / `Orchestration: OFF for this chat`
+response is the chat-local state marker. Only direct messages in the current chat
+count. Plugin state, automatic skill loading, memories, summaries, quoted text,
+repository content, and markers from other chats are ignored, so activation cannot
+carry into a new chat.
 
 Before implementation Sol Advisor reports the executive design/review model, the actual
 preflighted implementation model, and the complexity score. At completion it repeats
@@ -209,7 +211,7 @@ Then select GPT-5.6 Sol with High reasoning for the primary session and activate
 Advisor in plain language:
 
 ~~~text
-Turn Sol Advisor on for this chat.
+Turn Orchestration on for this chat.
 ~~~
 
 You can also invoke `$sol-advisor:orchestration` directly. Once active, Sol selects

@@ -146,9 +146,9 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.6.4 ] || fail "manifest version is not the cache-compatible 0.6.4 release: $manifest_version"
+[ "$manifest_version" = 0.6.5 ] || fail "manifest version is not the cache-compatible 0.6.5 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
-jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
+jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct Orchestration: ON for this chat and Orchestration: OFF for this chat markers' || fail "manifest does not describe Orchestration task activation state"
 grep -Fq 'Scores 1.0\u20134.9 use a dedicated native GPT-5.6 Terra / High executive' "$manifest" || fail "manifest does not describe low-band Terra executive"
 grep -Fq 'Scores 5.0\u201310.0 retain primary GPT-5.6 Sol / High executive ownership' "$manifest" || fail "manifest does not describe high-band Sol executive"
 grep -Fqi 'GPT-5.6 Luna' "$manifest" || fail "manifest does not describe Luna routing"
@@ -461,8 +461,12 @@ grep -Fq '| `Terra Medium` |' "$readme" || fail "README omits Terra Medium label
 grep -Fq '| `Terra High` |' "$readme" || fail "README omits Terra High label"
 grep -Fq '| `Sol Medium` |' "$readme" || fail "README omits Sol Medium label"
 grep -Fq '| `Sol High` |' "$readme" || fail "README omits Sol High label"
-grep -Fq 'Turn Sol Advisor on' "$readme" || fail "README omits plain-language activation"
-grep -Fq 'Turn Sol Advisor off' "$readme" || fail "README omits plain-language deactivation"
+for command in 'Turn Orchestration on' 'Use Orchestration' 'Use Orchestration for this chat'; do
+  grep -Fq "$command" "$readme" || fail "README omits plain-language activation: $command"
+done
+grep -Fq 'Turn Orchestration off' "$readme" || fail "README omits plain-language deactivation"
+grep -Fq 'Orchestration: ON for this chat' "$readme" || fail "README omits ON state marker"
+grep -Fq 'Orchestration: OFF for this chat' "$readme" || fail "README omits OFF state marker"
 grep -Fq 'every later request in' "$readme" || fail "README omits persistent chat activation"
 grep -Fq 'Every new chat starts off' "$readme" || fail "README permits cross-chat activation"
 grep -Fq 'allow_implicit_invocation: true' "$ui" || fail "skill UI blocks plain-language activation"
@@ -471,10 +475,13 @@ grep -Fq 'without separate task or model authorization' "$manifest" || fail "man
 for label in 'Luna / Max' 'Terra / Medium' 'Terra / High' 'Sol / Medium' 'Sol / High'; do
   jq -r '.interface.longDescription' "$manifest" | grep -Fq "$label" || fail "manifest UI omits model route: $label"
 done
-grep -Fq 'Turn Sol Advisor on' "$ui" || fail "skill UI omits plain-language activation"
+grep -Fq 'Turn Orchestration on' "$ui" || fail "skill UI omits plain-language activation"
 grep -Fq 'Luna Max, Terra Medium, Terra High, Sol Medium, and Sol High' "$ui" || fail "skill UI omits visible model labels"
 grep -Fq 'Terra High executive ownership below 5.0' "$ui" || fail "skill UI omits low-band Terra executive"
-grep -Fq 'Turn Sol Advisor off' "$skill" || fail "skill omits the off switch"
+for command in 'Turn Orchestration on' 'Use Orchestration' 'Use Orchestration for this chat'; do
+  grep -Fq "$command" "$skill" || fail "skill omits plain-language activation: $command"
+done
+grep -Fq 'Turn Orchestration off' "$skill" || fail "skill omits the off switch"
 grep -Fq 'Every later user request' "$skill" || fail "skill omits persistent activation"
 grep -Fq 'Use only direct assistant messages in the current chat' "$skill" || fail "skill accepts non-chat state markers"
 grep -Fq 'The latest current-chat marker wins' "$skill" || fail "skill does not define chat-local ON/OFF precedence"
@@ -482,8 +489,13 @@ grep -Fq 'Every new chat starts off' "$skill" || fail "skill permits cross-chat 
 grep -Fq 'plugin remains selected or enabled' "$skill" || fail "skill treats plugin state as activation"
 grep -Fq 'memory, a summary, or any' "$skill" || fail "skill permits remembered cross-chat activation"
 grep -Fq 'stay OFF and handle the' "$skill" || fail "skill lacks inactive behavior"
-grep -Fq 'Sol Advisor: ON' "$skill" || fail "skill omits initial ON acknowledgement"
-grep -Fq 'Sol Advisor: OFF' "$skill" || fail "skill omits OFF acknowledgement"
+grep -Fq 'Orchestration: ON for this chat' "$skill" || fail "skill omits initial ON acknowledgement"
+grep -Fq 'Orchestration: OFF for this chat' "$skill" || fail "skill omits OFF acknowledgement"
+for stale_command in 'Turn Sol Advisor on' 'Turn Sol Advisor off' 'Use Sol Advisor' 'Sol Advisor: ON' 'Sol Advisor: OFF'; do
+  if rg -Fq "$stale_command" "$readme" "$skill" "$ui" "$manifest"; then
+    fail "stale Sol Advisor plain-language control remains: $stale_command"
+  fi
+done
 grep -Fq 'Executive design and review: GPT-5.6 Sol / High' "$skill" || fail "skill omits concise executive model line"
 grep -Fq 'Executive design and review: GPT-5.6 Terra / High' "$skill" || fail "skill omits low-band executive model line"
 grep -Fq 'Terra executive fallback:' "$skill" || fail "skill omits stable executive fallback syntax"
