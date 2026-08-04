@@ -78,10 +78,13 @@ Normal selection rationale, worker identity, review details, and token totals re
 internal. The complexity score is always shown to one decimal place out of 10. If
 routing falls back, the implementation line includes one short verified reason. The
 receipt measures the task's recorded model usage and compares that same token mix with
-an all-Sol route. A plugin Stop hook now enforces this footer mechanically: if a routed
-task skips the receipt lifecycle, it reconstructs the root turn and every spawned
-worker/reviewer, then keeps the task open for one corrected final response. If recovery
-is genuinely unavailable, the final response shows that reason instead of silently
+an all-Sol route. A plugin gate now persists the exact announced complexity before
+routed work can begin; that score cannot drift or disappear later, even when the actual
+implementation model changes during a verified fallback. A Stop hook enforces the
+footer mechanically: if a routed task skips the receipt lifecycle, it reconstructs the
+root turn and every spawned worker/reviewer, then keeps the task open for one corrected
+final response containing the saved score and recovered receipt. If recovery is
+genuinely unavailable, the final response shows that reason instead of silently
 omitting the receipt.
 
 Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor

@@ -1,6 +1,19 @@
 {
-  "description": "Prevent routed Sol Advisor tasks from silently omitting their final receipt.",
+  "description": "Persist exact Sol Advisor complexity before work and enforce the final receipt.",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/receipt-stop-hook.py\"",
+            "timeout": 10,
+            "statusMessage": "Saving Sol Advisor complexity"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

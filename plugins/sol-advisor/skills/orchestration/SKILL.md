@@ -28,9 +28,11 @@ includes a task. Start its measurement before route analysis, register every spa
 implementation or review thread, and append only its three-line result after the
 completed task's model lines. This lifecycle is a completion invariant: never compose
 or send the final answer without first running the receipt's `finish` command. The
-plugin Stop hook independently checks every routed turn, reconstructs root and
-delegated usage when the lifecycle was skipped, and keeps the turn open until the
-numeric complexity and receipt are visible. A measurement failure remains
+plugin's PreToolUse gate independently requires and persists the exact one-decimal
+complexity score before routed work can start. That saved turn score is immutable even
+if the implementation lane later falls back. The Stop hook reconstructs root and
+delegated usage when the receipt lifecycle was skipped, and keeps the turn open until
+the saved numeric complexity and receipt are visible. A measurement failure remains
 non-blocking, but it must be reported explicitly rather than silently dropping the
 receipt.
 
@@ -251,6 +253,11 @@ Implementation: <actual available model / effort>
 Complexity: <score>/10
 ~~~
 
+The next implementation or worker tool call persists that exact score in plugin data.
+If the complexity gate denies the call, repeat the complete three-line route with one
+decimal place and retry. Once persisted, never revise the score during the turn; a
+later availability fallback changes only the `Implementation:` line.
+
 The score-selected model is an internal candidate until its current-turn preflight
 passes. Never print that candidate as `Implementation:` and then perform its preflight.
 If the actual route is a fallback, append one short verified reason to the same line:
@@ -467,7 +474,8 @@ review branch if useful, verify, then merge accepted work into fork `main`.
 
 Activation/deactivation acknowledgements and blocking clarification before scoring have
 no model footer. End every completed scored task with the two model lines, the same
-one-decimal complexity score, and then the successful receipt output:
+one-decimal complexity score persisted before work began, and then the successful
+receipt output:
 
 ~~~text
 Executive design and review: GPT-5.6 Sol / High
@@ -483,7 +491,8 @@ efficiency notes, route evidence, reviewer verdict, task IDs, or token totals. A
 fallback line must include its compact current-turn reason. Append the receipt verbatim
 when its helper succeeds. Never draft or send the final response before calling
 `finish`; a task that merely prints model lines has not completed the Sol Advisor
-protocol. If direct measurement reports `receipt-unavailable`, allow the Stop hook to
+protocol. Never recalculate or replace the saved score at completion. If direct
+measurement reports `receipt-unavailable`, allow the Stop hook to
 recover the turn from its transcript. If both paths are unavailable, include the
 hook's explicit `Savings receipt unavailable: <reason>` line instead of silently
 omitting the receipt. Never claim an implementation model that runtime evidence did
