@@ -20,6 +20,11 @@ the observed route again in the final output.
 Read [references/role-contracts.md](references/role-contracts.md) before the first
 native delegation in a session. Read the
 [Luna task-lane contract](references/luna-task-lane.md) before creating a Luna task.
+Read [references/usage-receipt.md](references/usage-receipt.md) when an activated
+message includes a task. Start its measurement before route analysis, register every
+implementation and review thread, and append only its three-line result after the
+completed task's routing record. Receipt failure is non-blocking and produces no
+substitute estimate.
 
 ## Activate for the current chat
 

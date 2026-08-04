@@ -57,6 +57,21 @@ any pending review issue, and—when new activity exists—summarizes the diff, 
 changes as adopt unchanged, adapt, or skip, and recommends a decision. This audit does
 not delay or replace the user's requested task and never merges upstream automatically.
 
+Every completed routed task also ends with a deliberately terse weekly usage receipt:
+
+~~~text
+Actual weekly usage: 0.70%
+All-Sol equivalent: 1.00%
+Estimated routing savings: 0.30%
+~~~
+
+The receipt checks the official GPT-5.6 credit rates once per local day, measures the
+recorded usage of the primary, implementation, and review tasks, and calibrates that
+weighted usage to Codex's current weekly meter. The all-Sol line reprices the same
+observed token mix; it does not guess how many tokens a different model would have
+generated. If pricing, the meter, or a recorded task is unavailable, Sol Advisor omits
+the receipt instead of inventing a number.
+
 Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
 for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as
 a fallback. Activation lasts only for the current chat, and every later request in
@@ -84,6 +99,7 @@ Requirements common to both modes:
 
 - A current Codex CLI or ChatGPT desktop app with plugins enabled.
 - Access to GPT-5.6 Sol / High for the primary task.
+- Python 3 and `curl` for the weekly usage receipt.
 
 Additional native-mode requirements:
 
@@ -325,7 +341,9 @@ process for the child task. Sol Advisor does not globally reroute unrelated task
 
 Every completed task ends with a `SOL ADVISOR ROUTING` record containing activation,
 primary model/effort, every implementation lane used, selection reason, observed route
-evidence, review model/effort, isolation where applicable, and verdict.
+evidence, review model/effort, isolation where applicable, and verdict. Its final three
+lines are actual weekly usage, the same observed usage repriced as all Sol, and estimated
+routing savings; no receipt heading or diagnostic metadata is added.
 
 ## Local development
 

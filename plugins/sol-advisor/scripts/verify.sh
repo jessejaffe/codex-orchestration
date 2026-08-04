@@ -12,6 +12,7 @@ repo_dir=$(CDPATH= cd "$plugin_dir/../.." && pwd) || exit 1
 installer=$script_dir/install-agents.sh
 runtime_inspector=$script_dir/inspect-agent-runtime.sh
 daily_audit=$script_dir/daily-upstream-audit.sh
+usage_receipt=$script_dir/usage-receipt.py
 templates=$plugin_dir/agents
 manifest=$plugin_dir/.codex-plugin/plugin.json
 skill=$plugin_dir/skills/orchestration/SKILL.md
@@ -428,6 +429,11 @@ grep -Fq 'SOL ADVISOR ROUTING' "$skill" || fail "skill omits final route reporti
 grep -Fq 'Implementation:' "$skill" || fail "skill omits pre-execution route announcement"
 grep -Fq 'Do not ask for a second Luna opt-in' "$skill" || fail "skill requires a second Luna authorization"
 grep -Fq '../../scripts/daily-upstream-audit.sh' "$skill" || fail "skill omits daily upstream audit"
+grep -Fq 'references/usage-receipt.md' "$skill" || fail "skill omits weekly usage receipt"
+grep -Fq 'Actual weekly usage:' "$plugin_dir/skills/orchestration/references/usage-receipt.md" || fail "usage receipt omits actual weekly usage"
+grep -Fq 'All-Sol equivalent:' "$plugin_dir/skills/orchestration/references/usage-receipt.md" || fail "usage receipt omits all-Sol equivalent"
+grep -Fq 'Estimated routing savings:' "$plugin_dir/skills/orchestration/references/usage-receipt.md" || fail "usage receipt omits routing savings"
+python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$usage_receipt" || fail "usage receipt script does not compile"
 grep -Fq 'first Sol Advisor activation of each local calendar day' "$skill" || fail "skill omits once-daily activation boundary"
 grep -Fq 'adopt unchanged' "$skill" || fail "skill omits upstream adoption classification"
 grep -Fq 'adapt' "$skill" || fail "skill omits upstream adaptation classification"
