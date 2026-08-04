@@ -8,7 +8,7 @@ Sol Advisor is a Codex-native architect workflow for cost-efficient software del
 Its first principle is the minimum sufficient answer or change: minimize total token
 use and elapsed time across Sol, workers, monitoring, and review without sacrificing
 correctness. The primary session stays focused on requirements, architecture, specs,
-and verification while every scored request is executed by its mapped worker.
+and verification while every scored request starts with its mapped worker.
 
 ## Go deeper
 
@@ -16,7 +16,7 @@ I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=gi
 
 | Mode | Visible label | Worker | Routing | Primary ownership |
 |---|---|---|---|---|
-| Primary architect | — | Not an implementation lane | GPT-5.6 Sol / High for every routed task | Architecture, exact worker directions, verification, and acceptance |
+| Primary architect | `Sol High` on terminal fallback | Terminal fallback only | GPT-5.6 Sol / High for every routed task | Architecture, exact directions, verification, acceptance, and execution only after delegated tiers are unavailable |
 | Luna task | `Luna Max` | User-visible Codex task | GPT-5.6 Luna / Max for 1.0–2.9 implementation | Primary Sol / High review |
 | Native Terra / Medium | `Terra Medium` | `sol_advisor_terra_medium_implementer` | GPT-5.6 Terra / Medium for 3.0–5.0 | Fresh Sol / High review after primary verification |
 | Native Terra / High | `Terra High` | `sol_advisor_terra_implementer` | GPT-5.6 Terra / High for 5.1–6.5 | Fresh Sol / High review after primary verification |
@@ -31,9 +31,12 @@ estimates shape scope and checkpoints; they do not override the numeric bands un
 lane is unavailable or incapable. Primary Sol / High verifies every result, and native
 implementation receives a fresh Sol / High final review before acceptance.
 Every request with a deliverable is scored, including read-only answers, inspections,
-analyses, and diagnoses. A score always launches the mapped producer; primary Sol never
-uses a no-worker route for scored work. Routine native read-only results return to
-primary Sol for acceptance without the extra final reviewer.
+analyses, and diagnoses. A score first launches the mapped producer. If that tier is
+unavailable, routing moves upward one tier at a time: Luna Max → Terra Medium → Terra
+High → Sol Medium → Sol High implementer → primary Sol High. It never moves downward,
+and primary Sol completes the work itself after all applicable delegated tiers fail.
+Routine native read-only results return to primary Sol for acceptance without the extra
+final reviewer.
 The Luna lane remains outside native subagent V2 and does not use a Luna custom-agent TOML.
 Every delegated activity keeps its colored model icon and starts its visible label with
 the spelled-out model and effort: `Luna Max`, `Terra Medium`, `Terra High`, `Sol Medium`,
@@ -268,8 +271,8 @@ Only the user's decision authorizes applying an upstream change.
 
 After Sol Advisor activation, the primary selects Luna for work scored 1.0–2.9.
 Activation authorizes task creation;
-there is no second opt-in. If Luna is unavailable, Sol may select Terra when it remains
-capable and must announce the route change before implementation.
+there is no second opt-in. If Luna is unavailable, Sol tries Terra / Medium, then each
+higher tier in order, and announces the route change before implementation.
 
 The primary task then:
 
@@ -322,10 +325,10 @@ Before delegation and acceptance, the skill requires all of the following:
    and reported.
 
 A missing, stale, conflicting, unavailable, inconsistent, or unobservable native
-role/model/effort makes that lane unavailable with an actionable error. Sol may select
-Luna when it remains capable, but must announce the route change before implementation.
-There is no silent model, reasoning, or agent-type fallback, and native per-spawn calls
-do not override the role pins.
+role/model/effort makes that tier unavailable with an actionable error. Sol then tries
+the next-higher tier, never a lower one, and announces the route change before
+implementation. After the Sol / High implementer is unavailable, primary Sol / High
+executes the settled packet directly. Native per-spawn calls do not override role pins.
 
 The Sol reviewer TOML requests read-only sandboxing, but the host permission profile
 may broaden that request. If the observed sandbox policy type is read-only, review can

@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this same chat contains the latest ON state marker. Ignore plugin selection, enabled state, memories, summaries, and markers from every other chat. While ON, primary Sol / High owns architecture, exact directions, verification, and acceptance. Score every request with a deliverable from 1 to 10 and require its implementation producer: 1.0–2.9 Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High, 6.6–7.9 Sol / Medium, and 8.0–10.0 Sol / High. Read-only work follows the same mandatory bands; never omit the mapped worker for a scored task. Verify, persist to completion, and reroute after user interruptions. Stay OFF when this chat has no direct activation evidence or its latest direct marker is OFF."
+description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this chat contains the latest ON marker. Ignore plugin state and evidence outside this chat. While ON, primary Sol / High owns architecture, exact directions, verification, and acceptance. Score every request with a deliverable from 1 to 10 and start with its implementation producer: 1.0–2.9 Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High, 6.6–7.9 Sol / Medium, and 8.0–10.0 Sol / High. Read-only work follows the same bands. If a producer is unavailable, move upward one tier at a time; after unavailable Sol / High delegation, primary Sol / High executes as the terminal fallback. Verify, persist to completion, and reroute after user interruptions. Stay OFF without direct activation evidence or when this chat's latest direct marker is OFF."
 ---
 
 # Sol Advisor Orchestration
@@ -15,8 +15,8 @@ Luna / Max for 1.0–2.9, Terra / Medium for 3.0–5.0, Terra / High for 5.1–6
 Sol / Medium for 6.6–7.9, or a separate Sol / High implementer for 8.0–10.0. After
 implementation, primary Sol verifies the result and a fresh Sol / High reviewer checks
 native work before final acceptance. Announce the route before work starts and report
-the observed route again in the final output. Every scored task must use its mapped
-producer; primary Sol is never a scored implementation lane.
+the observed route again in the final output. Start every scored task with its mapped
+producer and use primary Sol implementation only as the terminal availability fallback.
 
 Read [references/role-contracts.md](references/role-contracts.md) before the first
 native delegation in a session. Read the
@@ -114,8 +114,8 @@ expansion, perform all three gates:
    selected lane is unavailable, return to route selection and announce the capable
    fallback rather than silently substituting it.
 3. **Time budget checkpoint.** Include setup, preflight, task-packet construction,
-   monitoring, retries, verification, and review. Reject a lane whose orchestration
-   overhead is likely to cost more time than the minimum sufficient direct route.
+   monitoring, retries, verification, and review. Use the estimate to set a focused
+   checkpoint; time overhead never skips the score-selected producer.
 
 Make each budget concrete. Use a user-supplied numeric limit when present. Otherwise
 state an operational cap such as one focused inspection pass, one worker, an exact
@@ -200,15 +200,20 @@ architect work or send an incomplete packet to a worker.
 
 Every activated request that asks for an answer, inspection, analysis, diagnosis,
 change, build, or other deliverable is a scored task. Read-only work is still scored.
-Once a score exists, run the mapped producer; never complete that task as primary-only.
-Only activation or deactivation acknowledgements and a genuinely blocking clarification
-before scoring have no worker.
+Once a score exists, try the mapped producer first. Use primary Sol / High for execution
+only after the selected producer and every higher delegated tier are unavailable. Only
+activation or deactivation acknowledgements and a genuinely blocking clarification
+before scoring have no implementation route.
 
 Check the selected route's capabilities before announcing it. If a delegated lane is
-unavailable, reselect another authorized delegated lane only when it can still satisfy
-the work and all constraints. Announce the changed selection and capability reason;
-never fall back silently. If no delegated lane is capable, report the capability
-blocker rather than executing the scored work directly in primary Sol.
+unavailable or incapable, move upward without skipping an available tier:
+
+`Luna Max → Terra Medium → Terra High → Sol Medium → Sol High implementer → primary Sol High`.
+
+Begin this ladder at the score-selected tier; never move downward. Announce the original
+selection, each failed capability, and the actual higher route before implementation.
+Primary Sol High is the guaranteed terminal fallback and completes the work itself.
+Availability fallback never permits a read-only, token, time, or convenience bypass.
 
 For multiple independent work items, Sol may choose different lanes. Announce every
 route separately, keep ownership non-overlapping, and serialize shared-file or
@@ -297,10 +302,10 @@ the result:
    permission profile type. Never call the review OS-enforced read-only unless the
    observed sandbox policy type is `read-only`.
 
-A missing or invalid native capability makes the native lane unavailable; return to
-lane selection and use Luna only when it can satisfy the task. Never substitute an
-unnamed native role, model, or reasoning level. Custom-agent TOML, not the spawn call,
-pins native model and effort, so omit per-spawn overrides.
+A missing or invalid native capability makes that native tier unavailable; continue
+upward through the ordered fallback ladder. Never substitute an unnamed native role,
+model, or reasoning level. Custom-agent TOML, not the spawn call, pins native model and
+effort, so omit per-spawn overrides.
 
 ## Keep architect work in the primary session
 
@@ -312,11 +317,14 @@ Keep these responsibilities in the primary session:
 - Inspect the actual diff and rerun verification.
 - Judge reviewer feedback or Luna-task findings and accept the deliverable.
 
-Do not type implementation code, tests, boilerplate, or mechanical configuration in
-the primary session. Primary Sol / High writes exact directions, delegates the
-implementation even in the 8.0–10.0 band, verifies the result, and accepts or corrects
-it. Correct a native result with a revised packet to the same implementation role.
-Correct a Luna result in the same Luna task.
+During normal routed work, do not type implementation code, tests, boilerplate, or
+mechanical configuration in the primary session. Primary Sol / High writes exact
+directions, delegates the implementation even in the 8.0–10.0 band, verifies the
+result, and accepts or corrects it. In the terminal availability fallback, primary Sol
+may execute the settled packet itself and must verify its own result. Use the fresh Sol
+High reviewer when that separate capability remains available; otherwise report
+primary-only verification. Correct a native result with a revised packet to the same
+implementation role. Correct a Luna result in the same Luna task.
 
 ## Check implementation without duplicating it
 
@@ -464,10 +472,11 @@ no routing record. Every completed scored task must include this routing record:
 SOL ADVISOR ROUTING
 ACTIVATION: on for this chat
 PRIMARY: GPT-5.6 Sol / High — <observed | required, not exposed by host>
-IMPLEMENTATION: <every lane, model, effort, and task/agent identity used>
+IMPLEMENTATION: <every delegated lane and identity used, or primary Sol / High terminal fallback>
 LABELS: <Luna Max | Terra Medium | Terra High | Sol Medium | Sol High labels actually used>
 COMPLEXITY: <1.0–10.0 score and calibration reason for each work item>
 SELECTION REASON: <why each route was chosen>
+FALLBACK: <none | original tier, unavailable higher tiers with evidence, and actual route>
 EFFICIENCY: <minimum sufficient boundary, checkpoint decisions, and avoided overhead>
 ROUTE EVIDENCE: <observed metadata or clearly labeled unavailable fields>
 REVIEW: <reviewer model/effort, isolation when native, and verdict>
