@@ -1,7 +1,8 @@
 # Sol Advisor
 
-**Turn Sol Advisor on once. Sol / High keeps complex executive work, routes routine
-bounded work to Terra / High, and may use Luna / Max for super-simple work.**
+**Primary Sol / High always architects and reviews. It scores implementation from 1 to
+10: 1.0–2.9 uses Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High,
+6.6–7.9 Sol / Medium, and 8.0–10.0 a separate Sol / High implementer.**
 
 Sol Advisor is a Codex-native architect workflow for cost-efficient software delivery.
 Its first principle is the minimum sufficient answer or change: minimize total token
@@ -16,18 +17,20 @@ I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=gi
 
 | Mode | Worker | Routing | Primary ownership |
 |---|---|---|---|
-| Primary Sol (Sol-selected) | None | GPT-5.6 Sol / High keeps genuinely complex or executive work | Architecture, unresolved scope, high-level judgment, verification, and acceptance |
-| Native Terra (Sol-selected) | `sol_advisor_terra_implementer`; fresh reviewer only for implementation | GPT-5.6 Terra / High for routine bounded analysis or settled implementation | Exact specification, evidence/diff verification, and final acceptance; fresh Sol review after implementation |
-| Luna task (Sol-selected) | User-visible Codex task created with app task tools | GPT-5.6 Luna / Max for super-simple fully determined work when app-task overhead remains cheapest | Task monitoring, actual result/diff review, corrections, PR authorization, and final acceptance |
+| Primary Sol | None | GPT-5.6 Sol / High in every band | Architecture, exact worker directions, verification, and acceptance |
+| Luna task | User-visible Codex task | GPT-5.6 Luna / Max for 1.0–2.9 implementation | Primary Sol / High review |
+| Native Terra / Medium | `sol_advisor_terra_medium_implementer` | GPT-5.6 Terra / Medium for 3.0–5.0 | Fresh Sol / High review after primary verification |
+| Native Terra / High | `sol_advisor_terra_implementer` | GPT-5.6 Terra / High for 5.1–6.5 | Fresh Sol / High review after primary verification |
+| Native Sol / Medium | `sol_advisor_sol_medium_implementer` | GPT-5.6 Sol / Medium for 6.6–7.9 | Fresh Sol / High review after primary verification |
+| Native Sol / High | `sol_advisor_sol_high_implementer` | GPT-5.6 Sol / High for 8.0–10.0 | Fresh Sol / High review after primary verification |
 
-The primary session is GPT-5.6 Sol / High in every mode. Once Sol Advisor is active,
-Sol first classifies complexity and compares total token and time overhead, then chooses
-the efficient capable route for each work item; the user does not provide a second Luna
-opt-in. Read-only work is low mutation risk and normally makes a strong Terra candidate
-when it is routine and bounded. Genuinely complex analysis or implementation stays with
-Sol. Super-simple work may use Luna only when creating and monitoring a separate app
-task still costs less overall. The native lane uses a fresh Sol reviewer after
-implementation, while primary Sol directly checks routine read-only Terra results.
+The primary session is GPT-5.6 Sol / High in every mode. It resolves requirements,
+architecture, interfaces, ownership, and acceptance before scoring only the remaining
+implementation: 1.0–2.9 uses Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High,
+6.6–7.9 Sol / Medium, and 8.0–10.0 a separate Sol / High implementer. Token and time
+estimates shape scope and checkpoints; they do not override the numeric bands unless a
+lane is unavailable or incapable. Primary Sol / High verifies every result, and native
+implementation receives a fresh Sol / High final review before acceptance.
 The Luna lane remains outside native subagent V2 and does not use a Luna custom-agent TOML.
 
 Before delegation, external access, or scope expansion, Sol records three checkpoints:
@@ -162,11 +165,11 @@ Normal installer mode replaces either that exact legacy Terra file or the exact 
 template shipped immediately before this routing update with the current Terra / High
 template. It removes the exact legacy Luna file and refuses modified, nonregular, or
 symlinked destinations without partial agent-file mutation. `--check` is
-non-mutating and fails until both current role files match exactly and Luna is absent.
+non-mutating and fails until all five current role files match exactly and Luna is absent.
 The native routing update was motivated by
 [Eric Provencher's X post](https://x.com/pvncher/status/2083300990350954981).
 
-The installer intentionally installs only the two native companion roles. The Luna
+The installer intentionally installs only the five native companion roles. The Luna
 task lane is an app-task workflow and must not add or restore a
 `sol-advisor-luna-implementer.toml` file.
 
@@ -203,10 +206,10 @@ exist, they must agree.
 
 ## How routing works
 
-The Sol orchestrator keeps architecture, decomposition, complex executive work,
-verification, and acceptance in the primary session. The native lane uses a bounded
-worker specification and routes routine analysis or settled implementation through
-Terra / High. The Luna lane uses a complete task packet with
+The Sol / High orchestrator scores only remaining implementation complexity after it
+settles architecture and scope. The implementation ladder is Luna / Max at 1.0–2.9,
+Terra / Medium at 3.0–5.0, Terra / High at 5.1–6.5, Sol / Medium at 6.6–7.9, and a
+separate Sol / High implementer at 8.0–10.0. The Luna lane uses a complete task packet with
 objective, files and ownership, interfaces, constraints, starting state/base,
 verification, git/PR boundary, and a structured return. Read the full app-task
 contract in [the Luna task-lane reference](plugins/sol-advisor/skills/orchestration/references/luna-task-lane.md).
@@ -240,9 +243,8 @@ Only the user's decision authorizes applying an upstream change.
 
 ### Luna task lane (Sol-selected)
 
-After Sol Advisor activation, the primary may select Luna when the work is super-simple
-and fully determined, a tiny complete task packet is possible, and the user-visible
-task or isolated execution still justifies its orchestration overhead. Activation authorizes task creation;
+After Sol Advisor activation, the primary selects Luna for work scored 1.0–2.9.
+Activation authorizes task creation;
 there is no second opt-in. If Luna is unavailable, Sol may select Terra when it remains
 capable and must announce the route change before implementation.
 
@@ -279,17 +281,15 @@ The complete packet, tool sequence, branch rules, and return schema are defined 
 
 ### Native subagent lane
 
-Sol selects the native lane for routine bounded read-only analysis or settled
-implementation when tight task context, shared working-tree state, rapid iteration,
-or lower orchestration overhead makes it the efficient capable route. It uses the
-installed Terra role, with primary Sol checking read-only evidence directly and a
-fresh Sol reviewer after implementation and parent verification. It does not use the
-app-task tools for execution.
+Sol selects one native implementation role for scores 3.0–10.0. The installed roles
+pin Terra / Medium, Terra / High, Sol / Medium, and Sol / High; primary Sol verifies
+the work and a fresh Sol / High reviewer checks it before acceptance. Native roles do
+not use the app-task tools for execution.
 
 Before delegation and acceptance, the skill requires all of the following:
 
 1. The installed role files pass the byte-for-byte companion check.
-2. The native spawn tool exposes both exact names in the table above.
+2. The native spawn tool exposes all five exact names in the table above.
 3. Public native spawn/details metadata identifies the selected role and, when exposed,
    its expected model and effort. If model or effort is omitted, the exact-rollout local
    inspector above must provide them instead.

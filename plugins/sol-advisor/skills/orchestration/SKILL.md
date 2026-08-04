@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this same chat contains the latest ON state marker. Ignore plugin selection, enabled state, memories, summaries, and markers from every other chat. While ON, enforce minimum-sufficient, token, and time budgets; keep complex executive work with Sol / High, route routine bounded work to Terra / High, and use Luna / Max for super-simple work when task overhead still makes it cheapest. Verify, persist to completion, and reroute after user interruptions. Stay OFF when this chat has no direct activation evidence or its latest direct marker is OFF."
+description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this same chat contains the latest ON state marker. Ignore plugin selection, enabled state, memories, summaries, and markers from every other chat. While ON, primary Sol / High owns architecture, exact directions, verification, and acceptance. Score implementation complexity from 1 to 10 and route 1.0–2.9 to Luna / Max, 3.0–5.0 to Terra / Medium, 5.1–6.5 to Terra / High, 6.6–7.9 to Sol / Medium, and 8.0–10.0 to Sol / High. Verify, persist to completion, and reroute after user interruptions. Stay OFF when this chat has no direct activation evidence or its latest direct marker is OFF."
 ---
 
 # Sol Advisor Orchestration
@@ -9,11 +9,13 @@ Act as the architect. Own the user's intent, architecture, decomposition, route
 selection, complete implementation specification, primary verification, and final
 acceptance. Principle one is efficiency: minimize total token use and elapsed time
 across the primary, workers, monitoring, and review while preserving correctness.
-Choose the lowest-total-cost capable execution route by complexity: primary Sol / High
-for complex executive work, native Terra / High for routine bounded analysis or
-implementation, or a user-visible Luna / Max Codex task for super-simple fully
-determined work when its task overhead is still justified. Announce delegated routes
-before work starts and report the observed route again in the final output.
+Primary Sol / High always resolves the task and writes exact implementation directions
+before delegation. Choose only the implementation producer from the reasoned score:
+Luna / Max for 1.0–2.9, Terra / Medium for 3.0–5.0, Terra / High for 5.1–6.5,
+Sol / Medium for 6.6–7.9, or a separate Sol / High implementer for 8.0–10.0. After
+implementation, primary Sol verifies the result and a fresh Sol / High reviewer checks
+native work before final acceptance. Announce the route before work starts and report
+the observed route again in the final output.
 
 Read [references/role-contracts.md](references/role-contracts.md) before the first
 native delegation in a session. Read the
@@ -100,11 +102,11 @@ expansion, perform all three gates:
    fully satisfy the user's exact request. Do not add downstream consequences,
    production data, database access, broad searches, robustness matrices, or adjacent
    deliverables unless they are required for that outcome or explicitly requested.
-2. **Token budget checkpoint.** Compare the expected total tokens for direct primary
-   work with every proposed delegated route. Delegate only when it is expected to save
-   total tokens, provides necessary isolation/capability, or materially reduces risk.
-   If the comparison is unclear, use the lowest-overhead capable route after weighing
-   task-creation and review cost; do not equate read-only work with direct Sol work.
+2. **Token budget checkpoint.** Estimate total tokens for the score-selected route,
+   including its task packet, context, monitoring, and review. Use the estimate to set
+   a focused scope and checkpoint, not to override the numeric lane mapping. If the
+   selected lane is unavailable, return to route selection and announce the capable
+   fallback rather than silently substituting it.
 3. **Time budget checkpoint.** Include setup, preflight, task-packet construction,
    monitoring, retries, verification, and review. Reject a lane whose orchestration
    overhead is likely to cost more time than the minimum sufficient direct route.
@@ -118,19 +120,50 @@ about a cheaper approach, narrower method, corrected route, or genuine blocker.
 
 ## Principle two: route by complexity and risk
 
-Classify the work before choosing a lane:
+Assign a **complexity score from 1.0 to 10.0** before choosing a lane. This is a
+reasoned judgment, not a deterministic formula. Score the work that remains after
+primary Sol has resolved requirements, architecture, and scope well enough to write a
+worker packet. Judge how much irreducible executive reasoning must remain inside
+execution; do not inflate the score merely because the task is long, read-only,
+context-heavy, touches several files, or requires careful verification.
 
-- **Complex or executive work:** Keep work with primary Sol / High when it requires
-  architecture, unresolved scope, high-level decisions, material ambiguity, or
-  complex reasoning that Terra should not own. Sol may answer, inspect, or implement
-  directly when its executive reasoning remains necessary throughout.
-- **Routine bounded work:** Prefer Terra / High for bounded read-only analysis,
-  research, audits, inspections, and settled implementation. Provide an exact
-  question or specification and an evidence boundary; primary Sol accepts the result.
-- **Super-simple work:** Luna / Max may handle a fully determined mechanical answer or
-  action when a complete task packet is tiny and task creation, context reconstruction,
-  monitoring, and review still cost less overall. Do not use Luna merely because the
-  task is simple when its app-task overhead would erase the saving.
+Use this implementation calibration:
+
+- **1.0–2.9 — simple:** Fully determined answers, inspections, or changes with little
+  judgment. Use Luna / Max.
+- **3.0–5.0 — routine:** Clear bounded implementation with a precise evidence and file
+  boundary. Use Terra / Medium.
+- **5.1–6.5 — involved:** Several steps or meaningful context remain inside a settled
+  specification. Use Terra / High.
+- **6.6–7.9 — difficult:** Substantial implementation reasoning remains, while primary
+  Sol has still settled architecture and scope. Use Sol / Medium.
+- **8.0–10.0 — hardest implementation:** Deep implementation reasoning, difficult
+  tradeoffs, or high consequence remain inside the settled packet. Use a separate
+  Sol / High implementer.
+
+Use these exact implementation bands: **1.0–2.9 Luna / Max; 3.0–5.0 Terra / Medium;
+5.1–6.5 Terra / High; 6.6–7.9 Sol / Medium; 8.0–10.0 Sol / High.** Token/time gates
+shape scope and checkpoints but do not override the score-selected implementation
+lane; only an unavailable or incapable lane triggers a clearly announced fallback.
+
+Anchor an ordinary bounded task with settled requirements at **5.0**, not near the top
+of the scale. A typical bounded bug investigation or settled multi-file change belongs
+in Terra / Medium or Terra / High unless substantial implementation judgment remains.
+Reserve the Sol implementation bands for genuinely difficult residual reasoning after
+the primary has already removed architectural uncertainty.
+
+Score only the implementation after primary Sol / High settles requirements,
+architecture, interfaces, ownership, and acceptance. Do not add complexity points for
+the architect or final-review work that Sol / High owns in every band.
+
+Map the score to the qualitative classes:
+
+- **Luna / Max (1.0–2.9):** Fully determined implementation with little judgment.
+- **Terra / Medium (3.0–5.0):** Routine bounded implementation.
+- **Terra / High (5.1–6.5):** Involved implementation within a settled design.
+- **Sol / Medium (6.6–7.9):** Difficult implementation with architecture already fixed.
+- **Sol / High (8.0–10.0):** The hardest implementation packet, separate from the
+  primary Sol / High architect and the fresh Sol / High reviewer.
 
 Repeat the three gates after the first material evidence, before any new external
 access or scope expansion, and when actual cost is materially exceeding the initial
@@ -154,33 +187,10 @@ announcement and final routing report. Never claim unobserved metadata was verif
 Reach this section after the efficiency gates. Sol makes the executive route decision;
 the user does not need to choose Sol, Terra, or Luna after activation.
 
-Keep work with primary Sol / High when:
-
-- the task is genuinely complex rather than routine and bounded;
-- architecture, scope, interfaces, or acceptance criteria remain materially unsettled;
-- high-stakes interpretation or executive judgment is the main work; or
-- delegating would transfer decisions the primary must own or cost more overall.
-
-Prefer native Terra / High when:
-
-- a bounded read-only question, inspection, audit, or research pass can be specified
-  precisely and answered from identified evidence;
-- a settled implementation specification lets Terra save total tokens relative to Sol;
-- the change benefits from the current task's tightly controlled specification;
-- implementation or correction should happen with low orchestration overhead;
-- shared working-tree state, rapid iteration, or context-heavy debugging matters; or
-- a user-visible child task and isolated worktree would add more cost than value.
-
-Prefer a Luna / Max Codex task when:
-
-- the work is super-simple, fully determined, and expressible as a tiny complete packet;
-- an isolated worktree and user-visible progress are useful;
-- task creation and monitoring overhead still leave Luna as the cheapest capable
-  route; or
-- an independent work stack can proceed safely without overlapping ownership.
-
-Choose Luna only when those benefits justify its task-creation, context-reconstruction,
-monitoring, and primary-review overhead. Otherwise prefer Terra or direct primary work.
+Select the implementation lane strictly from the five score bands. If architecture,
+scope, interfaces, or acceptance remain materially unsettled, primary Sol / High must
+settle them before scoring; do not inflate the implementation score with unresolved
+architect work or send an incomplete packet to a worker.
 
 Check the selected route's capabilities before announcing it. If a delegated lane is
 unavailable, reselect primary Sol or the other authorized lane only when it can still
@@ -200,9 +210,11 @@ concise user-visible update in this shape:
 ~~~text
 Sol Advisor: ON
 Primary: GPT-5.6 Sol / High — <observed | required, not exposed by host>
-Execution: <primary GPT-5.6 Sol / High | GPT-5.6 Terra / High — native subagent | GPT-5.6 Luna / Max — Codex task>
-Why: <one sentence explaining why this is the efficient capable route>
-Review: <fresh GPT-5.6 Sol / High reviewer | primary GPT-5.6 Sol / High review>
+Implementation: <GPT-5.6 Luna / Max — Codex task | GPT-5.6 Terra / Medium — native subagent | GPT-5.6 Terra / High — native subagent | GPT-5.6 Sol / Medium — native subagent | GPT-5.6 Sol / High — native subagent>
+Complexity: <1.0–10.0 score plus one-sentence calibration reason>
+Why: <one sentence explaining why this is the efficient capable route after the token/time gates>
+Architect: primary GPT-5.6 Sol / High — exact implementation packet
+Review: primary verification plus <fresh GPT-5.6 Sol / High reviewer | primary GPT-5.6 Sol / High review for Luna>
 Budget: <minimum sufficient outcome plus token/time boundary>
 ~~~
 
@@ -213,7 +225,7 @@ final primary-route line is sufficient.
 
 ## Preflight native custom agents
 
-The native lane uses two user-owned custom-agent TOML files. Before every native
+The native lane uses five user-owned custom-agent TOML files. Before every native
 delegation, complete steps 1-2. After spawning, complete steps 3-4 before accepting
 the result:
 
@@ -226,12 +238,15 @@ the result:
    sh "$installer" --check
    ~~~
 
-   It must prove the Terra and Sol files exactly match the shipped templates and the
+   It must prove all five role files exactly match the shipped templates and the
    retired Luna companion file is absent.
 
-2. Require the native spawn tool to expose both exact types:
+2. Require the native spawn tool to expose all five exact types:
 
+   - `sol_advisor_terra_medium_implementer`
    - `sol_advisor_terra_implementer`
+   - `sol_advisor_sol_medium_implementer`
+   - `sol_advisor_sol_high_implementer`
    - `sol_advisor_sol_reviewer`
 
 3. Inspect public native spawn/details metadata first. It must identify the selected
@@ -245,7 +260,8 @@ the result:
    sh "$runtime_inspector" <native-subagent-thread-id>
    ~~~
 
-   Accept only Terra / High for implementation and Sol / High for native review.
+   Accept only the model/effort pin selected by the score band for implementation and
+   Sol / High for native review.
 
 4. For every native Sol review, capture the observed sandbox policy type and
    permission profile type. Never call the review OS-enforced read-only unless the
@@ -267,14 +283,14 @@ Keep these responsibilities in the primary session:
 - Judge reviewer feedback or Luna-task findings and accept the deliverable.
 
 Do not type implementation code, tests, boilerplate, or mechanical configuration in
-the primary session when a selected delegated lane can do it. Primary Sol may implement
-directly when the work remains genuinely complex and executive reasoning cannot be
-separated safely from execution. Correct a native result with a revised Terra
-specification. Correct a Luna result in the same Luna task.
+the primary session. Primary Sol / High writes exact directions, delegates the
+implementation even in the 8.0–10.0 band, verifies the result, and accepts or corrects
+it. Correct a native result with a revised packet to the same implementation role.
+Correct a Luna result in the same Luna task.
 
 ## Check implementation without duplicating it
 
-Do not spawn another Sol reviewer merely to watch Terra. The primary Sol session owns
+Do not spawn another Sol reviewer merely to watch the implementation worker. The primary Sol session owns
 one lightweight adherence checkpoint when it is justified. Require that checkpoint
 only when the work is long-running or high-risk, or when the worker reports ambiguity,
 scope growth, an ownership conflict, failed verification, a new dependency, external
@@ -292,7 +308,7 @@ requested outcome.
 ## Handle interruption and changed direction
 
 The user's newest instruction always has priority over an active worker. If the user
-stops, cancels, replaces, or materially redirects the task while Terra is active,
+stops, cancels, replaces, or materially redirects the task while a native worker is active,
 immediately call `interrupt_agent` for that worker before accepting more work. If Luna
 is active, use the available task interruption or pause mechanism; when none is
 available, send an explicit pause instruction and do not accept stale output.
@@ -308,17 +324,21 @@ A user cancellation authorizes stopping the cancelled objective. A worker budget
 checkpoint does not: it requires replanning toward completion unless a genuine blocker
 or new user decision makes completion impossible.
 
-## Route routine native work through Terra / High
+## Route native implementation by score
 
-Spawn exactly:
+Spawn exactly one implementation role for the scored band:
 
 ~~~text
-agent_type: sol_advisor_terra_implementer
+3.0–5.0: agent_type: sol_advisor_terra_medium_implementer
+5.1–6.5: agent_type: sol_advisor_terra_implementer
+6.6–7.9: agent_type: sol_advisor_sol_medium_implementer
+8.0–10.0: agent_type: sol_advisor_sol_high_implementer
 fork_turns: none
 ~~~
 
-The installed role pins GPT-5.6 Terra at High reasoning. Omit per-spawn model and
-reasoning fields. Confirm the role, model, and effort before accepting work.
+The installed roles pin GPT-5.6 Terra / Medium, Terra / High, Sol / Medium, and
+Sol / High respectively. Omit per-spawn model and reasoning fields. Confirm the exact
+role, model, and effort before accepting work.
 
 - Give each worker one owned file set or bounded responsibility.
 - Put the minimum sufficient outcome, token/time boundary, checkpoint trigger, and
@@ -408,7 +428,7 @@ review branch if useful, verify, then merge accepted work into fork `main`.
 For primary Sol work, append only this compact line:
 
 ~~~text
-SOL ADVISOR: primary Sol / no worker — <complexity reason and minimum sufficient boundary>
+SOL ADVISOR: primary Sol / no worker — complexity <1.0–10.0>; <reason and minimum sufficient boundary>
 ~~~
 
 Every completed delegated task must include this routing record:
@@ -418,6 +438,7 @@ SOL ADVISOR ROUTING
 ACTIVATION: on for this chat
 PRIMARY: GPT-5.6 Sol / High — <observed | required, not exposed by host>
 IMPLEMENTATION: <direct primary work or every lane, model, effort, and task/agent identity used>
+COMPLEXITY: <1.0–10.0 score and calibration reason for each work item>
 SELECTION REASON: <why each route was chosen>
 EFFICIENCY: <minimum sufficient boundary, checkpoint decisions, and avoided overhead>
 ROUTE EVIDENCE: <observed metadata or clearly labeled unavailable fields>

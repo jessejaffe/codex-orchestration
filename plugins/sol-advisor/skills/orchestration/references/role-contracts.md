@@ -12,13 +12,14 @@ field.
 Before every native spawn, complete steps 1-2 of SKILL.md's preflight. After spawning,
 complete steps 3-4 before accepting the result:
 
-1. Require the non-mutating companion check to prove both installed files exactly
+1. Require the non-mutating companion check to prove all five installed files exactly
    match current templates and the retired companion file is absent.
-2. Require native exposure of exactly `sol_advisor_terra_implementer` and
-   `sol_advisor_sol_reviewer`.
+2. Require native exposure of exactly `sol_advisor_terra_medium_implementer`,
+   `sol_advisor_terra_implementer`, `sol_advisor_sol_medium_implementer`,
+   `sol_advisor_sol_high_implementer`, and `sol_advisor_sol_reviewer`.
 3. Observe the selected role, model, and effort through public spawn/details metadata
    first, using the local runtime inspector only for omitted fields. Accept only
-   Terra / High for routine bounded work and Sol / High for implementation review.
+   the score-selected implementation pin and Sol / High for implementation review.
 4. For the reviewer, capture actual sandbox policy and permission profile types.
 
 A missing, stale, unsafe, conflicting, unavailable, inconsistent, or unobservable
@@ -28,7 +29,7 @@ pinned by custom-agent TOML, so omit native per-spawn overrides.
 
 ## Shared native worker contract
 
-Every Terra prompt must contain all five sections:
+Every native implementation prompt must contain all five sections:
 
 ~~~text
 OBJECTIVE
@@ -52,7 +53,8 @@ CONSTRAINTS
 
 EFFICIENCY BOUNDARY
 - Minimum sufficient outcome: <smallest complete answer or implementation and evidence>.
-- Token budget: <why Terra is cheaper than direct Sol work and what work is excluded>.
+- Complexity: <primary Sol's 1.0–10.0 implementation score and selected band>.
+- Token budget: <focused implementation boundary and explicitly excluded work>.
 - Time budget: <expected bounded effort and the point at which to escalate for replanning>.
 - Checkpoint: <none for routine bounded work, or the exact first milestone to report
   before an expensive, external, risky, or scope-expanding action>.
@@ -72,7 +74,7 @@ Return exact commands and actual evidence. A completion claim without evidence i
 
 WORKER REPORT
 STATUS: complete | partial (only after user cancellation or primary-authorized scope change) | blocked
-ROUTE: GPT-5.6 Terra / High — native subagent
+ROUTE: <GPT-5.6 Terra / Medium | Terra / High | Sol / Medium | Sol / High> — native subagent
 OBJECTIVE: <one-line restatement>
 RESULT: <answer with cited evidence, or file-by-file summary from the actual diff>
 VERIFIED: <exact commands plus concrete output evidence>
@@ -129,29 +131,28 @@ concurrent; shared-file and dependent stacks are serial. Worktree isolation alon
 not merge safety, and “report back” means explicit primary monitoring/read, not an
 automatic callback.
 
-## Terra / High - routine bounded native lane
+## Native implementation lanes
 
-Use this lane for routine bounded read-only analysis and settled implementation. Do
-not give Terra genuinely complex architecture, unresolved scope, or executive work;
-primary Sol retains that work. This is not the Luna task-lane path. The primary
-selects Terra when native execution is the efficient capable route.
-
-Spawn exactly:
+Primary Sol / High must settle architecture and give every lane a complete packet.
+Select exactly one role from the implementation score:
 
 ~~~text
-agent_type: sol_advisor_terra_implementer
+3.0–5.0: agent_type: sol_advisor_terra_medium_implementer
+5.1–6.5: agent_type: sol_advisor_terra_implementer
+6.6–7.9: agent_type: sol_advisor_sol_medium_implementer
+8.0–10.0: agent_type: sol_advisor_sol_high_implementer
 fork_turns: none
 ~~~
 
-The installed role pins GPT-5.6 Terra at high reasoning. Do not attach per-spawn model
-or reasoning fields. Require public-details-first runtime observation of the exact
-role and pin before accepting its report.
+The installed roles pin Terra / Medium, Terra / High, Sol / Medium, and Sol / High.
+Do not attach per-spawn model or reasoning fields. Require public-details-first runtime
+observation of the exact score-selected role and pin before accepting its report.
 
 Prompt:
 
 ~~~text
 ROLE
-Act as Sol Advisor's native routine worker. Resolve the supplied question or
+Act as Sol Advisor's score-selected implementation worker. Execute the supplied
 specification within the stated evidence, ownership, and settled architecture;
 preserve every constraint and surface ambiguity instead of making executive decisions.
 

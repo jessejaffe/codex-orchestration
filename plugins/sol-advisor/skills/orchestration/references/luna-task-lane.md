@@ -8,8 +8,7 @@ authority, and final acceptor.
 ## Scope and authorization
 
 - Create a Luna task only after Sol Advisor is active for the current Codex task and
-  the primary Sol task selects Luna for super-simple, fully determined work and its
-  app-task overhead still makes it the cheapest capable route.
+  the primary Sol task scores the work from 1.0 through 2.9.
   Activating Sol Advisor authorizes this user-visible task creation; do not request a
   separate Luna opt-in. An ordinary implementation request that does not name Sol
   Advisor is not activation.
@@ -84,7 +83,7 @@ do not assume the child can inspect the parent task's conversation.
 
 ~~~text
 ROLE
-Act as the super-simple execution worker in Sol Advisor's user-visible Luna task lane.
+Act as the simple 1.0–2.9 execution worker in Sol Advisor's user-visible Luna task lane.
 Prepare the requested answer, changes, and evidence within this packet. Do not redesign the
 architecture, broaden ownership, create a PR, or push changes without the explicit
 primary authorization stated below. You are not alone in the project; preserve edits
@@ -114,6 +113,7 @@ CONSTRAINTS
 
 EFFICIENCY BOUNDARY
 - Minimum sufficient outcome: <smallest complete answer or implementation and evidence>.
+- Complexity: <primary Sol's 1.0–2.9 score in Luna's band>.
 - Token budget: <why this separate task costs less overall or supplies necessary
   isolation/capability, plus explicitly excluded work>.
 - Time budget: <bounded expectation and the point at which to escalate for replanning>.
