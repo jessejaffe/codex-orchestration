@@ -19,7 +19,12 @@ the observed route again in the final output. Start every scored task with its m
 producer and use primary Sol implementation only as the terminal availability fallback.
 
 Read [references/role-contracts.md](references/role-contracts.md) before the first
-native delegation in a session.
+native delegation in a session. Read
+[references/usage-receipt.md](references/usage-receipt.md) when an activated message
+includes a task. Start its measurement before route analysis, register every spawned
+implementation or review thread, and append only its three-line result after the
+completed task's model lines. Receipt failure is non-blocking and produces no
+substitute estimate.
 
 ## Activate for the current chat
 
@@ -209,24 +214,41 @@ selection, each failed capability, and the actual higher route before implementa
 Primary Sol High is the guaranteed terminal fallback and completes the work itself.
 Availability fallback never permits a read-only, token, time, or convenience bypass.
 
+Availability is a **per-tier, current-turn decision**. Before declaring the selected
+or a fallback tier unavailable, check that exact role now and retain the concrete
+failure from this turn. Never reuse a prior turn's failure, a “known preflight issue,”
+or an earlier installation state as current evidence. A passing current check
+invalidates every older failure of the same check. Missing or stale unrelated roles do
+not block a healthy selected role; check the reviewer separately only when review is
+required.
+
 For multiple independent work items, Sol may choose different lanes. Announce every
 route separately, keep ownership non-overlapping, and serialize shared-file or
 dependent work.
 
 ## Announce the route before implementation
 
-After capability checks and before spawning implementation work, send exactly these
-two user-visible lines:
+After current-turn capability checks identify the actual available route and before
+spawning implementation work, send exactly these two user-visible lines:
 
 ~~~text
 Executive design and review: GPT-5.6 Sol / High
-Implementation: <GPT-5.6 Luna / Max | GPT-5.6 Terra / Medium | GPT-5.6 Terra / High | GPT-5.6 Sol / Medium | GPT-5.6 Sol / High>
+Implementation: <actual available model / effort>
 ~~~
 
-Do not say implementation has started until the selected spawn is accepted. If routing
-changes later, repeat only the `Implementation:` line with the actual model. Keep the
-score, selection reason, fallback evidence, budgets, worker identity, and review details
-internal. Never postpone a scored task's route announcement until the final response.
+The score-selected model is an internal candidate until its current-turn preflight
+passes. Never print that candidate as `Implementation:` and then perform its preflight.
+If the actual route is a fallback, append one short verified reason to the same line:
+
+~~~text
+Implementation: GPT-5.6 Sol / High — fallback from GPT-5.6 Terra / High: <current-turn failure>
+~~~
+
+Do not say implementation has started until the selected spawn is accepted. If a spawn
+or its runtime validation fails after the initial announcement, repeat only the
+`Implementation:` line with the new actual model and the verified failure. Keep the
+score, budgets, worker identity, and normal selection rationale internal. Never
+postpone a scored task's route announcement until the final response.
 
 ## Put the model in every visible worker label
 
@@ -262,14 +284,10 @@ the result:
 
    It must prove all six role files exactly match the shipped templates.
 
-2. Require the native spawn tool to expose all six exact types:
-
-   - `sol_advisor_luna_implementer`
-   - `sol_advisor_terra_medium_implementer`
-   - `sol_advisor_terra_implementer`
-   - `sol_advisor_sol_medium_implementer`
-   - `sol_advisor_sol_high_implementer`
-   - `sol_advisor_sol_reviewer`
+2. Require the native spawn tool to expose the exact type for the tier being attempted.
+   Do not require unrelated implementation types or the reviewer merely to start the
+   selected worker. When moving upward, check the next tier's exact type at that time.
+   Check `sol_advisor_sol_reviewer` separately only before a review that requires it.
 
 3. Inspect public native spawn/details metadata first. It must identify the selected
    custom role. Compare any exposed model and effort with the role pin. If either is
@@ -289,10 +307,13 @@ the result:
    permission profile type. Never call the review OS-enforced read-only unless the
    observed sandbox policy type is `read-only`.
 
-A missing or invalid native capability makes that native tier unavailable; continue
-upward through the ordered fallback ladder. Never substitute an unnamed native role,
-model, or reasoning level. Custom-agent TOML, not the spawn call, pins native model and
-effort, so omit per-spawn overrides.
+A missing or invalid selected native capability makes only that tier unavailable;
+continue upward through the ordered fallback ladder. An unrelated role failure cannot
+invalidate a healthy selected tier. Every failure must come from this turn's actual
+file, tool-exposure, spawn, or runtime evidence; never carry a failure forward from a
+prior turn. Never substitute an unnamed native role, model, or reasoning level.
+Custom-agent TOML, not the spawn call, pins native model and effort, so omit per-spawn
+overrides.
 
 ## Keep architect work in the primary session
 
@@ -423,17 +444,23 @@ verifying conflicts. Do not overwrite or force-push fork `main`. Upstream review
 decisions follow the same rule after the user approves them: adopt, adapt, or skip on a
 review branch if useful, verify, then merge accepted work into fork `main`.
 
-## Report the route in the final output
+## Report the route and receipt in the final output
 
 Activation/deactivation acknowledgements and blocking clarification before scoring have
-no model footer. End every completed scored task with exactly these two lines:
+no model footer. End every completed scored task with the two model lines followed by
+the successful receipt output:
 
 ~~~text
 Executive design and review: GPT-5.6 Sol / High
-Implementation: <actual GPT-5.6 model / effort used, comma-separated when more than one>
+Implementation: <actual GPT-5.6 model / effort used, with verified fallback reason when applicable>
+Actual weekly usage: <percentage>
+All-Sol equivalent: <percentage>
+Estimated routing savings: <percentage>
 ~~~
 
-Do not append a heading, activation state, labels, complexity, selection reason,
-fallback, efficiency notes, route evidence, reviewer verdict, task IDs, token totals,
-or savings receipt. Never claim an implementation model that runtime evidence did not
+Do not append a heading, activation state, labels, complexity, normal selection reason,
+efficiency notes, route evidence, reviewer verdict, task IDs, or token totals. A
+fallback line must include its compact current-turn reason. Append the receipt verbatim
+when its helper succeeds; if it reports `receipt-unavailable`, omit only those three
+receipt lines. Never claim an implementation model that runtime evidence did not
 confirm.

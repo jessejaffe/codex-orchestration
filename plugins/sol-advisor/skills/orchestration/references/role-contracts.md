@@ -10,20 +10,22 @@ Before every native spawn, complete steps 1-2 of SKILL.md's preflight. After spa
 complete steps 3-4 before accepting the result:
 
 1. Require the non-mutating companion check to prove all six installed files exactly
-   match current templates.
-2. Require native exposure of exactly `sol_advisor_luna_implementer`,
-   `sol_advisor_terra_medium_implementer`,
-   `sol_advisor_terra_implementer`, `sol_advisor_sol_medium_implementer`,
-   `sol_advisor_sol_high_implementer`, and `sol_advisor_sol_reviewer`.
+   match current templates. Use only a check performed in the current turn.
+2. Require native exposure of the exact selected implementation type. Do not require
+   unrelated implementation roles or the reviewer to start that worker. Check each
+   fallback tier only when it is attempted, and check `sol_advisor_sol_reviewer`
+   separately only when that review is required.
 3. Observe the selected role, model, and effort through public spawn/details metadata
    first, using the local runtime inspector only for omitted fields. Accept only
    the score-selected implementation pin and Sol / High for implementation review.
 4. For the reviewer, capture actual sandbox policy and permission profile types.
 
 A missing, stale, unsafe, conflicting, unavailable, inconsistent, or unobservable
-role/model/effort makes the native lane unavailable. Never silently fall back; primary
-Sol must reselect a capable route toward completion. Model and effort are
-pinned by custom-agent TOML, so omit native per-spawn overrides.
+selected role/model/effort makes only that tier unavailable. An unrelated role cannot
+block a healthy selected tier. Never reuse a prior-turn failure or a “known issue” as
+current evidence. Never silently fall back; primary Sol must report the exact
+current-turn failure and reselect a capable route toward completion. Model and effort
+are pinned by custom-agent TOML, so omit native per-spawn overrides.
 
 ## Shared native worker contract
 

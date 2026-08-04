@@ -62,15 +62,22 @@ any pending review issue, and—when new activity exists—summarizes the diff, 
 changes as adopt unchanged, adapt, or skip, and recommends a decision. This audit does
 not delay or replace the user's requested task and never merges upstream automatically.
 
-Every completed routed task ends with only the two models people need to know:
+Every completed routed task ends with the two models people need to know and the
+compact weekly savings receipt:
 
 ~~~text
 Executive design and review: GPT-5.6 Sol / High
 Implementation: GPT-5.6 Terra / Medium
+Actual weekly usage: 0.70%
+All-Sol equivalent: 1.00%
+Estimated routing savings: 0.30%
 ~~~
 
-Complexity, selection rationale, fallback evidence, worker identity, review details,
-token totals, and savings calculations remain internal instead of consuming output.
+Complexity, normal selection rationale, worker identity, review details, and token
+totals remain internal. If routing falls back, the implementation line includes one
+short verified reason. The receipt measures the task's recorded model usage and
+compares that same token mix with an all-Sol route; it is omitted when measurement is
+unavailable rather than estimated without evidence.
 
 Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
 for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as
@@ -84,8 +91,9 @@ is the chat-local state marker. Only direct messages in the current chat count. 
 state, automatic skill loading, memories, summaries, quoted text, repository content,
 and markers from other chats are ignored, so activation cannot carry into a new chat.
 
-Before implementation and at completion, Sol Advisor reports only the executive
-design/review model and the implementation model.
+Before implementation Sol Advisor reports the executive design/review model and the
+actual preflighted implementation model. At completion it repeats those models and the
+three-line weekly usage receipt.
 
 The final review is context-independent, not model-family-independent: Sol reviews
 Sol's orchestration with a fresh context.
@@ -255,18 +263,21 @@ begins with `sol_high_review_`.
 Before delegation and acceptance, the skill requires all of the following:
 
 1. The installed role files pass the byte-for-byte companion check.
-2. The native spawn tool exposes all six exact names in the table above.
+2. The native spawn tool exposes the exact selected role. Unrelated roles are not
+   required; fallback tiers and the reviewer are checked only when attempted.
 3. Public native spawn/details metadata identifies the selected role and, when exposed,
    its expected model and effort. If model or effort is omitted, the exact-rollout local
    inspector above must provide them instead.
 4. The reviewer’s observed sandbox policy type and permission profile type are captured
    and reported.
 
-A missing, stale, conflicting, unavailable, inconsistent, or unobservable native
-role/model/effort makes that tier unavailable with an actionable error. Sol then tries
-the next-higher tier, never a lower one, and announces the route change before
-implementation. After the Sol / High implementer is unavailable, primary Sol / High
-executes the settled packet directly. Native per-spawn calls do not override role pins.
+A missing, stale, conflicting, unavailable, inconsistent, or unobservable selected
+role/model/effort makes only that tier unavailable with current-turn evidence. A prior
+turn's failure and an unrelated role cannot block a healthy selected worker. Sol then
+tries the next-higher tier, never a lower one, and announces the actual route plus the
+verified fallback reason before implementation. After the Sol / High implementer is
+unavailable, primary Sol / High executes the settled packet directly. Native per-spawn
+calls do not override role pins.
 
 The Sol reviewer TOML requests read-only sandboxing, but the host permission profile
 may broaden that request. If the observed sandbox policy type is read-only, review can

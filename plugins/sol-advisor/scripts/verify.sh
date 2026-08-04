@@ -13,10 +13,12 @@ installer=$script_dir/install-agents.sh
 reinstaller=$script_dir/reinstall-plugin.sh
 runtime_inspector=$script_dir/inspect-agent-runtime.sh
 daily_audit=$script_dir/daily-upstream-audit.sh
+usage_receipt=$script_dir/usage-receipt.py
 templates=$plugin_dir/agents
 manifest=$plugin_dir/.codex-plugin/plugin.json
 skill=$plugin_dir/skills/orchestration/SKILL.md
 contracts=$plugin_dir/skills/orchestration/references/role-contracts.md
+receipt_contract=$plugin_dir/skills/orchestration/references/usage-receipt.md
 readme=$repo_dir/README.md
 ui=$plugin_dir/skills/orchestration/agents/openai.yaml
 upstream_workflow=$repo_dir/.github/workflows/upstream-review.yml
@@ -132,19 +134,20 @@ PREVIOUS_TERRA
   [ "$(shasum -a 256 "$target/$terra_file" | awk '{print $1}')" = "$previous_terra_sha256" ] || fail "previous Terra fixture digest drifted"
 }
 
-for required in "$installer" "$reinstaller" "$runtime_inspector" "$daily_audit" "$manifest" "$skill" "$contracts" "$readme" "$ui" "$upstream_workflow"; do
+for required in "$installer" "$reinstaller" "$runtime_inspector" "$daily_audit" "$usage_receipt" "$manifest" "$skill" "$contracts" "$receipt_contract" "$readme" "$ui" "$upstream_workflow"; do
   test -f "$required" || fail "required file missing: $required"
 done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.5.4 ] || fail "manifest version is not the cache-compatible 0.5.4 release: $manifest_version"
+[ "$manifest_version" = 0.5.5 ] || fail "manifest version is not the cache-compatible 0.5.5 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
 grep -Fqi 'GPT-5.6 Luna' "$manifest" || fail "manifest does not describe Luna routing"
 grep -Fq 'native GPT-5.6 Luna / Max' "$manifest" || fail "manifest does not describe native Luna routing"
-grep -Fq 'only two model lines' "$manifest" || fail "manifest does not describe the concise model summary"
+grep -Fq 'three-line weekly usage and routing-savings receipt' "$manifest" || fail "manifest does not describe the savings receipt"
+grep -Fq 'unrelated missing roles never block' "$manifest" || fail "manifest does not describe tier-specific preflight"
 grep -Fq 'fresh Sol' "$manifest" || fail "manifest does not preserve native fresh Sol review"
 pass "manifest JSON, version, and five-band UI language"
 
@@ -401,6 +404,11 @@ grep -Fq '../../scripts/reinstall-plugin.sh' "$skill" || fail "skill does not re
 grep -Fq '../../scripts/inspect-agent-runtime.sh' "$skill" || fail "skill does not resolve inspector relatively"
 grep -Fqi 'public native spawn/details metadata first' "$skill" || fail "skill lacks public-details-first evidence rule"
 grep -Fqi 'parent captures and verifies exact before-and-after' "$contracts" || fail "contracts lack behavioral read-only state check"
+grep -Fq 'exact type for the tier being attempted' "$skill" || fail "skill still requires unrelated worker types"
+grep -Fq 'An unrelated role failure cannot' "$skill" || fail "skill lets unrelated roles block selected tier"
+grep -Fq 'Never reuse a prior turn' "$skill" || fail "skill permits stale preflight reuse"
+grep -Fq 'Never reuse a prior-turn failure' "$contracts" || fail "contracts permit stale preflight reuse"
+grep -Fq 'Never print that candidate as `Implementation:`' "$skill" || fail "skill permits preflight after route announcement"
 for tool in list_projects list_threads create_thread wait_threads read_thread send_message_to_thread clientThreadId; do
   if rg -n "$tool" "$skill" "$contracts" "$readme" "$manifest"; then
     fail "retired Luna app-task tool remains: $tool"
@@ -440,12 +448,15 @@ grep -Fq 'Executive design and review: GPT-5.6 Sol / High' "$skill" || fail "ski
 grep -Fq 'Implementation:' "$skill" || fail "skill omits pre-execution route announcement"
 grep -Fq 'Do not ask for separate worker or model authorization' "$skill" || fail "skill requires a second worker authorization"
 grep -Fq '../../scripts/daily-upstream-audit.sh' "$skill" || fail "skill omits daily upstream audit"
-if rg -n 'SOL ADVISOR ROUTING|Actual weekly usage:|All-Sol equivalent:|Estimated routing savings:|usage-receipt' "$skill" "$contracts" "$readme" "$manifest" "$ui"; then
-  fail "retired verbose routing or savings receipt output remains"
+if rg -n 'SOL ADVISOR ROUTING' "$skill" "$contracts" "$readme" "$manifest" "$ui"; then
+  fail "retired verbose routing output remains"
 fi
 test ! -e "$plugin_dir/skills/orchestration/references/luna-task-lane.md" || fail "retired Luna task contract remains"
-test ! -e "$plugin_dir/skills/orchestration/references/usage-receipt.md" || fail "retired usage receipt contract remains"
-test ! -e "$script_dir/usage-receipt.py" || fail "retired usage receipt helper remains"
+grep -Fq 'references/usage-receipt.md' "$skill" || fail "skill omits weekly usage receipt"
+grep -Fq 'Actual weekly usage:' "$receipt_contract" || fail "usage receipt omits actual weekly usage"
+grep -Fq 'All-Sol equivalent:' "$receipt_contract" || fail "usage receipt omits all-Sol equivalent"
+grep -Fq 'Estimated routing savings:' "$receipt_contract" || fail "usage receipt omits routing savings"
+python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$usage_receipt" || fail "usage receipt script does not compile"
 grep -Fq 'first Sol Advisor activation of each local calendar day' "$skill" || fail "skill omits once-daily activation boundary"
 grep -Fq 'adopt unchanged' "$skill" || fail "skill omits upstream adoption classification"
 grep -Fq 'adapt' "$skill" || fail "skill omits upstream adaptation classification"
@@ -478,7 +489,7 @@ grep -Fq 'only an unavailable or incapable lane triggers' "$skill" || fail "skil
 grep -Fq 'do not inflate the score merely because' "$skill" || fail "skill permits conservative score inflation"
 grep -Fq 'Anchor an ordinary bounded task with settled requirements at **5.0**' "$skill" || fail "skill lacks a non-conservative score anchor"
 grep -Fq 'typical bounded bug investigation or settled multi-file change' "$skill" || fail "skill overweights multi-step engineering work"
-grep -Fq 'fallback evidence, budgets, worker identity' "$skill" || fail "skill does not keep routing diagnostics internal"
+grep -Fq 'score, budgets, worker identity, and normal selection rationale internal' "$skill" || fail "skill does not keep normal routing diagnostics internal"
 grep -Fq 'Read-only work is low mutation risk' "$skill" || fail "skill does not treat read-only work as a Terra candidate"
 grep -Fq 'Terra / Medium (3.0–5.0)' "$skill" || fail "skill omits Terra/Medium route"
 grep -Fq 'Terra / High (5.1–6.5)' "$skill" || fail "skill omits Terra/High route"
@@ -524,7 +535,8 @@ jq -r '.interface.longDescription' "$manifest" | grep -Fq 'primary Sol High exec
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Worker interruptions force fresh primary routing' || fail "manifest omits user-interruption rerouting"
 grep -Fq 'route every scored task through the native Luna Max' "$ui" || fail "skill UI permits a routing bypass"
 grep -Fq 'move only upward when unavailable' "$ui" || fail "skill UI omits upward fallback"
-grep -Fq 'end with only the executive/review model and implementation model lines' "$ui" || fail "skill UI omits concise output"
+grep -Fq 'preflight only the attempted tier with current-turn evidence' "$ui" || fail "skill UI omits tier-specific current-turn preflight"
+grep -Fq 'model lines plus the three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 
 grep -Fq '17 12 * * *' "$upstream_workflow" || fail "upstream workflow is not scheduled daily"
