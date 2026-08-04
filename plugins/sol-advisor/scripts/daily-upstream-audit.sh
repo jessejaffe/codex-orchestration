@@ -3,6 +3,20 @@
 
 set -eu
 
+force=0
+if [ "$#" -gt 1 ]; then
+  printf '%s\n' 'ERROR: usage: daily-upstream-audit.sh [--force]' >&2
+  exit 2
+fi
+case "${1-}" in
+  '') ;;
+  --force) force=1 ;;
+  *)
+    printf '%s\n' 'ERROR: usage: daily-upstream-audit.sh [--force]' >&2
+    exit 2
+    ;;
+esac
+
 upstream_repo=${SOL_ADVISOR_UPSTREAM_REPO:-DannyMac180/sol-advisor}
 fork_repo=${SOL_ADVISOR_FORK_REPO:-jessejaffe/sol-advisor}
 
@@ -23,7 +37,7 @@ if [ -L "$state_file" ]; then
   exit 1
 fi
 
-if [ -f "$state_file" ] && [ "$(sed -n 's/^CHECKED_DATE: //p' "$state_file" | head -1)" = "$today" ]; then
+if [ "$force" -eq 0 ] && [ -f "$state_file" ] && [ "$(sed -n 's/^CHECKED_DATE: //p' "$state_file" | head -1)" = "$today" ]; then
   printf '%s\n' 'STATUS: already-checked-today'
   cat "$state_file"
   exit 0

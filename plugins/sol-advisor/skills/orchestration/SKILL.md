@@ -116,6 +116,14 @@ and actual diff, then add a compact upstream review to the response:
   main-branch policies; and
 - suggest a decision without merging anything.
 
+Classification must compare the upstream patch with the fork's current files and
+behavior, not merely judge the upstream patch in isolation. If the fork already
+satisfies the stated objective, or the patch changes a legacy path superseded by this
+fork, classify it as **skip — redundant**. Never recommend **adopt unchanged** for a
+change whose target behavior is already present. After the user resolves an open review
+on the same day, rerun the audit with `--force` so the cached pending result cannot be
+shown in a later chat.
+
 Never merge upstream changes merely because the scheduled or activation audit found
 them. Wait for the user's decision. The scheduled GitHub workflow may only open or
 update an issue; it must not modify code or merge upstream.

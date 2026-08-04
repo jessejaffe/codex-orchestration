@@ -302,6 +302,12 @@ coherent change:
 - **Adapt** when the idea is useful but must preserve this fork's policies.
 - **Skip** when it conflicts, duplicates existing behavior, or adds no useful value.
 
+The classification is against the fork's current implementation, not the upstream
+patch in isolation. A patch for behavior the fork already provides is **Skip —
+redundant**, including when upstream modifies a legacy prompt or path that this fork has
+replaced. After a same-day review is resolved, `daily-upstream-audit.sh --force`
+refreshes the local audit cache so later chats do not repeat the closed review.
+
 Only the user's decision authorizes applying an upstream change.
 
 ### Native subagent lane

@@ -145,7 +145,7 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.6.2 ] || fail "manifest version is not the cache-compatible 0.6.2 release: $manifest_version"
+[ "$manifest_version" = 0.6.3 ] || fail "manifest version is not the cache-compatible 0.6.3 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
@@ -592,7 +592,14 @@ fi
 grep -Fq 'DannyMac180/sol-advisor' "$daily_audit" || fail "daily audit omits original repository"
 grep -Fq 'jessejaffe/sol-advisor' "$daily_audit" || fail "daily audit omits maintained fork"
 grep -Fq 'already-checked-today' "$daily_audit" || fail "daily audit omits same-day short circuit"
+grep -Fq 'daily-upstream-audit.sh [--force]' "$daily_audit" || fail "daily audit omits forced cache refresh"
 grep -Fq 'workflow run upstream-review.yml' "$daily_audit" || fail "daily audit cannot request issue workflow"
+grep -Fq 'skip — redundant' "$skill" || fail "skill does not reject already-satisfied upstream patches"
+grep -Fq 'current files and' "$skill" || fail "skill does not compare upstream changes with the fork"
+
+if sh "$daily_audit" --invalid >/dev/null 2>&1; then
+  fail "daily audit accepted an invalid option"
+fi
 
 audit_state=$tmp_dir/audit-state
 mkdir -p "$audit_state"
