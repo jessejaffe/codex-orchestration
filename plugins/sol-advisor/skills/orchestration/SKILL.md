@@ -39,7 +39,10 @@ receipt.
 The effectiveness tracker is exactly
 `skill_dir/../../scripts/effectiveness-tracker.py`. The Stop hook records each
 successfully completed routed turn once in persistent state outside the replaceable
-plugin cache, including exact root-and-delegated token usage. When the user asks to
+plugin cache, including exact root-and-delegated token usage. Only a Codex
+`task_complete` terminal event qualifies for completed-task metrics. A user
+interruption or redirect produces `turn_aborted` and must be excluded, even if a
+provisional completion candidate was written during a timing race. When the user asks to
 start an effectiveness experiment, run `baseline`; when they ask for the later
 comparison, run `compare`. Treat completed routed turns as the primary unit and report
 exact task tokens, average tokens per completed task, elapsed time, delegation count,

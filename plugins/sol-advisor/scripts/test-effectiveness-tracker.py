@@ -46,6 +46,19 @@ def fixture(path: Path, lifetime: int) -> None:
     )
 
 
+def transcript(path: Path, turn_id: str, terminal_type: str) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "type": "event_msg",
+                "payload": {"type": terminal_type, "turn_id": turn_id},
+            },
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
 def main() -> int:
     if len(sys.argv) != 3:
         raise SystemExit("usage: test-effectiveness-tracker.py <plugin-dir> <temp-dir>")
@@ -73,6 +86,8 @@ def main() -> int:
         "33333333-3333-3333-3333-333333333333",
     ]
     for turn_id in turn_ids:
+        transcript_path = temporary / f"{turn_id}.jsonl"
+        transcript(transcript_path, turn_id, "task_complete")
         recorded = run(
             *common,
             "record-turn",
@@ -105,6 +120,8 @@ def main() -> int:
                 },
                 separators=(",", ":"),
             ),
+            "--transcript-path",
+            str(transcript_path),
         )
         if "effectiveness-completion-recorded" not in recorded:
             raise AssertionError(f"completion was not recorded: {recorded!r}")
@@ -140,9 +157,42 @@ def main() -> int:
             },
             separators=(",", ":"),
         ),
+        "--transcript-path",
+        str(temporary / f"{turn_ids[0]}.jsonl"),
     )
     if "effectiveness-completion-already-recorded" not in duplicate:
         raise AssertionError(f"duplicate completion was not idempotent: {duplicate!r}")
+    interrupted_turn = "44444444-4444-4444-4444-444444444444"
+    interrupted_transcript = temporary / f"{interrupted_turn}.jsonl"
+    transcript(interrupted_transcript, interrupted_turn, "turn_aborted")
+    interrupted = run(
+        *common,
+        "record-turn",
+        "--session-id",
+        session_id,
+        "--turn-id",
+        interrupted_turn,
+        "--complexity",
+        "4.2",
+        "--implementation",
+        "Implementation: GPT-5.6 Terra / Medium",
+        "--actual-weekly-usage",
+        "0.20%",
+        "--all-sol-equivalent",
+        "0.30%",
+        "--estimated-routing-savings",
+        "0.10%",
+        "--elapsed-seconds",
+        "60",
+        "--delegated-starts",
+        "2",
+        "--task-metrics-json",
+        '{"input_tokens":800,"cached_input_tokens":600,"output_tokens":200}',
+        "--transcript-path",
+        str(interrupted_transcript),
+    )
+    if "effectiveness-completion-recorded" not in interrupted:
+        raise AssertionError(f"interruption race fixture was not recorded: {interrupted!r}")
     comparison = run(
         *common,
         "--usage-file",
@@ -163,6 +213,7 @@ def main() -> int:
         "All-Sol same-token counterfactual: 0.600% of weekly capacity",
         "Estimated direct routing savings: 0.200 percentage points",
         "Exact receipt aggregation coverage: 2/2 tasks",
+        "Interrupted or redirected tasks excluded: 1",
         "Account-wide token change (background): 600",
     )
     for line in expected:
@@ -172,7 +223,7 @@ def main() -> int:
     if "Completed Sol Advisor tasks: 2" not in report:
         raise AssertionError(f"stored report is wrong: {report!r}")
     completions = list((state / "effectiveness" / "completions").glob("*.json"))
-    if len(completions) != 2:
+    if len(completions) != 3:
         raise AssertionError(f"completion ledger is not idempotent: {completions!r}")
     print("effectiveness baseline, ledger, and comparison passed")
     return 0

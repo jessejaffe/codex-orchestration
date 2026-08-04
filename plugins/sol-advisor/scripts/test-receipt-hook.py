@@ -230,6 +230,74 @@ def main() -> int:
     persisted = json.loads(persisted_files[0].read_text())
     if persisted.get("score") != "4.2":
         raise AssertionError(f"fallback overwrote the route score: {persisted!r}")
+
+    interrupted_session_id = "55555555-5555-5555-5555-555555555555"
+    interrupted_turn_id = "66666666-6666-6666-6666-666666666666"
+    interrupted_rollout = sessions / f"rollout-{interrupted_session_id}.jsonl"
+    interrupted_footer = "\n".join(
+        [
+            "Implementation: GPT-5.6 Terra / Medium",
+            "Complexity: 4.2/10",
+            expected,
+        ]
+    )
+    write_jsonl(
+        interrupted_rollout,
+        [
+            token_event(10),
+            {
+                "type": "event_msg",
+                "payload": {"type": "task_started", "turn_id": interrupted_turn_id},
+            },
+            {
+                "type": "turn_context",
+                "payload": {
+                    "turn_id": interrupted_turn_id,
+                    "model": "gpt-5.6-sol",
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "content": [{"type": "output_text", "text": route}],
+                },
+            },
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "turn_aborted",
+                    "turn_id": interrupted_turn_id,
+                    "reason": "interrupted",
+                },
+            },
+        ],
+    )
+    interrupted_pre_tool = {
+        "hook_event_name": "PreToolUse",
+        "transcript_path": str(interrupted_rollout),
+        "session_id": interrupted_session_id,
+        "turn_id": interrupted_turn_id,
+        "tool_input": {"agent_type": "sol_advisor_terra_medium_implementer"},
+    }
+    if run_hook(hook, interrupted_pre_tool, environment) != {}:
+        raise AssertionError("complexity gate rejected the interrupted-turn fixture")
+    interrupted_stop = {
+        "hook_event_name": "Stop",
+        "transcript_path": str(interrupted_rollout),
+        "session_id": interrupted_session_id,
+        "turn_id": interrupted_turn_id,
+        "last_assistant_message": interrupted_footer,
+        "stop_hook_active": False,
+    }
+    if run_hook(hook, interrupted_stop, environment) != {"continue": True}:
+        raise AssertionError("hook did not release an interrupted turn")
+    early_completions = list((state / "effectiveness" / "completions").glob("*.json"))
+    if early_completions:
+        raise AssertionError(
+            f"hook counted an interrupted turn as completed: {early_completions!r}"
+        )
+
     hook_input = {
         "hook_event_name": "Stop",
         "transcript_path": str(root_rollout),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Track Sol Advisor account usage, chats, and completed routed turns over time."""
+"""Track Sol Advisor account usage and terminally completed routed tasks over time."""
 
 from __future__ import annotations
 
@@ -215,6 +215,35 @@ def exact_percent(value: Any) -> float | None:
     return float(match.group(1)) if match else None
 
 
+def transcript_terminal_status(value: dict[str, Any]) -> str:
+    """Return completed, interrupted, or pending from Codex's terminal turn event."""
+    transcript_value = value.get("transcript_path")
+    turn_id = value.get("turn_id")
+    if not isinstance(transcript_value, str) or not isinstance(turn_id, str):
+        return "pending"
+    transcript = Path(transcript_value)
+    if not transcript.is_absolute() or not transcript.is_file() or transcript.is_symlink():
+        return "pending"
+    completed = False
+    try:
+        with transcript.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                payload = event.get("payload") or {}
+                if event.get("type") != "event_msg" or payload.get("turn_id") != turn_id:
+                    continue
+                if payload.get("type") == "turn_aborted":
+                    return "interrupted"
+                if payload.get("type") == "task_complete":
+                    completed = True
+    except OSError:
+        return "pending"
+    return "completed" if completed else "pending"
+
+
 def completion_metrics(root: Path) -> dict[str, int | float]:
     directory = root / "completions"
     if not directory.is_dir() or directory.is_symlink():
@@ -231,6 +260,9 @@ def completion_metrics(root: Path) -> dict[str, int | float]:
             "task_cached_input_tokens": 0,
             "task_output_tokens": 0,
             "task_tokens": 0,
+            "completion_candidates": 0,
+            "interrupted_tasks": 0,
+            "pending_tasks": 0,
         }
     result: dict[str, int | float] = {
         "count": 0,
@@ -245,6 +277,9 @@ def completion_metrics(root: Path) -> dict[str, int | float]:
         "task_cached_input_tokens": 0,
         "task_output_tokens": 0,
         "task_tokens": 0,
+        "completion_candidates": 0,
+        "interrupted_tasks": 0,
+        "pending_tasks": 0,
     }
     for path in directory.glob("*.json"):
         if not path.is_file() or path.is_symlink():
@@ -254,6 +289,14 @@ def completion_metrics(root: Path) -> dict[str, int | float]:
             elapsed = max(0, int(value.get("elapsed_seconds", 0)))
             delegated = max(0, int(value.get("delegated_starts", 0)))
         except (TrackerUnavailable, TypeError, ValueError):
+            continue
+        result["completion_candidates"] += 1
+        terminal_status = transcript_terminal_status(value)
+        if terminal_status == "interrupted":
+            result["interrupted_tasks"] += 1
+            continue
+        if terminal_status != "completed":
+            result["pending_tasks"] += 1
             continue
         result["count"] += 1
         result["elapsed_seconds"] += elapsed
@@ -456,6 +499,15 @@ def print_report(baseline: dict[str, Any], latest: dict[str, Any]) -> None:
         )
     else:
         print("Average completed-task duration: n/a")
+    interrupted_delta = int(end_metrics.get("interrupted_tasks", 0)) - int(
+        start_metrics.get("interrupted_tasks", 0)
+    )
+    pending_delta = int(end_metrics.get("pending_tasks", 0)) - int(
+        start_metrics.get("pending_tasks", 0)
+    )
+    print(f"Interrupted or redirected tasks excluded: {max(0, interrupted_delta):,}")
+    if pending_delta > 0:
+        print(f"Awaiting authoritative completion signal: {pending_delta:,}")
     print(f"Account-wide token change (background): {token_delta:,}")
     start_chats = baseline.get("profile_total_chats")
     end_chats = latest.get("profile_total_chats")
@@ -530,6 +582,9 @@ def command_record_turn(args: argparse.Namespace) -> None:
         raise TrackerUnavailable("task token metrics are invalid") from exc
     if not isinstance(task_metrics, dict):
         raise TrackerUnavailable("task token metrics are invalid")
+    transcript = Path(args.transcript_path).expanduser()
+    if not transcript.is_absolute() or not transcript.is_file() or transcript.is_symlink():
+        raise TrackerUnavailable("an absolute regular transcript path is required")
     root = state_root(args.state_dir)
     completions = root / "completions"
     if completions.is_symlink():
@@ -549,6 +604,7 @@ def command_record_turn(args: argparse.Namespace) -> None:
         "elapsed_seconds": args.elapsed_seconds,
         "delegated_starts": args.delegated_starts,
         "task_metrics": task_metrics,
+        "transcript_path": str(transcript),
     }
     if atomic_json(path, value, replace=False):
         print("STATUS: effectiveness-completion-recorded")
@@ -584,6 +640,7 @@ def parser() -> argparse.ArgumentParser:
     record.add_argument("--elapsed-seconds", required=True, type=int)
     record.add_argument("--delegated-starts", required=True, type=int)
     record.add_argument("--task-metrics-json", required=True)
+    record.add_argument("--transcript-path", required=True)
     record.set_defaults(handler=command_record_turn)
     return result
 

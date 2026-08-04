@@ -103,8 +103,11 @@ plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId 
 python3 "$plugin_dir/scripts/effectiveness-tracker.py" baseline
 ~~~
 
-Every successful routed task is then logged automatically and idempotently. After a
-week, compare the task ledger with the baseline:
+Every successful routed task is then logged automatically and idempotently. A task
+counts only when its Codex transcript ends with the authoritative `task_complete`
+event. A user interruption or mid-task redirect ends the prior turn with
+`turn_aborted`; that work and its tokens are explicitly excluded from completed-task
+metrics. After a week, compare the task ledger with the baseline:
 
 ~~~sh
 python3 "$plugin_dir/scripts/effectiveness-tracker.py" compare

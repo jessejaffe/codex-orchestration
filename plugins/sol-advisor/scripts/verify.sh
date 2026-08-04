@@ -145,7 +145,7 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.6.1 ] || fail "manifest version is not the cache-compatible 0.6.1 release: $manifest_version"
+[ "$manifest_version" = 0.6.2 ] || fail "manifest version is not the cache-compatible 0.6.2 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
@@ -157,6 +157,7 @@ grep -Fq 'persists the exact one-decimal complexity score' "$manifest" || fail "
 grep -Fq 'persisted complexity' "$manifest" || fail "manifest does not describe persisted complexity"
 grep -Fq 'routing-savings receipt' "$manifest" || fail "manifest does not describe receipt completion gating"
 grep -Fq 'outcome tracking' "$manifest" || fail "manifest does not describe effectiveness tracking"
+grep -Fq 'turn_aborted work is excluded' "$manifest" || fail "manifest does not exclude interrupted tasks"
 grep -Fq 'fresh Sol' "$manifest" || fail "manifest does not preserve native fresh Sol review"
 pass "manifest JSON, version, and five-band UI language"
 
@@ -548,6 +549,7 @@ for document in "$skill" "$readme" "$manifest" "$ui"; do
 done
 grep -Fq 'interrupt_agent' "$skill" || fail "skill omits native-worker interruption"
 grep -Fq 'fresh executive decision' "$skill" || fail "skill omits fresh Sol decision after interruption"
+grep -Fq '`task_complete` terminal event qualifies' "$skill" || fail "skill does not require authoritative task completion"
 grep -Fq 'Never resume' "$skill" || fail "skill permits stale worker plans to resume automatically"
 grep -Fq 'do not spawn a fresh' "$skill" || fail "skill adds routine read-only reviewer overhead"
 for document in "$contracts"; do

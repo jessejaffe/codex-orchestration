@@ -165,6 +165,26 @@ def recover_task_metrics(transcript: Path, turn_id: str) -> dict[str, Any] | Non
     return value if isinstance(value, dict) else None
 
 
+def turn_was_interrupted(transcript: Path, turn_id: str) -> bool:
+    try:
+        with transcript.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                payload = event.get("payload") or {}
+                if (
+                    event.get("type") == "event_msg"
+                    and payload.get("type") == "turn_aborted"
+                    and payload.get("turn_id") == turn_id
+                ):
+                    return True
+    except OSError:
+        return False
+    return False
+
+
 def record_completion(
     *,
     session_id: str,
@@ -175,6 +195,7 @@ def record_completion(
     elapsed_seconds: int,
     delegated_starts: int,
     task_metrics: dict[str, Any] | None,
+    transcript: Path,
 ) -> None:
     values = [receipt_value(final_message, label) for label in RECEIPT_LABELS]
     if any(value is None for value in values):
@@ -206,6 +227,8 @@ def record_completion(
                 str(delegated_starts),
                 "--task-metrics-json",
                 json.dumps(task_metrics or {}, separators=(",", ":")),
+                "--transcript-path",
+                str(transcript),
             ],
             capture_output=True,
             text=True,
@@ -433,6 +456,9 @@ def main() -> int:
     complexity_present = exact_score is not None and final_score == exact_score
     receipt_present = all(label in last_message for label in RECEIPT_LABELS)
     if complexity_present and receipt_present:
+        if turn_was_interrupted(transcript, turn_id):
+            emit({"continue": True})
+            return 0
         elapsed_seconds, delegated_starts = turn_metrics(transcript, turn_id)
         task_metrics = recover_task_metrics(transcript, turn_id)
         record_completion(
@@ -444,6 +470,7 @@ def main() -> int:
             elapsed_seconds=elapsed_seconds,
             delegated_starts=delegated_starts,
             task_metrics=task_metrics,
+            transcript=transcript,
         )
         emit({"continue": True})
         return 0
