@@ -1,7 +1,7 @@
 interface:
   display_name: "Sol Advisor Orchestration"
   short_description: "Sol/High directs, effort-scaled workers implement"
-  default_prompt: "Use $orchestration with primary Sol / High directing and reviewing; route implementation 1.0–2.9 to Luna / Max, 3.0–5.0 to Terra / Medium, 5.1–6.5 to Terra / High, 6.6–7.9 to Sol / Medium, and 8.0–10.0 to a separate Sol / High implementer; prefix visible worker labels with LMax, TMed, THI, S-MED, or S-HI; keep accepted fork changes on main and run the once-daily non-merging upstream audit; activate only when my current message directly says “Turn Sol Advisor on.”"
+  default_prompt: "Use $orchestration with primary Sol / High directing and reviewing; route implementation 1.0–2.9 to Luna / Max, 3.0–5.0 to Terra / Medium, 5.1–6.5 to Terra / High, 6.6–7.9 to Sol / Medium, and 8.0–10.0 to a separate Sol / High implementer; prefix visible worker labels with Luna Max, Terra Medium, Terra High, Sol Medium, or Sol High; keep accepted fork changes on main and run the once-daily non-merging upstream audit; activate only when my current message directly says “Turn Sol Advisor on.”"
 
 policy:
   allow_implicit_invocation: true

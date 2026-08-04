@@ -211,7 +211,7 @@ concise user-visible update in this shape:
 Sol Advisor: ON
 Primary: GPT-5.6 Sol / High — <observed | required, not exposed by host>
 Implementation: <GPT-5.6 Luna / Max — Codex task | GPT-5.6 Terra / Medium — native subagent | GPT-5.6 Terra / High — native subagent | GPT-5.6 Sol / Medium — native subagent | GPT-5.6 Sol / High — native subagent>
-Label: <LMax | TMed | THI | S-MED | S-HI>
+Label: <Luna Max | Terra Medium | Terra High | Sol Medium | Sol High>
 Complexity: <1.0–10.0 score plus one-sentence calibration reason>
 Why: <one sentence explaining why this is the efficient capable route after the token/time gates>
 Architect: primary GPT-5.6 Sol / High — exact implementation packet
@@ -229,18 +229,18 @@ final primary-route line is sufficient.
 Keep the colored model icon, and make the model/effort abbreviation the first visible
 token in every delegated task name or title:
 
-- `LMax` — Luna / Max
-- `TMed` — Terra / Medium
-- `THI` — Terra / High
-- `S-MED` — Sol / Medium
-- `S-HI` — Sol / High, including the fresh reviewer
+- `Luna Max` — Luna / Max
+- `Terra Medium` — Terra / Medium
+- `Terra High` — Terra / High
+- `Sol Medium` — Sol / Medium
+- `Sol High` — Sol / High, including the fresh reviewer
 
-Use `LMax — <concise objective>` as the `create_thread.title` for Luna. Native
+Use `Luna Max — <concise objective>` as the `create_thread.title` for Luna. Native
 `spawn_agent.task_name` accepts only lowercase letters, digits, and underscores, so
-use the corresponding machine prefixes `tmed_`, `thi_`, `smed_`, and `shi_` followed
-by a short objective slug. Put the prefix first so it remains visible when the activity
-chip truncates the objective. Never use a generic task name that hides the selected
-model tier.
+use the corresponding full machine prefixes `terra_medium_`, `terra_high_`,
+`sol_medium_`, and `sol_high_` followed by a short objective slug. Put the prefix first
+so it remains visible when the activity chip truncates the objective. Never use an
+abbreviation or generic task name that hides the selected model tier.
 
 ## Preflight native custom agents
 
@@ -348,10 +348,10 @@ or new user decision makes completion impossible.
 Spawn exactly one implementation role for the scored band:
 
 ~~~text
-3.0–5.0: agent_type: sol_advisor_terra_medium_implementer; task_name: tmed_<objective_slug>
-5.1–6.5: agent_type: sol_advisor_terra_implementer; task_name: thi_<objective_slug>
-6.6–7.9: agent_type: sol_advisor_sol_medium_implementer; task_name: smed_<objective_slug>
-8.0–10.0: agent_type: sol_advisor_sol_high_implementer; task_name: shi_<objective_slug>
+3.0–5.0: agent_type: sol_advisor_terra_medium_implementer; task_name: terra_medium_<objective_slug>
+5.1–6.5: agent_type: sol_advisor_terra_implementer; task_name: terra_high_<objective_slug>
+6.6–7.9: agent_type: sol_advisor_sol_medium_implementer; task_name: sol_medium_<objective_slug>
+8.0–10.0: agent_type: sol_advisor_sol_high_implementer; task_name: sol_high_<objective_slug>
 fork_turns: none
 ~~~
 
@@ -376,7 +376,7 @@ isolated worktree; for a non-Git project, use its local environment.
 The new task does not inherit full parent context. Give it the complete packet in
 [references/luna-task-lane.md](references/luna-task-lane.md). Set `model` to
 `gpt-5.6-luna`, `thinking` to `max`, and `title` to
-`LMax — <concise objective>` in `create_thread`. Accepted creation routing
+`Luna Max — <concise objective>` in `create_thread`. Accepted creation routing
 plus the returned identity is routing evidence; report model/thinking metadata as
 observed only when the app exposes it.
 
@@ -416,7 +416,7 @@ Spawn the native reviewer exactly with no per-spawn model or effort override:
 
 ~~~text
 agent_type: sol_advisor_sol_reviewer
-task_name: shi_review_<objective_slug>
+task_name: sol_high_review_<objective_slug>
 fork_turns: none
 ~~~
 
@@ -459,7 +459,7 @@ SOL ADVISOR ROUTING
 ACTIVATION: on for this chat
 PRIMARY: GPT-5.6 Sol / High — <observed | required, not exposed by host>
 IMPLEMENTATION: <direct primary work or every lane, model, effort, and task/agent identity used>
-LABELS: <LMax | TMed | THI | S-MED | S-HI labels actually used>
+LABELS: <Luna Max | Terra Medium | Terra High | Sol Medium | Sol High labels actually used>
 COMPLEXITY: <1.0–10.0 score and calibration reason for each work item>
 SELECTION REASON: <why each route was chosen>
 EFFICIENCY: <minimum sufficient boundary, checkpoint decisions, and avoided overhead>

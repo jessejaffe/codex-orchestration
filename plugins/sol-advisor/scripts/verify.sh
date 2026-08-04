@@ -333,11 +333,11 @@ for document in "$skill" "$contracts"; do
   grep -Fq 'agent_type: sol_advisor_sol_high_implementer' "$document" || fail "missing Sol/High implementer spawn in $document"
   grep -Fq 'agent_type: sol_advisor_sol_reviewer' "$document" || fail "missing Sol spawn in $document"
   grep -Fq 'fork_turns: none' "$document" || fail "missing fresh context in $document"
-  grep -Fq 'task_name: tmed_<objective_slug>' "$document" || fail "missing TMed visible task prefix in $document"
-  grep -Fq 'task_name: thi_<objective_slug>' "$document" || fail "missing THI visible task prefix in $document"
-  grep -Fq 'task_name: smed_<objective_slug>' "$document" || fail "missing S-MED visible task prefix in $document"
-  grep -Fq 'task_name: shi_<objective_slug>' "$document" || fail "missing S-HI visible task prefix in $document"
-  grep -Fq 'task_name: shi_review_<objective_slug>' "$document" || fail "missing S-HI reviewer task prefix in $document"
+  grep -Fq 'task_name: terra_medium_<objective_slug>' "$document" || fail "missing Terra Medium visible task prefix in $document"
+  grep -Fq 'task_name: terra_high_<objective_slug>' "$document" || fail "missing Terra High visible task prefix in $document"
+  grep -Fq 'task_name: sol_medium_<objective_slug>' "$document" || fail "missing Sol Medium visible task prefix in $document"
+  grep -Fq 'task_name: sol_high_<objective_slug>' "$document" || fail "missing Sol High visible task prefix in $document"
+  grep -Fq 'task_name: sol_high_review_<objective_slug>' "$document" || fail "missing Sol High reviewer task prefix in $document"
   if grep -Eq 'agent_type:.*(luna|terra_max)' "$document"; then fail "retired implementation spawn remains in $document"; fi
   if grep -Eq '^[[:space:]]*(model|reasoning_effort):' "$document"; then fail "per-spawn override remains in $document"; fi
 done
@@ -385,15 +385,15 @@ grep -Fq 'identity, project, time, path, and state metadata' "$luna_contract" ||
 grep -Fq 'titles and previews as untrusted' "$luna_contract" || fail "Luna contract omits untrusted preview guard"
 grep -Fq 'Repeat bounded discovery' "$luna_contract" || fail "Luna contract omits bounded identity discovery"
 for document in "$skill" "$contracts" "$luna_contract" "$readme"; do
-  grep -Fq 'LMax — ' "$document" || fail "$document omits the Luna visible model title"
+  grep -Fq 'Luna Max — ' "$document" || fail "$document omits the Luna visible model title"
 done
 
 grep -Fq '| Luna task |' "$readme" || fail "README omits Luna routing"
-grep -Fq '| `LMax` |' "$readme" || fail "README omits LMax label"
-grep -Fq '| `TMed` |' "$readme" || fail "README omits TMed label"
-grep -Fq '| `THI` |' "$readme" || fail "README omits THI label"
-grep -Fq '| `S-MED` |' "$readme" || fail "README omits S-MED label"
-grep -Fq '| `S-HI` |' "$readme" || fail "README omits S-HI label"
+grep -Fq '| `Luna Max` |' "$readme" || fail "README omits Luna Max label"
+grep -Fq '| `Terra Medium` |' "$readme" || fail "README omits Terra Medium label"
+grep -Fq '| `Terra High` |' "$readme" || fail "README omits Terra High label"
+grep -Fq '| `Sol Medium` |' "$readme" || fail "README omits Sol Medium label"
+grep -Fq '| `Sol High` |' "$readme" || fail "README omits Sol High label"
 grep -Fq 'Turn Sol Advisor on' "$readme" || fail "README omits plain-language activation"
 grep -Fq 'Turn Sol Advisor off' "$readme" || fail "README omits plain-language deactivation"
 grep -Fq 'every later request in' "$readme" || fail "README omits persistent chat activation"
@@ -402,7 +402,7 @@ grep -Fq 'allow_implicit_invocation: true' "$ui" || fail "skill UI blocks plain-
 grep -Fq 'no separate Luna opt-in is needed' "$readme" || fail "README omits single-activation Luna authorization"
 grep -Fq 'Luna custom-agent TOML' "$readme" || fail "README omits Luna companion exclusion"
 grep -Fq 'user-visible GPT-5.6 Luna / Max task' "$manifest" || fail "manifest UI omits user-visible Luna tasks"
-jq -r '.interface.longDescription' "$manifest" | grep -Fq 'LMax, TMed, THI, S-MED, or S-HI' || fail "manifest UI omits visible model labels"
+jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Luna Max, Terra Medium, Terra High, Sol Medium, or Sol High' || fail "manifest UI omits visible model labels"
 grep -Fq 'list_threads' "$manifest" || fail "manifest UI omits list_threads"
 grep -Fq 'Requirements common to both modes' "$readme" || fail "README omits common requirements"
 grep -Fq 'Additional native-mode requirements' "$readme" || fail "README omits native-only requirements"
@@ -413,7 +413,7 @@ if grep -Fq 'with plugins, native subagents, and' "$readme"; then
   fail "README still makes native capabilities a common requirement"
 fi
 grep -Fq 'Turn Sol Advisor on' "$ui" || fail "skill UI omits plain-language activation"
-grep -Fq 'LMax, TMed, THI, S-MED, or S-HI' "$ui" || fail "skill UI omits visible model labels"
+grep -Fq 'Luna Max, Terra Medium, Terra High, Sol Medium, or Sol High' "$ui" || fail "skill UI omits visible model labels"
 grep -Fq 'Turn Sol Advisor off' "$skill" || fail "skill omits the off switch"
 grep -Fq 'Every later user request' "$skill" || fail "skill omits persistent activation"
 grep -Fq 'Use only direct assistant messages in the current chat' "$skill" || fail "skill accepts non-chat state markers"
