@@ -1,0 +1,30 @@
+{
+  "description": "Persist Codex Orchestration complexity, enforce receipts, and log completed routed tasks.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/receipt-stop-hook.py\"",
+            "timeout": 10,
+            "statusMessage": "Saving Codex Orchestration complexity"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/receipt-stop-hook.py\"",
+            "timeout": 30,
+            "statusMessage": "Checking Codex Orchestration receipt"
+          }
+        ]
+      }
+    ]
+  }
+}

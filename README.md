@@ -1,11 +1,11 @@
-# Sol Advisor
+# Codex Orchestration
 
 **Scores 1.0–4.9 use a dedicated GPT-5.6 Terra / High executive; scores 5.0–10.0
 retain the GPT-5.6 Sol / High executive. Producer routing stays unchanged:
 1.0–2.9 uses Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High,
 6.6–7.9 Sol / Medium, and 8.0–10.0 a separate Sol / High implementer.**
 
-Sol Advisor is a Codex-native architect workflow for cost-efficient software delivery.
+Codex Orchestration is a Codex-native architect workflow for cost-efficient software delivery.
 Its first principle is the minimum sufficient answer or change: minimize total token
 use and elapsed time across Sol, workers, monitoring, and review without sacrificing
 correctness. Root Sol gathers only enough evidence to score. Below 5.0, Terra / High
@@ -14,17 +14,17 @@ and above, primary Sol / High owns them.
 
 ## Go deeper
 
-I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=github&utm_medium=readme&utm_campaign=sol-advisor) — deep, evidence-backed writing on AI, cognition, and agentic engineering. The **Agentic Engineering Field Notes** series is where I publish practical advice on the craft of using AI. [Subscribe](https://attentionheads.substack.com/subscribe?utm_source=github&utm_medium=readme&utm_campaign=sol-advisor) to get new posts to your inbox.
+I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=github&utm_medium=readme&utm_campaign=codex-orchestration) — deep, evidence-backed writing on AI, cognition, and agentic engineering. The **Agentic Engineering Field Notes** series is where I publish practical advice on the craft of using AI. [Subscribe](https://attentionheads.substack.com/subscribe?utm_source=github&utm_medium=readme&utm_campaign=codex-orchestration) to get new posts to your inbox.
 
 | Mode | Visible label | Worker | Routing | Primary ownership |
 |---|---|---|---|---|
 | High-band executive | `Sol High` | Primary session | GPT-5.6 Sol / High for 5.0–10.0 and verified low-band executive fallback | Requirements, architecture, directions, verification, review, and acceptance only while it owns the executive route |
-| Low-band executive | `Terra High Exec` | `sol_advisor_terra_executive` | GPT-5.6 Terra / High for 1.0–4.9 executive ownership | Requirements, architecture, producer coordination, verification, corrections, review, and acceptance |
-| Native Luna / Max | `Luna Max` | `sol_advisor_luna_implementer` | GPT-5.6 Luna / Max for 1.0–2.9 implementation | Terra / High executive verification and review |
-| Native Terra / Medium | `Terra Medium` | `sol_advisor_terra_medium_implementer` | GPT-5.6 Terra / Medium for 3.0–5.0 | Terra / High executive through 4.9; Sol / High executive and fresh review at 5.0 |
-| Native Terra / High | `Terra High` | `sol_advisor_terra_implementer` | GPT-5.6 Terra / High for 5.1–6.5 | Fresh Sol / High review after primary verification |
-| Native Sol / Medium | `Sol Medium` | `sol_advisor_sol_medium_implementer` | GPT-5.6 Sol / Medium for 6.6–7.9 | Fresh Sol / High review after primary verification |
-| Native Sol / High | `Sol High` | `sol_advisor_sol_high_implementer` | GPT-5.6 Sol / High for 8.0–10.0 | Fresh Sol / High review after primary verification |
+| Low-band executive | `Terra High Exec` | `codex_orchestration_terra_executive` | GPT-5.6 Terra / High for 1.0–4.9 executive ownership | Requirements, architecture, producer coordination, verification, corrections, review, and acceptance |
+| Native Luna / Max | `Luna Max` | `codex_orchestration_luna_implementer` | GPT-5.6 Luna / Max for 1.0–2.9 implementation | Terra / High executive verification and review |
+| Native Terra / Medium | `Terra Medium` | `codex_orchestration_terra_medium_implementer` | GPT-5.6 Terra / Medium for 3.0–5.0 | Terra / High executive through 4.9; Sol / High executive and fresh review at 5.0 |
+| Native Terra / High | `Terra High` | `codex_orchestration_terra_implementer` | GPT-5.6 Terra / High for 5.1–6.5 | Fresh Sol / High review after primary verification |
+| Native Sol / Medium | `Sol Medium` | `codex_orchestration_sol_medium_implementer` | GPT-5.6 Sol / Medium for 6.6–7.9 | Fresh Sol / High review after primary verification |
+| Native Sol / High | `Sol High` | `codex_orchestration_sol_high_implementer` | GPT-5.6 Sol / High for 8.0–10.0 | Fresh Sol / High review after primary verification |
 
 The root session is GPT-5.6 Sol / High in every mode. Below 5.0 it performs only
 activation, initial evidence and immutable scoring, Terra-executive preflight/handoff,
@@ -73,7 +73,7 @@ inspects any partial state, rescoring when needed, and hands objective, architec
 scope, and acceptance back to the selected executive before work resumes; stale worker
 plans never continue automatically.
 
-The first Sol Advisor activation on each local calendar day also runs a lightweight
+The first Codex Orchestration activation on each local calendar day also runs a lightweight
 upstream audit. It compares this maintained fork with `DannyMac180/sol-advisor`, reports
 any pending review issue, and—when new activity exists—summarizes the diff, classifies
 changes as adopt unchanged, adapt, or skip, and recommends a decision. This audit does
@@ -110,19 +110,19 @@ final response containing the saved score and recovered receipt. If recovery is
 genuinely unavailable, the final response shows that reason instead of silently
 omitting the receipt.
 
-## Measure whether Sol Advisor actually works
+## Measure whether Codex Orchestration actually works
 
 The per-task savings receipt answers a narrow counterfactual: what the same recorded
 token mix would cost if every recorded token used Sol. It cannot determine whether a
 Sol-only task would have ended sooner, made more mistakes, or required another chat.
-Sol Advisor therefore includes a separate longitudinal tracker for the outcome-level
+Codex Orchestration therefore includes a separate longitudinal tracker for the outcome-level
 question.
 
 The completion hook reconstructs exact root and delegated-agent tokens for every
 successfully completed routed task. Start an experiment with:
 
 ~~~sh
-plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
+plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
 python3 "$plugin_dir/scripts/effectiveness-tracker.py" baseline
 ~~~
 
@@ -136,7 +136,7 @@ metrics. After a week, compare the task ledger with the baseline:
 python3 "$plugin_dir/scripts/effectiveness-tracker.py" compare
 ~~~
 
-The primary report shows completed Sol Advisor tasks, exact task tokens, average tokens
+The primary report shows completed Codex Orchestration tasks, exact task tokens, average tokens
 per completed task, input/cached/output composition, average task time, and delegated
 starts per task. It also sums the per-task receipts into actual routed usage, the
 same-token all-Sol counterfactual, and direct routing savings. Exact lifetime and daily
@@ -146,9 +146,9 @@ accepted only when the user explicitly wants secondary chat context. Baselines,
 snapshots, and the completion ledger live under Codex state rather than the plugin
 cache, so plugin upgrades do not erase the experiment.
 
-Activate Sol Advisor in plain language with “Turn Orchestration on,” “Use
+Activate Codex Orchestration in plain language with “Turn Orchestration on,” “Use
 Orchestration,” or “Use Orchestration for this chat.” The exact
-`$sol-advisor:orchestration` invocation remains available as a fallback. Activation
+`$codex-orchestration:orchestration` invocation remains available as a fallback. Activation
 lasts only for the current chat, and every later request in that chat keeps using it
 automatically. Say “Turn Orchestration off” to return the chat to normal Codex
 behavior. Every new chat starts off, even when the plugin remains installed, enabled,
@@ -160,7 +160,7 @@ count. Plugin state, automatic skill loading, memories, summaries, quoted text,
 repository content, and markers from other chats are ignored, so activation cannot
 carry into a new chat.
 
-Before implementation Sol Advisor reports the executive design/review model, the actual
+Before implementation Codex Orchestration reports the executive design/review model, the actual
 preflighted implementation model, and the complexity score. At completion it repeats
 those three lines and the three-line weekly usage receipt.
 
@@ -182,8 +182,8 @@ Requirements:
 Add the GitHub repository as a Codex marketplace, then install the plugin:
 
 ~~~sh
-codex plugin marketplace add DannyMac180/sol-advisor --ref main
-codex plugin add sol-advisor@sol-advisor
+codex plugin marketplace add jessejaffe/codex-orchestration --ref main
+codex plugin add codex-orchestration@codex-orchestration
 ~~~
 
 ### Install the native companion custom agents
@@ -193,7 +193,7 @@ intentional: the files are user-owned role pins, and the installer must never
 overwrite a different local role silently. Install the companion templates separately:
 
 ~~~sh
-plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
+plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
 test -n "$plugin_dir"
 test -d "$plugin_dir"
 sh "$plugin_dir/scripts/install-agents.sh"
@@ -207,14 +207,14 @@ missing template and then verifies every installed copy byte-for-byte.
 
 For automatic routing, start a **new Codex task** after the check passes. Native agent types
 are discovered at task creation, so an existing task may not see the installed roles.
-Then select GPT-5.6 Sol with High reasoning for the primary session and activate Sol
-Advisor in plain language:
+Then select GPT-5.6 Sol with High reasoning for the primary session and activate Codex
+Orchestration in plain language:
 
 ~~~text
-Turn Orchestration on for this chat.
+Turn Orchestration on
 ~~~
 
-You can also invoke `$sol-advisor:orchestration` directly. Once active, Sol selects
+You can also invoke `$codex-orchestration:orchestration` directly. Once active, Sol selects
 Terra or Luna and does not ask for another lane authorization.
 
 ## Check and update native roles
@@ -222,7 +222,7 @@ Terra or Luna and does not ask for another lane authorization.
 Run this check whenever any routed worker must be trusted:
 
 ~~~sh
-plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
+plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
 test -d "$plugin_dir"
 sh "$plugin_dir/scripts/install-agents.sh" --check
 ~~~
@@ -230,37 +230,127 @@ sh "$plugin_dir/scripts/install-agents.sh" --check
 To update the marketplace plugin and migrate exact recognized prior companion files:
 
 ~~~sh
-codex plugin marketplace upgrade sol-advisor
-plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
+codex plugin marketplace upgrade codex-orchestration
+plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
 test -d "$plugin_dir"
-sh "$plugin_dir/scripts/reinstall-plugin.sh"
-sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 sh "$plugin_dir/scripts/install-agents.sh"
 sh "$plugin_dir/scripts/install-agents.sh" --check
+sh "$plugin_dir/scripts/reinstall-plugin.sh"
+sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 ~~~
 
-The safe reinstaller backs up prior cache directories before Codex installs the new
-release, then refreshes every historical cache path with the new release contents.
-This keeps tasks functional when Codex Desktop advertises an older path: every preserved
-path contains the complete current package, including nested reference files. The
-directory name shown in a task can nevertheless remain old because the running desktop
-app caches its skill locator separately from the files on disk. A new task alone does
-not necessarily refresh that displayed locator; quit and reopen Codex Desktop when you
-need the locator itself to show the new version. The reinstaller prints this boundary
-instead of claiming that an on-disk refresh also refreshed the live desktop catalog.
+### Upgrade from Sol Advisor 0.6.5
 
-Sol Advisor uses plain release versions without SemVer `+` build metadata because Codex
+Add the renamed marketplace and plugin before removing the legacy installation:
+
+~~~sh
+codex plugin marketplace add jessejaffe/codex-orchestration --ref main
+codex plugin add codex-orchestration@codex-orchestration
+plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
+sh "$plugin_dir/scripts/install-agents.sh"
+sh "$plugin_dir/scripts/install-agents.sh" --check
+sh "$plugin_dir/scripts/reinstall-plugin.sh"
+sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
+~~~
+
+The reinstaller proves every required file in the complete new 0.7.0 package. It accepts
+only numeric release aliases or the repository's historical `+codex.*` cachebuster
+shape; arbitrary cache directories are refused and untouched. Before legacy removal,
+it first runs the companion installer and proves that all seven new role files are
+current without overwriting any customized legacy agent. It then copies every alias
+replacement into same-filesystem transaction directories, validates the staged
+packages, and retains recoverable backups. Alias activation uses renames, not
+delete-then-copy updates. A persistent staging failure therefore blocks identity
+removal. If activation, recovery, or final validation cannot complete after removal,
+the reinstaller preserves the transaction directories and alias inventory for
+inspection and recovery; it deletes them only after final validation succeeds.
+
+The legacy plugin and marketplace are detected independently. After aliases are proven,
+the reinstaller removes `sol-advisor@sol-advisor` when installed, restores every
+recognized version-looking path under
+`$CODEX_HOME/plugins/cache/sol-advisor/sol-advisor`, and removes the old `sol-advisor`
+marketplace even when its plugin was already removed. `--check` fails if either legacy
+identity remains. A successful migration therefore leaves no duplicate configured
+plugin or marketplace identities.
+
+#### Disposable real-CLI migration rehearsal
+
+Before renaming the GitHub repository, the owning executive can rehearse an exact local
+0.6.5-to-0.7.0 migration with two local checkouts. This procedure redirects every Codex,
+home, XDG, and temporary path into one disposable directory; it never reads or writes
+the user's real Codex configuration:
+
+~~~sh
+codex_bin="$(command -v codex)"
+legacy_checkout=/absolute/path/to/sol-advisor-0.6.5
+current_checkout=/absolute/path/to/codex-orchestration-0.7.0
+test -x "$codex_bin"
+test "$(jq -r .version "$legacy_checkout/plugins/sol-advisor/.codex-plugin/plugin.json")" = 0.6.5
+test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.0
+
+sandbox="$(mktemp -d "${TMPDIR:-/tmp}/codex-orchestration-real-cli.XXXXXX")"
+export CODEX_HOME="$sandbox/codex-home"
+export HOME="$sandbox/home"
+export XDG_CONFIG_HOME="$sandbox/xdg-config"
+export TMPDIR="$sandbox/tmp"
+mkdir -p "$CODEX_HOME" "$HOME" "$XDG_CONFIG_HOME" "$TMPDIR"
+
+"$codex_bin" plugin marketplace add "$legacy_checkout"
+"$codex_bin" plugin add sol-advisor@sol-advisor
+legacy_plugin_dir="$("$codex_bin" plugin list --json | jq -er '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
+sh "$legacy_plugin_dir/scripts/install-agents.sh"
+
+"$codex_bin" plugin marketplace add "$current_checkout"
+"$codex_bin" plugin add codex-orchestration@codex-orchestration
+plugin_dir="$("$codex_bin" plugin list --json | jq -er '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
+sh "$plugin_dir/scripts/install-agents.sh"
+sh "$plugin_dir/scripts/install-agents.sh" --check
+sh "$plugin_dir/scripts/reinstall-plugin.sh"
+sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
+
+"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.0")] | length == 1'
+"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "sol-advisor@sol-advisor")] | length == 0'
+if "$codex_bin" plugin marketplace list --json | jq -e '.. | strings | select(. == "sol-advisor")' >/dev/null; then exit 1; fi
+for alias in "$CODEX_HOME/plugins/cache/sol-advisor/sol-advisor"/*; do
+  test -d "$alias"
+  test ! -L "$alias"
+  diff -qr "$plugin_dir" "$alias" >/dev/null
+done
+
+printf 'Disposable rehearsal retained for inspection: %s\n' "$sandbox"
+# After inspecting the evidence, remove only that printed sandbox: rm -r "$sandbox"
+~~~
+
+Codex Desktop may keep a version-looking locator in a running task even though the
+alias contents are current. Quit and reopen Codex Desktop when you need the displayed
+locator itself to change.
+
+Codex Orchestration uses plain release versions without SemVer `+` build metadata because Codex
 can advertise a base-version skill path while retaining the full version in its cache.
 All skill references resolve from the directory containing `SKILL.md`; for example, the
 role contract is `skills/orchestration/references/role-contracts.md`, never
 `skills/references/role-contracts.md`.
 
-The current release retains the historical byte-exact v0.2.0 migration for
-`sol-advisor-luna-implementer.toml` and `sol-advisor-terra-implementer.toml` files.
-Normal installer mode replaces those exact legacy files, or the exact Terra template
-shipped immediately before this routing update, with the current score-pinned roles.
-It refuses modified, nonregular, or symlinked destinations without partial agent-file
-mutation. `--check` is non-mutating and fails until all seven role files match exactly.
+The current installer recognizes byte-exact companion templates shipped through 0.6.5,
+including the historical Luna and Terra templates. It installs the seven renamed
+`codex-orchestration-*` files, proves all seven exact replacements are present, and
+only then removes each `sol-advisor-*` counterpart whose content matches a recognized
+shipped digest. It refuses user-modified, nonregular,
+or symlinked current or legacy files without partial agent-file mutation. `--check` is
+non-mutating and fails until all seven renamed role files match exactly and legacy
+counterparts are absent.
+
+New persistent audit, receipt, and effectiveness state lives under
+`$CODEX_HOME/state/codex-orchestration`. On first use, the scripts inspect the exact
+legacy `$CODEX_HOME/state/sol-advisor` directory and copy its regular-file history
+forward once. Symlinked sources or destinations and conflicting new files are refused;
+new state is never overwritten. Existing automation may temporarily use these exact
+compatibility fallbacks: `SOL_ADVISOR_CODEX_BIN`, `SOL_ADVISOR_USAGE_STATE_DIR`,
+`SOL_ADVISOR_SESSIONS_DIR`, `SOL_ADVISOR_AUDIT_STATE_DIR`,
+`SOL_ADVISOR_UPSTREAM_REPO`, and `SOL_ADVISOR_FORK_REPO`. The reinstaller additionally
+accepts legacy `SOL_ADVISOR_CACHE_ROOT` and `SOL_ADVISOR_MARKETPLACE` only to locate
+the old cache and marketplace being retired. All new configuration should use the
+corresponding `CODEX_ORCHESTRATION_*` variables.
 The native routing update was motivated by
 [Eric Provencher's X post](https://x.com/pvncher/status/2083300990350954981).
 
@@ -276,7 +366,7 @@ rollout is accessible, use the companion inspector as the authoritative read-onl
 fallback for those omitted fields:
 
 ~~~sh
-plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
+plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
 thread_id="<native-subagent-thread-id>"
 sh "$plugin_dir/scripts/inspect-agent-runtime.sh" "$thread_id"
 ~~~
@@ -307,7 +397,7 @@ boundary, verification, and structured return.
 ## Fork main and upstream review
 
 Accepted changes to this maintained fork always finish on
-[`jessejaffe/sol-advisor` main](https://github.com/jessejaffe/sol-advisor/tree/main).
+[`jessejaffe/codex-orchestration` main](https://github.com/jessejaffe/codex-orchestration/tree/main).
 A temporary `codex/*` branch may isolate work, but the same task must verify it, merge
 it into fork `main`, and push `main`. The original
 [`DannyMac180/sol-advisor`](https://github.com/DannyMac180/sol-advisor) repository is a
@@ -320,7 +410,7 @@ issue containing commits, changed files, and a comparison link. It has read-only
 contents permission and issue-writing permission; it cannot merge or modify code.
 
 The activation audit uses
-[`daily-upstream-audit.sh`](plugins/sol-advisor/scripts/daily-upstream-audit.sh) and a
+[`daily-upstream-audit.sh`](plugins/codex-orchestration/scripts/daily-upstream-audit.sh) and a
 local date marker to avoid duplicate daily network checks. When activity is pending,
 Sol inspects the actual upstream diff and proposes one of three decisions for each
 coherent change:
@@ -377,7 +467,7 @@ review lane and do not claim enforced read-only isolation.
 
 The owning executive inspects every diff and reruns verification. For modifying work at
 5.0+, a fresh Sol reviewer returns ship, fix-first, or rethink; below 5.0 the Terra
-executive performs final review itself. Sol Advisor does not
+executive performs final review itself. Codex Orchestration does not
 globally reroute unrelated tasks.
 
 Every completed task ends with the score-selected executive line—Terra / High below
@@ -389,18 +479,18 @@ Every completed task ends with the score-selected executive line—Terra / High 
 Install a checkout as a local marketplace when you want Codex to use its skill:
 
 ~~~sh
-cd /absolute/path/to/sol-advisor
-codex plugin marketplace add /absolute/path/to/sol-advisor
-sh plugins/sol-advisor/scripts/reinstall-plugin.sh
-sh plugins/sol-advisor/scripts/reinstall-plugin.sh --check
+cd /absolute/path/to/codex-orchestration
+codex plugin marketplace add /absolute/path/to/codex-orchestration
+sh plugins/codex-orchestration/scripts/reinstall-plugin.sh
+sh plugins/codex-orchestration/scripts/reinstall-plugin.sh --check
 ~~~
 
 Run the repository verifier separately. It uses only a disposable target directory and
 never changes your Codex configuration:
 
 ~~~sh
-cd /absolute/path/to/sol-advisor
-sh plugins/sol-advisor/scripts/verify.sh
+cd /absolute/path/to/codex-orchestration
+sh plugins/codex-orchestration/scripts/verify.sh
 git diff --check
 ~~~
 
@@ -409,41 +499,44 @@ The installer commands below enable every score band, including Luna / Max.
 To exercise the native installer itself against an explicit disposable target:
 
 ~~~sh
-cd /absolute/path/to/sol-advisor
+cd /absolute/path/to/codex-orchestration
 scratch_agents="$(mktemp -d)"
-sh plugins/sol-advisor/scripts/install-agents.sh --target-dir "$scratch_agents"
-sh plugins/sol-advisor/scripts/install-agents.sh --target-dir "$scratch_agents" --check
+sh plugins/codex-orchestration/scripts/install-agents.sh --target-dir "$scratch_agents"
+sh plugins/codex-orchestration/scripts/install-agents.sh --target-dir "$scratch_agents" --check
 ~~~
 
 To install this checkout's native templates for real local development, use the same
 repository-relative commands without --target-dir, then begin a new task:
 
 ~~~sh
-cd /absolute/path/to/sol-advisor
-sh plugins/sol-advisor/scripts/install-agents.sh
-sh plugins/sol-advisor/scripts/install-agents.sh --check
+cd /absolute/path/to/codex-orchestration
+sh plugins/codex-orchestration/scripts/install-agents.sh
+sh plugins/codex-orchestration/scripts/install-agents.sh --check
 ~~~
 
 After editing the plugin, validate both layers:
 
 ~~~sh
-cd /absolute/path/to/sol-advisor
+cd /absolute/path/to/codex-orchestration
 if [ -n "$CODEX_HOME" ]; then
   codex_skills="$CODEX_HOME/skills/.system"
 else
   codex_skills="$HOME/.codex/skills/.system"
 fi
-uv run --no-project --with pyyaml python "$codex_skills/skill-creator/scripts/quick_validate.py" plugins/sol-advisor/skills/orchestration
-uv run --no-project --with pyyaml python "$codex_skills/plugin-creator/scripts/validate_plugin.py" plugins/sol-advisor
-jq empty .agents/plugins/marketplace.json plugins/sol-advisor/.codex-plugin/plugin.json
+uv run --no-project --with pyyaml python "$codex_skills/skill-creator/scripts/quick_validate.py" plugins/codex-orchestration/skills/orchestration
+uv run --no-project --with pyyaml python "$codex_skills/plugin-creator/scripts/validate_plugin.py" plugins/codex-orchestration
+jq empty .agents/plugins/marketplace.json plugins/codex-orchestration/.codex-plugin/plugin.json
 ~~~
 
 The verifier validates JSON and TOML, the seven exact native role pins, clean/current/
-missing and idempotent installer behavior, exact-v0.2.0 migration, refusal/non-
-mutation gates, runtime-inspector safe fixtures, native lane contracts,
-version/UI metadata, stale-claim guards, and shell syntax. The uv commands supply the
-validators' PyYAML dependency in a disposable environment. They do not install the
-marketplace or mutate Codex configuration.
+missing and idempotent installer behavior, exact legacy-agent migration, complete-package
+and version-alias gates, seven-role-before-identity retirement, distinct-marketplace
+enforcement, plugin/marketplace retirement, persistent-copy and preserved failed-recovery
+transactions, state copy-forward and no-overwrite refusals, runtime-inspector safe fixtures,
+native lane contracts, version/UI metadata,
+stale-claim guards, and shell syntax. The uv commands supply the validators' PyYAML
+dependency in a disposable environment. They do not install the marketplace or mutate
+Codex configuration.
 
 ## License
 

@@ -1,14 +1,14 @@
 {
-  "name": "sol-advisor",
+  "name": "codex-orchestration",
   "interface": {
-    "displayName": "Sol Advisor"
+    "displayName": "Codex Orchestration"
   },
   "plugins": [
     {
-      "name": "sol-advisor",
+      "name": "codex-orchestration",
       "source": {
         "source": "local",
-        "path": "./plugins/sol-advisor"
+        "path": "./plugins/codex-orchestration"
       },
       "policy": {
         "installation": "AVAILABLE",

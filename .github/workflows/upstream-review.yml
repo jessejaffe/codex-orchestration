@@ -79,7 +79,7 @@ jobs:
           fi
 
           gh label create upstream-review --repo "$GITHUB_REPOSITORY" \
-            --color D4C5F9 --description "Original Sol Advisor changes awaiting review" --force
+            --color D4C5F9 --description "Original upstream changes awaiting Codex Orchestration review" --force
 
           report=$RUNNER_TEMP/upstream-review.md
           {
@@ -104,7 +104,7 @@ jobs:
             echo
             echo "### Decision requested"
             echo
-            echo "On the next Sol Advisor activation, summarize these changes and classify each as:"
+            echo "On the next Codex Orchestration activation, summarize these changes and classify each as:"
             echo
             echo "- **Adopt unchanged** — compatible and useful."
             echo "- **Adapt** — useful, but must preserve this fork's policies."
@@ -113,7 +113,7 @@ jobs:
             echo "Do not merge until the user approves the proposed decision."
           } > "$report"
 
-          title="Review upstream Sol Advisor changes through ${upstream_head:0:7}"
+          title="Review upstream changes through ${upstream_head:0:7}"
           if [[ -n "$issue_number" ]]; then
             gh issue edit "$issue_number" --repo "$GITHUB_REPOSITORY" \
               --title "$title" --body-file "$report" --add-label upstream-review
