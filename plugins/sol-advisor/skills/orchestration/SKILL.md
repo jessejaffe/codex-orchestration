@@ -1,22 +1,30 @@
 ---
 name: orchestration
-description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this chat contains the latest ON marker. Ignore plugin state and evidence outside this chat. While ON, primary Sol / High owns architecture, exact directions, verification, and acceptance. Score every request with a deliverable from 1 to 10 and start with its implementation producer: 1.0–2.9 Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High, 6.6–7.9 Sol / Medium, and 8.0–10.0 Sol / High. Read-only work follows the same bands. If a producer is unavailable, move upward one tier at a time; after unavailable Sol / High delegation, primary Sol / High executes as the terminal fallback. Verify, persist to completion, and reroute after user interruptions. Stay OFF without direct activation evidence or when this chat's latest direct marker is OFF."
+description: "Manage Sol Advisor only inside the current chat. Use when the current user message directly says to turn or use Sol Advisor on or off, contains the literal $sol-advisor:orchestration invocation, or a direct assistant message earlier in this chat contains the latest ON marker. Ignore plugin state and evidence outside this chat. Score every deliverable once from 1.0 to 10.0. For 1.0–4.9, hand executive ownership to GPT-5.6 Terra / High; for 5.0–10.0, primary Sol / High retains executive ownership. Keep producer bands unchanged: 1.0–2.9 Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High, 6.6–7.9 Sol / Medium, and 8.0–10.0 Sol / High. Verify, persist to completion, and reroute after user interruptions. Stay OFF without direct activation evidence or when this chat's latest direct marker is OFF."
 ---
 
 # Sol Advisor Orchestration
 
-Act as the architect. Own the user's intent, architecture, decomposition, route
-selection, complete implementation specification, primary verification, and final
-acceptance. Principle one is efficiency: minimize total token use and elapsed time
+Act as the root orchestrator. For scores 5.0–10.0, own the user's intent, architecture,
+decomposition, complete implementation specification, primary verification, and final
+acceptance. For scores 1.0–4.9, do only minimum-sufficient activation, initial evidence
+needed to score, immutable score persistence and announcement, Terra-executive
+preflight, complete request/evidence handoff, registration/monitoring, and relay of its
+accepted result. Do not duplicate the Terra executive's architecture, specification,
+verification, corrections, or acceptance. Principle one is efficiency: minimize total token use and elapsed time
 across the primary, workers, monitoring, and review while preserving correctness.
-Primary Sol / High always resolves the task and writes exact implementation directions
-before delegation. Choose only the implementation producer from the reasoned score:
+Choose the executive and implementation producer from the immutable reasoned score.
+Scores 1.0–4.9 use the dedicated GPT-5.6 Terra / High executive; scores 5.0–10.0
+retain primary Sol / High executive ownership. Choose the implementation producer:
 Luna / Max for 1.0–2.9, Terra / Medium for 3.0–5.0, Terra / High for 5.1–6.5,
 Sol / Medium for 6.6–7.9, or a separate Sol / High implementer for 8.0–10.0. After
-implementation, primary Sol verifies the result and a fresh Sol / High reviewer checks
-native work before final acceptance. Announce the route before work starts and report
-the observed route again in the final output. Start every scored task with its mapped
-producer and use primary Sol implementation only as the terminal availability fallback.
+implementation, the owning executive verifies and accepts the result. High-band
+modifying work retains a fresh Sol / High reviewer; the low-band Terra executive
+performs final review itself. Announce the route before work starts and report
+the observed route again in the final output. For scores 1.0–4.9, start with the
+dedicated Terra / High executive, which then starts the mapped producer. For scores
+5.0–10.0, start the mapped producer under the primary Sol / High executive. Use primary
+Sol implementation only as the terminal availability fallback.
 
 Let `skill_dir` be the directory that contains this exact `SKILL.md`. Resolve every
 relative file from `skill_dir`, never from its parent `skills/` directory. The role
@@ -157,16 +165,16 @@ Make each budget concrete. Use a user-supplied numeric limit when present. Other
 state an operational cap such as one focused inspection pass, one worker, an exact
 variant or retry limit, and a named checkpoint before additional work. “Be efficient”
 without an escalation or replanning boundary is not a budget. A budget checkpoint is
-never permission to abandon an incomplete user outcome: it triggers a new Sol decision
-about a cheaper approach, narrower method, corrected route, or genuine blocker.
+never permission to abandon an incomplete user outcome: it triggers a new owning-executive
+decision about a cheaper approach, narrower method, corrected route, or genuine blocker.
 
 ## Principle two: route by complexity and risk
 
-Assign a **complexity score from 1.0 to 10.0** before choosing a lane. This is a
-reasoned judgment, not a deterministic formula. Score the work that remains after
-primary Sol has resolved requirements, architecture, and scope well enough to write a
-worker packet. Judge how much irreducible executive reasoning must remain inside
-execution; do not inflate the score merely because the task is long, read-only,
+Assign a **complexity score from 1.0 to 10.0** from minimum initial evidence before
+choosing a lane. This is a reasoned judgment, not a deterministic formula. Below 5.0,
+do not resolve requirements or architecture before handoff; score the observed task so
+the Terra executive owns that reasoning. At 5.0+, primary Sol owns it. In either band,
+do not inflate the score merely because the task is long, read-only,
 context-heavy, touches several files, or requires careful verification.
 
 Use this implementation calibration:
@@ -177,8 +185,8 @@ Use this implementation calibration:
   boundary. Use Terra / Medium.
 - **5.1–6.5 — involved:** Several steps or meaningful context remain inside a settled
   specification. Use Terra / High.
-- **6.6–7.9 — difficult:** Substantial implementation reasoning remains, while primary
-  Sol has still settled architecture and scope. Use Sol / Medium.
+- **6.6–7.9 — difficult:** Substantial implementation reasoning remains after the
+  owning executive settles architecture and scope. Use Sol / Medium.
 - **8.0–10.0 — hardest implementation:** Deep implementation reasoning, difficult
   tradeoffs, or high consequence remain inside the settled packet. Use a separate
   Sol / High implementer.
@@ -192,11 +200,12 @@ Anchor an ordinary bounded task with settled requirements at **5.0**, not near t
 of the scale. A typical bounded bug investigation or settled multi-file change belongs
 in Terra / Medium or Terra / High unless substantial implementation judgment remains.
 Reserve the Sol implementation bands for genuinely difficult residual reasoning after
-the primary has already removed architectural uncertainty.
+the owning executive removes architectural uncertainty.
 
-Score only the implementation after primary Sol / High settles requirements,
-architecture, interfaces, ownership, and acceptance. Do not add complexity points for
-the architect or final-review work that Sol / High owns in every band.
+Score the complete request once after only the initial evidence needed for a reasoned
+route decision. Persist that one-decimal score before routed work and never revise it.
+Do not create a second score inside the Terra executive or infer complexity from task
+titles.
 
 Map the score to the qualitative classes:
 
@@ -226,17 +235,17 @@ claim unobserved metadata was verified.
 
 ## Choose the execution route
 
-Reach this section after the efficiency gates. Sol makes the executive route decision;
+Reach this section after the efficiency gates. Root Sol makes the initial executive route decision;
 the user does not need to choose Sol, Terra, or Luna after activation.
 
-Select the implementation lane strictly from the five score bands. If architecture,
-scope, interfaces, or acceptance remain materially unsettled, primary Sol / High must
-settle them before scoring; do not inflate the implementation score with unresolved
-architect work or send an incomplete packet to a worker.
+Select the producer strictly from the five score bands. Select the executive separately:
+`1.0–4.9: sol_advisor_terra_executive` and `5.0–10.0: primary Sol / High`. At exactly
+5.0 the producer remains Terra / Medium while the executive is Sol / High.
 
 Every activated request that asks for an answer, inspection, analysis, diagnosis,
 change, build, or other deliverable is a scored task. Read-only work is still scored.
-Once a score exists, try the mapped producer first. Use primary Sol / High for execution
+Once a low score exists, spawn the Terra executive first; it then tries the mapped
+producer. Once a high score exists, primary Sol tries the mapped producer. Use primary Sol / High for execution
 only after the selected producer and every higher delegated tier are unavailable. Only
 activation or deactivation acknowledgements and a genuinely blocking clarification
 before scoring have no implementation route.
@@ -270,10 +279,14 @@ spawning implementation work, send exactly these three user-visible lines. Forma
 score to one decimal place, including a trailing `.0` for whole-number scores:
 
 ~~~text
-Executive design and review: GPT-5.6 Sol / High
+Executive design and review: <GPT-5.6 Terra / High below 5.0; GPT-5.6 Sol / High at 5.0+>
 Implementation: <actual available model / effort>
 Complexity: <score>/10
 ~~~
+
+Substitute exactly `Executive design and review: GPT-5.6 Terra / High` for scores
+1.0–4.9 and exactly `Executive design and review: GPT-5.6 Sol / High` for scores
+5.0–10.0.
 
 The next implementation or worker tool call persists that exact score in plugin data.
 If the complexity gate denies the call, repeat the complete three-line route with one
@@ -282,10 +295,12 @@ later availability fallback changes only the `Implementation:` line.
 
 The score-selected model is an internal candidate until its current-turn preflight
 passes. Never print that candidate as `Implementation:` and then perform its preflight.
-If the actual route is a fallback, append one short verified reason to the same line:
+If a producer route is a fallback, append one short verified reason to its line. If
+the low-band Terra executive is unavailable, fall upward to root Sol / High and use
+this stable syntax with a nonempty current-turn verified reason:
 
 ~~~text
-Implementation: GPT-5.6 Sol / High — fallback from GPT-5.6 Terra / High: <current-turn failure>
+Executive design and review: GPT-5.6 Sol / High — Terra executive fallback: <current-turn verified reason>
 ~~~
 
 Do not say implementation has started until the selected spawn is accepted. If a spawn
@@ -303,18 +318,19 @@ token in every delegated task name or title:
 - `Luna Max` — Luna / Max
 - `Terra Medium` — Terra / Medium
 - `Terra High` — Terra / High
+- `Terra High Exec` — Terra / High executive
 - `Sol Medium` — Sol / Medium
 - `Sol High` — Sol / High, including the fresh reviewer
 
 Native `spawn_agent.task_name` accepts only lowercase letters, digits, and underscores,
-so use the corresponding full machine prefixes `luna_max_`, `terra_medium_`, `terra_high_`,
+so use the corresponding full machine prefixes `luna_max_`, `terra_medium_`, `terra_high_`, `terra_high_exec_`,
 `sol_medium_`, and `sol_high_` followed by a short objective slug. Put the prefix first
 so it remains visible when the activity chip truncates the objective. Never use an
 abbreviation or generic task name that hides the selected model tier.
 
 ## Preflight native custom agents
 
-The native lane uses six user-owned custom-agent TOML files. Before every native
+The native lane uses seven user-owned custom-agent TOML files. Before every native
 delegation, complete steps 1-2. After spawning, complete steps 3-4 before accepting
 the result:
 
@@ -327,7 +343,7 @@ the result:
    sh "$installer" --check
    ~~~
 
-   It must prove all six role files exactly match the shipped templates.
+   It must prove all seven role files exactly match the shipped templates.
 
 2. Require the native spawn tool to expose the exact type for the tier being attempted.
    Do not require unrelated implementation types or the reviewer merely to start the
@@ -345,8 +361,8 @@ the result:
    sh "$runtime_inspector" <native-subagent-thread-id>
    ~~~
 
-   Accept only the model/effort pin selected by the score band for implementation and
-   Sol / High for native review.
+   Accept only the model/effort pin selected by the score band for implementation,
+   Terra / High for the low-band executive, and Sol / High for native review.
 
 4. For every native Sol review, capture the observed sandbox policy type and
    permission profile type. Never call the review OS-enforced read-only unless the
@@ -360,9 +376,10 @@ prior turn. Never substitute an unnamed native role, model, or reasoning level.
 Custom-agent TOML, not the spawn call, pins native model and effort, so omit per-spawn
 overrides.
 
-## Keep architect work in the primary session
+## Keep executive work in the selected executive
 
-Keep these responsibilities in the primary session:
+For scores 5.0–10.0, keep these responsibilities in the primary session. For scores
+1.0–4.9, transfer all of them to `sol_advisor_terra_executive`:
 
 - Resolve requirements and material ambiguity.
 - Choose architecture, interfaces, decomposition, and the implementation route.
@@ -370,10 +387,26 @@ Keep these responsibilities in the primary session:
 - Inspect the actual diff and rerun verification.
 - Judge reviewer feedback and accept the deliverable.
 
+For a low route, root Sol may only activate, inspect enough evidence to score, persist
+and announce the score, preflight and spawn the Terra executive, hand off the complete
+original request/constraints/evidence, root thread ID, resolved receipt-helper path,
+exact score, executive line, actual producer line, producer mapping, and explicit root
+receipt state; register and monitor the Terra executive itself; and relay its accepted
+result. The Terra executive may spawn, register, and monitor its own descendants against
+the root receipt while coordinating the mapped producer. Before its first nested producer/reviewer tool call,
+it must emit the same exact three-line route in its own session so the child PreToolUse
+gate persists the score. Immediately after every descendant spawn, it must run
+`usage-receipt.py add-thread <descendant-id> --root-thread-id <root-thread-id>` before
+monitoring or accepting work. Root Sol still registers the Terra executive itself.
+It performs final review itself; do not add a Sol reviewer unless the user explicitly
+requests independent Sol review or risk is escalated out of the low band.
+The Terra executive's delegated Stop releases without a separate receipt or
+effectiveness completion; root Stop is the sole completion record for the user task.
+
 During normal routed work, do not type implementation code, tests, boilerplate, or
-mechanical configuration in the primary session. Primary Sol / High writes exact
-directions, delegates the implementation even in the 8.0–10.0 band, verifies the
-result, and accepts or corrects it. In the terminal availability fallback, primary Sol
+mechanical configuration in the root session. The owning executive writes exact
+directions, delegates implementation, verifies, and accepts or corrects it. In the
+terminal availability fallback, primary Sol
 may execute the settled packet itself and must verify its own result. Use the fresh Sol
 High reviewer when that separate capability remains available; otherwise report
 primary-only verification. Correct a native result with a revised packet to the same
@@ -381,7 +414,7 @@ implementation role.
 
 ## Check implementation without duplicating it
 
-Do not spawn another Sol reviewer merely to watch the implementation worker. The primary Sol session owns
+Do not spawn another Sol reviewer merely to watch the implementation worker. The owning executive owns
 one lightweight adherence checkpoint when it is justified. Require that checkpoint
 only when the work is long-running or high-risk, or when the worker reports ambiguity,
 scope growth, an ownership conflict, failed verification, a new dependency, external
@@ -389,12 +422,17 @@ system access, or budget overrun. For routine bounded work, skip it.
 
 When required, have the worker send a concise checkpoint after the first meaningful
 unit or first verification result and before the expensive or scope-expanding action.
-The primary checks only objective, ownership, constraints, remaining token/time value,
+The owning executive checks only objective, ownership, constraints, remaining token/time value,
 and whether current evidence is already sufficient; it does not reimplement or repeat
 the worker's investigation. Return `continue`, `redirect`, or `escalate`. A redirect
 must narrow or change the specification; never repeat an unchanged prompt. Escalation
-returns control to primary Sol for a fresh route decision and does not abandon the
-requested outcome.
+returns control to the owning executive for a fresh specification decision and does not
+abandon the requested outcome.
+
+If low-band work materially grows beyond 4.9, the Terra executive must pause further
+implementation and escalate. Root Sol makes a fresh executive decision and replans,
+but the persisted original score remains immutable. Report any observed transition
+with the stable Terra-executive fallback syntax rather than rewriting the score.
 
 ## Handle interruption and changed direction
 
@@ -402,18 +440,33 @@ The user's newest instruction always has priority over an active worker. If the 
 stops, cancels, replaces, or materially redirects the task while a native worker is active,
 immediately call `interrupt_agent` for that worker before accepting more work.
 
-Primary Sol must then reread the newest request, decide whether it replaces or adds to
+Root Sol must then reread the newest request, decide whether it replaces or adds to
 the prior request, inspect any partial diff or state without blindly reverting it, and
-rerun the minimum-sufficient, token, and time gates. Make a fresh executive decision
-about objective, scope, route, and whether any prior work remains valid. Never resume
-the old worker automatically. Resume or correct it only after Sol confirms that its
-work still fits; otherwise issue a new specification or choose a different route.
+rerun the minimum-sufficient, token, and time gates, and select the owning executive
+from a fresh score. Below 5.0, the new Terra executive decides objective, architecture,
+scope, and whether prior work remains valid; at 5.0+, primary Sol decides them.
+Never resume the old worker automatically or reuse stale worker plans without the
+owning executive's fresh acceptance.
 
 A user cancellation authorizes stopping the cancelled objective. A worker budget
 checkpoint does not: it requires replanning toward completion unless a genuine blocker
 or new user decision makes completion impossible.
 
 ## Route native implementation by score
+
+For scores 1.0–4.9, root Sol first spawns exactly one executive:
+
+~~~text
+agent_type: sol_advisor_terra_executive
+task_name: terra_high_exec_<objective_slug>
+fork_turns: none
+~~~
+
+Give it the original user request, current constraints, relevant prior evidence, root
+thread ID, resolved receipt-helper path, immutable score, exact executive line, actual
+producer line, mapped producer, and explicit root receipt state. It owns the producer spawn,
+verification, corrections, review, and acceptance. For scores 5.0–10.0, primary Sol
+continues directly with the producer mapping below.
 
 Spawn exactly one implementation role for the scored band:
 
@@ -442,14 +495,15 @@ exact role, model, and effort before accepting work.
 Treat worker reports as claims. Before acceptance:
 
 1. Inspect the working tree, complete diff, and changed-file scope.
-2. Rerun the specification's verification commands in the primary session.
+2. Rerun the specification's verification commands in the owning executive session.
 3. Compare the evidence with the objective, interfaces, and constraints.
 4. Route corrections back to the same implementation lane and verify again.
 
-For modifying native implementation, obtain a fresh Sol / High final review after primary
-verification. The reviewer must return exactly `ship`, `fix-first`, or `rethink`; any
+For modifying native implementation at score 5.0 or above, obtain a fresh Sol / High
+final review after primary verification. For 1.0–4.9, the Terra executive performs the
+final review itself. The Sol reviewer must return exactly `ship`, `fix-first`, or `rethink`; any
 subsequent fix invalidates the verdict and requires a new review. For native read-only
-analysis, primary Sol inspects the evidence and accepts the answer; do not spawn a fresh
+analysis, the owning executive inspects the evidence and accepts the answer; do not spawn a fresh
 reviewer unless high stakes or a specifically requested independent review justifies
 its cost.
 
@@ -500,7 +554,7 @@ one-decimal complexity score persisted before work began, and then the successfu
 receipt output:
 
 ~~~text
-Executive design and review: GPT-5.6 Sol / High
+Executive design and review: <GPT-5.6 Terra / High below 5.0; GPT-5.6 Sol / High at 5.0+, or stable low-band fallback line>
 Implementation: <actual GPT-5.6 model / effort used, with verified fallback reason when applicable>
 Complexity: <score>/10
 Actual weekly usage: <percentage>

@@ -13,7 +13,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-ROUTE_EXECUTIVE = "Executive design and review: GPT-5.6 Sol / High"
+SOL_EXECUTIVE = "Executive design and review: GPT-5.6 Sol / High"
+TERRA_EXECUTIVE = "Executive design and review: GPT-5.6 Terra / High"
+TERRA_FALLBACK_PREFIX = SOL_EXECUTIVE + " — Terra executive fallback: "
 RECEIPT_LABELS = (
     "Actual weekly usage:",
     "All-Sol equivalent:",
@@ -60,6 +62,9 @@ def read_state(path: Path | None) -> dict[str, Any] | None:
     score = value.get("score")
     if not isinstance(score, str) or not re.fullmatch(r"(?:10\.0|[1-9]\.\d)", score):
         return None
+    executive = value.get("executive")
+    if not isinstance(executive, str) or not valid_executive(score, executive):
+        return None
     return value
 
 
@@ -70,6 +75,8 @@ def write_state(
     turn_id: str,
     score: str,
     implementation: str,
+    executive: str,
+    executive_spawned: bool = False,
 ) -> bool:
     if path is None:
         return False
@@ -91,6 +98,8 @@ def write_state(
                         "turn_id": turn_id,
                         "score": score,
                         "implementation": implementation,
+                        "executive": executive,
+                        "executive_spawned": executive_spawned,
                     },
                     handle,
                     separators=(",", ":"),
@@ -115,6 +124,27 @@ def write_state(
     return True
 
 
+def replace_state(path: Path | None, state: dict[str, Any]) -> bool:
+    if path is None:
+        return False
+    try:
+        descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(state, handle, separators=(",", ":"), sort_keys=True)
+            handle.write("\n")
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, path)
+        return True
+    except OSError:
+        return False
+    finally:
+        if "temporary" in locals():
+            try:
+                os.unlink(temporary)
+            except FileNotFoundError:
+                pass
+
+
 def normalized_complexity(text: str) -> str | None:
     matches = COMPLEXITY_RE.findall(text)
     if not matches:
@@ -130,6 +160,60 @@ def normalized_complexity(text: str) -> str | None:
 def implementation_line(text: str) -> str:
     matches = re.findall(r"(?m)^Implementation: GPT-5\.6[^\r\n]*", text)
     return matches[-1] if matches else "Implementation: <actual routed model / effort>"
+
+
+def executive_line(text: str) -> str | None:
+    matches = re.findall(r"(?m)^Executive design and review: GPT-5\.6[^\r\n]*", text)
+    return matches[-1] if matches else None
+
+
+def valid_executive(score: str, line: str | None) -> bool:
+    if line is None:
+        return False
+    if float(score) < 5.0:
+        return line == TERRA_EXECUTIVE or (
+            line.startswith(TERRA_FALLBACK_PREFIX)
+            and bool(line[len(TERRA_FALLBACK_PREFIX) :].strip())
+        )
+    return line == SOL_EXECUTIVE
+
+
+def expected_executive(score: str | None, observed: str | None) -> str:
+    if score is not None and float(score) < 5.0:
+        if observed and observed.startswith(TERRA_FALLBACK_PREFIX):
+            return observed
+        return TERRA_EXECUTIVE
+    return SOL_EXECUTIVE
+
+
+def session_role(transcript: Path) -> str | None:
+    try:
+        with transcript.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                payload = event.get("payload") or {}
+                if event.get("type") == "session_meta":
+                    role = payload.get("agent_role")
+                    if isinstance(role, str):
+                        return role
+    except OSError:
+        return None
+    return None
+
+
+def allowed_child_role(score: str, agent_type: str) -> bool:
+    ladder = [
+        "sol_advisor_luna_implementer",
+        "sol_advisor_terra_medium_implementer",
+        "sol_advisor_terra_implementer",
+        "sol_advisor_sol_medium_implementer",
+        "sol_advisor_sol_high_implementer",
+    ]
+    start = 0 if float(score) < 3.0 else 1
+    return agent_type in ladder[start:]
 
 
 def receipt_value(text: str, label: str) -> str | None:
@@ -358,9 +442,6 @@ def pre_tool_gate(hook_input: dict[str, Any]) -> int:
         emit({})
         return 0
     route_state = state_path(session_id, turn_id)
-    if read_state(route_state) is not None:
-        emit({})
-        return 0
     transcript = Path(transcript_value)
     try:
         current_text = turn_text(transcript, turn_id)
@@ -370,7 +451,7 @@ def pre_tool_gate(hook_input: dict[str, Any]) -> int:
     tool_input = hook_input.get("tool_input")
     agent_type = tool_input.get("agent_type") if isinstance(tool_input, dict) else None
     sol_agent_call = isinstance(agent_type, str) and agent_type.startswith("sol_advisor_")
-    routed = ROUTE_EXECUTIVE in current_text and "Implementation: GPT-5.6" in current_text
+    routed = executive_line(current_text) is not None and "Implementation: GPT-5.6" in current_text
     if not routed and not sol_agent_call:
         emit({})
         return 0
@@ -390,12 +471,59 @@ def pre_tool_gate(hook_input: dict[str, Any]) -> int:
             }
         )
         return 0
-    if not write_state(
+    observed_executive = executive_line(current_text)
+    if not valid_executive(score, observed_executive):
+        emit(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": (
+                        "Sol Advisor executive gate: scores below 5.0 require "
+                        f"`{TERRA_EXECUTIVE}`; scores 5.0 and above require "
+                        f"`{SOL_EXECUTIVE}`. A low-band upward fallback must use "
+                        f"`{TERRA_FALLBACK_PREFIX}<current-turn verified reason>`."
+                    ),
+                }
+            }
+        )
+        return 0
+    persisted = read_state(route_state)
+    role = session_role(transcript)
+    if persisted is not None:
+        if persisted.get("score") != score:
+            emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Sol Advisor complexity gate: the persisted score is immutable."}})
+            return 0
+        prior_executive = persisted.get("executive")
+        if float(score) < 5.0:
+            transition_valid = (
+                prior_executive == TERRA_EXECUTIVE
+                and (
+                    observed_executive == TERRA_EXECUTIVE
+                    or (observed_executive or "").startswith(TERRA_FALLBACK_PREFIX)
+                )
+            ) or (
+                isinstance(prior_executive, str)
+                and prior_executive.startswith(TERRA_FALLBACK_PREFIX)
+                and observed_executive == prior_executive
+            )
+        else:
+            transition_valid = prior_executive == SOL_EXECUTIVE and observed_executive == SOL_EXECUTIVE
+        if not transition_valid:
+            emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Sol Advisor executive gate: the executive route cannot move downward or change after fallback."}})
+            return 0
+        if observed_executive != prior_executive:
+            persisted["executive"] = observed_executive
+            if not replace_state(route_state, persisted):
+                emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Sol Advisor executive gate could not persist the verified transition."}})
+                return 0
+    elif not write_state(
         route_state,
         session_id=session_id,
         turn_id=turn_id,
         score=score,
         implementation=implementation_line(current_text),
+        executive=observed_executive or "",
     ):
         emit(
             {
@@ -410,6 +538,28 @@ def pre_tool_gate(hook_input: dict[str, Any]) -> int:
             }
         )
         return 0
+    persisted = read_state(route_state)
+    if sol_agent_call and persisted is not None:
+        if role == "sol_advisor_terra_executive":
+            if not allowed_child_role(score, agent_type):
+                emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Sol Advisor executive gate: the Terra executive may spawn only the score-mapped producer or an upward producer fallback."}})
+                return 0
+        elif float(score) < 5.0:
+            if str(persisted.get("executive", "")).startswith(TERRA_FALLBACK_PREFIX):
+                if not allowed_child_role(score, agent_type):
+                    emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Sol Advisor executive gate: fallback root Sol may spawn only the score-mapped producer or an upward producer fallback."}})
+                    return 0
+            elif not persisted.get("executive_spawned"):
+                if agent_type != "sol_advisor_terra_executive":
+                    emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Sol Advisor executive gate: the first low-band root role must be sol_advisor_terra_executive."}})
+                    return 0
+                persisted["executive_spawned"] = True
+                if not replace_state(route_state, persisted):
+                    emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Sol Advisor executive gate could not persist the root executive spawn."}})
+                    return 0
+            else:
+                emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Sol Advisor executive gate: low-band producer descendants belong to the Terra executive session."}})
+                return 0
     emit({})
     return 0
 
@@ -430,12 +580,15 @@ def main() -> int:
         emit({"continue": True})
         return 0
     transcript = Path(transcript_value)
+    if session_role(transcript) == "sol_advisor_terra_executive":
+        emit({"continue": True})
+        return 0
     try:
         current_text = turn_text(transcript, turn_id)
     except OSError:
         emit({"continue": True})
         return 0
-    routed = ROUTE_EXECUTIVE in current_text and "Implementation: GPT-5.6" in current_text
+    routed = executive_line(current_text) is not None and "Implementation: GPT-5.6" in current_text
     if not routed:
         emit({"continue": True})
         return 0
@@ -449,13 +602,21 @@ def main() -> int:
             turn_id=turn_id,
             score=transcript_score,
             implementation=implementation_line(current_text),
+            executive=executive_line(current_text) or "",
         )
         persisted = read_state(route_state)
     exact_score = persisted.get("score") if persisted else None
+    observed_executive = executive_line(current_text)
+    persisted_executive = persisted.get("executive") if persisted else None
     final_score = normalized_complexity(last_message)
     complexity_present = exact_score is not None and final_score == exact_score
     receipt_present = all(label in last_message for label in RECEIPT_LABELS)
-    if complexity_present and receipt_present:
+    executive_present = (
+        exact_score is not None
+        and isinstance(persisted_executive, str)
+        and executive_line(last_message) == persisted_executive
+    )
+    if complexity_present and receipt_present and executive_present:
         if turn_was_interrupted(transcript, turn_id):
             emit({"continue": True})
             return 0
@@ -489,7 +650,7 @@ def main() -> int:
     else:
         receipt_text = "\n".join(receipt)
     footer = "\n".join(
-        [ROUTE_EXECUTIVE, implementation, complexity, receipt_text]
+        [expected_executive(exact_score, persisted_executive or observed_executive), implementation, complexity, receipt_text]
     )
     reason = (
         "Sol Advisor completion gate: revise the final answer without removing its task result, "

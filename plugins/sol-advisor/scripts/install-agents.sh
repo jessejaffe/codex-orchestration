@@ -7,7 +7,7 @@ usage() {
   cat <<'EOF'
 Usage: install-agents.sh [--target-dir PATH] [--check]
 
-Install Sol Advisor's six current custom-agent templates into the target directory.
+Install Sol Advisor's seven current custom-agent templates into the target directory.
 Normal mode also migrates only exact known shipped files: it replaces the v0.2.0 Luna
 and the v0.2.0 or immediately previous Terra templates. It never
 overwrites a modified, nonregular, or symlinked destination.
@@ -17,7 +17,7 @@ set, otherwise "$HOME/.codex/agents".
 
 Options:
   --target-dir PATH  Explicit destination directory (absolute or relative).
-  --check            Verify that all six implementation and reviewer roles match
+  --check            Verify that all seven executive, implementation, and reviewer roles match
                      exactly; do not mutate anything.
   --help             Show this help text.
 EOF
@@ -194,6 +194,7 @@ case "$target_dir" in
 esac
 
 terra_medium_file=sol-advisor-terra-medium-implementer.toml
+terra_executive_file=sol-advisor-terra-executive.toml
 terra_file=sol-advisor-terra-implementer.toml
 sol_medium_file=sol-advisor-sol-medium-implementer.toml
 sol_high_file=sol-advisor-sol-high-implementer.toml
@@ -201,11 +202,13 @@ sol_file=sol-advisor-sol-reviewer.toml
 luna_file=sol-advisor-luna-implementer.toml
 luna_template=$template_dir/$luna_file
 terra_medium_template=$template_dir/$terra_medium_file
+terra_executive_template=$template_dir/$terra_executive_file
 terra_template=$template_dir/$terra_file
 sol_medium_template=$template_dir/$sol_medium_file
 sol_high_template=$template_dir/$sol_high_file
 sol_template=$template_dir/$sol_file
 terra_medium_destination=$target_dir/$terra_medium_file
+terra_executive_destination=$target_dir/$terra_executive_file
 terra_destination=$target_dir/$terra_file
 sol_medium_destination=$target_dir/$sol_medium_file
 sol_high_destination=$target_dir/$sol_high_file
@@ -221,7 +224,7 @@ legacy_terra_sha256=4425a8c1f21ce8c6af93f96adc253bbc33ea301f1389b3fa8ce350be0858
 # routine-analysis routing policy update.
 previous_terra_sha256=06c318e5e93f37452635906394e6ea69fb6a65ba9e6ad7172d37b444e0dc871d
 
-for template in "$luna_template" "$terra_medium_template" "$terra_template" "$sol_medium_template" "$sol_high_template" "$sol_template"; do
+for template in "$luna_template" "$terra_medium_template" "$terra_executive_template" "$terra_template" "$sol_medium_template" "$sol_high_template" "$sol_template"; do
   [ -f "$template" ] && [ ! -L "$template" ] ||
     fail "shipped template is missing or not a regular file: $template"
 done
@@ -234,6 +237,7 @@ if path_exists "$target_dir"; then
 fi
 
 terra_medium_state=$(classify_current_or_legacy "$terra_medium_destination" "$terra_medium_template" '')
+terra_executive_state=$(classify_current_or_legacy "$terra_executive_destination" "$terra_executive_template" '')
 terra_state=$(classify_current_or_legacy "$terra_destination" "$terra_template" "$legacy_terra_sha256" "$previous_terra_sha256")
 sol_medium_state=$(classify_current_or_legacy "$sol_medium_destination" "$sol_medium_template" '')
 sol_high_state=$(classify_current_or_legacy "$sol_high_destination" "$sol_high_template" '')
@@ -245,6 +249,8 @@ if [ "$check_only" -eq 1 ]; then
     report_preflight_error "Luna / Max template is $luna_state, not the current exact file: $luna_destination"
   [ "$terra_medium_state" = current ] ||
     report_preflight_error "Terra / Medium template is $terra_medium_state, not the current exact file: $terra_medium_destination"
+  [ "$terra_executive_state" = current ] ||
+    report_preflight_error "Terra / High executive template is $terra_executive_state, not the current exact file: $terra_executive_destination"
   [ "$terra_state" = current ] ||
     report_preflight_error "Terra / High template is $terra_state, not the current exact file: $terra_destination"
   [ "$sol_medium_state" = current ] ||
@@ -261,6 +267,10 @@ else
   case "$terra_medium_state" in
     current|missing) ;;
     *) report_preflight_error "Terra / Medium destination is $terra_medium_state and will not be replaced: $terra_medium_destination" ;;
+  esac
+  case "$terra_executive_state" in
+    current|missing) ;;
+    *) report_preflight_error "Terra / High executive destination is $terra_executive_state and will not be replaced: $terra_executive_destination" ;;
   esac
   case "$terra_state" in
     current|legacy|missing) ;;
@@ -283,7 +293,7 @@ fi
 [ "$preflight_failed" -eq 0 ] || exit 1
 
 if [ "$check_only" -eq 1 ]; then
-  printf '%s\n' "CHECK PASSED: all six roles exactly match $template_dir."
+  printf '%s\n' "CHECK PASSED: all seven roles exactly match $template_dir."
   exit 0
 fi
 
@@ -295,6 +305,7 @@ fi
 
 same_state "Luna / Max" "$luna_state" "$(classify_current_or_legacy "$luna_destination" "$luna_template" "$legacy_luna_sha256")"
 same_state "Terra / Medium" "$terra_medium_state" "$(classify_current_or_legacy "$terra_medium_destination" "$terra_medium_template" '')"
+same_state "Terra / High executive" "$terra_executive_state" "$(classify_current_or_legacy "$terra_executive_destination" "$terra_executive_template" '')"
 same_state "Terra / High" "$terra_state" "$(classify_current_or_legacy "$terra_destination" "$terra_template" "$legacy_terra_sha256" "$previous_terra_sha256")"
 same_state "Sol / Medium" "$sol_medium_state" "$(classify_current_or_legacy "$sol_medium_destination" "$sol_medium_template" '')"
 same_state "Sol / High implementer" "$sol_high_state" "$(classify_current_or_legacy "$sol_high_destination" "$sol_high_template" '')"
@@ -309,6 +320,11 @@ esac
 case "$terra_medium_state" in
   missing) install_missing "$terra_medium_template" "$terra_medium_destination" ;;
   current) printf '%s\n' "ALREADY CURRENT: $terra_medium_destination" ;;
+esac
+
+case "$terra_executive_state" in
+  missing) install_missing "$terra_executive_template" "$terra_executive_destination" ;;
+  current) printf '%s\n' "ALREADY CURRENT: $terra_executive_destination" ;;
 esac
 
 case "$terra_state" in
@@ -336,6 +352,8 @@ esac
   fail "post-install exactness check failed: $luna_destination"
 [ "$(classify_current_or_legacy "$terra_medium_destination" "$terra_medium_template" '')" = current ] ||
   fail "post-install exactness check failed: $terra_medium_destination"
+[ "$(classify_current_or_legacy "$terra_executive_destination" "$terra_executive_template" '')" = current ] ||
+  fail "post-install exactness check failed: $terra_executive_destination"
 [ "$(classify_current_or_legacy "$terra_destination" "$terra_template" "$legacy_terra_sha256" "$previous_terra_sha256")" = current ] ||
   fail "post-install exactness check failed: $terra_destination"
 [ "$(classify_current_or_legacy "$sol_medium_destination" "$sol_medium_template" '')" = current ] ||
@@ -344,4 +362,4 @@ esac
   fail "post-install exactness check failed: $sol_high_destination"
 [ "$(classify_current_or_legacy "$sol_destination" "$sol_template" '')" = current ] ||
   fail "post-install exactness check failed: $sol_destination"
-printf '%s\n' "INSTALL PASSED: all six roles exactly match $template_dir."
+printf '%s\n' "INSTALL PASSED: all seven roles exactly match $template_dir."

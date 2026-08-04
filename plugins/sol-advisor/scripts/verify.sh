@@ -1,5 +1,5 @@
 #!/bin/sh
-# Repository-local verification for Sol Advisor's six-role companion migration.
+# Repository-local verification for Sol Advisor's seven-role companion migration.
 
 set -eu
 
@@ -43,6 +43,7 @@ trap cleanup 0 HUP INT TERM
 tmp_dir=$(mktemp -d "$tmp_base/sol-advisor-verify.XXXXXX") || fail "could not create disposable verification directory"
 
 terra_medium_file=sol-advisor-terra-medium-implementer.toml
+terra_executive_file=sol-advisor-terra-executive.toml
 terra_file=sol-advisor-terra-implementer.toml
 sol_medium_file=sol-advisor-sol-medium-implementer.toml
 sol_high_file=sol-advisor-sol-high-implementer.toml
@@ -148,18 +149,19 @@ manifest_version=$(jq -r '.version' "$manifest")
 [ "$manifest_version" = 0.6.3 ] || fail "manifest version is not the cache-compatible 0.6.3 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
-grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
+grep -Fq 'Scores 1.0\u20134.9 use a dedicated native GPT-5.6 Terra / High executive' "$manifest" || fail "manifest does not describe low-band Terra executive"
+grep -Fq 'Scores 5.0\u201310.0 retain primary GPT-5.6 Sol / High executive ownership' "$manifest" || fail "manifest does not describe high-band Sol executive"
 grep -Fqi 'GPT-5.6 Luna' "$manifest" || fail "manifest does not describe Luna routing"
 grep -Fq 'native GPT-5.6 Luna / Max' "$manifest" || fail "manifest does not describe native Luna routing"
-grep -Fq 'three-line weekly usage and routing-savings receipt' "$manifest" || fail "manifest does not describe the savings receipt"
-grep -Fq 'unrelated missing roles never block' "$manifest" || fail "manifest does not describe tier-specific preflight"
-grep -Fq 'persists the exact one-decimal complexity score' "$manifest" || fail "manifest does not require deterministic complexity persistence"
+grep -Fq 'unchanged three-line weekly savings receipt' "$manifest" || fail "manifest does not describe the savings receipt"
+grep -Fq 'Current-turn preflight checks only attempted roles' "$manifest" || fail "manifest does not describe tier-specific preflight"
+grep -Fq 'persists that immutable one-decimal score' "$manifest" || fail "manifest does not require deterministic complexity persistence"
 grep -Fq 'persisted complexity' "$manifest" || fail "manifest does not describe persisted complexity"
-grep -Fq 'routing-savings receipt' "$manifest" || fail "manifest does not describe receipt completion gating"
-grep -Fq 'outcome tracking' "$manifest" || fail "manifest does not describe effectiveness tracking"
+grep -Fq 'Completed tasks show the actual executive' "$manifest" || fail "manifest does not describe receipt completion output"
+grep -Fq 'Every descendant thread is registered' "$manifest" || fail "manifest does not describe descendant receipt tracking"
 grep -Fq 'turn_aborted work is excluded' "$manifest" || fail "manifest does not exclude interrupted tasks"
 grep -Fq 'fresh Sol' "$manifest" || fail "manifest does not preserve native fresh Sol review"
-pass "manifest JSON, version, and five-band UI language"
+pass "manifest JSON, version, executive bands, and five producer bands"
 
 python3 - "$templates" <<'PY'
 from pathlib import Path
@@ -176,6 +178,11 @@ expected = {
         "name": "sol_advisor_terra_medium_implementer",
         "model": "gpt-5.6-terra",
         "model_reasoning_effort": "medium",
+    },
+    "sol-advisor-terra-executive.toml": {
+        "name": "sol_advisor_terra_executive",
+        "model": "gpt-5.6-terra",
+        "model_reasoning_effort": "high",
     },
     "sol-advisor-terra-implementer.toml": {
         "name": "sol_advisor_terra_implementer",
@@ -210,9 +217,9 @@ for filename, pins in expected.items():
     for field, value in pins.items():
         if data.get(field) != value:
             raise SystemExit(f"{filename}: {field}={data.get(field)!r}, expected {value!r}")
-print("six exact role pins are valid")
+print("seven exact role pins are valid")
 PY
-pass "exact six-role TOML inventory"
+pass "exact seven-role TOML inventory"
 
 grep -Fq "legacy_terra_sha256=$legacy_terra_sha256" "$installer" || fail "installer legacy Terra digest mismatch"
 grep -Fq "legacy_luna_sha256=$legacy_luna_sha256" "$installer" || fail "installer legacy Luna digest mismatch"
@@ -268,6 +275,7 @@ clean_target=$tmp_dir/clean
 sh "$installer" --target-dir "$clean_target"
 cmp -s "$templates/$luna_file" "$clean_target/$luna_file" || fail "clean Luna/Max install mismatch"
 cmp -s "$templates/$terra_medium_file" "$clean_target/$terra_medium_file" || fail "clean Terra/Medium install mismatch"
+cmp -s "$templates/$terra_executive_file" "$clean_target/$terra_executive_file" || fail "clean Terra executive install mismatch"
 cmp -s "$templates/$terra_file" "$clean_target/$terra_file" || fail "clean Terra install mismatch"
 cmp -s "$templates/$sol_medium_file" "$clean_target/$sol_medium_file" || fail "clean Sol/Medium install mismatch"
 cmp -s "$templates/$sol_high_file" "$clean_target/$sol_high_file" || fail "clean Sol/High implementer install mismatch"
@@ -288,6 +296,7 @@ codex_home=$tmp_dir/codex-home
 CODEX_HOME="$codex_home" sh "$installer"
 cmp -s "$templates/$luna_file" "$codex_home/agents/$luna_file" || fail "CODEX_HOME Luna/Max mismatch"
 cmp -s "$templates/$terra_medium_file" "$codex_home/agents/$terra_medium_file" || fail "CODEX_HOME Terra/Medium mismatch"
+cmp -s "$templates/$terra_executive_file" "$codex_home/agents/$terra_executive_file" || fail "CODEX_HOME Terra executive mismatch"
 cmp -s "$templates/$terra_file" "$codex_home/agents/$terra_file" || fail "CODEX_HOME Terra mismatch"
 cmp -s "$templates/$sol_medium_file" "$codex_home/agents/$sol_medium_file" || fail "CODEX_HOME Sol/Medium mismatch"
 cmp -s "$templates/$sol_high_file" "$codex_home/agents/$sol_high_file" || fail "CODEX_HOME Sol/High implementer mismatch"
@@ -298,6 +307,7 @@ mkdir "$relative_parent"
 (cd "$relative_parent" && sh "$installer" --target-dir relative-agents)
 cmp -s "$templates/$luna_file" "$relative_parent/relative-agents/$luna_file" || fail "relative target Luna/Max mismatch"
 cmp -s "$templates/$terra_medium_file" "$relative_parent/relative-agents/$terra_medium_file" || fail "relative target Terra/Medium mismatch"
+cmp -s "$templates/$terra_executive_file" "$relative_parent/relative-agents/$terra_executive_file" || fail "relative target Terra executive mismatch"
 cmp -s "$templates/$terra_file" "$relative_parent/relative-agents/$terra_file" || fail "relative target Terra mismatch"
 pass "CODEX_HOME and relative target behavior"
 
@@ -306,6 +316,7 @@ write_legacy_roles "$migration_target"
 sh "$installer" --target-dir "$migration_target"
 cmp -s "$templates/$luna_file" "$migration_target/$luna_file" || fail "legacy Luna was not migrated"
 cmp -s "$templates/$terra_medium_file" "$migration_target/$terra_medium_file" || fail "Terra/Medium was not added during migration"
+cmp -s "$templates/$terra_executive_file" "$migration_target/$terra_executive_file" || fail "Terra executive was not added during migration"
 cmp -s "$templates/$terra_file" "$migration_target/$terra_file" || fail "legacy Terra was not migrated"
 cmp -s "$templates/$sol_medium_file" "$migration_target/$sol_medium_file" || fail "Sol/Medium was not added during migration"
 cmp -s "$templates/$sol_high_file" "$migration_target/$sol_high_file" || fail "Sol/High implementer was not added during migration"
@@ -319,6 +330,7 @@ cp "$templates/$sol_file" "$previous_target/$sol_file"
 sh "$installer" --target-dir "$previous_target"
 cmp -s "$templates/$luna_file" "$previous_target/$luna_file" || fail "Luna/Max was not added during previous-template migration"
 cmp -s "$templates/$terra_medium_file" "$previous_target/$terra_medium_file" || fail "Terra/Medium was not added during previous-template migration"
+cmp -s "$templates/$terra_executive_file" "$previous_target/$terra_executive_file" || fail "Terra executive was not added during previous-template migration"
 cmp -s "$templates/$terra_file" "$previous_target/$terra_file" || fail "previous Terra was not migrated"
 cmp -s "$templates/$sol_medium_file" "$previous_target/$sol_medium_file" || fail "Sol/Medium was not added during previous-template migration"
 cmp -s "$templates/$sol_high_file" "$previous_target/$sol_high_file" || fail "Sol/High implementer was not added during previous-template migration"
@@ -365,6 +377,7 @@ after=$(snapshot_files "$unsafe")
 test ! -e "$unsafe/$sol_file" || fail "symlink refusal partially installed Sol"
 test ! -e "$unsafe/$luna_file" || fail "symlink refusal partially installed Luna/Max"
 test ! -e "$unsafe/$terra_medium_file" || fail "symlink refusal partially installed Terra/Medium"
+test ! -e "$unsafe/$terra_executive_file" || fail "symlink refusal partially installed Terra executive"
 test ! -e "$unsafe/$sol_medium_file" || fail "symlink refusal partially installed Sol/Medium"
 test ! -e "$unsafe/$sol_high_file" || fail "symlink refusal partially installed Sol/High implementer"
 pass "unsafe destination refusal with zero partial mutation"
@@ -393,6 +406,7 @@ if sh "$runtime_inspector" --sessions-dir "$runtime_sessions" "$zero_id" >/dev/n
 pass "runtime inspector Terra/High routing and safe refusal"
 
 for document in "$skill" "$contracts"; do
+  grep -Fq 'agent_type: sol_advisor_terra_executive' "$document" || fail "missing Terra/High executive spawn in $document"
   grep -Fq 'agent_type: sol_advisor_luna_implementer' "$document" || fail "missing Luna/Max spawn in $document"
   grep -Fq 'agent_type: sol_advisor_terra_medium_implementer' "$document" || fail "missing Terra/Medium spawn in $document"
   grep -Fq 'agent_type: sol_advisor_terra_implementer' "$document" || fail "missing Terra/High spawn in $document"
@@ -403,6 +417,7 @@ for document in "$skill" "$contracts"; do
   grep -Fq 'task_name: luna_max_<objective_slug>' "$document" || fail "missing Luna Max visible task prefix in $document"
   grep -Fq 'task_name: terra_medium_<objective_slug>' "$document" || fail "missing Terra Medium visible task prefix in $document"
   grep -Fq 'task_name: terra_high_<objective_slug>' "$document" || fail "missing Terra High visible task prefix in $document"
+  grep -Fq 'task_name: terra_high_exec_<objective_slug>' "$document" || fail "missing Terra High executive task prefix in $document"
   grep -Fq 'task_name: sol_medium_<objective_slug>' "$document" || fail "missing Sol Medium visible task prefix in $document"
   grep -Fq 'task_name: sol_high_<objective_slug>' "$document" || fail "missing Sol High visible task prefix in $document"
   grep -Fq 'task_name: sol_high_review_<objective_slug>' "$document" || fail "missing Sol High reviewer task prefix in $document"
@@ -440,6 +455,7 @@ done
 grep -Fq 'model = "gpt-5.6-luna"' "$templates/$luna_file" || fail "Luna role omits Luna model pin"
 grep -Fq 'model_reasoning_effort = "max"' "$templates/$luna_file" || fail "Luna role omits Max effort pin"
 grep -Fq '| Native Luna / Max |' "$readme" || fail "README omits native Luna routing"
+grep -Fq 'the seven exact native role pins' "$readme" || fail "README does not describe the seven-role inventory"
 grep -Fq '| `Luna Max` |' "$readme" || fail "README omits Luna Max label"
 grep -Fq '| `Terra Medium` |' "$readme" || fail "README omits Terra Medium label"
 grep -Fq '| `Terra High` |' "$readme" || fail "README omits Terra High label"
@@ -452,11 +468,12 @@ grep -Fq 'Every new chat starts off' "$readme" || fail "README permits cross-cha
 grep -Fq 'allow_implicit_invocation: true' "$ui" || fail "skill UI blocks plain-language activation"
 grep -Fq 'does not ask for another lane authorization' "$readme" || fail "README requires separate worker authorization"
 grep -Fq 'without separate task or model authorization' "$manifest" || fail "manifest requires separate Luna authorization"
-for label in 'Luna Max' 'Terra Medium' 'Terra High' 'Sol Medium' 'Sol High'; do
-  jq -r '.interface.longDescription' "$manifest" | grep -Fq "$label" || fail "manifest UI omits visible model label: $label"
+for label in 'Luna / Max' 'Terra / Medium' 'Terra / High' 'Sol / Medium' 'Sol / High'; do
+  jq -r '.interface.longDescription' "$manifest" | grep -Fq "$label" || fail "manifest UI omits model route: $label"
 done
 grep -Fq 'Turn Sol Advisor on' "$ui" || fail "skill UI omits plain-language activation"
-grep -Fq 'Luna Max, Terra Medium, Terra High, Sol Medium, or Sol High' "$ui" || fail "skill UI omits visible model labels"
+grep -Fq 'Luna Max, Terra Medium, Terra High, Sol Medium, and Sol High' "$ui" || fail "skill UI omits visible model labels"
+grep -Fq 'Terra High executive ownership below 5.0' "$ui" || fail "skill UI omits low-band Terra executive"
 grep -Fq 'Turn Sol Advisor off' "$skill" || fail "skill omits the off switch"
 grep -Fq 'Every later user request' "$skill" || fail "skill omits persistent activation"
 grep -Fq 'Use only direct assistant messages in the current chat' "$skill" || fail "skill accepts non-chat state markers"
@@ -468,6 +485,52 @@ grep -Fq 'stay OFF and handle the' "$skill" || fail "skill lacks inactive behavi
 grep -Fq 'Sol Advisor: ON' "$skill" || fail "skill omits initial ON acknowledgement"
 grep -Fq 'Sol Advisor: OFF' "$skill" || fail "skill omits OFF acknowledgement"
 grep -Fq 'Executive design and review: GPT-5.6 Sol / High' "$skill" || fail "skill omits concise executive model line"
+grep -Fq 'Executive design and review: GPT-5.6 Terra / High' "$skill" || fail "skill omits low-band executive model line"
+grep -Fq 'Terra executive fallback:' "$skill" || fail "skill omits stable executive fallback syntax"
+grep -Fq 'For scores 1.0–4.9, start with the' "$skill" || fail "skill does not start low-band work with the Terra executive"
+if grep -Fq 'Start every scored task with its mapped producer' "$skill"; then
+  fail "skill bypasses the low-band Terra executive"
+fi
+grep -Fq 'The owning executive must inspect the evidence or diff' "$contracts" || fail "contracts assign verification to the primary instead of the owning executive"
+grep -Fq 'after handoff, the Terra executive owns all' "$contracts" || fail "contracts omit low-band post-handoff checkpoint ownership"
+grep -Fq 'Before the low-band executive handoff, root Sol records route-level checkpoints' "$readme" || fail "README omits root's minimum-evidence handoff checkpoint"
+grep -Fq 'these post-handoff checkpoints belong to the Terra executive' "$readme" || fail "README omits low-band checkpoint ownership"
+if grep -Fq 'Before delegation, external access, or scope expansion, Sol records three checkpoints' "$readme"; then
+  fail "README assigns all checkpoints to Sol"
+fi
+grep -Fq 'Escalate to the owning executive before broadening scope' "$contracts" || fail "contracts route producer escalation to primary Sol"
+grep -Fq "owning executive's replanned route" "$contracts" || fail "contracts route budget replanning to primary Sol"
+if grep -Fq 'Escalate to primary Sol before broadening scope' "$contracts" || grep -Fq "primary's replanned route" "$contracts"; then
+  fail "contracts contain stale primary-Sol producer escalation"
+fi
+grep -Fq 'triggers a new owning-executive' "$skill" || fail "skill routes budget checkpoints away from the owning executive"
+grep -Fq 'returns control to the owning executive for a fresh specification decision' "$skill" || fail "skill routes adherence escalation away from the owning executive"
+if grep -Fq 'triggers a new Sol decision' "$skill" || grep -Fq 'returns control to primary Sol for a fresh route decision' "$skill"; then
+  fail "skill contains stale primary-Sol budget or adherence escalation"
+fi
+grep -Fq 'Below 5.0, the Terra executive performs final review itself' "$readme" || fail "README omits low-band Terra self-review"
+grep -Fq 'For modifying work at' "$readme" && grep -Fq 'a fresh Sol / High reviewer checks primary Sol' "$readme" || fail "README omits conditional high-band fresh Sol review"
+if grep -Fq "Sol reviews Sol's orchestration with a fresh context" "$readme"; then
+  fail "README contains unconditional Sol-final-review wording"
+fi
+grep -Fq 'At exactly' "$skill" && grep -Fq '5.0 the producer remains Terra / Medium while the executive is Sol / High' "$skill" || fail "skill omits the 5.0 executive boundary"
+grep -Fq 'Immediately after every descendant spawn' "$skill" || fail "skill omits low-executive descendant registration"
+grep -Fq 'root thread ID, resolved receipt-helper path' "$skill" || fail "skill omits root receipt handoff identity"
+grep -Fq 'register and monitor the Terra executive itself' "$skill" || fail "skill assigns descendant registration to root Sol"
+grep -Fq 'register, and monitor its own descendants against' "$skill" || fail "skill omits Terra executive descendant ownership"
+grep -Fq 'emit the same exact three-line route in its own session' "$skill" || fail "skill does not authorize nested producer hooks"
+grep -Fq 'add-thread <descendant-id> --root-thread-id <root-thread-id>' "$skill" || fail "skill omits explicit root descendant registration"
+grep -Fq 'recovery' "$contracts" && grep -Fq 'recursion is not a substitute' "$contracts" || fail "contracts permit recovery to replace normal registration"
+grep -Fq 'normal finish omitted or mispriced a nested descendant' "$receipt_hook_test" || fail "hook fixture does not test normal nested receipt finish"
+grep -Fq 'delegated Terra executive Stop required a separate receipt' "$receipt_hook_test" || fail "hook fixture omits delegated executive Stop suppression"
+grep -Fq 'sole completion was not the root task' "$receipt_hook_test" || fail "hook fixture does not assert one root completion"
+grep -Fq 'root low route directly spawned a producer before its executive' "$receipt_hook_test" || fail "hook fixture omits root-first executive enforcement"
+grep -Fq 'valid Terra-to-Sol executive fallback was denied' "$receipt_hook_test" || fail "hook fixture omits monotonic fallback acceptance"
+grep -Fq 'malformed executive fallback was accepted' "$receipt_hook_test" || fail "hook fixture omits malformed fallback denial"
+grep -Fq 'fallback route moved downward to Terra' "$receipt_hook_test" || fail "hook fixture omits downward transition denial"
+grep -Fq 'Stop did not reconstruct the persisted fallback' "$receipt_hook_test" || fail "hook fixture omits persisted fallback reconstruction"
+grep -Fq 'session_role(transcript) == "sol_advisor_terra_executive"' "$receipt_hook" || fail "Stop hook does not identify delegated Terra executive"
+grep -Fq 'performs final review itself' "$skill" || fail "skill adds routine Sol review to the low route"
 grep -Fq 'Implementation:' "$skill" || fail "skill omits pre-execution route announcement"
 grep -Fq 'Do not ask for separate worker or model authorization' "$skill" || fail "skill requires a second worker authorization"
 grep -Fq '../../scripts/daily-upstream-audit.sh' "$skill" || fail "skill omits daily upstream audit"
@@ -490,8 +553,8 @@ jq -er '.hooks.Stop[0].hooks[0] | select(.type == "command" and (.command | cont
 grep -Fq 'This lifecycle is a completion invariant' "$skill" || fail "skill permits skipping the receipt lifecycle"
 grep -Fq 'Never draft or send the final response before calling' "$skill" || fail "skill permits a final response before receipt finish"
 grep -Fq 'Never omit the receipt' "$receipt_contract" || fail "receipt contract permits silent omission"
-python3 "$receipt_hook_test" "$plugin_dir" "$tmp_dir/receipt-hook" || fail "complexity persistence, receipt recovery, or Stop-hook gate failed"
-pass "complexity persistence, receipt recovery, and Stop-hook completion gate"
+python3 "$receipt_hook_test" "$plugin_dir" "$tmp_dir/receipt-hook" || fail "executive-band, fallback, complexity, receipt, or Stop-hook gate failed"
+pass "both executive bands, fallback, complexity persistence, receipt recovery, and Stop-hook completion gate"
 python3 "$effectiveness_test" "$plugin_dir" "$tmp_dir/effectiveness" || fail "effectiveness baseline, ledger, or comparison failed"
 pass "effectiveness baseline, completion ledger, and comparison"
 grep -Fq 'first Sol Advisor activation of each local calendar day' "$skill" || fail "skill omits once-daily activation boundary"
@@ -555,7 +618,7 @@ grep -Fq 'do not spawn a fresh' "$skill" || fail "skill adds routine read-only r
 for document in "$contracts"; do
   grep -Fq 'EFFICIENCY BOUNDARY' "$document" || fail "$document omits worker efficiency boundary"
   grep -Fq 'Minimum sufficient outcome' "$document" || fail "$document omits minimum-sufficient worker outcome"
-  grep -Fq 'Complexity: <primary Sol' "$document" || fail "$document omits the numeric complexity judgment"
+  grep -Fq 'Complexity: <root Sol' "$document" || fail "$document omits the numeric complexity judgment"
   grep -Fq 'Token budget:' "$document" || fail "$document omits worker token budget"
   grep -Fq 'Time budget:' "$document" || fail "$document omits worker time budget"
   grep -Fq 'Do not abandon' "$document" || fail "$document permits budget-based abandonment"
@@ -571,12 +634,12 @@ jq -r '.description + " " + .interface.shortDescription + " " + .interface.longD
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'checkpoints shape scope without overriding' || fail "manifest permits budget-based abandonment"
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'primary Sol High executes as the terminal fallback' || fail "manifest omits terminal primary fallback"
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Worker interruptions force fresh primary routing' || fail "manifest omits user-interruption rerouting"
-grep -Fq 'route every scored task through the native Luna Max' "$ui" || fail "skill UI permits a routing bypass"
-grep -Fq 'move only upward when unavailable' "$ui" || fail "skill UI omits upward fallback"
-grep -Fq 'preflight only the attempted tier with current-turn evidence' "$ui" || fail "skill UI omits tier-specific current-turn preflight"
-grep -Fq 'persist the exact one-decimal complexity score before work' "$ui" || fail "skill UI omits deterministic complexity persistence"
+grep -Fq 'keeping the Luna Max, Terra Medium, Terra High, Sol Medium, and Sol High producer bands unchanged' "$ui" || fail "skill UI permits a producer routing bypass"
+grep -Fq 'Terra High executive ownership below 5.0 and primary Sol High executive ownership at 5.0 or above' "$ui" || fail "skill UI omits executive score bands"
+grep -Fq 'preflight attempted roles with current-turn evidence' "$ui" || fail "skill UI omits role-specific current-turn preflight"
+grep -Fq 'persist the exact one-decimal complexity score in root and nested executive sessions before work' "$ui" || fail "skill UI omits deterministic nested complexity persistence"
 grep -Fq 'completion-gated three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
-grep -Fq 'log exact root-and-delegated tokens' "$ui" || fail "skill UI omits exact task-token logging"
+grep -Fq 'register every descendant against the root receipt immediately after spawn' "$ui" || fail "skill UI omits root descendant receipt registration"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 
 grep -Fq '17 12 * * *' "$upstream_workflow" || fail "upstream workflow is not scheduled daily"
@@ -615,4 +678,4 @@ sh -n "$daily_audit"
 sh -n "$script_dir/verify.sh"
 pass "shell syntax"
 
-printf '%s\n' "VERIFY PASSED: Sol Advisor six-role migration checks completed in $tmp_dir"
+printf '%s\n' "VERIFY PASSED: Sol Advisor seven-role migration and executive routing checks completed in $tmp_dir"

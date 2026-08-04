@@ -27,6 +27,16 @@ ID, register it before monitoring or accepting more work:
 python3 "$usage_receipt" add-thread <delegated-thread-id>
 ~~~
 
+When a delegated executive spawns a descendant, it must use the root identity supplied
+in its handoff and register immediately after the spawn, before monitoring or accepting:
+
+~~~sh
+python3 "$usage_receipt" add-thread <descendant-thread-id> --root-thread-id <root-thread-id>
+~~~
+
+The root registers the delegated executive itself. Transcript recovery recursion does
+not replace descendant registration in the normal start/register/finish lifecycle.
+
 Registration starts delegated usage at zero so setup tokens already consumed by the
 new thread remain part of the task. Register implementation and review threads. Do not
 register unrelated tasks or use visible task titles as identity.
