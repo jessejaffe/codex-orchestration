@@ -77,9 +77,12 @@ Estimated routing savings: 0.30%
 Normal selection rationale, worker identity, review details, and token totals remain
 internal. The complexity score is always shown to one decimal place out of 10. If
 routing falls back, the implementation line includes one short verified reason. The
-receipt measures the task's recorded model usage and
-compares that same token mix with an all-Sol route; it is omitted when measurement is
-unavailable rather than estimated without evidence.
+receipt measures the task's recorded model usage and compares that same token mix with
+an all-Sol route. A plugin Stop hook now enforces this footer mechanically: if a routed
+task skips the receipt lifecycle, it reconstructs the root turn and every spawned
+worker/reviewer, then keeps the task open for one corrected final response. If recovery
+is genuinely unavailable, the final response shows that reason instead of silently
+omitting the receipt.
 
 Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
 for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as

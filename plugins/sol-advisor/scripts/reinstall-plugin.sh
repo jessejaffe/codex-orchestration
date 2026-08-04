@@ -58,6 +58,9 @@ check_current() {
     [ -d "$cached" ] || fail "cache entry is not a directory: $cached"
     for required_relative in \
       .codex-plugin/plugin.json \
+      hooks/hooks.json \
+      scripts/receipt-stop-hook.py \
+      scripts/usage-receipt.py \
       skills/orchestration/SKILL.md \
       skills/orchestration/references/role-contracts.md \
       skills/orchestration/references/usage-receipt.md

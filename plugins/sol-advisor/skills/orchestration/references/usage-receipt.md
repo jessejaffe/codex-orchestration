@@ -17,7 +17,8 @@ python3 "$usage_receipt" start
 ~~~
 
 The helper reads the root identity from `CODEX_THREAD_ID`. A failure is non-blocking.
-Do not retry during the same request or turn the failure into extra user-visible prose.
+Do not retry during the same request. The completion hook has the transcript and can
+recover the task boundary if this early measurement cannot start.
 
 After every native worker/reviewer spawn or Luna task creation returns a real thread
 ID, register it before monitoring or accepting more work:
@@ -39,6 +40,9 @@ answer:
 python3 "$usage_receipt" finish
 ~~~
 
+This command is mandatory for every completed scored task. Do not draft the final
+answer and do not substitute hand-written model lines until the command has run.
+
 When successful, append its output verbatim at the very end of the response:
 
 ~~~text
@@ -49,9 +53,18 @@ Estimated routing savings: <percentage>
 
 Do not add a receipt heading, basis, confidence, token totals, pricing explanation, or
 another savings sentence. The word `Estimated` already carries the necessary caveat.
-If the helper reports `receipt-unavailable`, omit the receipt completely. Preserve its
-task state for a later finish only when the current request is interrupted rather than
-completed.
+The plugin's Stop hook verifies these lines before a routed turn can stop. If the
+normal start/register/finish lifecycle was skipped, it uses the transcript's turn
+boundary and every spawned thread ID to run the equivalent recovery command:
+
+~~~sh
+python3 "$usage_receipt" recover --transcript <root-rollout.jsonl> --turn-id <turn-id>
+~~~
+
+If both normal measurement and transcript recovery report `receipt-unavailable`, show
+one explicit `Savings receipt unavailable: <reason>` line. Never omit the receipt
+silently. Preserve task state for a later finish only when the current request is
+interrupted rather than completed.
 
 The receipt intentionally has two limits: it estimates the weekly denominator from
 local Codex history plus the weekly meter, and it compares identical observed token

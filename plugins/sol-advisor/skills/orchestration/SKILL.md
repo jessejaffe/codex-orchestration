@@ -26,8 +26,13 @@ path. Read it before the first native delegation in a session. The receipt contr
 exactly `skill_dir/references/usage-receipt.md`; read it when an activated message
 includes a task. Start its measurement before route analysis, register every spawned
 implementation or review thread, and append only its three-line result after the
-completed task's model lines. Receipt failure is non-blocking and produces no
-substitute estimate.
+completed task's model lines. This lifecycle is a completion invariant: never compose
+or send the final answer without first running the receipt's `finish` command. The
+plugin Stop hook independently checks every routed turn, reconstructs root and
+delegated usage when the lifecycle was skipped, and keeps the turn open until the
+numeric complexity and receipt are visible. A measurement failure remains
+non-blocking, but it must be reported explicitly rather than silently dropping the
+receipt.
 
 The version-looking directory above `skills/` may be a compatibility alias retained by
 Codex Desktop. Its directory name is not the loaded release identity. The alias must
@@ -476,6 +481,10 @@ Estimated routing savings: <percentage>
 Do not append a heading, activation state, labels, normal selection reason,
 efficiency notes, route evidence, reviewer verdict, task IDs, or token totals. A
 fallback line must include its compact current-turn reason. Append the receipt verbatim
-when its helper succeeds; if it reports `receipt-unavailable`, omit only those three
-receipt lines. Never claim an implementation model that runtime evidence did not
-confirm.
+when its helper succeeds. Never draft or send the final response before calling
+`finish`; a task that merely prints model lines has not completed the Sol Advisor
+protocol. If direct measurement reports `receipt-unavailable`, allow the Stop hook to
+recover the turn from its transcript. If both paths are unavailable, include the
+hook's explicit `Savings receipt unavailable: <reason>` line instead of silently
+omitting the receipt. Never claim an implementation model that runtime evidence did
+not confirm.

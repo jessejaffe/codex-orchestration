@@ -430,6 +430,102 @@ def usage_delta(end: dict[str, int], baseline: dict[str, Any]) -> dict[str, int]
     }
 
 
+def recover_turn_usage(
+    transcript: Path, turn_id: str
+) -> tuple[list[tuple[str, dict[str, int]]], dict[str, Any]]:
+    """Recover root and delegated usage for one completed or stopping Codex turn."""
+    require_thread_id(turn_id)
+    if not transcript.is_file() or transcript.is_symlink():
+        raise ReceiptUnavailable("the root task transcript is unavailable")
+
+    active = False
+    baseline = empty_usage()
+    latest_before = empty_usage()
+    latest = empty_usage()
+    root_model: str | None = None
+    rate_limit: dict[str, Any] | None = None
+    child_ids: list[str] = []
+    try:
+        with transcript.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                payload = event.get("payload") or {}
+                event_type = payload.get("type")
+                if event.get("type") == "event_msg" and event_type == "task_started":
+                    candidate = payload.get("turn_id")
+                    if active and candidate != turn_id:
+                        break
+                    if candidate == turn_id:
+                        active = True
+                        baseline = dict(latest_before)
+                    continue
+                if not active:
+                    if event.get("type") == "event_msg" and event_type == "token_count":
+                        totals = (payload.get("info") or {}).get("total_token_usage") or {}
+                        for key in TOKEN_KEYS:
+                            value = totals.get(key)
+                            if isinstance(value, (int, float)) and value >= 0:
+                                latest_before[key] = int(value)
+                    continue
+                if event.get("type") == "turn_context" and payload.get("turn_id") == turn_id:
+                    candidate = payload.get("model")
+                    if isinstance(candidate, str):
+                        root_model = candidate
+                if event.get("type") == "event_msg" and event_type == "token_count":
+                    info = payload.get("info") or {}
+                    totals = info.get("total_token_usage") or {}
+                    for key in TOKEN_KEYS:
+                        value = totals.get(key)
+                        if isinstance(value, (int, float)) and value >= 0:
+                            latest[key] = int(value)
+                    primary = (payload.get("rate_limits") or {}).get("primary")
+                    if isinstance(primary, dict):
+                        rate_limit = primary
+                if event.get("type") == "event_msg" and event_type == "sub_agent_activity":
+                    child_id = payload.get("agent_thread_id")
+                    if (
+                        payload.get("kind") == "started"
+                        and isinstance(child_id, str)
+                        and THREAD_RE.fullmatch(child_id)
+                        and child_id not in child_ids
+                    ):
+                        child_ids.append(child_id)
+                if (
+                    event.get("type") == "event_msg"
+                    and event_type == "task_complete"
+                    and payload.get("turn_id") == turn_id
+                ):
+                    break
+    except OSError as exc:
+        raise ReceiptUnavailable("the root task transcript cannot be read") from exc
+
+    if not active:
+        raise ReceiptUnavailable("the requested Codex turn is absent from the transcript")
+    if rate_limit is None:
+        raise ReceiptUnavailable("the weekly Codex usage meter is unavailable")
+
+    usages: list[tuple[str, dict[str, int]]] = []
+    normalized_root = normalize_model(root_model)
+    if normalized_root is None:
+        raise ReceiptUnavailable("the root task model is unavailable")
+    usages.append((normalized_root, usage_delta(latest, baseline)))
+
+    sessions = sessions_root()
+    for child_id in child_ids:
+        rollout = find_rollout(sessions, child_id)
+        if rollout is None:
+            raise ReceiptUnavailable(f"rollout unavailable for delegated thread {child_id}")
+        summary = rollout_summary(rollout)
+        model = normalize_model(summary["model"])
+        if model is None:
+            raise ReceiptUnavailable(f"model unavailable for delegated thread {child_id}")
+        usages.append((model, summary["totals"]))
+    return usages, rate_limit
+
+
 def format_percent(value: float) -> str:
     if value <= 0:
         return "0.00%"
@@ -438,6 +534,28 @@ def format_percent(value: float) -> str:
     if value < 0.01:
         return f"{value:.3f}%"
     return f"{value:.2f}%"
+
+
+def receipt_lines(
+    usages: Iterable[tuple[str, dict[str, int]]],
+    pricing: dict[str, Any],
+    capacity: float,
+) -> list[str]:
+    actual_credits = 0.0
+    all_sol_credits = 0.0
+    for model, usage in usages:
+        if model not in pricing.get("models", {}):
+            raise ReceiptUnavailable(f"pricing unavailable for {model}")
+        actual_credits += priced_credits(usage, model, pricing)
+        all_sol_credits += priced_credits(usage, "sol", pricing)
+    actual_percent = actual_credits / capacity * 100.0
+    all_sol_percent = all_sol_credits / capacity * 100.0
+    savings_percent = max(0.0, all_sol_percent - actual_percent)
+    return [
+        f"Actual weekly usage: {format_percent(actual_percent)}",
+        f"All-Sol equivalent: {format_percent(all_sol_percent)}",
+        f"Estimated routing savings: {format_percent(savings_percent)}",
+    ]
 
 
 def command_finish(args: argparse.Namespace) -> None:
@@ -453,8 +571,7 @@ def command_finish(args: argparse.Namespace) -> None:
         raise ReceiptUnavailable("usage receipt calibration is invalid")
     if not isinstance(threads, list) or not threads:
         raise ReceiptUnavailable("usage receipt has no recorded threads")
-    actual_credits = 0.0
-    all_sol_credits = 0.0
+    usages: list[tuple[str, dict[str, int]]] = []
     sessions = sessions_root()
     for item in threads:
         if not isinstance(item, dict):
@@ -472,16 +589,20 @@ def command_finish(args: argparse.Namespace) -> None:
             raise ReceiptUnavailable(
                 f"pricing unavailable for recorded thread {thread_id}"
             )
-        actual_credits += priced_credits(usage, model, pricing)
-        all_sol_credits += priced_credits(usage, "sol", pricing)
-    actual_percent = actual_credits / float(capacity) * 100.0
-    all_sol_percent = all_sol_credits / float(capacity) * 100.0
-    savings_percent = max(0.0, all_sol_percent - actual_percent)
-    print(f"Actual weekly usage: {format_percent(actual_percent)}")
-    print(f"All-Sol equivalent: {format_percent(all_sol_percent)}")
-    print(f"Estimated routing savings: {format_percent(savings_percent)}")
+        usages.append((model, usage))
+    print("\n".join(receipt_lines(usages, pricing, float(capacity))))
     if not args.keep:
         path.unlink(missing_ok=True)
+
+
+def command_recover(args: argparse.Namespace) -> None:
+    transcript = Path(args.transcript).expanduser()
+    usages, rate_limit = recover_turn_usage(transcript, args.turn_id)
+    root = state_root()
+    sessions = sessions_root()
+    pricing = current_pricing(root)
+    capacity = weekly_capacity(root, sessions, rate_limit, pricing)
+    print("\n".join(receipt_lines(usages, pricing, capacity)))
 
 
 def parser() -> argparse.ArgumentParser:
@@ -509,6 +630,12 @@ def parser() -> argparse.ArgumentParser:
     finish.add_argument("--root-thread-id")
     finish.add_argument("--keep", action="store_true")
     finish.set_defaults(handler=command_finish)
+    recover = commands.add_parser(
+        "recover", help="reconstruct a receipt from a root Codex turn transcript"
+    )
+    recover.add_argument("--transcript", required=True)
+    recover.add_argument("--turn-id", required=True)
+    recover.set_defaults(handler=command_recover)
     return result
 
 

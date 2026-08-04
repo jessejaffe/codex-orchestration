@@ -14,8 +14,11 @@ reinstaller=$script_dir/reinstall-plugin.sh
 runtime_inspector=$script_dir/inspect-agent-runtime.sh
 daily_audit=$script_dir/daily-upstream-audit.sh
 usage_receipt=$script_dir/usage-receipt.py
+receipt_hook=$script_dir/receipt-stop-hook.py
+receipt_hook_test=$script_dir/test-receipt-hook.py
 templates=$plugin_dir/agents
 manifest=$plugin_dir/.codex-plugin/plugin.json
+hook_config=$plugin_dir/hooks/hooks.json
 skill=$plugin_dir/skills/orchestration/SKILL.md
 contracts=$plugin_dir/skills/orchestration/references/role-contracts.md
 receipt_contract=$plugin_dir/skills/orchestration/references/usage-receipt.md
@@ -134,13 +137,13 @@ PREVIOUS_TERRA
   [ "$(shasum -a 256 "$target/$terra_file" | awk '{print $1}')" = "$previous_terra_sha256" ] || fail "previous Terra fixture digest drifted"
 }
 
-for required in "$installer" "$reinstaller" "$runtime_inspector" "$daily_audit" "$usage_receipt" "$manifest" "$skill" "$contracts" "$receipt_contract" "$readme" "$ui" "$upstream_workflow"; do
+for required in "$installer" "$reinstaller" "$runtime_inspector" "$daily_audit" "$usage_receipt" "$receipt_hook" "$receipt_hook_test" "$hook_config" "$manifest" "$skill" "$contracts" "$receipt_contract" "$readme" "$ui" "$upstream_workflow"; do
   test -f "$required" || fail "required file missing: $required"
 done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.5.7 ] || fail "manifest version is not the cache-compatible 0.5.7 release: $manifest_version"
+[ "$manifest_version" = 0.5.8 ] || fail "manifest version is not the cache-compatible 0.5.8 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
@@ -149,6 +152,7 @@ grep -Fq 'native GPT-5.6 Luna / Max' "$manifest" || fail "manifest does not desc
 grep -Fq 'three-line weekly usage and routing-savings receipt' "$manifest" || fail "manifest does not describe the savings receipt"
 grep -Fq 'unrelated missing roles never block' "$manifest" || fail "manifest does not describe tier-specific preflight"
 grep -Fq 'shows the numeric complexity score out of 10' "$manifest" || fail "manifest does not require the visible complexity score"
+grep -Fq 'completion-gated weekly savings receipt' "$manifest" || fail "manifest does not describe receipt completion gating"
 grep -Fq 'fresh Sol' "$manifest" || fail "manifest does not preserve native fresh Sol review"
 pass "manifest JSON, version, and five-band UI language"
 
@@ -466,6 +470,15 @@ grep -Fq 'Actual weekly usage:' "$receipt_contract" || fail "usage receipt omits
 grep -Fq 'All-Sol equivalent:' "$receipt_contract" || fail "usage receipt omits all-Sol equivalent"
 grep -Fq 'Estimated routing savings:' "$receipt_contract" || fail "usage receipt omits routing savings"
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$usage_receipt" || fail "usage receipt script does not compile"
+python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$receipt_hook" || fail "receipt Stop hook does not compile"
+python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$receipt_hook_test" || fail "receipt Stop-hook test does not compile"
+jq empty "$hook_config" || fail "receipt Stop-hook configuration is invalid JSON"
+jq -er '.hooks.Stop[0].hooks[0] | select(.type == "command" and (.command | contains("receipt-stop-hook.py")))' "$hook_config" >/dev/null || fail "plugin hook does not register the receipt Stop gate"
+grep -Fq 'This lifecycle is a completion invariant' "$skill" || fail "skill permits skipping the receipt lifecycle"
+grep -Fq 'Never draft or send the final response before calling' "$skill" || fail "skill permits a final response before receipt finish"
+grep -Fq 'Never omit the receipt' "$receipt_contract" || fail "receipt contract permits silent omission"
+python3 "$receipt_hook_test" "$plugin_dir" "$tmp_dir/receipt-hook" || fail "receipt recovery or Stop-hook gate failed"
+pass "receipt recovery and Stop-hook completion gate"
 grep -Fq 'first Sol Advisor activation of each local calendar day' "$skill" || fail "skill omits once-daily activation boundary"
 grep -Fq 'adopt unchanged' "$skill" || fail "skill omits upstream adoption classification"
 grep -Fq 'adapt' "$skill" || fail "skill omits upstream adaptation classification"
@@ -546,7 +559,7 @@ grep -Fq 'route every scored task through the native Luna Max' "$ui" || fail "sk
 grep -Fq 'move only upward when unavailable' "$ui" || fail "skill UI omits upward fallback"
 grep -Fq 'preflight only the attempted tier with current-turn evidence' "$ui" || fail "skill UI omits tier-specific current-turn preflight"
 grep -Fq 'show the one-decimal complexity score out of 10' "$ui" || fail "skill UI omits the visible complexity score"
-grep -Fq 'end with the three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
+grep -Fq 'completion-gated three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 
 grep -Fq '17 12 * * *' "$upstream_workflow" || fail "upstream workflow is not scheduled daily"
