@@ -457,6 +457,10 @@ change is incomplete until it is committed, merged into the fork's `main`, and p
 to `jessejaffe/sol-advisor` in the same task. Never leave accepted Sol Advisor changes
 only on a feature branch. Never push to the original author's repository.
 
+After an accepted self-update, increment the manifest's plain release version without
+SemVer `+` build metadata, then resolve and run `../../scripts/reinstall-plugin.sh`.
+Its backup-and-restore flow keeps the skill paths held by already-open tasks valid.
+
 Before updating fork `main`, fetch both repositories and inspect divergence. Use a
 fast-forward when possible; otherwise make a non-destructive merge after resolving and
 verifying conflicts. Do not overwrite or force-push fork `main`. Upstream review

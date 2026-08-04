@@ -178,14 +178,20 @@ companion files:
 
 ~~~sh
 codex plugin marketplace upgrade sol-advisor
-codex plugin add sol-advisor@sol-advisor
 plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
 test -d "$plugin_dir"
+sh "$plugin_dir/scripts/reinstall-plugin.sh"
+sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 sh "$plugin_dir/scripts/install-agents.sh"
 sh "$plugin_dir/scripts/install-agents.sh" --check
 ~~~
 
-Version 0.5.1 retains the historical byte-exact v0.2.0 migration for
+The safe reinstaller backs up prior cache directories before Codex installs the new
+release, then restores any paths still needed by already-open tasks. Sol Advisor uses
+plain release versions without SemVer `+` build metadata because Codex currently
+advertises a base-version skill path while retaining the full version in its cache.
+
+Version 0.5.2 retains the historical byte-exact v0.2.0 migration for
 `sol-advisor-luna-implementer.toml` and `sol-advisor-terra-implementer.toml` files.
 Normal installer mode replaces either that exact legacy Terra file or the exact Terra
 template shipped immediately before this routing update with the current Terra / High
@@ -358,7 +364,8 @@ Install a checkout as a local marketplace when you want Codex to use its skill:
 ~~~sh
 cd /absolute/path/to/sol-advisor
 codex plugin marketplace add /absolute/path/to/sol-advisor
-codex plugin add sol-advisor@sol-advisor
+sh plugins/sol-advisor/scripts/reinstall-plugin.sh
+sh plugins/sol-advisor/scripts/reinstall-plugin.sh --check
 ~~~
 
 Run the repository verifier separately. It uses only a disposable target directory and

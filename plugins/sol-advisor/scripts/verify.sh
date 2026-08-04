@@ -10,6 +10,7 @@ script_dir=$(CDPATH= cd "$(dirname "$0")" && pwd) || exit 1
 plugin_dir=$(CDPATH= cd "$script_dir/.." && pwd) || exit 1
 repo_dir=$(CDPATH= cd "$plugin_dir/../.." && pwd) || exit 1
 installer=$script_dir/install-agents.sh
+reinstaller=$script_dir/reinstall-plugin.sh
 runtime_inspector=$script_dir/inspect-agent-runtime.sh
 daily_audit=$script_dir/daily-upstream-audit.sh
 usage_receipt=$script_dir/usage-receipt.py
@@ -133,16 +134,14 @@ PREVIOUS_TERRA
   [ "$(shasum -a 256 "$target/$terra_file" | awk '{print $1}')" = "$previous_terra_sha256" ] || fail "previous Terra fixture digest drifted"
 }
 
-for required in "$installer" "$runtime_inspector" "$daily_audit" "$manifest" "$skill" "$contracts" "$luna_contract" "$readme" "$ui" "$upstream_workflow"; do
+for required in "$installer" "$reinstaller" "$runtime_inspector" "$daily_audit" "$manifest" "$skill" "$contracts" "$luna_contract" "$readme" "$ui" "$upstream_workflow"; do
   test -f "$required" || fail "required file missing: $required"
 done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-case "$manifest_version" in
-  0.5.1|0.5.1+codex.*) ;;
-  *) fail "manifest version does not preserve the 0.5.1 base: $manifest_version" ;;
-esac
+[ "$manifest_version" = 0.5.2 ] || fail "manifest version is not the cache-compatible 0.5.2 release: $manifest_version"
+case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
 grep -Fqi 'GPT-5.6 Luna' "$manifest" || fail "manifest does not describe Luna routing"
@@ -202,6 +201,48 @@ grep -Fq "legacy_terra_sha256=$legacy_terra_sha256" "$installer" || fail "instal
 grep -Fq "legacy_luna_sha256=$legacy_luna_sha256" "$installer" || fail "installer legacy Luna digest mismatch"
 grep -Fq "previous_terra_sha256=$previous_terra_sha256" "$installer" || fail "installer previous Terra digest mismatch"
 pass "immutable v0.2.0 migration fingerprints"
+
+reinstall_cache=$tmp_dir/reinstall-cache
+old_build=0.5.1+codex.20260804022121
+mkdir -p "$reinstall_cache/$old_build/skills/orchestration"
+printf '%s\n' preserved-open-task-skill > "$reinstall_cache/$old_build/skills/orchestration/SKILL.md"
+fake_codex=$tmp_dir/fake-codex
+fake_state=$tmp_dir/fake-codex-version
+printf '%s\n' "$old_build" > "$fake_state"
+cat > "$fake_codex" <<'FAKE_CODEX'
+#!/bin/sh
+set -eu
+if [ "${1:-}" = plugin ] && [ "${2:-}" = list ] && [ "${3:-}" = --json ]; then
+  version=$(cat "$SOL_ADVISOR_TEST_STATE")
+  printf '{"installed":[{"pluginId":"sol-advisor@sol-advisor","version":"%s"}]}\n' "$version"
+  exit 0
+fi
+if [ "${1:-}" = plugin ] && [ "${2:-}" = add ] && [ "${3:-}" = sol-advisor@sol-advisor ]; then
+  rm -rf "$SOL_ADVISOR_CACHE_ROOT"
+  current=$(jq -r .version "$SOL_ADVISOR_TEST_MANIFEST")
+  current_dir=$SOL_ADVISOR_CACHE_ROOT/$current/skills/orchestration
+  mkdir -p "$current_dir"
+  cp "$SOL_ADVISOR_TEST_SKILL" "$current_dir/SKILL.md"
+  printf '%s\n' "$current" > "$SOL_ADVISOR_TEST_STATE"
+  exit 0
+fi
+exit 64
+FAKE_CODEX
+chmod +x "$fake_codex"
+SOL_ADVISOR_CODEX_BIN="$fake_codex" \
+SOL_ADVISOR_CACHE_ROOT="$reinstall_cache" \
+SOL_ADVISOR_TEST_STATE="$fake_state" \
+SOL_ADVISOR_TEST_MANIFEST="$manifest" \
+SOL_ADVISOR_TEST_SKILL="$skill" \
+  sh "$reinstaller"
+test -f "$reinstall_cache/$manifest_version/skills/orchestration/SKILL.md" || fail "reinstaller lost the current skill cache"
+grep -Fq preserved-open-task-skill "$reinstall_cache/$old_build/skills/orchestration/SKILL.md" || fail "reinstaller lost the exact prior cache"
+grep -Fq preserved-open-task-skill "$reinstall_cache/0.5.1/skills/orchestration/SKILL.md" || fail "reinstaller did not restore the base-version compatibility path"
+SOL_ADVISOR_CODEX_BIN="$fake_codex" \
+SOL_ADVISOR_CACHE_ROOT="$reinstall_cache" \
+SOL_ADVISOR_TEST_STATE="$fake_state" \
+  sh "$reinstaller" --check
+pass "cache-compatible reinstall and open-task path preservation"
 
 clean_target=$tmp_dir/clean
 sh "$installer" --target-dir "$clean_target"
@@ -343,6 +384,7 @@ for document in "$skill" "$contracts"; do
   if grep -Eq '^[[:space:]]*(model|reasoning_effort):' "$document"; then fail "per-spawn override remains in $document"; fi
 done
 grep -Fq '../../scripts/install-agents.sh' "$skill" || fail "skill does not resolve installer relatively"
+grep -Fq '../../scripts/reinstall-plugin.sh' "$skill" || fail "skill does not resolve safe reinstaller relatively"
 grep -Fq '../../scripts/inspect-agent-runtime.sh' "$skill" || fail "skill does not resolve inspector relatively"
 grep -Fqi 'public native spawn/details metadata first' "$skill" || fail "skill lacks public-details-first evidence rule"
 grep -Fqi 'parent captures and verifies exact before-and-after' "$contracts" || fail "contracts lack behavioral read-only state check"
@@ -441,6 +483,8 @@ grep -Fq 'skip' "$skill" || fail "skill omits upstream skip classification"
 grep -Fq 'must not modify code or merge upstream' "$skill" || fail "skill permits automatic upstream merge"
 grep -Fq 'merged into the fork' "$skill" || fail "skill does not require fork-main completion"
 grep -Fq 'Never push to the original author' "$skill" || fail "skill permits pushes to upstream"
+grep -Fq 'plain release versions without SemVer `+` build metadata' "$readme" || fail "README omits cache-compatible version policy"
+grep -Fq 'reinstall-plugin.sh' "$readme" || fail "README omits safe plugin reinstall"
 
 for document in "$readme" "$manifest" "$skill" "$contracts" "$ui"; do
   if grep -Eqi 'Terra / High is the sole implementation producer|one role-pinned .*handles all implementation|route all implementation through.*Terra|delegate all implementation to (the )?(native )?Terra' "$document"; then
@@ -536,6 +580,7 @@ SOL_ADVISOR_AUDIT_STATE_DIR="$audit_state" sh "$daily_audit" | \
 pass "daily activation audit and non-merging upstream issue workflow"
 
 sh -n "$installer"
+sh -n "$reinstaller"
 sh -n "$runtime_inspector"
 sh -n "$daily_audit"
 sh -n "$script_dir/verify.sh"

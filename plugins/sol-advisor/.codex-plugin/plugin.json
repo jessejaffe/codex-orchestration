@@ -1,6 +1,6 @@
 {
   "name": "sol-advisor",
-  "version": "0.5.1+codex.20260804022121",
+  "version": "0.5.2",
   "description": "Score-routed workers with upward model fallback and terse weekly savings receipts.",
   "author": {
     "name": "Daniel McAteer",
