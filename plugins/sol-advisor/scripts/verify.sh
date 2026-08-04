@@ -146,7 +146,7 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.6.3 ] || fail "manifest version is not the cache-compatible 0.6.3 release: $manifest_version"
+[ "$manifest_version" = 0.6.4 ] || fail "manifest version is not the cache-compatible 0.6.4 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Scores 1.0\u20134.9 use a dedicated native GPT-5.6 Terra / High executive' "$manifest" || fail "manifest does not describe low-band Terra executive"
