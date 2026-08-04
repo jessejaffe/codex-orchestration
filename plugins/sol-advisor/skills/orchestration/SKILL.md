@@ -237,11 +237,13 @@ dependent work.
 ## Announce the route before implementation
 
 After current-turn capability checks identify the actual available route and before
-spawning implementation work, send exactly these two user-visible lines:
+spawning implementation work, send exactly these three user-visible lines. Format the
+score to one decimal place, including a trailing `.0` for whole-number scores:
 
 ~~~text
 Executive design and review: GPT-5.6 Sol / High
 Implementation: <actual available model / effort>
+Complexity: <score>/10
 ~~~
 
 The score-selected model is an internal candidate until its current-turn preflight
@@ -255,8 +257,9 @@ Implementation: GPT-5.6 Sol / High — fallback from GPT-5.6 Terra / High: <curr
 Do not say implementation has started until the selected spawn is accepted. If a spawn
 or its runtime validation fails after the initial announcement, repeat only the
 `Implementation:` line with the new actual model and the verified failure. Keep the
-score, budgets, worker identity, and normal selection rationale internal. Never
-postpone a scored task's route announcement until the final response.
+budgets, worker identity, and normal selection rationale internal. The numeric
+complexity score itself is always visible. Never postpone a scored task's route
+announcement until the final response.
 
 ## Put the model in every visible worker label
 
@@ -458,18 +461,19 @@ review branch if useful, verify, then merge accepted work into fork `main`.
 ## Report the route and receipt in the final output
 
 Activation/deactivation acknowledgements and blocking clarification before scoring have
-no model footer. End every completed scored task with the two model lines followed by
-the successful receipt output:
+no model footer. End every completed scored task with the two model lines, the same
+one-decimal complexity score, and then the successful receipt output:
 
 ~~~text
 Executive design and review: GPT-5.6 Sol / High
 Implementation: <actual GPT-5.6 model / effort used, with verified fallback reason when applicable>
+Complexity: <score>/10
 Actual weekly usage: <percentage>
 All-Sol equivalent: <percentage>
 Estimated routing savings: <percentage>
 ~~~
 
-Do not append a heading, activation state, labels, complexity, normal selection reason,
+Do not append a heading, activation state, labels, normal selection reason,
 efficiency notes, route evidence, reviewer verdict, task IDs, or token totals. A
 fallback line must include its compact current-turn reason. Append the receipt verbatim
 when its helper succeeds; if it reports `receipt-unavailable`, omit only those three

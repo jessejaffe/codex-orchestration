@@ -140,7 +140,7 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.5.6 ] || fail "manifest version is not the cache-compatible 0.5.6 release: $manifest_version"
+[ "$manifest_version" = 0.5.7 ] || fail "manifest version is not the cache-compatible 0.5.7 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
@@ -148,6 +148,7 @@ grep -Fqi 'GPT-5.6 Luna' "$manifest" || fail "manifest does not describe Luna ro
 grep -Fq 'native GPT-5.6 Luna / Max' "$manifest" || fail "manifest does not describe native Luna routing"
 grep -Fq 'three-line weekly usage and routing-savings receipt' "$manifest" || fail "manifest does not describe the savings receipt"
 grep -Fq 'unrelated missing roles never block' "$manifest" || fail "manifest does not describe tier-specific preflight"
+grep -Fq 'shows the numeric complexity score out of 10' "$manifest" || fail "manifest does not require the visible complexity score"
 grep -Fq 'fresh Sol' "$manifest" || fail "manifest does not preserve native fresh Sol review"
 pass "manifest JSON, version, and five-band UI language"
 
@@ -409,6 +410,9 @@ grep -Fq 'An unrelated role failure cannot' "$skill" || fail "skill lets unrelat
 grep -Fq 'Never reuse a prior turn' "$skill" || fail "skill permits stale preflight reuse"
 grep -Fq 'Never reuse a prior-turn failure' "$contracts" || fail "contracts permit stale preflight reuse"
 grep -Fq 'Never print that candidate as `Implementation:`' "$skill" || fail "skill permits preflight after route announcement"
+grep -Fq 'Complexity: <score>/10' "$skill" || fail "skill omits the visible numeric complexity score"
+grep -Fq 'score to one decimal place' "$skill" || fail "skill does not standardize visible complexity precision"
+grep -Fq 'complexity score itself is always visible' "$skill" || fail "skill permits hiding the complexity score"
 grep -Fq 'skill_dir/references/role-contracts.md' "$skill" || fail "skill does not pin role-contract resolution to the skill directory"
 grep -Fq 'do not drop the' "$skill" || fail "skill does not guard the observed orchestration-path resolution failure"
 grep -Fq 'directory name is not the loaded release identity' "$skill" || fail "skill mistakes a compatibility alias name for release identity"
@@ -494,7 +498,7 @@ grep -Fq 'only an unavailable or incapable lane triggers' "$skill" || fail "skil
 grep -Fq 'do not inflate the score merely because' "$skill" || fail "skill permits conservative score inflation"
 grep -Fq 'Anchor an ordinary bounded task with settled requirements at **5.0**' "$skill" || fail "skill lacks a non-conservative score anchor"
 grep -Fq 'typical bounded bug investigation or settled multi-file change' "$skill" || fail "skill overweights multi-step engineering work"
-grep -Fq 'score, budgets, worker identity, and normal selection rationale internal' "$skill" || fail "skill does not keep normal routing diagnostics internal"
+grep -Fq 'budgets, worker identity, and normal selection rationale internal' "$skill" || fail "skill does not keep normal routing diagnostics internal"
 grep -Fq 'Read-only work is low mutation risk' "$skill" || fail "skill does not treat read-only work as a Terra candidate"
 grep -Fq 'Terra / Medium (3.0–5.0)' "$skill" || fail "skill omits Terra/Medium route"
 grep -Fq 'Terra / High (5.1–6.5)' "$skill" || fail "skill omits Terra/High route"
@@ -541,7 +545,8 @@ jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Worker interruptions 
 grep -Fq 'route every scored task through the native Luna Max' "$ui" || fail "skill UI permits a routing bypass"
 grep -Fq 'move only upward when unavailable' "$ui" || fail "skill UI omits upward fallback"
 grep -Fq 'preflight only the attempted tier with current-turn evidence' "$ui" || fail "skill UI omits tier-specific current-turn preflight"
-grep -Fq 'model lines plus the three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
+grep -Fq 'show the one-decimal complexity score out of 10' "$ui" || fail "skill UI omits the visible complexity score"
+grep -Fq 'end with the three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 
 grep -Fq '17 12 * * *' "$upstream_workflow" || fail "upstream workflow is not scheduled daily"

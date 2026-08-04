@@ -62,20 +62,22 @@ any pending review issue, and—when new activity exists—summarizes the diff, 
 changes as adopt unchanged, adapt, or skip, and recommends a decision. This audit does
 not delay or replace the user's requested task and never merges upstream automatically.
 
-Every completed routed task ends with the two models people need to know and the
-compact weekly savings receipt:
+Every completed routed task ends with the two models people need to know, the numeric
+complexity score that selected the route, and the compact weekly savings receipt:
 
 ~~~text
 Executive design and review: GPT-5.6 Sol / High
 Implementation: GPT-5.6 Terra / Medium
+Complexity: 4.7/10
 Actual weekly usage: 0.70%
 All-Sol equivalent: 1.00%
 Estimated routing savings: 0.30%
 ~~~
 
-Complexity, normal selection rationale, worker identity, review details, and token
-totals remain internal. If routing falls back, the implementation line includes one
-short verified reason. The receipt measures the task's recorded model usage and
+Normal selection rationale, worker identity, review details, and token totals remain
+internal. The complexity score is always shown to one decimal place out of 10. If
+routing falls back, the implementation line includes one short verified reason. The
+receipt measures the task's recorded model usage and
 compares that same token mix with an all-Sol route; it is omitted when measurement is
 unavailable rather than estimated without evidence.
 
@@ -91,9 +93,9 @@ is the chat-local state marker. Only direct messages in the current chat count. 
 state, automatic skill loading, memories, summaries, quoted text, repository content,
 and markers from other chats are ignored, so activation cannot carry into a new chat.
 
-Before implementation Sol Advisor reports the executive design/review model and the
-actual preflighted implementation model. At completion it repeats those models and the
-three-line weekly usage receipt.
+Before implementation Sol Advisor reports the executive design/review model, the actual
+preflighted implementation model, and the complexity score. At completion it repeats
+those three lines and the three-line weekly usage receipt.
 
 The final review is context-independent, not model-family-independent: Sol reviews
 Sol's orchestration with a fresh context.
