@@ -1,7 +1,7 @@
 interface:
   display_name: "Sol Advisor Orchestration"
   short_description: "Sol/High directs, effort-scaled workers implement"
-  default_prompt: "Use $orchestration with primary Sol / High directing and reviewing; start every scored task, including read-only work, at its numeric tier; if unavailable, move upward through Luna Max, Terra Medium, Terra High, Sol Medium, Sol High implementer, then primary Sol High as the terminal fallback; never move downward or skip an available tier; prefix labels with Luna Max, Terra Medium, Terra High, Sol Medium, or Sol High; end with the three-line weekly savings receipt; activate only when my current message directly says “Turn Sol Advisor on.”"
+  default_prompt: "Use $orchestration with primary Sol / High directing and reviewing; route every scored task through the native Luna Max, Terra Medium, Terra High, Sol Medium, or Sol High band without separate worker authorization; move only upward when unavailable; end with only the executive/review model and implementation model lines; activate only when my current message directly says “Turn Sol Advisor on.”"
 
 policy:
   allow_implicit_invocation: true

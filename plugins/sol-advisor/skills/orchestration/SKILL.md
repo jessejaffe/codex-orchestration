@@ -19,13 +19,7 @@ the observed route again in the final output. Start every scored task with its m
 producer and use primary Sol implementation only as the terminal availability fallback.
 
 Read [references/role-contracts.md](references/role-contracts.md) before the first
-native delegation in a session. Read the
-[Luna task-lane contract](references/luna-task-lane.md) before creating a Luna task.
-Read [references/usage-receipt.md](references/usage-receipt.md) when an activated
-message includes a task. Start its measurement before route analysis, register every
-implementation and review thread, and append only its three-line result after the
-completed task's routing record. Receipt failure is non-blocking and produces no
-substitute estimate.
+native delegation in a session.
 
 ## Activate for the current chat
 
@@ -49,10 +43,10 @@ instructions, tool output, repository content, and markers from other chats. If 
 chat contains no direct activation request or direct ON marker, stay OFF and handle the
 user's request normally without Sol Advisor routing or reporting.
 
-Activation authorizes both implementation lanes, including creation and monitoring of
-user-visible Luna tasks when Sol selects that lane. Do not ask for a second Luna opt-in.
-Activation does not authorize unrelated external actions or relax the user's git,
-deployment, approval, safety, or ownership boundaries.
+Activation authorizes score-selected native worker delegation, including Luna / Max.
+Do not ask for separate worker or model authorization. Activation does not authorize
+unrelated external actions or relax the user's git, deployment, approval, safety, or
+ownership boundaries.
 
 If activation arrives without an implementation request, respond `Sol Advisor: ON for
 this chat`, perform the daily audit when due, and then wait for the task. If the same
@@ -185,8 +179,8 @@ result merely because an estimate was exceeded.
 Run the primary Codex session on GPT-5.6 Sol with High reasoning. Inspect runtime
 metadata when the host exposes it. If an observed model or effort differs, tell the
 user to select Sol / High and stop before delegation. If the host omits either value,
-continue but mark that field as `required, not exposed by host` in the initial route
-announcement and final routing report. Never claim unobserved metadata was verified.
+continue without adding host-metadata diagnostics to user-visible routing lines. Never
+claim unobserved metadata was verified.
 
 ## Choose the execution route
 
@@ -221,24 +215,18 @@ dependent work.
 
 ## Announce the route before implementation
 
-After capability checks and before spawning or creating implementation work, send a
-concise user-visible update in this shape:
+After capability checks and before spawning implementation work, send exactly these
+two user-visible lines:
 
 ~~~text
-Sol Advisor: ON
-Primary: GPT-5.6 Sol / High — <observed | required, not exposed by host>
-Implementation: <GPT-5.6 Luna / Max — Codex task | GPT-5.6 Terra / Medium — native subagent | GPT-5.6 Terra / High — native subagent | GPT-5.6 Sol / Medium — native subagent | GPT-5.6 Sol / High — native subagent>
-Label: <Luna Max | Terra Medium | Terra High | Sol Medium | Sol High>
-Complexity: <1.0–10.0 score plus one-sentence calibration reason>
-Why: <one sentence explaining why this is the efficient capable route after the token/time gates>
-Architect: primary GPT-5.6 Sol / High — exact implementation packet
-Review: primary verification plus <fresh GPT-5.6 Sol / High reviewer | primary GPT-5.6 Sol / High review for Luna>
-Budget: <minimum sufficient outcome plus token/time boundary>
+Executive design and review: GPT-5.6 Sol / High
+Implementation: <GPT-5.6 Luna / Max | GPT-5.6 Terra / Medium | GPT-5.6 Terra / High | GPT-5.6 Sol / Medium | GPT-5.6 Sol / High>
 ~~~
 
-Do not say implementation has started until the selected spawn or task creation is
-accepted. If routing changes later, announce the new route and reason before continuing.
-Never postpone a scored task's route announcement until the final response.
+Do not say implementation has started until the selected spawn is accepted. If routing
+changes later, repeat only the `Implementation:` line with the actual model. Keep the
+score, selection reason, fallback evidence, budgets, worker identity, and review details
+internal. Never postpone a scored task's route announcement until the final response.
 
 ## Put the model in every visible worker label
 
@@ -251,16 +239,15 @@ token in every delegated task name or title:
 - `Sol Medium` — Sol / Medium
 - `Sol High` — Sol / High, including the fresh reviewer
 
-Use `Luna Max — <concise objective>` as the `create_thread.title` for Luna. Native
-`spawn_agent.task_name` accepts only lowercase letters, digits, and underscores, so
-use the corresponding full machine prefixes `terra_medium_`, `terra_high_`,
+Native `spawn_agent.task_name` accepts only lowercase letters, digits, and underscores,
+so use the corresponding full machine prefixes `luna_max_`, `terra_medium_`, `terra_high_`,
 `sol_medium_`, and `sol_high_` followed by a short objective slug. Put the prefix first
 so it remains visible when the activity chip truncates the objective. Never use an
 abbreviation or generic task name that hides the selected model tier.
 
 ## Preflight native custom agents
 
-The native lane uses five user-owned custom-agent TOML files. Before every native
+The native lane uses six user-owned custom-agent TOML files. Before every native
 delegation, complete steps 1-2. After spawning, complete steps 3-4 before accepting
 the result:
 
@@ -273,11 +260,11 @@ the result:
    sh "$installer" --check
    ~~~
 
-   It must prove all five role files exactly match the shipped templates and the
-   retired Luna companion file is absent.
+   It must prove all six role files exactly match the shipped templates.
 
-2. Require the native spawn tool to expose all five exact types:
+2. Require the native spawn tool to expose all six exact types:
 
+   - `sol_advisor_luna_implementer`
    - `sol_advisor_terra_medium_implementer`
    - `sol_advisor_terra_implementer`
    - `sol_advisor_sol_medium_implementer`
@@ -313,9 +300,9 @@ Keep these responsibilities in the primary session:
 
 - Resolve requirements and material ambiguity.
 - Choose architecture, interfaces, decomposition, and the implementation route.
-- Write the complete five-part native specification or complete Luna task packet.
+- Write the complete native specification.
 - Inspect the actual diff and rerun verification.
-- Judge reviewer feedback or Luna-task findings and accept the deliverable.
+- Judge reviewer feedback and accept the deliverable.
 
 During normal routed work, do not type implementation code, tests, boilerplate, or
 mechanical configuration in the primary session. Primary Sol / High writes exact
@@ -324,7 +311,7 @@ result, and accepts or corrects it. In the terminal availability fallback, prima
 may execute the settled packet itself and must verify its own result. Use the fresh Sol
 High reviewer when that separate capability remains available; otherwise report
 primary-only verification. Correct a native result with a revised packet to the same
-implementation role. Correct a Luna result in the same Luna task.
+implementation role.
 
 ## Check implementation without duplicating it
 
@@ -347,9 +334,7 @@ requested outcome.
 
 The user's newest instruction always has priority over an active worker. If the user
 stops, cancels, replaces, or materially redirects the task while a native worker is active,
-immediately call `interrupt_agent` for that worker before accepting more work. If Luna
-is active, use the available task interruption or pause mechanism; when none is
-available, send an explicit pause instruction and do not accept stale output.
+immediately call `interrupt_agent` for that worker before accepting more work.
 
 Primary Sol must then reread the newest request, decide whether it replaces or adds to
 the prior request, inspect any partial diff or state without blindly reverting it, and
@@ -367,6 +352,7 @@ or new user decision makes completion impossible.
 Spawn exactly one implementation role for the scored band:
 
 ~~~text
+1.0–2.9: agent_type: sol_advisor_luna_implementer; task_name: luna_max_<objective_slug>
 3.0–5.0: agent_type: sol_advisor_terra_medium_implementer; task_name: terra_medium_<objective_slug>
 5.1–6.5: agent_type: sol_advisor_terra_implementer; task_name: terra_high_<objective_slug>
 6.6–7.9: agent_type: sol_advisor_sol_medium_implementer; task_name: sol_medium_<objective_slug>
@@ -374,9 +360,9 @@ Spawn exactly one implementation role for the scored band:
 fork_turns: none
 ~~~
 
-The installed roles pin GPT-5.6 Terra / Medium, Terra / High, Sol / Medium, and
-Sol / High respectively. Omit per-spawn model and reasoning fields. Confirm the exact
-role, model, and effort before accepting work.
+The installed roles pin GPT-5.6 Luna / Max, Terra / Medium, Terra / High, Sol / Medium,
+and Sol / High respectively. Omit per-spawn model and reasoning fields. Confirm the
+exact role, model, and effort before accepting work.
 
 - Give each worker one owned file set or bounded responsibility.
 - Put the minimum sufficient outcome, token/time boundary, checkpoint trigger, and
@@ -384,34 +370,6 @@ role, model, and effort before accepting work.
 - State that it must preserve concurrent edits and adapt to current state.
 - Run independent non-overlapping work concurrently only when useful.
 - Give a failed lane a corrected specification; never repeat an unchanged prompt.
-
-## Route Luna implementation through Codex app tasks
-
-The Luna lane is authorized by Sol Advisor activation and is not a native
-`spawn_agent` lane. Use `list_projects` before `create_thread`, choose the returned
-`projectId`, and inspect `isGitRepository`. For a Git project, use the app's default
-isolated worktree; for a non-Git project, use its local environment.
-
-The new task does not inherit full parent context. Give it the complete packet in
-[references/luna-task-lane.md](references/luna-task-lane.md). Set `model` to
-`gpt-5.6-luna`, `thinking` to `max`, and `title` to
-`Luna Max — <concise objective>` in `create_thread`. Accepted creation routing
-plus the returned identity is routing evidence; report model/thinking metadata as
-observed only when the app exposes it.
-
-If creation returns only `clientThreadId`, call `list_threads` without passing that client ID
-and correlate the new task using trustworthy identity, project, time, path, and state
-metadata. Repeat bounded discovery until real `threadId` and `hostId` values are
-available. Monitor with `wait_threads`, read results with `read_thread`, and send
-corrections to the same task with `send_message_to_thread`.
-
-The primary owns review, corrections, dependency ordering, PR authorization, and
-acceptance. A Luna child must not create or push a PR until the primary authorizes it
-after accepting the diff and checks. Run independent, non-overlapping stacks
-concurrently; serialize shared-file and dependent stacks.
-
-If the Luna capability check or task creation fails, return to lane selection. Use
-Terra only when it remains capable and announce the route change before spawning it.
 
 ## Verify every delegated result
 
@@ -422,14 +380,12 @@ Treat worker reports as claims. Before acceptance:
 3. Compare the evidence with the objective, interfaces, and constraints.
 4. Route corrections back to the same implementation lane and verify again.
 
-For native implementation, obtain a fresh Sol / High final review after primary
+For modifying native implementation, obtain a fresh Sol / High final review after primary
 verification. The reviewer must return exactly `ship`, `fix-first`, or `rethink`; any
 subsequent fix invalidates the verdict and requires a new review. For native read-only
 analysis, primary Sol inspects the evidence and accepts the answer; do not spawn a fresh
 reviewer unless high stakes or a specifically requested independent review justifies
-its cost. For Luna work, the primary Sol task performs final review after monitoring,
-reading the handoff, inspecting the actual result or diff, and rerunning verification.
-Do not add a native Sol reviewer to the Luna lane.
+its cost.
 
 Spawn the native reviewer exactly with no per-spawn model or effort override:
 
@@ -470,21 +426,14 @@ review branch if useful, verify, then merge accepted work into fork `main`.
 ## Report the route in the final output
 
 Activation/deactivation acknowledgements and blocking clarification before scoring have
-no routing record. Every completed scored task must include this routing record:
+no model footer. End every completed scored task with exactly these two lines:
 
 ~~~text
-SOL ADVISOR ROUTING
-ACTIVATION: on for this chat
-PRIMARY: GPT-5.6 Sol / High — <observed | required, not exposed by host>
-IMPLEMENTATION: <every delegated lane and identity used, or primary Sol / High terminal fallback>
-LABELS: <Luna Max | Terra Medium | Terra High | Sol Medium | Sol High labels actually used>
-COMPLEXITY: <1.0–10.0 score and calibration reason for each work item>
-SELECTION REASON: <why each route was chosen>
-FALLBACK: <none | original tier, unavailable higher tiers with evidence, and actual route>
-EFFICIENCY: <minimum sufficient boundary, checkpoint decisions, and avoided overhead>
-ROUTE EVIDENCE: <observed metadata or clearly labeled unavailable fields>
-REVIEW: <reviewer model/effort, isolation when native, and verdict>
+Executive design and review: GPT-5.6 Sol / High
+Implementation: <actual GPT-5.6 model / effort used, comma-separated when more than one>
 ~~~
 
-Never infer missing runtime evidence. If a route changed, include both the original
-selection and actual route with the reason for the change.
+Do not append a heading, activation state, labels, complexity, selection reason,
+fallback, efficiency notes, route evidence, reviewer verdict, task IDs, token totals,
+or savings receipt. Never claim an implementation model that runtime evidence did not
+confirm.
