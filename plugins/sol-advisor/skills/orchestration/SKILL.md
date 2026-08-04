@@ -18,13 +18,21 @@ native work before final acceptance. Announce the route before work starts and r
 the observed route again in the final output. Start every scored task with its mapped
 producer and use primary Sol implementation only as the terminal availability fallback.
 
-Read [references/role-contracts.md](references/role-contracts.md) before the first
-native delegation in a session. Read
-[references/usage-receipt.md](references/usage-receipt.md) when an activated message
+Let `skill_dir` be the directory that contains this exact `SKILL.md`. Resolve every
+relative file from `skill_dir`, never from its parent `skills/` directory. The role
+contract is exactly `skill_dir/references/role-contracts.md`; do not drop the
+`orchestration/` path segment or report the contract absent without checking that exact
+path. Read it before the first native delegation in a session. The receipt contract is
+exactly `skill_dir/references/usage-receipt.md`; read it when an activated message
 includes a task. Start its measurement before route analysis, register every spawned
 implementation or review thread, and append only its three-line result after the
 completed task's model lines. Receipt failure is non-blocking and produces no
 substitute estimate.
+
+The version-looking directory above `skills/` may be a compatibility alias retained by
+Codex Desktop. Its directory name is not the loaded release identity. The alias must
+contain the same complete package as the installed release; use its sibling
+`.codex-plugin/plugin.json` only when release identity matters.
 
 ## Activate for the current chat
 
@@ -437,6 +445,9 @@ only on a feature branch. Never push to the original author's repository.
 After an accepted self-update, increment the manifest's plain release version without
 SemVer `+` build metadata, then resolve and run `../../scripts/reinstall-plugin.sh`.
 Its backup-and-restore flow keeps the skill paths held by already-open tasks valid.
+Codex Desktop may continue displaying an older compatibility-path name until the app
+restarts even though that path contains the current release. Never infer stale contents
+from the displayed directory name alone.
 
 Before updating fork `main`, fetch both repositories and inspect divergence. Use a
 fast-forward when possible; otherwise make a non-destructive merge after resolving and

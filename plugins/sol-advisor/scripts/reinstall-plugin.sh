@@ -56,6 +56,15 @@ check_current() {
     esac
     [ ! -L "$cached" ] || fail "refusing symlinked cache entry: $cached"
     [ -d "$cached" ] || fail "cache entry is not a directory: $cached"
+    for required_relative in \
+      .codex-plugin/plugin.json \
+      skills/orchestration/SKILL.md \
+      skills/orchestration/references/role-contracts.md \
+      skills/orchestration/references/usage-receipt.md
+    do
+      test -f "$cached/$required_relative" || \
+        fail "incomplete plugin cache alias is missing $required_relative: $cached"
+    done
     diff -qr "$current_cache" "$cached" >/dev/null || \
       fail "stale plugin cache alias does not match $manifest_version: $cached"
   done
@@ -210,3 +219,4 @@ backup_ready=0
 
 check_current
 pass "refreshed every preserved cache path to the installed release"
+printf '%s\n' "NOTICE: Codex Desktop may display an older compatibility-path name until the app restarts; its checked contents are $manifest_version."

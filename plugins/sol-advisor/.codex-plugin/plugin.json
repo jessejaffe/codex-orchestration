@@ -1,6 +1,6 @@
 {
   "name": "sol-advisor",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "Score-routed native workers with tier-specific preflight and a weekly savings receipt.",
   "author": {
     "name": "Daniel McAteer",

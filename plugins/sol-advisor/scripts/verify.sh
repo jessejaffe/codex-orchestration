@@ -140,7 +140,7 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.5.5 ] || fail "manifest version is not the cache-compatible 0.5.5 release: $manifest_version"
+[ "$manifest_version" = 0.5.6 ] || fail "manifest version is not the cache-compatible 0.5.6 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
@@ -227,9 +227,9 @@ fi
 if [ "${1:-}" = plugin ] && [ "${2:-}" = add ] && [ "${3:-}" = sol-advisor@sol-advisor ]; then
   rm -rf "$SOL_ADVISOR_CACHE_ROOT"
   current=$(jq -r .version "$SOL_ADVISOR_TEST_MANIFEST")
-  current_dir=$SOL_ADVISOR_CACHE_ROOT/$current/skills/orchestration
+  current_dir=$SOL_ADVISOR_CACHE_ROOT/$current
   mkdir -p "$current_dir"
-  cp "$SOL_ADVISOR_TEST_SKILL" "$current_dir/SKILL.md"
+  cp -Rp "$SOL_ADVISOR_TEST_PLUGIN"/. "$current_dir"
   printf '%s\n' "$current" > "$SOL_ADVISOR_TEST_STATE"
   exit 0
 fi
@@ -240,7 +240,7 @@ SOL_ADVISOR_CODEX_BIN="$fake_codex" \
 SOL_ADVISOR_CACHE_ROOT="$reinstall_cache" \
 SOL_ADVISOR_TEST_STATE="$fake_state" \
 SOL_ADVISOR_TEST_MANIFEST="$manifest" \
-SOL_ADVISOR_TEST_SKILL="$skill" \
+SOL_ADVISOR_TEST_PLUGIN="$plugin_dir" \
   sh "$reinstaller"
 test -f "$reinstall_cache/$manifest_version/skills/orchestration/SKILL.md" || fail "reinstaller lost the current skill cache"
 cmp -s "$skill" "$reinstall_cache/$old_build/skills/orchestration/SKILL.md" || fail "reinstaller left the full-version cache alias stale"
@@ -409,6 +409,11 @@ grep -Fq 'An unrelated role failure cannot' "$skill" || fail "skill lets unrelat
 grep -Fq 'Never reuse a prior turn' "$skill" || fail "skill permits stale preflight reuse"
 grep -Fq 'Never reuse a prior-turn failure' "$contracts" || fail "contracts permit stale preflight reuse"
 grep -Fq 'Never print that candidate as `Implementation:`' "$skill" || fail "skill permits preflight after route announcement"
+grep -Fq 'skill_dir/references/role-contracts.md' "$skill" || fail "skill does not pin role-contract resolution to the skill directory"
+grep -Fq 'do not drop the' "$skill" || fail "skill does not guard the observed orchestration-path resolution failure"
+grep -Fq 'directory name is not the loaded release identity' "$skill" || fail "skill mistakes a compatibility alias name for release identity"
+grep -Fq 'incomplete plugin cache alias is missing' "$reinstaller" || fail "reinstaller does not reject incomplete aliases"
+grep -Fq 'may display an older compatibility-path name until the app restarts' "$reinstaller" || fail "reinstaller hides the Desktop locator cache boundary"
 for tool in list_projects list_threads create_thread wait_threads read_thread send_message_to_thread clientThreadId; do
   if rg -n "$tool" "$skill" "$contracts" "$readme" "$manifest"; then
     fail "retired Luna app-task tool remains: $tool"

@@ -171,12 +171,21 @@ sh "$plugin_dir/scripts/install-agents.sh" --check
 
 The safe reinstaller backs up prior cache directories before Codex installs the new
 release, then refreshes every historical cache path with the new release contents.
-This covers Codex Desktop processes that keep advertising an older path to a newly
-created task. Sol Advisor uses plain release versions without SemVer `+` build metadata
-because Codex can advertise a base-version skill path while retaining the full version
-in its cache.
+This keeps tasks functional when Codex Desktop advertises an older path: every preserved
+path contains the complete current package, including nested reference files. The
+directory name shown in a task can nevertheless remain old because the running desktop
+app caches its skill locator separately from the files on disk. A new task alone does
+not necessarily refresh that displayed locator; quit and reopen Codex Desktop when you
+need the locator itself to show the new version. The reinstaller prints this boundary
+instead of claiming that an on-disk refresh also refreshed the live desktop catalog.
 
-Version 0.5.4 retains the historical byte-exact v0.2.0 migration for
+Sol Advisor uses plain release versions without SemVer `+` build metadata because Codex
+can advertise a base-version skill path while retaining the full version in its cache.
+All skill references resolve from the directory containing `SKILL.md`; for example, the
+role contract is `skills/orchestration/references/role-contracts.md`, never
+`skills/references/role-contracts.md`.
+
+The current release retains the historical byte-exact v0.2.0 migration for
 `sol-advisor-luna-implementer.toml` and `sol-advisor-terra-implementer.toml` files.
 Normal installer mode replaces those exact legacy files, or the exact Terra template
 shipped immediately before this routing update, with the current score-pinned roles.
