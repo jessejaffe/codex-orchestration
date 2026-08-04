@@ -36,6 +36,18 @@ the saved numeric complexity and receipt are visible. A measurement failure rema
 non-blocking, but it must be reported explicitly rather than silently dropping the
 receipt.
 
+The effectiveness tracker is exactly
+`skill_dir/../../scripts/effectiveness-tracker.py`. The Stop hook records each
+successfully completed routed turn once in persistent state outside the replaceable
+plugin cache. When the user asks to start an effectiveness experiment, obtain the
+current exact **Total chats** value from their Profile screen and run `baseline
+--total-chats <count>`. The tracker obtains exact lifetime and daily account tokens
+from Codex. When the user asks for the later comparison, obtain the new Profile count
+and run `compare --total-chats <count>`. Never infer the Profile chat count from local
+session files: account token activity and local thread history do not expose that same
+account-wide field. Explain that account tokens per completed task are most meaningful
+when the experiment window is predominantly Sol Advisor work.
+
 The version-looking directory above `skills/` may be a compatibility alias retained by
 Codex Desktop. Its directory name is not the loaded release identity. The alias must
 contain the same complete package as the installed release; use its sibling

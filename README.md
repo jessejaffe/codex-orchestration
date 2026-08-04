@@ -87,6 +87,43 @@ final response containing the saved score and recovered receipt. If recovery is
 genuinely unavailable, the final response shows that reason instead of silently
 omitting the receipt.
 
+## Measure whether Sol Advisor actually works
+
+The per-task savings receipt answers a narrow counterfactual: what the same recorded
+token mix would cost if every recorded token used Sol. It cannot determine whether a
+Sol-only task would have ended sooner, made more mistakes, or required another chat.
+Sol Advisor therefore includes a separate longitudinal tracker for the outcome-level
+question.
+
+The tracker reads exact lifetime and daily token activity through Codex's authenticated
+account interface. Codex does not return the account-wide Profile **Total chats** field
+through that interface, so copy the exact count from **Settings → Profile** when taking
+a snapshot. Start an experiment with:
+
+~~~sh
+plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
+python3 "$plugin_dir/scripts/effectiveness-tracker.py" baseline --total-chats <current-total-chats>
+~~~
+
+Every successful routed task is then logged automatically and idempotently by the
+completion hook. After a week, use the new Profile count:
+
+~~~sh
+python3 "$plugin_dir/scripts/effectiveness-tracker.py" compare --total-chats <new-total-chats>
+~~~
+
+The report shows exact account-token change, new chats, completed Sol Advisor tasks,
+tokens per new chat, account tokens per completed task, new chats per completed task,
+average completed-task time, delegated starts per task, and daily token pace versus the
+seven full days before the baseline. It also sums the exact per-task receipts into
+actual routed usage, the same-token all-Sol counterfactual, and direct routing savings.
+The Profile/account totals are raw tokens rather than model-weighted credits; the
+receipt aggregate is the credit-weighted view. Account-wide tokens per completed Sol
+Advisor task are cleanest when most work during the experiment uses Sol Advisor;
+unrelated Codex activity remains in the account numerator. Baselines, snapshots, and
+the completion ledger live under Codex state rather than the plugin cache, so plugin
+upgrades do not erase the experiment.
+
 Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
 for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as
 a fallback. Activation lasts only for the current chat, and every later request in

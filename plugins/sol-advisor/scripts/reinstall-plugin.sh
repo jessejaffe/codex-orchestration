@@ -59,6 +59,7 @@ check_current() {
     for required_relative in \
       .codex-plugin/plugin.json \
       hooks/hooks.json \
+      scripts/effectiveness-tracker.py \
       scripts/receipt-stop-hook.py \
       scripts/usage-receipt.py \
       skills/orchestration/SKILL.md \

@@ -14,6 +14,8 @@ reinstaller=$script_dir/reinstall-plugin.sh
 runtime_inspector=$script_dir/inspect-agent-runtime.sh
 daily_audit=$script_dir/daily-upstream-audit.sh
 usage_receipt=$script_dir/usage-receipt.py
+effectiveness_tracker=$script_dir/effectiveness-tracker.py
+effectiveness_test=$script_dir/test-effectiveness-tracker.py
 receipt_hook=$script_dir/receipt-stop-hook.py
 receipt_hook_test=$script_dir/test-receipt-hook.py
 templates=$plugin_dir/agents
@@ -137,13 +139,13 @@ PREVIOUS_TERRA
   [ "$(shasum -a 256 "$target/$terra_file" | awk '{print $1}')" = "$previous_terra_sha256" ] || fail "previous Terra fixture digest drifted"
 }
 
-for required in "$installer" "$reinstaller" "$runtime_inspector" "$daily_audit" "$usage_receipt" "$receipt_hook" "$receipt_hook_test" "$hook_config" "$manifest" "$skill" "$contracts" "$receipt_contract" "$readme" "$ui" "$upstream_workflow"; do
+for required in "$installer" "$reinstaller" "$runtime_inspector" "$daily_audit" "$usage_receipt" "$effectiveness_tracker" "$effectiveness_test" "$receipt_hook" "$receipt_hook_test" "$hook_config" "$manifest" "$skill" "$contracts" "$receipt_contract" "$readme" "$ui" "$upstream_workflow"; do
   test -f "$required" || fail "required file missing: $required"
 done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.5.9 ] || fail "manifest version is not the cache-compatible 0.5.9 release: $manifest_version"
+[ "$manifest_version" = 0.6.0 ] || fail "manifest version is not the cache-compatible 0.6.0 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
@@ -153,7 +155,8 @@ grep -Fq 'three-line weekly usage and routing-savings receipt' "$manifest" || fa
 grep -Fq 'unrelated missing roles never block' "$manifest" || fail "manifest does not describe tier-specific preflight"
 grep -Fq 'persists the exact one-decimal complexity score' "$manifest" || fail "manifest does not require deterministic complexity persistence"
 grep -Fq 'persisted complexity' "$manifest" || fail "manifest does not describe persisted complexity"
-grep -Fq 'completion-gated weekly savings receipt' "$manifest" || fail "manifest does not describe receipt completion gating"
+grep -Fq 'routing-savings receipt' "$manifest" || fail "manifest does not describe receipt completion gating"
+grep -Fq 'outcome tracking' "$manifest" || fail "manifest does not describe effectiveness tracking"
 grep -Fq 'fresh Sol' "$manifest" || fail "manifest does not preserve native fresh Sol review"
 pass "manifest JSON, version, and five-band UI language"
 
@@ -420,6 +423,8 @@ grep -Fq 'score to one decimal place' "$skill" || fail "skill does not standardi
 grep -Fq 'complexity score itself is always visible' "$skill" || fail "skill permits hiding the complexity score"
 grep -Fq 'PreToolUse gate independently requires and persists' "$skill" || fail "skill does not persist complexity before work"
 grep -Fq 'Once persisted, never revise the score' "$skill" || fail "skill permits complexity drift after routing"
+grep -Fq 'effectiveness-tracker.py' "$skill" || fail "skill omits the effectiveness tracker"
+grep -Fq 'Never infer the Profile chat count' "$skill" || fail "skill permits an inferred account chat count"
 grep -Fq 'skill_dir/references/role-contracts.md' "$skill" || fail "skill does not pin role-contract resolution to the skill directory"
 grep -Fq 'do not drop the' "$skill" || fail "skill does not guard the observed orchestration-path resolution failure"
 grep -Fq 'directory name is not the loaded release identity' "$skill" || fail "skill mistakes a compatibility alias name for release identity"
@@ -473,6 +478,8 @@ grep -Fq 'Actual weekly usage:' "$receipt_contract" || fail "usage receipt omits
 grep -Fq 'All-Sol equivalent:' "$receipt_contract" || fail "usage receipt omits all-Sol equivalent"
 grep -Fq 'Estimated routing savings:' "$receipt_contract" || fail "usage receipt omits routing savings"
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$usage_receipt" || fail "usage receipt script does not compile"
+python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$effectiveness_tracker" || fail "effectiveness tracker does not compile"
+python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$effectiveness_test" || fail "effectiveness tracker test does not compile"
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$receipt_hook" || fail "receipt Stop hook does not compile"
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$receipt_hook_test" || fail "receipt Stop-hook test does not compile"
 jq empty "$hook_config" || fail "receipt Stop-hook configuration is invalid JSON"
@@ -483,6 +490,8 @@ grep -Fq 'Never draft or send the final response before calling' "$skill" || fai
 grep -Fq 'Never omit the receipt' "$receipt_contract" || fail "receipt contract permits silent omission"
 python3 "$receipt_hook_test" "$plugin_dir" "$tmp_dir/receipt-hook" || fail "complexity persistence, receipt recovery, or Stop-hook gate failed"
 pass "complexity persistence, receipt recovery, and Stop-hook completion gate"
+python3 "$effectiveness_test" "$plugin_dir" "$tmp_dir/effectiveness" || fail "effectiveness baseline, ledger, or comparison failed"
+pass "effectiveness baseline, completion ledger, and comparison"
 grep -Fq 'first Sol Advisor activation of each local calendar day' "$skill" || fail "skill omits once-daily activation boundary"
 grep -Fq 'adopt unchanged' "$skill" || fail "skill omits upstream adoption classification"
 grep -Fq 'adapt' "$skill" || fail "skill omits upstream adaptation classification"
@@ -564,6 +573,7 @@ grep -Fq 'move only upward when unavailable' "$ui" || fail "skill UI omits upwar
 grep -Fq 'preflight only the attempted tier with current-turn evidence' "$ui" || fail "skill UI omits tier-specific current-turn preflight"
 grep -Fq 'persist the exact one-decimal complexity score before work' "$ui" || fail "skill UI omits deterministic complexity persistence"
 grep -Fq 'completion-gated three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
+grep -Fq 'log the completed routed outcome' "$ui" || fail "skill UI omits outcome logging"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 
 grep -Fq '17 12 * * *' "$upstream_workflow" || fail "upstream workflow is not scheduled daily"

@@ -1,5 +1,5 @@
 {
-  "description": "Persist exact Sol Advisor complexity before work and enforce the final receipt.",
+  "description": "Persist Sol Advisor complexity, enforce receipts, and log completed routed tasks.",
   "hooks": {
     "PreToolUse": [
       {

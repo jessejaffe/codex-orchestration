@@ -238,6 +238,14 @@ def main() -> int:
     allowed = run_hook(hook, hook_input, environment)
     if allowed != {"continue": True}:
         raise AssertionError(f"hook rejected a complete receipt: {allowed!r}")
+    completions = list((state / "effectiveness" / "completions").glob("*.json"))
+    if len(completions) != 1:
+        raise AssertionError(f"hook did not record one completion: {completions!r}")
+    completion = json.loads(completions[0].read_text())
+    if completion.get("complexity") != "4.2":
+        raise AssertionError(f"hook recorded the wrong complexity: {completion!r}")
+    if completion.get("delegated_starts") != 1:
+        raise AssertionError(f"hook recorded the wrong delegation count: {completion!r}")
     print("complexity persistence, receipt recovery, and Stop-hook gate passed")
     return 0
 

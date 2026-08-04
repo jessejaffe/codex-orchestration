@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import re
@@ -131,6 +132,59 @@ def implementation_line(text: str) -> str:
     return matches[-1] if matches else "Implementation: <actual routed model / effort>"
 
 
+def receipt_value(text: str, label: str) -> str | None:
+    match = re.search(rf"(?m)^{re.escape(label)}\s*(\S[^\r\n]*)\s*$", text)
+    return match.group(1) if match else None
+
+
+def record_completion(
+    *,
+    session_id: str,
+    turn_id: str,
+    score: str,
+    implementation: str,
+    final_message: str,
+    elapsed_seconds: int,
+    delegated_starts: int,
+) -> None:
+    values = [receipt_value(final_message, label) for label in RECEIPT_LABELS]
+    if any(value is None for value in values):
+        return
+    tracker = Path(__file__).with_name("effectiveness-tracker.py")
+    try:
+        subprocess.run(
+            [
+                sys.executable,
+                str(tracker),
+                "record-turn",
+                "--session-id",
+                session_id,
+                "--turn-id",
+                turn_id,
+                "--complexity",
+                score,
+                "--implementation",
+                implementation,
+                "--actual-weekly-usage",
+                values[0],
+                "--all-sol-equivalent",
+                values[1],
+                "--estimated-routing-savings",
+                values[2],
+                "--elapsed-seconds",
+                str(elapsed_seconds),
+                "--delegated-starts",
+                str(delegated_starts),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        # Effectiveness tracking must never hold a completed user task open.
+        return
+
+
 def turn_text(transcript: Path, turn_id: str) -> str:
     active = False
     messages: list[str] = []
@@ -165,6 +219,56 @@ def turn_text(transcript: Path, turn_id: str) -> str:
             ):
                 break
     return "\n".join(messages)
+
+
+def turn_metrics(transcript: Path, turn_id: str) -> tuple[int, int]:
+    active = False
+    started_at: dt.datetime | None = None
+    children: set[str] = set()
+    with transcript.open(encoding="utf-8", errors="replace") as handle:
+        for line in handle:
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            payload = event.get("payload") or {}
+            if event.get("type") == "event_msg" and payload.get("type") == "task_started":
+                candidate = payload.get("turn_id")
+                if active and candidate != turn_id:
+                    break
+                if candidate == turn_id:
+                    active = True
+                    timestamp = event.get("timestamp")
+                    if isinstance(timestamp, str):
+                        try:
+                            started_at = dt.datetime.fromisoformat(
+                                timestamp.replace("Z", "+00:00")
+                            )
+                        except ValueError:
+                            started_at = None
+                continue
+            if not active:
+                continue
+            if (
+                event.get("type") == "event_msg"
+                and payload.get("type") == "sub_agent_activity"
+            ):
+                child_id = payload.get("agent_thread_id")
+                if payload.get("kind") == "started" and isinstance(child_id, str):
+                    children.add(child_id)
+            if (
+                event.get("type") == "event_msg"
+                and payload.get("type") == "task_complete"
+                and payload.get("turn_id") == turn_id
+            ):
+                break
+    elapsed = 0
+    if started_at is not None:
+        now = dt.datetime.now(dt.timezone.utc)
+        if started_at.tzinfo is None:
+            started_at = started_at.replace(tzinfo=dt.timezone.utc)
+        elapsed = max(0, round((now - started_at).total_seconds()))
+    return elapsed, len(children)
 
 
 def recover_receipt(transcript: Path, turn_id: str) -> tuple[list[str], str | None]:
@@ -298,6 +402,16 @@ def main() -> int:
     complexity_present = exact_score is not None and final_score == exact_score
     receipt_present = all(label in last_message for label in RECEIPT_LABELS)
     if complexity_present and receipt_present:
+        elapsed_seconds, delegated_starts = turn_metrics(transcript, turn_id)
+        record_completion(
+            session_id=session_id,
+            turn_id=turn_id,
+            score=exact_score,
+            implementation=implementation_line(current_text),
+            final_message=last_message,
+            elapsed_seconds=elapsed_seconds,
+            delegated_starts=delegated_starts,
+        )
         emit({"continue": True})
         return 0
 
