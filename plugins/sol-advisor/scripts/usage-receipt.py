@@ -235,6 +235,33 @@ def rollout_summary(path: Path) -> dict[str, Any]:
     return {"model": model, "totals": totals, "rate_limit": rate_limit}
 
 
+def spawned_thread_ids(path: Path) -> list[str]:
+    children: list[str] = []
+    try:
+        with path.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                if '"type":"sub_agent_activity"' not in line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                payload = event.get("payload") or {}
+                child_id = payload.get("agent_thread_id")
+                if (
+                    event.get("type") == "event_msg"
+                    and payload.get("type") == "sub_agent_activity"
+                    and payload.get("kind") == "started"
+                    and isinstance(child_id, str)
+                    and THREAD_RE.fullmatch(child_id)
+                    and child_id not in children
+                ):
+                    children.append(child_id)
+    except OSError as exc:
+        raise ReceiptUnavailable(f"cannot inspect rollout {path.name}") from exc
+    return children
+
+
 def normalize_model(model: str | None) -> str | None:
     lowered = (model or "").lower()
     for name in ("sol", "terra", "luna"):
@@ -514,7 +541,13 @@ def recover_turn_usage(
     usages.append((normalized_root, usage_delta(latest, baseline)))
 
     sessions = sessions_root()
-    for child_id in child_ids:
+    pending = list(child_ids)
+    seen: set[str] = set()
+    while pending:
+        child_id = pending.pop(0)
+        if child_id in seen:
+            continue
+        seen.add(child_id)
         rollout = find_rollout(sessions, child_id)
         if rollout is None:
             raise ReceiptUnavailable(f"rollout unavailable for delegated thread {child_id}")
@@ -523,6 +556,7 @@ def recover_turn_usage(
         if model is None:
             raise ReceiptUnavailable(f"model unavailable for delegated thread {child_id}")
         usages.append((model, summary["totals"]))
+        pending.extend(spawned_thread_ids(rollout))
     return usages, rate_limit
 
 
@@ -556,6 +590,24 @@ def receipt_lines(
         f"All-Sol equivalent: {format_percent(all_sol_percent)}",
         f"Estimated routing savings: {format_percent(savings_percent)}",
     ]
+
+
+def token_totals(
+    usages: Iterable[tuple[str, dict[str, int]]]
+) -> dict[str, Any]:
+    totals = empty_usage()
+    models: dict[str, int] = {}
+    for model, usage in usages:
+        for key in TOKEN_KEYS:
+            totals[key] += max(0, int(usage.get(key, 0)))
+        models[model] = models.get(model, 0) + max(
+            0, int(usage.get("input_tokens", 0))
+        ) + max(0, int(usage.get("output_tokens", 0)))
+    return {
+        **totals,
+        "total_tokens": totals["input_tokens"] + totals["output_tokens"],
+        "models": models,
+    }
 
 
 def command_finish(args: argparse.Namespace) -> None:
@@ -605,6 +657,12 @@ def command_recover(args: argparse.Namespace) -> None:
     print("\n".join(receipt_lines(usages, pricing, capacity)))
 
 
+def command_recover_tokens(args: argparse.Namespace) -> None:
+    transcript = Path(args.transcript).expanduser()
+    usages, _ = recover_turn_usage(transcript, args.turn_id)
+    print(json.dumps(token_totals(usages), separators=(",", ":"), sort_keys=True))
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     commands = result.add_subparsers(dest="command", required=True)
@@ -636,6 +694,12 @@ def parser() -> argparse.ArgumentParser:
     recover.add_argument("--transcript", required=True)
     recover.add_argument("--turn-id", required=True)
     recover.set_defaults(handler=command_recover)
+    recover_tokens = commands.add_parser(
+        "recover-tokens", help="reconstruct exact root-and-delegated task tokens"
+    )
+    recover_tokens.add_argument("--transcript", required=True)
+    recover_tokens.add_argument("--turn-id", required=True)
+    recover_tokens.set_defaults(handler=command_recover_tokens)
     return result
 
 

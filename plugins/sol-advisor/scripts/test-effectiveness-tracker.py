@@ -64,10 +64,8 @@ def main() -> int:
         "--usage-file",
         str(first),
         "baseline",
-        "--total-chats",
-        "10",
     )
-    if "Lifetime tokens per chat: 100" not in baseline:
+    if "Exact lifetime tokens: 1,000" not in baseline:
         raise AssertionError(f"baseline calculation is wrong: {baseline!r}")
     session_id = "11111111-1111-1111-1111-111111111111"
     turn_ids = [
@@ -96,6 +94,17 @@ def main() -> int:
             "60",
             "--delegated-starts",
             "2",
+            "--task-metrics-json",
+            json.dumps(
+                {
+                    "input_tokens": 800,
+                    "cached_input_tokens": 600,
+                    "output_tokens": 200,
+                    "total_tokens": 1_000,
+                    "models": {"terra": 1_000},
+                },
+                separators=(",", ":"),
+            ),
         )
         if "effectiveness-completion-recorded" not in recorded:
             raise AssertionError(f"completion was not recorded: {recorded!r}")
@@ -120,6 +129,17 @@ def main() -> int:
         "60",
         "--delegated-starts",
         "2",
+        "--task-metrics-json",
+        json.dumps(
+            {
+                "input_tokens": 800,
+                "cached_input_tokens": 600,
+                "output_tokens": 200,
+                "total_tokens": 1_000,
+                "models": {"terra": 1_000},
+            },
+            separators=(",", ":"),
+        ),
     )
     if "effectiveness-completion-already-recorded" not in duplicate:
         raise AssertionError(f"duplicate completion was not idempotent: {duplicate!r}")
@@ -128,22 +148,22 @@ def main() -> int:
         "--usage-file",
         str(second),
         "compare",
-        "--total-chats",
-        "13",
     )
     expected = (
-        "Account token change: 600",
-        "New chats: 3",
         "Completed Sol Advisor tasks: 2",
-        "Tokens per new chat: 200",
-        "Account tokens per completed Sol Advisor task: 300",
-        "New chats per completed task: 1.50",
+        "Exact recorded task tokens: 2,000",
+        "Average tokens per completed Sol Advisor task: 1,000",
+        "Task input tokens: 1,600",
+        "Task cached input tokens: 1,200",
+        "Task output tokens: 400",
+        "Exact task-token coverage: 2/2 tasks",
         "Average completed-task duration: 1m 0s",
         "Delegated starts per completed task: 2.00",
         "Direct routed usage (summed receipts): 0.400% of weekly capacity",
         "All-Sol same-token counterfactual: 0.600% of weekly capacity",
         "Estimated direct routing savings: 0.200 percentage points",
         "Exact receipt aggregation coverage: 2/2 tasks",
+        "Account-wide token change (background): 600",
     )
     for line in expected:
         if line not in comparison:

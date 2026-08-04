@@ -95,34 +95,30 @@ Sol-only task would have ended sooner, made more mistakes, or required another c
 Sol Advisor therefore includes a separate longitudinal tracker for the outcome-level
 question.
 
-The tracker reads exact lifetime and daily token activity through Codex's authenticated
-account interface. Codex does not return the account-wide Profile **Total chats** field
-through that interface, so copy the exact count from **Settings → Profile** when taking
-a snapshot. Start an experiment with:
+The completion hook reconstructs exact root and delegated-agent tokens for every
+successfully completed routed task. Start an experiment with:
 
 ~~~sh
 plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "sol-advisor@sol-advisor") | .source.path')"
-python3 "$plugin_dir/scripts/effectiveness-tracker.py" baseline --total-chats <current-total-chats>
+python3 "$plugin_dir/scripts/effectiveness-tracker.py" baseline
 ~~~
 
-Every successful routed task is then logged automatically and idempotently by the
-completion hook. After a week, use the new Profile count:
+Every successful routed task is then logged automatically and idempotently. After a
+week, compare the task ledger with the baseline:
 
 ~~~sh
-python3 "$plugin_dir/scripts/effectiveness-tracker.py" compare --total-chats <new-total-chats>
+python3 "$plugin_dir/scripts/effectiveness-tracker.py" compare
 ~~~
 
-The report shows exact account-token change, new chats, completed Sol Advisor tasks,
-tokens per new chat, account tokens per completed task, new chats per completed task,
-average completed-task time, delegated starts per task, and daily token pace versus the
-seven full days before the baseline. It also sums the exact per-task receipts into
-actual routed usage, the same-token all-Sol counterfactual, and direct routing savings.
-The Profile/account totals are raw tokens rather than model-weighted credits; the
-receipt aggregate is the credit-weighted view. Account-wide tokens per completed Sol
-Advisor task are cleanest when most work during the experiment uses Sol Advisor;
-unrelated Codex activity remains in the account numerator. Baselines, snapshots, and
-the completion ledger live under Codex state rather than the plugin cache, so plugin
-upgrades do not erase the experiment.
+The primary report shows completed Sol Advisor tasks, exact task tokens, average tokens
+per completed task, input/cached/output composition, average task time, and delegated
+starts per task. It also sums the per-task receipts into actual routed usage, the
+same-token all-Sol counterfactual, and direct routing savings. Exact lifetime and daily
+account token activity remains as background context only; it is never divided by a
+chat count or substituted for task-specific usage. An optional `--total-chats` value is
+accepted only when the user explicitly wants secondary chat context. Baselines,
+snapshots, and the completion ledger live under Codex state rather than the plugin
+cache, so plugin upgrades do not erase the experiment.
 
 Activate Sol Advisor in plain language with “Turn Sol Advisor on” or “Use Sol Advisor
 for this chat.” The exact `$sol-advisor:orchestration` invocation remains available as

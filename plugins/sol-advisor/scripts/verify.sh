@@ -145,7 +145,7 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.6.0 ] || fail "manifest version is not the cache-compatible 0.6.0 release: $manifest_version"
+[ "$manifest_version" = 0.6.1 ] || fail "manifest version is not the cache-compatible 0.6.1 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
@@ -424,7 +424,8 @@ grep -Fq 'complexity score itself is always visible' "$skill" || fail "skill per
 grep -Fq 'PreToolUse gate independently requires and persists' "$skill" || fail "skill does not persist complexity before work"
 grep -Fq 'Once persisted, never revise the score' "$skill" || fail "skill permits complexity drift after routing"
 grep -Fq 'effectiveness-tracker.py' "$skill" || fail "skill omits the effectiveness tracker"
-grep -Fq 'Never infer the Profile chat count' "$skill" || fail "skill permits an inferred account chat count"
+grep -Fq 'exact root-and-delegated token usage' "$skill" || fail "skill omits exact per-task tokens"
+grep -Fq 'Do not request, infer, or divide by a Profile chat count' "$skill" || fail "skill makes chat count the primary denominator"
 grep -Fq 'skill_dir/references/role-contracts.md' "$skill" || fail "skill does not pin role-contract resolution to the skill directory"
 grep -Fq 'do not drop the' "$skill" || fail "skill does not guard the observed orchestration-path resolution failure"
 grep -Fq 'directory name is not the loaded release identity' "$skill" || fail "skill mistakes a compatibility alias name for release identity"
@@ -573,7 +574,7 @@ grep -Fq 'move only upward when unavailable' "$ui" || fail "skill UI omits upwar
 grep -Fq 'preflight only the attempted tier with current-turn evidence' "$ui" || fail "skill UI omits tier-specific current-turn preflight"
 grep -Fq 'persist the exact one-decimal complexity score before work' "$ui" || fail "skill UI omits deterministic complexity persistence"
 grep -Fq 'completion-gated three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
-grep -Fq 'log the completed routed outcome' "$ui" || fail "skill UI omits outcome logging"
+grep -Fq 'log exact root-and-delegated tokens' "$ui" || fail "skill UI omits exact task-token logging"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 
 grep -Fq '17 12 * * *' "$upstream_workflow" || fail "upstream workflow is not scheduled daily"

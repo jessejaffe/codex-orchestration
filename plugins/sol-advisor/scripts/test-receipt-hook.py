@@ -64,8 +64,10 @@ def main() -> int:
     root_id = "11111111-1111-1111-1111-111111111111"
     turn_id = "22222222-2222-2222-2222-222222222222"
     child_id = "33333333-3333-3333-3333-333333333333"
+    grandchild_id = "44444444-4444-4444-4444-444444444444"
     root_rollout = sessions / f"rollout-{root_id}.jsonl"
     child_rollout = sessions / f"rollout-{child_id}.jsonl"
+    grandchild_rollout = sessions / f"rollout-{grandchild_id}.jsonl"
     route_without_score = (
         "Executive design and review: GPT-5.6 Sol / High\n"
         "Implementation: GPT-5.6 Terra / Medium"
@@ -112,7 +114,22 @@ def main() -> int:
                 "type": "turn_context",
                 "payload": {"model": "gpt-5.6-terra"},
             },
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "sub_agent_activity",
+                    "kind": "started",
+                    "agent_thread_id": grandchild_id,
+                },
+            },
             token_event(50),
+        ],
+    )
+    write_jsonl(
+        grandchild_rollout,
+        [
+            {"type": "turn_context", "payload": {"model": "gpt-5.6-luna"}},
+            token_event(25),
         ],
     )
     today = dt.datetime.now().astimezone().date().isoformat()
@@ -188,9 +205,9 @@ def main() -> int:
         env=environment,
     ).stdout.strip()
     expected = (
-        "Actual weekly usage: 10.50%\n"
-        "All-Sol equivalent: 15.00%\n"
-        "Estimated routing savings: 4.50%"
+        "Actual weekly usage: 10.62%\n"
+        "All-Sol equivalent: 17.50%\n"
+        "Estimated routing savings: 6.88%"
     )
     if receipt != expected:
         raise AssertionError(f"unexpected recovered receipt: {receipt!r}")
@@ -246,6 +263,8 @@ def main() -> int:
         raise AssertionError(f"hook recorded the wrong complexity: {completion!r}")
     if completion.get("delegated_starts") != 1:
         raise AssertionError(f"hook recorded the wrong delegation count: {completion!r}")
+    if (completion.get("task_metrics") or {}).get("total_tokens") != 175:
+        raise AssertionError(f"hook recorded the wrong task tokens: {completion!r}")
     print("complexity persistence, receipt recovery, and Stop-hook gate passed")
     return 0
 

@@ -226,6 +226,11 @@ def completion_metrics(root: Path) -> dict[str, int | float]:
             "actual_percent": 0.0,
             "all_sol_percent": 0.0,
             "savings_percent": 0.0,
+            "task_token_records": 0,
+            "task_input_tokens": 0,
+            "task_cached_input_tokens": 0,
+            "task_output_tokens": 0,
+            "task_tokens": 0,
         }
     result: dict[str, int | float] = {
         "count": 0,
@@ -235,6 +240,11 @@ def completion_metrics(root: Path) -> dict[str, int | float]:
         "actual_percent": 0.0,
         "all_sol_percent": 0.0,
         "savings_percent": 0.0,
+        "task_token_records": 0,
+        "task_input_tokens": 0,
+        "task_cached_input_tokens": 0,
+        "task_output_tokens": 0,
+        "task_tokens": 0,
     }
     for path in directory.glob("*.json"):
         if not path.is_file() or path.is_symlink():
@@ -258,13 +268,27 @@ def completion_metrics(root: Path) -> dict[str, int | float]:
             result["actual_percent"] += float(receipt[0])
             result["all_sol_percent"] += float(receipt[1])
             result["savings_percent"] += float(receipt[2])
+        task = value.get("task_metrics")
+        if isinstance(task, dict):
+            try:
+                task_input = max(0, int(task["input_tokens"]))
+                task_cached = max(0, int(task["cached_input_tokens"]))
+                task_output = max(0, int(task["output_tokens"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+            if task_cached <= task_input:
+                result["task_token_records"] += 1
+                result["task_input_tokens"] += task_input
+                result["task_cached_input_tokens"] += task_cached
+                result["task_output_tokens"] += task_output
+                result["task_tokens"] += task_input + task_output
     return result
 
 
 def capture_snapshot(
-    args: argparse.Namespace, *, label: str, profile_total_chats: int
+    args: argparse.Namespace, *, label: str, profile_total_chats: int | None
 ) -> dict[str, Any]:
-    if profile_total_chats < 1:
+    if profile_total_chats is not None and profile_total_chats < 1:
         raise TrackerUnavailable("Profile Total chats must be a positive integer")
     root = state_root(args.state_dir)
     now = dt.datetime.now(dt.timezone.utc)
@@ -319,18 +343,17 @@ def percent_change(current: float, baseline: float) -> str:
 
 def print_baseline(snapshot: dict[str, Any]) -> None:
     tokens = lifetime_tokens(snapshot)
-    chats = int(snapshot["profile_total_chats"])
     days = preceding_full_days(snapshot)
     prior_tokens = sum(int(item["tokens"]) for item in days)
     print(f"Baseline recorded: {snapshot['recorded_at']}")
     print(f"Exact lifetime tokens: {tokens:,}")
-    print(f"Profile total chats: {chats:,}")
-    print(f"Lifetime tokens per chat: {integer(tokens / chats)}")
     if days:
         print(f"Previous {len(days)} full days: {prior_tokens:,} tokens")
         print(f"Previous daily average: {integer(prior_tokens / len(days))} tokens")
     metrics = snapshot["sol_advisor_completion_metrics"]
     print(f"Logged Sol Advisor completions: {metrics['count']:,}")
+    if snapshot.get("profile_total_chats") is not None:
+        print(f"Optional Profile chat context: {snapshot['profile_total_chats']:,}")
 
 
 def duration(seconds: float) -> str:
@@ -348,9 +371,6 @@ def print_report(baseline: dict[str, Any], latest: dict[str, Any]) -> None:
     start_tokens = lifetime_tokens(baseline)
     end_tokens = lifetime_tokens(latest)
     token_delta = end_tokens - start_tokens
-    chat_delta = int(latest["profile_total_chats"]) - int(
-        baseline["profile_total_chats"]
-    )
     start_metrics = baseline["sol_advisor_completion_metrics"]
     end_metrics = latest["sol_advisor_completion_metrics"]
     completion_delta = int(end_metrics["count"]) - int(start_metrics["count"])
@@ -372,29 +392,44 @@ def print_report(baseline: dict[str, Any], latest: dict[str, Any]) -> None:
     savings_percent_delta = float(end_metrics["savings_percent"]) - float(
         start_metrics["savings_percent"]
     )
+    task_token_record_delta = int(end_metrics["task_token_records"]) - int(
+        start_metrics["task_token_records"]
+    )
+    task_input_delta = int(end_metrics["task_input_tokens"]) - int(
+        start_metrics["task_input_tokens"]
+    )
+    task_cached_delta = int(end_metrics["task_cached_input_tokens"]) - int(
+        start_metrics["task_cached_input_tokens"]
+    )
+    task_output_delta = int(end_metrics["task_output_tokens"]) - int(
+        start_metrics["task_output_tokens"]
+    )
+    task_token_delta = int(end_metrics["task_tokens"]) - int(
+        start_metrics["task_tokens"]
+    )
     start_time = dt.datetime.fromisoformat(str(baseline["recorded_at"]))
     end_time = dt.datetime.fromisoformat(str(latest["recorded_at"]))
     elapsed_days = max((end_time - start_time).total_seconds() / 86400.0, 0.0)
-    starting_average = start_tokens / int(baseline["profile_total_chats"])
     print(f"Experiment window: {elapsed_days:.2f} days")
-    print(f"Account token change: {token_delta:,}")
-    print(f"New chats: {chat_delta:,}")
     print(f"Completed Sol Advisor tasks: {completion_delta:,}")
-    if chat_delta > 0:
-        period_per_chat = token_delta / chat_delta
-        print(f"Tokens per new chat: {integer(period_per_chat)}")
+    if task_token_record_delta > 0:
+        print(f"Exact recorded task tokens: {task_token_delta:,}")
         print(
-            "Versus starting lifetime tokens/chat: "
-            f"{percent_change(period_per_chat, starting_average)}"
+            "Average tokens per completed Sol Advisor task: "
+            f"{integer(task_token_delta / task_token_record_delta)}"
         )
+        print(f"Task input tokens: {task_input_delta:,}")
+        print(f"Task cached input tokens: {task_cached_delta:,}")
+        print(f"Task output tokens: {task_output_delta:,}")
     else:
-        print("Tokens per new chat: n/a (no new Profile chats)")
+        print("Average tokens per completed Sol Advisor task: n/a")
+    print(
+        "Exact task-token coverage: "
+        f"{task_token_record_delta}/{completion_delta} tasks"
+        if completion_delta > 0
+        else "Exact task-token coverage: 0/0 tasks"
+    )
     if completion_delta > 0:
-        print(
-            "Account tokens per completed Sol Advisor task: "
-            f"{integer(token_delta / completion_delta)}"
-        )
-        print(f"New chats per completed task: {chat_delta / completion_delta:.2f}")
         print(
             "Average completed-task duration: "
             f"{duration(elapsed_delta / completion_delta)}"
@@ -420,7 +455,12 @@ def print_report(baseline: dict[str, Any], latest: dict[str, Any]) -> None:
             f"{exact_receipt_delta}/{completion_delta} tasks"
         )
     else:
-        print("Account tokens per completed Sol Advisor task: n/a")
+        print("Average completed-task duration: n/a")
+    print(f"Account-wide token change (background): {token_delta:,}")
+    start_chats = baseline.get("profile_total_chats")
+    end_chats = latest.get("profile_total_chats")
+    if isinstance(start_chats, int) and isinstance(end_chats, int):
+        print(f"Optional new-chat context: {end_chats - start_chats:,}")
     prior_days = preceding_full_days(baseline)
     prior_daily = (
         sum(int(item["tokens"]) for item in prior_days) / len(prior_days)
@@ -484,6 +524,12 @@ def command_record_turn(args: argparse.Namespace) -> None:
         raise TrackerUnavailable("valid session and turn IDs are required")
     if not SCORE_RE.fullmatch(args.complexity):
         raise TrackerUnavailable("an exact one-decimal complexity score is required")
+    try:
+        task_metrics = json.loads(args.task_metrics_json)
+    except json.JSONDecodeError as exc:
+        raise TrackerUnavailable("task token metrics are invalid") from exc
+    if not isinstance(task_metrics, dict):
+        raise TrackerUnavailable("task token metrics are invalid")
     root = state_root(args.state_dir)
     completions = root / "completions"
     if completions.is_symlink():
@@ -502,6 +548,7 @@ def command_record_turn(args: argparse.Namespace) -> None:
         "estimated_routing_savings": args.estimated_routing_savings,
         "elapsed_seconds": args.elapsed_seconds,
         "delegated_starts": args.delegated_starts,
+        "task_metrics": task_metrics,
     }
     if atomic_json(path, value, replace=False):
         print("STATUS: effectiveness-completion-recorded")
@@ -516,12 +563,12 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--codex-bin", default=os.environ.get("SOL_ADVISOR_CODEX_BIN", "codex"))
     commands = result.add_subparsers(dest="command", required=True)
     baseline = commands.add_parser("baseline", help="record the experiment baseline")
-    baseline.add_argument("--total-chats", required=True, type=int)
+    baseline.add_argument("--total-chats", type=int)
     baseline.add_argument("--label", default="baseline")
     baseline.add_argument("--replace", action="store_true")
     baseline.set_defaults(handler=command_baseline)
     compare = commands.add_parser("compare", help="capture now and compare with baseline")
-    compare.add_argument("--total-chats", required=True, type=int)
+    compare.add_argument("--total-chats", type=int)
     compare.add_argument("--label", default="comparison")
     compare.set_defaults(handler=command_compare)
     report = commands.add_parser("report", help="report the latest stored comparison")
@@ -536,6 +583,7 @@ def parser() -> argparse.ArgumentParser:
     record.add_argument("--estimated-routing-savings", required=True)
     record.add_argument("--elapsed-seconds", required=True, type=int)
     record.add_argument("--delegated-starts", required=True, type=int)
+    record.add_argument("--task-metrics-json", required=True)
     record.set_defaults(handler=command_record_turn)
     return result
 

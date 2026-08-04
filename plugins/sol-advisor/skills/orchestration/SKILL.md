@@ -39,14 +39,13 @@ receipt.
 The effectiveness tracker is exactly
 `skill_dir/../../scripts/effectiveness-tracker.py`. The Stop hook records each
 successfully completed routed turn once in persistent state outside the replaceable
-plugin cache. When the user asks to start an effectiveness experiment, obtain the
-current exact **Total chats** value from their Profile screen and run `baseline
---total-chats <count>`. The tracker obtains exact lifetime and daily account tokens
-from Codex. When the user asks for the later comparison, obtain the new Profile count
-and run `compare --total-chats <count>`. Never infer the Profile chat count from local
-session files: account token activity and local thread history do not expose that same
-account-wide field. Explain that account tokens per completed task are most meaningful
-when the experiment window is predominantly Sol Advisor work.
+plugin cache, including exact root-and-delegated token usage. When the user asks to
+start an effectiveness experiment, run `baseline`; when they ask for the later
+comparison, run `compare`. Treat completed routed turns as the primary unit and report
+exact task tokens, average tokens per completed task, elapsed time, delegation count,
+and the summed credit-weighted receipts. Account lifetime/daily tokens are background
+context only. Do not request, infer, or divide by a Profile chat count unless the user
+explicitly asks for that secondary context.
 
 The version-looking directory above `skills/` may be a compatibility alias retained by
 Codex Desktop. Its directory name is not the loaded release identity. The alias must

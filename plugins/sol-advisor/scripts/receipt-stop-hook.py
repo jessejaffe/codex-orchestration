@@ -137,6 +137,34 @@ def receipt_value(text: str, label: str) -> str | None:
     return match.group(1) if match else None
 
 
+def recover_task_metrics(transcript: Path, turn_id: str) -> dict[str, Any] | None:
+    helper = Path(__file__).with_name("usage-receipt.py")
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(helper),
+                "recover-tokens",
+                "--transcript",
+                str(transcript),
+                "--turn-id",
+                turn_id,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if completed.returncode != 0:
+        return None
+    try:
+        value = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return None
+    return value if isinstance(value, dict) else None
+
+
 def record_completion(
     *,
     session_id: str,
@@ -146,6 +174,7 @@ def record_completion(
     final_message: str,
     elapsed_seconds: int,
     delegated_starts: int,
+    task_metrics: dict[str, Any] | None,
 ) -> None:
     values = [receipt_value(final_message, label) for label in RECEIPT_LABELS]
     if any(value is None for value in values):
@@ -175,6 +204,8 @@ def record_completion(
                 str(elapsed_seconds),
                 "--delegated-starts",
                 str(delegated_starts),
+                "--task-metrics-json",
+                json.dumps(task_metrics or {}, separators=(",", ":")),
             ],
             capture_output=True,
             text=True,
@@ -403,6 +434,7 @@ def main() -> int:
     receipt_present = all(label in last_message for label in RECEIPT_LABELS)
     if complexity_present and receipt_present:
         elapsed_seconds, delegated_starts = turn_metrics(transcript, turn_id)
+        task_metrics = recover_task_metrics(transcript, turn_id)
         record_completion(
             session_id=session_id,
             turn_id=turn_id,
@@ -411,6 +443,7 @@ def main() -> int:
             final_message=last_message,
             elapsed_seconds=elapsed_seconds,
             delegated_starts=delegated_starts,
+            task_metrics=task_metrics,
         )
         emit({"continue": True})
         return 0
