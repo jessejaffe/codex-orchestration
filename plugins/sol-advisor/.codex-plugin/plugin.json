@@ -1,6 +1,6 @@
 {
   "name": "sol-advisor",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Score-routed native workers with upward fallback and a two-line model summary.",
   "author": {
     "name": "Daniel McAteer",

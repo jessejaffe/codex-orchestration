@@ -1,5 +1,5 @@
 #!/bin/sh
-# Reinstall Sol Advisor without invalidating skill paths held by open Codex tasks.
+# Reinstall Sol Advisor without leaving stale skill paths in Codex Desktop.
 
 set -eu
 
@@ -44,9 +44,23 @@ check_current() {
   current=$(installed_version) || fail "Sol Advisor is not installed"
   [ "$current" = "$manifest_version" ] || \
     fail "installed version $current does not match manifest $manifest_version"
-  current_skill=$cache_root/$manifest_version/skills/orchestration/SKILL.md
+  current_cache=$cache_root/$manifest_version
+  current_skill=$current_cache/skills/orchestration/SKILL.md
   test -f "$current_skill" || fail "installed skill cache is missing: $current_skill"
-  pass "installed version and skill cache match $manifest_version"
+
+  for cached in "$cache_root"/*; do
+    [ -e "$cached" ] || [ -L "$cached" ] || continue
+    name=$(basename "$cached")
+    case "$name" in
+      *[!0-9A-Za-z.+_-]*) fail "unsafe cache entry name: $name" ;;
+    esac
+    [ ! -L "$cached" ] || fail "refusing symlinked cache entry: $cached"
+    [ -d "$cached" ] || fail "cache entry is not a directory: $cached"
+    diff -qr "$current_cache" "$cached" >/dev/null || \
+      fail "stale plugin cache alias does not match $manifest_version: $cached"
+  done
+
+  pass "installed version and every skill cache alias match $manifest_version"
 }
 
 case "${1:-}" in
@@ -107,6 +121,51 @@ restore_cache() {
   done
 }
 
+refresh_cache_alias() {
+  name=$1
+  [ "$name" != "$manifest_version" ] || return 0
+
+  marker=$tmp_dir/refreshed/$name
+  [ ! -e "$marker" ] || return 0
+  mkdir -p "$marker"
+
+  current_cache=$cache_root/$manifest_version
+  destination=$cache_root/$name
+  staged=$tmp_dir/staged/$name
+  mkdir -p "$tmp_dir/staged"
+  cp -Rp "$current_cache" "$staged" || return 1
+
+  if [ -L "$destination" ]; then
+    printf '%s\n' "FAIL: refusing symlinked cache alias: $destination" >&2
+    return 1
+  fi
+  if [ -e "$destination" ]; then
+    [ -d "$destination" ] || return 1
+    rm -rf "$destination" || return 1
+  fi
+  mv "$staged" "$destination" || return 1
+}
+
+refresh_cache_aliases() {
+  current_cache=$cache_root/$manifest_version
+  [ -d "$current_cache" ] && [ ! -L "$current_cache" ] || \
+    fail "installed cache is missing or unsafe: $current_cache"
+
+  mkdir -p "$tmp_dir/refreshed"
+  for saved in "$backup_root"/*; do
+    [ -e "$saved" ] || continue
+    name=$(basename "$saved")
+    refresh_cache_alias "$name" || return 1
+
+    case "$name" in
+      *+*)
+        base=${name%%+*}
+        refresh_cache_alias "$base" || return 1
+        ;;
+    esac
+  done
+}
+
 interrupted() {
   trap - HUP INT TERM
   restore_cache || true
@@ -137,9 +196,17 @@ backup_ready=1
 
 install_status=0
 "$codex_bin" plugin add "sol-advisor@$marketplace" || install_status=$?
-restore_cache || fail "could not restore preserved skill cache paths"
+if [ "$install_status" -ne 0 ]; then
+  restore_cache || fail "Codex plugin install failed and prior cache could not be restored"
+  backup_ready=0
+  fail "Codex plugin install failed with status $install_status"
+fi
+if ! refresh_cache_aliases; then
+  restore_cache || fail "cache refresh failed and prior cache could not be restored"
+  backup_ready=0
+  fail "could not refresh preserved skill cache paths"
+fi
 backup_ready=0
-[ "$install_status" -eq 0 ] || fail "Codex plugin install failed with status $install_status"
 
 check_current
-pass "preserved cache paths for already-open Codex tasks"
+pass "refreshed every preserved cache path to the installed release"

@@ -138,7 +138,7 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.5.3 ] || fail "manifest version is not the cache-compatible 0.5.3 release: $manifest_version"
+[ "$manifest_version" = 0.5.4 ] || fail "manifest version is not the cache-compatible 0.5.4 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct ON/OFF markers' || fail "manifest does not describe task activation state"
 grep -Fq 'Primary GPT-5.6 Sol / High always resolves' "$manifest" || fail "manifest does not describe primary Sol architecture"
@@ -240,13 +240,16 @@ SOL_ADVISOR_TEST_MANIFEST="$manifest" \
 SOL_ADVISOR_TEST_SKILL="$skill" \
   sh "$reinstaller"
 test -f "$reinstall_cache/$manifest_version/skills/orchestration/SKILL.md" || fail "reinstaller lost the current skill cache"
-grep -Fq preserved-open-task-skill "$reinstall_cache/$old_build/skills/orchestration/SKILL.md" || fail "reinstaller lost the exact prior cache"
-grep -Fq preserved-open-task-skill "$reinstall_cache/0.5.1/skills/orchestration/SKILL.md" || fail "reinstaller did not restore the base-version compatibility path"
+cmp -s "$skill" "$reinstall_cache/$old_build/skills/orchestration/SKILL.md" || fail "reinstaller left the full-version cache alias stale"
+cmp -s "$skill" "$reinstall_cache/0.5.1/skills/orchestration/SKILL.md" || fail "reinstaller left the base-version cache alias stale"
+if grep -Fq preserved-open-task-skill "$reinstall_cache/$old_build/skills/orchestration/SKILL.md"; then
+  fail "reinstaller preserved stale skill contents"
+fi
 SOL_ADVISOR_CODEX_BIN="$fake_codex" \
 SOL_ADVISOR_CACHE_ROOT="$reinstall_cache" \
 SOL_ADVISOR_TEST_STATE="$fake_state" \
   sh "$reinstaller" --check
-pass "cache-compatible reinstall and open-task path preservation"
+pass "cache-compatible reinstall and stale desktop-path refresh"
 
 clean_target=$tmp_dir/clean
 sh "$installer" --target-dir "$clean_target"

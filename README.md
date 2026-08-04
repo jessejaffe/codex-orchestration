@@ -162,11 +162,13 @@ sh "$plugin_dir/scripts/install-agents.sh" --check
 ~~~
 
 The safe reinstaller backs up prior cache directories before Codex installs the new
-release, then restores any paths still needed by already-open tasks. Sol Advisor uses
-plain release versions without SemVer `+` build metadata because Codex currently
-advertises a base-version skill path while retaining the full version in its cache.
+release, then refreshes every historical cache path with the new release contents.
+This covers Codex Desktop processes that keep advertising an older path to a newly
+created task. Sol Advisor uses plain release versions without SemVer `+` build metadata
+because Codex can advertise a base-version skill path while retaining the full version
+in its cache.
 
-Version 0.5.3 retains the historical byte-exact v0.2.0 migration for
+Version 0.5.4 retains the historical byte-exact v0.2.0 migration for
 `sol-advisor-luna-implementer.toml` and `sol-advisor-terra-implementer.toml` files.
 Normal installer mode replaces those exact legacy files, or the exact Terra template
 shipped immediately before this routing update, with the current score-pinned roles.
