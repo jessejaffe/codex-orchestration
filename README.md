@@ -15,14 +15,14 @@ necessary capability or isolation boundary.
 
 I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=github&utm_medium=readme&utm_campaign=sol-advisor) — deep, evidence-backed writing on AI, cognition, and agentic engineering. The **Agentic Engineering Field Notes** series is where I publish practical advice on the craft of using AI. [Subscribe](https://attentionheads.substack.com/subscribe?utm_source=github&utm_medium=readme&utm_campaign=sol-advisor) to get new posts to your inbox.
 
-| Mode | Worker | Routing | Primary ownership |
-|---|---|---|---|
-| Primary Sol | None | GPT-5.6 Sol / High in every band | Architecture, exact worker directions, verification, and acceptance |
-| Luna task | User-visible Codex task | GPT-5.6 Luna / Max for 1.0–2.9 implementation | Primary Sol / High review |
-| Native Terra / Medium | `sol_advisor_terra_medium_implementer` | GPT-5.6 Terra / Medium for 3.0–5.0 | Fresh Sol / High review after primary verification |
-| Native Terra / High | `sol_advisor_terra_implementer` | GPT-5.6 Terra / High for 5.1–6.5 | Fresh Sol / High review after primary verification |
-| Native Sol / Medium | `sol_advisor_sol_medium_implementer` | GPT-5.6 Sol / Medium for 6.6–7.9 | Fresh Sol / High review after primary verification |
-| Native Sol / High | `sol_advisor_sol_high_implementer` | GPT-5.6 Sol / High for 8.0–10.0 | Fresh Sol / High review after primary verification |
+| Mode | Visible label | Worker | Routing | Primary ownership |
+|---|---|---|---|---|
+| Primary Sol | — | None | GPT-5.6 Sol / High in every band | Architecture, exact worker directions, verification, and acceptance |
+| Luna task | `LMax` | User-visible Codex task | GPT-5.6 Luna / Max for 1.0–2.9 implementation | Primary Sol / High review |
+| Native Terra / Medium | `TMed` | `sol_advisor_terra_medium_implementer` | GPT-5.6 Terra / Medium for 3.0–5.0 | Fresh Sol / High review after primary verification |
+| Native Terra / High | `THI` | `sol_advisor_terra_implementer` | GPT-5.6 Terra / High for 5.1–6.5 | Fresh Sol / High review after primary verification |
+| Native Sol / Medium | `S-MED` | `sol_advisor_sol_medium_implementer` | GPT-5.6 Sol / Medium for 6.6–7.9 | Fresh Sol / High review after primary verification |
+| Native Sol / High | `S-HI` | `sol_advisor_sol_high_implementer` | GPT-5.6 Sol / High for 8.0–10.0 | Fresh Sol / High review after primary verification |
 
 The primary session is GPT-5.6 Sol / High in every mode. It resolves requirements,
 architecture, interfaces, ownership, and acceptance before scoring only the remaining
@@ -32,6 +32,9 @@ estimates shape scope and checkpoints; they do not override the numeric bands un
 lane is unavailable or incapable. Primary Sol / High verifies every result, and native
 implementation receives a fresh Sol / High final review before acceptance.
 The Luna lane remains outside native subagent V2 and does not use a Luna custom-agent TOML.
+Every delegated activity keeps its colored model icon and starts its visible label with
+the compact model/effort marker: `LMax`, `TMed`, `THI`, `S-MED`, or `S-HI`. The marker
+comes first so it remains readable when Codex truncates a longer task objective.
 
 Before delegation, external access, or scope expansion, Sol records three checkpoints:
 the minimum sufficient outcome, the total-token comparison, and the total-time
@@ -254,7 +257,7 @@ The primary task then:
    For a Git project, `create_thread` defaults to an isolated worktree; for a
    non-Git project it uses the project's local environment.
 2. Sends a complete task packet to `create_thread` with `model` set to
-   `gpt-5.6-luna` and `thinking` set to `max`.
+   `gpt-5.6-luna`, `thinking` set to `max`, and a title starting with `LMax — `.
 3. If creation returns only a `clientThreadId`, calls `list_threads` without passing
    that value—`list_threads` does not accept `clientThreadId`—and correlates the newly
    created user-visible task using trustworthy identity, project, time, path, and
@@ -284,7 +287,8 @@ The complete packet, tool sequence, branch rules, and return schema are defined 
 Sol selects one native implementation role for scores 3.0–10.0. The installed roles
 pin Terra / Medium, Terra / High, Sol / Medium, and Sol / High; primary Sol verifies
 the work and a fresh Sol / High reviewer checks it before acceptance. Native roles do
-not use the app-task tools for execution.
+not use the app-task tools for execution. Their schema-safe task names begin with
+`tmed_`, `thi_`, `smed_`, or `shi_`; the fresh reviewer begins with `shi_review_`.
 
 Before delegation and acceptance, the skill requires all of the following:
 

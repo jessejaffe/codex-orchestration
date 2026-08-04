@@ -35,7 +35,9 @@ authority, and final acceptor.
    The packet must state the exact ownership, starting base, verification, and git/PR
    boundary that the new task cannot infer from the primary task.
 4. Call `create_thread` with the selected project, the complete packet, `model` set to
-   `gpt-5.6-luna`, and `thinking` set to `max`. For a Git project, use the default
+   `gpt-5.6-luna`, `thinking` set to `max`, and a user-visible `title` beginning
+   `LMax — ` followed by the concise objective. The model marker must come first so it
+   remains visible when the task chip truncates the title. For a Git project, use the default
    isolated worktree environment after `isGitRepository` confirms it is a repository.
    For a non-Git project, use the project's local environment. Do not use a working
    tree or an existing branch as the starting state unless the primary explicitly
@@ -153,6 +155,7 @@ GIT / PR BOUNDARY
 STRUCTURED RETURN
 STATUS: complete | partial (only after user cancellation or primary-authorized scope change) | blocked
 ROUTE: GPT-5.6 Luna / Max — user-visible Codex task
+LABEL: LMax
 TASK ID: <threadId, hostId, and any app-provided clientThreadId history>
 OBJECTIVE: <one-line restatement>
 STARTING STATE: <project, environment, base, and observed branch/worktree>
