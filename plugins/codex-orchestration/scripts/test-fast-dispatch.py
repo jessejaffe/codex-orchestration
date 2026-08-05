@@ -114,18 +114,20 @@ def main() -> int:
         "codex_orchestration_terra_executive",
         'fork_turns: "64"',
         'task_name: "gpt_5_6_terra_high_<objective_slug>"',
-        "gpt_5_6_sol_low_<objective_slug>",
-        "gpt_5_6_sol_medium_<objective_slug>",
         "zero-judgment root dispatcher",
         "Never inspect, verify, compare, or update",
         "compatibility locator",
-        "Terra owns low-band",
-        "ESCALATE_TO_ROOT_SOL_HIGH: ROUTE=<SOL_LOW|SOL_MEDIUM|SOL_HIGH>",
+        "Terra owns scoring and work below 5.0",
+        "Rate the complete",
+        "1.0 to 10.0",
+        "fixed six-level ladder",
+        "Complexity lines",
+        "AGENT=<agent type or DIRECT>",
+        "from this chat only",
     ):
         if required not in routed_context:
             raise AssertionError(f"dispatch contract omits {required!r}")
     for forbidden in (
-        "Complexity: <score>",
         "fork_turns: none",
         'fork_turns: "all"',
         "usage-receipt.py",
@@ -210,22 +212,26 @@ def main() -> int:
 
     terra = (plugin / "agents" / "codex-orchestration-terra-executive.toml").read_text()
     for boundary in (
-        "Be conservative: any",
-        "Do not inspect the repository, call task tools, design a solution, or modify anything",
-        "security or authorization judgment",
-        "irreversible data/schema changes",
-        "broad unfamiliar-repository reasoning",
-        "gpt_5_6_luna_max_<objective_slug>",
-        "gpt_5_6_terra_medium_<objective_slug>",
+        "rate the complexity of the complete",
+        "exactly one decimal",
+        "1.0–2.9",
+        "3.0–5.0",
+        "5.1–6.5",
+        "6.6–7.2",
+        "7.3–7.9",
+        "8.0–10.0",
+        "from this chat only",
+        "routine, fully specified repository catch-up, commit, push, SSH deployment",
+        "does not by itself require Sol",
+        "gpt_5_6_luna_max_",
+        "gpt_5_6_terra_medium_",
         'fork_turns: "64"',
     ):
         if boundary not in terra:
-            raise AssertionError(f"Terra under-routing guard omits {boundary!r}")
-    if (
-        "codex_orchestration_sol_low_implementer" in terra
-        or "codex_orchestration_sol_medium_implementer" in terra
-    ):
-        raise AssertionError("Terra can still execute or supervise a complex Sol lane")
+            raise AssertionError(f"Terra score-based route omits {boundary!r}")
+    for stale in ("Be conservative: any", "safely low-band", "without emitting a numeric score"):
+        if stale in terra:
+            raise AssertionError(f"Terra retains categorical routing language: {stale!r}")
     if "fork_turns: all" in terra or 'fork_turns: "all"' in terra:
         raise AssertionError("Terra retains the rejected custom-role full-history fork")
 

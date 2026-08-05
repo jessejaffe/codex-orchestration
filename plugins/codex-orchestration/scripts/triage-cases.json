@@ -3,6 +3,7 @@
   "cases": [
     {"id": "explain_known_code", "expected": "LOW", "request": "Explain what this already-identified helper does."},
     {"id": "single_copy_edit", "expected": "LOW", "request": "Change one settled UI label and run its focused test."},
+    {"id": "routine_static_release", "expected": "LOW", "request": "Remove one settled homepage sentence, commit and push it, deploy through the established SSH procedure, and verify the live page."},
     {"id": "mechanical_rename", "expected": "LOW", "request": "Rename this private symbol in the two named files."},
     {"id": "bounded_config", "expected": "LOW", "request": "Add the supplied value to the known configuration list."},
     {"id": "unknown_repo_bug", "expected": "SOL_MEDIUM", "request": "Read this unfamiliar repository, find why production is intermittently slow, and fix it."},

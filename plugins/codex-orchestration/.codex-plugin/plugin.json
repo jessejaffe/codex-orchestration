@@ -1,7 +1,7 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.0+codex.20260805174221",
-  "description": "Fast Terra-first triage with Sol-owned complex work.",
+  "version": "0.8.0+codex.20260805182424",
+  "description": "Fast Terra-first numeric routing across six model lanes.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -17,8 +17,8 @@
   ],
   "interface": {
     "displayName": "Codex Orchestration",
-    "shortDescription": "Fast credit routing with conservative escalation",
-    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Its stable user-level runtime hook runs once per prompt and sends the full chat immediately to GPT-5.6 Terra / High without loading the routing skill, scoring numerically, scanning the transcript, running before tools, or generating a receipt. Terra is a conservative triage gate and owns only settled low-band work, using Luna / Max, Terra / Medium, or direct Terra / High. Any uncertain, architectural, security-sensitive, cross-system, irreversible, high-stakes, or broadly diagnostic request returns untouched to root GPT-5.6 Sol / High, which owns design and acceptance and may use Sol / Low, Sol / Medium, or direct Sol / High for implementation. Full chat context is inherited across both handoffs. Each producer self-checks, the owning executive checks once, and at most one correction is sent to the same producer. Detailed usage comparison remains an on-demand offline diagnostic.",
+    "shortDescription": "Fast credit routing with one numeric score",
+    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Its stable user-level runtime hook runs once per prompt and sends up to 64 recent turns from that chat only to GPT-5.6 Terra / High without loading a routing skill, scanning the transcript, or generating a receipt. Terra assigns one immutable complexity score from 1.0 to 10.0 and uses six implementation lanes: Luna / Max at 1.0\u20132.9, Terra / Medium at 3.0\u20135.0, Terra / High at 5.1\u20136.5, Sol / Low at 6.6\u20137.2, Sol / Medium at 7.3\u20137.9, and Sol / High at 8.0\u201310.0. Terra owns executive review below 5.0; root Sol / High owns it at 5.0 and above. Routine, fully specified Git and SSH deployment is allowed in the Terra route and does not itself force escalation. Each producer self-checks, the owning executive checks once, and at most one correction is sent to the same producer. Detailed usage comparison remains an on-demand offline diagnostic.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [
@@ -27,7 +27,7 @@
     ],
     "websiteURL": "https://github.com/jessejaffe/codex-orchestration",
     "defaultPrompt": [
-      "Tell me \u201cTurn Orchestration on\u201d for full-context, Terra-first credit routing with Sol-owned complex work."
+      "Tell me \u201cTurn Orchestration on\u201d for same-chat, score-based routing across six model lanes."
     ]
   }
 }

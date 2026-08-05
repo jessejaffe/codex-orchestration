@@ -120,23 +120,26 @@ grep -Fq 'fork_turns: \"{FORK_TURNS}\"' "$script_dir/prompt-router-hook.py" ||
   fail "root-to-Terra continuity is missing"
 grep -Fq 'fork_turns: "64"' "$agents/codex-orchestration-terra-executive.toml" ||
   fail "low-band producer continuity is missing"
-if rg -n 'fork_turns: (none|all)|fork_turns: \\"all\\"|Complexity: <score>|exact one-decimal score' \
+if rg -n 'fork_turns: (none|all)|fork_turns: \\"all\\"|Be conservative: any|without emitting a numeric score' \
   "$script_dir/prompt-router-hook.py" "$agents/codex-orchestration-terra-executive.toml"; then
-  fail "runtime contract retains a rejected fork shape or numeric scoring"
-fi
-if rg -n 'codex_orchestration_sol_(low|medium)_implementer' "$agents/codex-orchestration-terra-executive.toml"; then
-  fail "Terra can still execute or supervise a complex Sol lane"
+  fail "runtime contract retains a rejected fork shape or categorical routing"
 fi
 for guard in \
-  'Be conservative: any' \
-  'Do not inspect the repository, call task tools, design a solution, or modify anything' \
-  'security or authorization judgment' \
-  'irreversible data/schema changes' \
-  'broad unfamiliar-repository reasoning' \
-  'ESCALATE_TO_ROOT_SOL_HIGH: ROUTE=<SOL_LOW|SOL_MEDIUM|SOL_HIGH>'
+  'rate the complexity of the complete' \
+  'exactly one decimal' \
+  '1.0–2.9' \
+  '3.0–5.0' \
+  '5.1–6.5' \
+  '6.6–7.2' \
+  '7.3–7.9' \
+  '8.0–10.0' \
+  'from this chat only' \
+  'routine, fully specified repository catch-up, commit, push, SSH deployment' \
+  'does not by itself require Sol' \
+  'ESCALATE_TO_ROOT_SOL_HIGH: SCORE=<one decimal>'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
-    fail "Terra complex-work boundary omits: $guard"
+    fail "Terra score-based routing omits: $guard"
 done
 grep -Fq 'never reads the offline routing benchmark' "$repo_dir/README.md" ||
   fail "offline benchmark is not explicitly kept off the runtime path"
@@ -151,7 +154,7 @@ expected = {case.get("expected") for case in cases}
 if not {"LOW", "SOL_LOW", "SOL_MEDIUM", "SOL_HIGH"}.issubset(expected):
     raise SystemExit(f"routing benchmark misses a lane: {sorted(expected)}")
 PY
-pass "conservative Terra ownership boundary and zero-runtime benchmark"
+pass "numeric six-lane Terra routing and zero-runtime benchmark"
 
 target=$tmp_dir/agents
 sh "$installer" --target-dir "$target" >/dev/null || fail "fresh agent install failed"
@@ -166,6 +169,10 @@ if sh "$installer" --target-dir "$target" >/dev/null 2>&1; then
 fi
 grep -Fq 'f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d' "$installer" ||
   fail "0.7.4 Terra role is not recognized for safe upgrade"
+grep -Fq 'd336e60b9b703f04c7bfe8aaa212818860b178c25f5b3119cbb6c87d6825e5f8' "$installer" ||
+  fail "0.8.0 categorical Terra role is not recognized for safe upgrade"
+grep -Fq '894823383b6184c3a972e4fff04ad6274dad949699bc32272b2e8f04335c0f84' "$installer" ||
+  fail "0.8.0 Terra / High implementation role is not recognized for safe upgrade"
 for file in install-user-hook.py orchestration_state.py prompt-router-hook.py test-fast-dispatch.py triage-cases.json; do
   grep -Fq "scripts/$file" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package check omits $file"
@@ -174,20 +181,22 @@ pass "safe companion-agent install and complete package inventory"
 
 for phrase in \
   'once-per-prompt hook' \
-  'Terra is the triage gate, not the executive for complex work' \
+  'Terra / High scores the complete' \
+  'six implementation lanes' \
+  'routine deployment does not force a Sol' \
   '64 recent turns' \
   'never reads the offline routing benchmark' \
   'unique cache-busted version' \
   'stable user-level hook' \
   'enabled and trusted' \
-  'manifest does not advertise a skill' \
+  'advertise a skill' \
   'Turn Orchestration on' \
   'Turn Orchestration off' \
   '0.8.0'
 do
   grep -Fq "$phrase" "$repo_dir/README.md" || fail "README omits: $phrase"
 done
-if rg -n 'reads one consolidated skill|score every deliverable once|Complexity: [<0-9]|PreToolUse' \
+if rg -n 'reads one consolidated skill|PreToolUse|conservative triage|without.*numeric' \
   "$repo_dir/README.md" "$manifest"; then
   fail "stale slow-path documentation remains"
 fi
@@ -200,4 +209,4 @@ if grep -Eq 'git push|gh pr merge|git cherry-pick|git rebase' "$repo_dir/.github
 fi
 pass "read-only upstream review"
 
-pass "Codex Orchestration 0.8.0 release verification complete"
+pass "Codex Orchestration 0.8.0 numeric-routing release verification complete"

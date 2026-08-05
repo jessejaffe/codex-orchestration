@@ -3,50 +3,61 @@
 Codex Orchestration saves Codex credits by moving settled work to the least expensive
 capable model while keeping complex executive judgment with GPT-5.6 Sol / High.
 
-The 0.8.0 release replaces the former skill-driven router with a minimal, recent-context
-fast path. The manifest does not advertise a skill, so no Orchestration skill or
-versioned skill locator is injected into a new task. Activation no longer makes the
-model calculate a decimal score, scan the transcript before every tool, construct a
-handoff summary, or call a finish-time receipt tool.
+The 0.8.0 release uses a minimal, recent-context fast path. The manifest does not
+advertise a skill, so no Orchestration skill or versioned skill locator is injected
+into a new task. Activation does not scan the transcript before every tool, construct
+a handoff summary, or call a finish-time receipt tool. Terra / High scores the complete
+task once, then applies the fixed six implementation lanes.
 
 ## Runtime architecture
 
 The active path is intentionally small:
 
 1. A stable user-level, once-per-prompt hook checks one chat-local boolean.
-2. Root Sol immediately gives the current request and up to 64 recent turns to Terra /
-   High with a constant prompt.
-3. Terra conservatively decides only whether the request is low-band or complex.
-4. Low-band work stays with Terra as executive. Complex work returns untouched to
-   root Sol / High, which owns architecture and acceptance.
-5. Root returns the result with the observed executive and implementation lanes.
+2. Root Sol immediately gives the current request and up to 64 recent turns from that
+   chat only to Terra / High with a constant prompt.
+3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
+4. Scores below 5.0 stay with Terra as executive. Scores of 5.0 or higher return
+   untouched to root Sol / High, which owns architecture and acceptance.
+5. The owning executive uses the exact score-selected implementation lane and returns
+   the result with the observed route and score.
 
 Spawned-task labels begin with the exact selected model and effort (`GPT 5 6 Terra
 High`, `GPT 5 6 Luna Max`, `GPT 5 6 Terra Medium`, `GPT 5 6 Sol Low`, or `GPT 5 6 Sol
 Medium`), so the model choice remains visible in the Codex activity stream without
 another model call or reporting step.
 
-Terra is the triage gate, not the executive for complex work. It may own settled,
-bounded work and choose Luna / Max, Terra / Medium, or direct Terra / High. It must
-return immediately for uncertain architecture, deep diagnosis, broad unfamiliar-repo
-work, cross-system coordination, security or authorization judgment, high-stakes
-advice, or irreversible data/schema changes. Root Sol / High may then use Sol / Low,
-Sol / Medium, or direct Sol / High, while retaining executive ownership.
+The numeric implementation ladder is monotonic:
 
-Both handoffs inherit up to 64 recent turns. This bounded history is used because
-current Codex rejects a custom-model role combined with a
-literal full-history fork. The router does not reconstruct requirements into a lossy
-packet, so active corrections, constraints, permissions, and repository context stay
-available to the selected model.
+| Complexity | Implementation |
+|---|---|
+| 1.0–2.9 | Luna / Max |
+| 3.0–5.0 | Terra / Medium |
+| 5.1–6.5 | Terra / High |
+| 6.6–7.2 | Sol / Low |
+| 7.3–7.9 | Sol / Medium |
+| 8.0–10.0 | primary Sol / High |
+
+A fully specified repository catch-up, commit, push, SSH deployment, and live
+verification is a routine release workflow: routine deployment does not force a Sol
+route. Terra / High may perform it directly. Unexpected failures and newly unresolved
+production decisions still return to the owning Sol executive when the immutable
+score is 5.0 or higher or the task can no longer be completed within its original scope.
+
+Each handoff inherits up to 64 recent turns from the current chat only. It never imports
+history from another chat. This bounded history is used because current Codex rejects a
+custom-model role combined with a literal full-history fork. The router does not
+reconstruct requirements into a lossy packet, so active corrections, constraints,
+permissions, and repository context stay available to the selected model.
 
 ```mermaid
 flowchart TD
     U["Active user prompt"] --> H["Stable user-level state hook"]
-    H --> T["Terra / High triage with up to 64 recent turns"]
-    T -->|"Settled low-band"| L["Terra executive"]
-    L --> P1["Luna / Max, Terra / Medium, or direct Terra / High"]
-    T -->|"Complex or uncertain"| S["Root Sol / High executive"]
-    S --> P2["Sol / Low, Sol / Medium, or direct Sol / High"]
+    H --> T["Terra / High score with up to 64 same-chat turns"]
+    T -->|"1.0–4.9"| L["Terra executive"]
+    L --> P1["Luna / Max or Terra / Medium"]
+    T -->|"5.0–10.0"| S["Root Sol / High executive"]
+    S --> P2["Terra / Medium, Terra / High, Sol / Low, Sol / Medium, or direct Sol / High"]
     P1 --> R["Root returns the accepted result"]
     P2 --> R
 ```
@@ -78,8 +89,9 @@ version-looking cache directory is a compatibility locator, not version evidence
 Every completed task reports the observed executive and implementation lanes:
 
 ```text
-Executive design and review: GPT-5.6 Terra / High
-Implementation: GPT-5.6 Terra / Medium
+Executive route: GPT-5.6 Terra / High
+Implementation route: GPT-5.6 Terra / Medium
+Complexity: 3.8/10
 ```
 
 There is deliberately no automatic savings receipt. Producing one requires transcript
@@ -104,9 +116,8 @@ public rates mean equal actual credit consumption.
 
 ## Offline routing evaluation
 
-`scripts/triage-cases.json` is a release-time benchmark for the dangerous boundary:
-under-routing complex work to Terra is a correctness failure; conservatively returning
-a low-band case to Sol is measurable overhead.
+`scripts/triage-cases.json` is a release-time calibration set for representative route
+boundaries. It is intentionally separate from the live scoring prompt.
 The runtime never reads the offline routing benchmark, so it adds zero task latency and zero task tokens.
 
 ## Install from GitHub

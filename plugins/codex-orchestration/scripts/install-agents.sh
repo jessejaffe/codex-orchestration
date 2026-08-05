@@ -41,11 +41,12 @@ role_files() {
       legacy_digests='309d1fd8f0bf17785fff53583d4e42067e637c0922b9f23da0653729e7f809cf'
       ;;
     terra-executive)
-      # Exact 0.7.3 and 0.7.4 templates, safe to replace with the triage-only role.
-      previous_current_digests='ee18e8ce854b5639790932d28c981f340b4b9ced3ea62cee7f03ab2c8f087c63 f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d 8caf6c47bcc47d8e9ea2566047233f69cf88a672ff8e400c9698fc911550104e ed3042963ef39384293ed072e6531193f8c18a6d48cac6753907efe4ec6dae54 437c5d4a531dd2003db28e264a4ef39fa913de8df44b56922bc55a81d62e2301'
+      # Exact previously shipped templates, safe to replace with the numeric scoring role.
+      previous_current_digests='ee18e8ce854b5639790932d28c981f340b4b9ced3ea62cee7f03ab2c8f087c63 f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d 8caf6c47bcc47d8e9ea2566047233f69cf88a672ff8e400c9698fc911550104e ed3042963ef39384293ed072e6531193f8c18a6d48cac6753907efe4ec6dae54 437c5d4a531dd2003db28e264a4ef39fa913de8df44b56922bc55a81d62e2301 d336e60b9b703f04c7bfe8aaa212818860b178c25f5b3119cbb6c87d6825e5f8'
       legacy_digests='4849c6591202290ff63db140b56089e63a4d06e2eaabec7256d016dcb056dbdc'
       ;;
     terra-implementer)
+      previous_current_digests='894823383b6184c3a972e4fff04ad6274dad949699bc32272b2e8f04335c0f84'
       legacy_digests='7b4549d971ddd7c07a886ebcc01bc9645cc0eedc4e81f32930bee6ec9ab8c44c 4425a8c1f21ce8c6af93f96adc253bbc33ea301f1389b3fa8ce350be08584eca 06c318e5e93f37452635906394e6ea69fb6a65ba9e6ad7172d37b444e0dc871d'
       ;;
     sol-low-implementer)
