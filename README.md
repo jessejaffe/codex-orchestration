@@ -15,14 +15,19 @@ The active path is intentionally small:
 
 1. A stable user-level, once-per-prompt hook checks one chat-local boolean.
 2. The user-selected root model immediately gives the current request and up to 64 recent turns from that
-   chat only to Terra / High with a constant prompt.
+   chat only to Terra / High. The context fork is always partial; on a short chat the one omitted oldest
+   task turn is copied verbatim, avoiding Codex's restriction on pinned models with full-history forks.
 3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
-4. Terra sends one root-visible checkpoint with the score, selected lane, objective,
-   and immediate next steps. Further working commentary stays inside the agent chip.
+4. Terra returns a score protocol containing one root-visible checkpoint; root displays
+   it before relaying any planning or implementation work.
 5. Scores below 5.0 stay with Terra as executive. Scores of 5.0 or higher go to a
    separately pinned Sol / High executive, so any user-selected starting model is safe.
-6. The owning executive uses the exact score-selected implementation lane and returns
-   the result with the observed route and score.
+6. The owning executive returns an execution packet. Root alone spawns the mapped
+   producer and relays its result for one acceptance check.
+
+Custom roles never need collaboration tools. The user-selected root performs only exact
+spawn and follow-up relays; all scoring, planning, implementation, and acceptance remain
+inside pinned roles.
 
 For example, the top-level task may show `Complexity 2.7 → GPT-5.6 Luna / Max. Updating
 the homepage, then committing, deploying, and checking the live site.` This adds one
@@ -58,19 +63,22 @@ permissions, and repository context stay available to the selected model.
 
 ```mermaid
 flowchart TD
-    U["Active user prompt"] --> H["Stable user-level state hook"]
+    U["Active user prompt"] --> H["Root relay from any starting model"]
     H --> T["Terra / High score with up to 64 same-chat turns"]
     T -->|"1.0–4.9"| L["Terra executive"]
-    L --> P1["Luna / Max or Terra / Medium"]
+    L --> H
     T -->|"5.0–10.0"| S["Pinned Sol / High executive"]
-    S --> P2["Terra / Medium through Sol / Extra High implementation"]
-    P1 --> R["Root returns the accepted result"]
-    P2 --> R
+    S --> H
+    H --> P["Exact score-selected implementation role"]
+    P --> H
+    H --> R["Owning executive accepts; root returns payload"]
 ```
 
-The producer self-checks. The owning executive checks once and may send one precise
-correction to the same producer. There is no automatic reviewer chain or replacement
-producer loop.
+The producer self-checks and the owning executive checks once. If acceptance finds any
+mistake, incomplete work, failed verification, missing evidence, or needed correction,
+Orchestration ends immediately. The user-selected root model announces takeover,
+reconciles the actual state, and finishes the whole request directly with no more
+handoffs. There is no correction, reviewer, replacement-producer, or escalation loop.
 
 ## Controls
 

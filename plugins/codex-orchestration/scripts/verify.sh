@@ -82,6 +82,8 @@ pass "script syntax, offline benchmark, and exact ten-role pins"
 
 python3 "$script_dir/test-fast-dispatch.py" "$plugin_dir" "$tmp_dir/hooks" ||
   fail "fast dispatch, continuity, ownership, or latency regression"
+python3 "$script_dir/test-relay-protocol.py" "$plugin_dir" ||
+  fail "root relay protocol regression"
 python3 - "$script_dir/install-user-hook.py" <<'PY'
 import importlib.util
 import sys
@@ -114,24 +116,27 @@ python3 "$script_dir/test-effectiveness-tracker.py" "$plugin_dir" "$tmp_dir/effe
 python3 "$script_dir/usage-receipt.py" --help >/dev/null || fail "usage receipt CLI is broken"
 pass "fast-path and telemetry regression tests"
 
-grep -Fq 'zero-judgment root dispatcher' "$script_dir/prompt-router-hook.py" ||
+grep -Fq 'zero-judgment relay' "$script_dir/prompt-router-hook.py" ||
   fail "root still owns routing analysis"
-grep -Fq 'FORK_TURNS = "64"' "$script_dir/prompt-router-hook.py" ||
-  fail "root-to-Terra history bound is missing"
-grep -Fq 'fork_turns: \"{FORK_TURNS}\"' "$script_dir/prompt-router-hook.py" ||
-  fail "root-to-Terra continuity is missing"
-grep -Fq 'fork_turns: "64"' "$agents/codex-orchestration-terra-executive.toml" ||
-  fail "low-band producer continuity is missing"
+grep -Fq 'MAX_FORK_TURNS = 64' "$script_dir/prompt-router-hook.py" ||
+  fail "root-to-executive history bound is missing"
+grep -Fq 'never full-history' "$script_dir/prompt-router-hook.py" ||
+  fail "custom-role full-history protection is missing"
+grep -Fq 'fork_turns: "none"' "$script_dir/prompt-router-hook.py" ||
+  fail "isolated producer handoff is missing"
 for guard in \
+  'ORCHESTRATION_SCORE:' \
   'ORCHESTRATION_STATUS:' \
   'top-level commentary' \
-  'interrupt its direct child' \
-  'list_agents' \
-  'deepest-first' \
+  'interrupt every running Orchestration child' \
+  'list agents' \
   'repeat until none is running' \
-  'Do not redispatch before' \
-  'No completed edit' \
-  'Reconcile actual files'
+  'ORCHESTRATION_DELEGATE' \
+  'ORCHESTRATION_ACCEPT' \
+  'ORCHESTRATION_TAKEOVER' \
+  'selected root model' \
+  'no more handoffs' \
+  'further agent-control'
 do
   grep -Fq "$guard" "$script_dir/prompt-router-hook.py" ||
     fail "root progress/interruption contract omits: $guard"
@@ -141,7 +146,7 @@ if rg -n 'fork_turns: (none|all)|fork_turns: \\"all\\"|Be conservative: any|with
   fail "runtime contract retains a rejected fork shape or categorical routing"
 fi
 for guard in \
-  'rate the complexity of the complete' \
+  'Rate the user request' \
   'exactly one decimal' \
   '1.0–2.9' \
   '3.0–5.0' \
@@ -153,13 +158,14 @@ for guard in \
   'from this chat only' \
   'routine, fully specified repository catch-up, commit, push, SSH deployment' \
   'does not by itself require Sol' \
-  'send_message' \
-  '`/root` exactly once' \
+  'ORCHESTRATION_SCORE: SCORE=' \
   'ORCHESTRATION_STATUS: Complexity' \
-  'before any task work or producer spawn' \
+  'Return immediately with exactly two lines' \
   'at most 20 words' \
-  'Do not send another parent status message' \
-  'ESCALATE_TO_ROOT_SOL_HIGH: SCORE=<one decimal>'
+  'ORCHESTRATION_DELEGATE:' \
+  'ORCHESTRATION_ACCEPT:' \
+  'ORCHESTRATION_TAKEOVER:' \
+  'zero correction loops'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
     fail "Terra score-based routing omits: $guard"
@@ -167,8 +173,10 @@ done
 for guard in \
   'root task may use any model' \
   'Never rescore, remap, or execute implementation directly' \
-  'Spawn the mapped implementation agent exactly once' \
-  'fork_turns: "64"' \
+  'ORCHESTRATION_DELEGATE:' \
+  'ORCHESTRATION_ACCEPT:' \
+  'ORCHESTRATION_TAKEOVER:' \
+  'TAKEOVER is terminal' \
   'Executive route: GPT-5.6 Sol / High'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-sol-high-executive.toml" ||
@@ -224,7 +232,7 @@ for digest in \
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done
-for file in install-user-hook.py orchestration_state.py prompt-router-hook.py test-fast-dispatch.py triage-cases.json; do
+for file in install-user-hook.py orchestration_state.py prompt-router-hook.py test-fast-dispatch.py test-relay-protocol.py triage-cases.json; do
   grep -Fq "scripts/$file" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package check omits $file"
 done

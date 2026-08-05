@@ -111,6 +111,7 @@ scripts/reinstall-plugin.sh
 scripts/state_migration.py
 scripts/test-effectiveness-tracker.py
 scripts/test-fast-dispatch.py
+scripts/test-relay-protocol.py
 scripts/triage-cases.json
 scripts/usage-receipt.py
 scripts/verify.sh

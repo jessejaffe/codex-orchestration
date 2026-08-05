@@ -112,41 +112,57 @@ def main() -> int:
     routed_context = context(routed)
     for required in (
         "codex_orchestration_terra_executive",
-        'fork_turns: "64"',
-        'task_name: "gpt_5_6_terra_high_executive_<objective_slug>"',
-        "zero-judgment root dispatcher",
-        "Never inspect, verify, compare, or update",
-        "compatibility locator",
-        "Terra owns scoring and work below 5.0",
-        "Rate the complete",
-        "1.0 to 10.0",
-        "fixed seven-level ladder",
-        "Complexity lines",
-        "AGENT=<agent type>",
+        'Executive context fork is `none`',
+        'fork_turns: "none"',
+        "never full-history",
+        "FOUNDATION_CONTEXT",
+        'task name\n`gpt_5_6_terra_high_executive_<objective_slug>`',
+        "zero-judgment relay",
+        "alone calls agent-control tools",
+        "Do nothing first",
+        "ORCHESTRATION_SCORE:",
         "codex_orchestration_sol_high_executive",
         "gpt_5_6_sol_high_executive_<objective_slug>",
-        "pinned executive owns",
-        "from this chat only",
         "ORCHESTRATION_STATUS:",
         "top-level commentary",
-        "interrupt its direct child",
-        "list_agents",
-        "deepest-first",
+        "interrupt every running Orchestration child",
+        "list agents",
         "repeat until none is running",
-        "Do not redispatch before",
-        "No completed edit",
-        "Reconcile actual files",
+        "ORCHESTRATION_DELEGATE",
+        "ORCHESTRATION_ACCEPT",
+        "ORCHESTRATION_TAKEOVER",
+        "selected root model",
+        "no more handoffs",
+        "Call no",
+        "further agent-control",
     ):
         if required not in routed_context:
             raise AssertionError(f"dispatch contract omits {required!r}")
-    for forbidden in (
-        "fork_turns: none",
-        'fork_turns: "all"',
-        "usage-receipt.py",
-        "receipt",
-    ):
+    for forbidden in ('fork_turns: "all"', "usage-receipt.py", "receipt"):
         if forbidden in routed_context:
             raise AssertionError(f"dispatch contract retains {forbidden!r}")
+
+    partial_transcript = temporary / "partial.jsonl"
+    partial_transcript.write_text(
+        root_transcript.read_text()
+        + "".join(json.dumps({"type": "turn_context", "payload": {}}) + "\n" for _ in range(3))
+    )
+    partial = context(
+        call(prompt_hook, {**base, "transcript_path": str(partial_transcript), "prompt": "work"}, env)
+    )
+    if 'Executive context fork is `2`' not in partial or 'fork_turns: "2"' not in partial:
+        raise AssertionError("short-chat context fork is not partial")
+
+    long_transcript = temporary / "long.jsonl"
+    long_transcript.write_text(
+        root_transcript.read_text()
+        + "".join(json.dumps({"type": "turn_context", "payload": {}}) + "\n" for _ in range(70))
+    )
+    bounded = context(
+        call(prompt_hook, {**base, "transcript_path": str(long_transcript), "prompt": "work"}, env)
+    )
+    if 'Executive context fork is `64`' not in bounded or 'fork_turns: "64"' not in bounded:
+        raise AssertionError("long-chat context fork is not bounded at 64")
 
     worker = call(
         prompt_hook,
@@ -224,7 +240,7 @@ def main() -> int:
 
     terra = (plugin / "agents" / "codex-orchestration-terra-executive.toml").read_text()
     for boundary in (
-        "rate the complexity of the complete",
+        "Rate the user request",
         "exactly one decimal",
         "1.0–2.9",
         "3.0–5.0",
@@ -241,13 +257,14 @@ def main() -> int:
         "gpt_5_6_terra_high_implementation_",
         "gpt_5_6_sol_high_implementation_",
         "gpt_5_6_sol_extra_high_implementation_",
-        'fork_turns: "64"',
-        "send_message",
-        "`/root` exactly once",
+        "ORCHESTRATION_SCORE: SCORE=",
         "ORCHESTRATION_STATUS: Complexity",
-        "before any task work or producer spawn",
+        "Return immediately with exactly two lines",
         "at most 20 words",
-        "Do not send another parent status message",
+        "ORCHESTRATION_DELEGATE:",
+        "ORCHESTRATION_ACCEPT:",
+        "ORCHESTRATION_TAKEOVER:",
+        "zero correction loops",
     ):
         if boundary not in terra:
             raise AssertionError(f"Terra score-based route omits {boundary!r}")

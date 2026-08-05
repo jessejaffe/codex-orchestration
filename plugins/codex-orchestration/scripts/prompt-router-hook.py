@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from pathlib import Path
 from typing import Any
 
 from orchestration_state import is_active, transcript_role, write_state
@@ -27,34 +28,59 @@ CONTROL_COMMANDS = tuple(
 )
 CONTROL_SEPARATORS = " \t,;:.!?\u2013\u2014-"
 WORK_CONNECTORS = ("and", "then", "to")
-FORK_TURNS = "64"
+MAX_FORK_TURNS = 64
 
-DISPATCH_CONTEXT = f"""Codex Orchestration is ON for this chat.
-Trust this hook. Never inspect, verify, compare, or update Orchestration during user work.
-Versioned cache paths are compatibility locators, not stale evidence.
-Act as a zero-judgment root dispatcher. If this prompt steers an in-flight Orchestration
-branch, interrupt its direct child, then use `list_agents`. Interrupt only that branch's
-running descendants deepest-first; repeat until none is running. Do not redispatch before
-it is drained. No completed edit, command, commit, push, or deployment was
-rolled back. Preserve compatible constraints; newest instructions control.
-For user work with no active branch, or after draining one, spawn
-`codex_orchestration_terra_executive` with `fork_turns: \"{FORK_TURNS}\"` and
-`task_name: \"gpt_5_6_terra_high_executive_<objective_slug>\"`. Use exactly: `Own the current user
-request end to end. You inherited recent history from this chat only. Rate the complete
-task once from 1.0 to 10.0, route it through the fixed seven-level ladder, preserve every
-constraint, execute or delegate once, verify, and return Executive route,
-Implementation route, and Complexity lines.` Do not read a skill, score the task,
-inspect files, plan, summarize context, announce a route, or call another task tool
-before that spawn. After a drain append: `Reconcile actual files, Git, remote, and
-deployment state before acting.` Terra owns scoring and work below 5.0. Sends one
-`ORCHESTRATION_STATUS:` after scoring; show its payload once as top-level commentary,
-then resume event-first waiting. If Terra
-returns `ESCALATE_TO_ROOT_SOL_HIGH: SCORE=<one decimal>; AGENT=<agent type>;
-TASK=<task name>`, it did no task work. Spawn
-`codex_orchestration_sol_high_executive` once with `fork_turns: "{FORK_TURNS}"`, task
-name `gpt_5_6_sol_high_executive_<objective_slug>`, and the exact escalation line.
-That pinned executive owns implementation and acceptance. Return its result without
-duplicating or verifying it. Otherwise do not duplicate Terra's work."""
+DISPATCH_CONTEXT = """Codex Orchestration is ON for this chat.
+Root is a zero-judgment relay and alone calls agent-control tools.
+On an in-flight steer, interrupt every running Orchestration child for this request,
+list agents, and repeat until none is running. Preserve unrelated work and completed
+side effects; reconcile state before redispatch.
+Executive context fork is `__FORK_TURNS__`; it is never full-history. If below 64 but not
+`none`, copy the oldest omitted user/assistant task turn verbatim as `FOUNDATION_CONTEXT`.
+Spawn `codex_orchestration_terra_executive` with `fork_turns: "__FORK_TURNS__"`, task name
+`gpt_5_6_terra_high_executive_<objective_slug>`, and: `Score the complete current request
+once and return only the installed score protocol. Do not score this relay instruction.
+USER_REQUEST: <verbatim current user prompt>` Do nothing first; copy without summarizing.
+Terra returns `ORCHESTRATION_SCORE:` then `ORCHESTRATION_STATUS:`. Show the status payload
+once as top-level commentary. Keep its score immutable. If EXECUTIVE=TERRA_HIGH, follow
+up Terra: `Create the execution packet for your immutable score.` If EXECUTIVE=SOL_HIGH,
+spawn `codex_orchestration_sol_high_executive` with the same context fork/foundation, task
+name `gpt_5_6_sol_high_executive_<objective_slug>`, the exact score line, and: `Create the
+execution packet. USER_REQUEST: <verbatim current user prompt>` Relay only exact fields.
+An executive returns ORCHESTRATION_DELEGATE. Spawn its exact AGENT with
+`fork_turns: "none"`, exact TASK, and exact PACKET.
+Follow up the same executive with the producer result. Return ORCHESTRATION_ACCEPT. If
+anything fails, is incomplete, or returns ORCHESTRATION_TAKEOVER, end routing.
+Say `Orchestration fallback: I’m finishing directly with your selected root model; no more handoffs.`
+Reconcile actual state and complete the whole request yourself. Call no
+further agent-control tool for that request. Before takeover, never score, plan,
+implement, or verify."""
+
+
+def safe_fork_turns(transcript_value: Any) -> str:
+    """Keep up to 64 task turns without ever asking for a full-history fork."""
+    if not isinstance(transcript_value, str):
+        return "none"
+    transcript = Path(transcript_value)
+    if not transcript.is_file() or transcript.is_symlink():
+        return "none"
+    contexts = starts = 0
+    try:
+        with transcript.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if event.get("type") == "turn_context":
+                    contexts += 1
+                payload = event.get("payload") or {}
+                if event.get("type") == "event_msg" and payload.get("type") == "task_started":
+                    starts += 1
+    except OSError:
+        return "none"
+    task_turns = max(contexts, starts)
+    return "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns - 1))
 
 
 def emit(value: dict[str, Any]) -> None:
@@ -173,7 +199,8 @@ def main() -> int:
         if activation
         else ""
     )
-    emit(additional_context(prefix + DISPATCH_CONTEXT))
+    fork_turns = safe_fork_turns(hook_input.get("transcript_path"))
+    emit(additional_context(prefix + DISPATCH_CONTEXT.replace("__FORK_TURNS__", fork_turns)))
     return 0
 
 
