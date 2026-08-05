@@ -17,10 +17,16 @@ The active path is intentionally small:
 2. Root Sol immediately gives the current request and up to 64 recent turns from that
    chat only to Terra / High with a constant prompt.
 3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
-4. Scores below 5.0 stay with Terra as executive. Scores of 5.0 or higher return
+4. Terra sends one root-visible checkpoint with the score, selected lane, objective,
+   and immediate next steps. Further working commentary stays inside the agent chip.
+5. Scores below 5.0 stay with Terra as executive. Scores of 5.0 or higher return
    untouched to root Sol / High, which owns architecture and acceptance.
-5. The owning executive uses the exact score-selected implementation lane and returns
+6. The owning executive uses the exact score-selected implementation lane and returns
    the result with the observed route and score.
+
+For example, the top-level task may show `Complexity 2.7 → GPT-5.6 Luna / Max. Updating
+the homepage, then committing, deploying, and checking the live site.` This adds one
+short handoff message rather than duplicating every nested progress update.
 
 Spawned-task labels begin with the exact selected model and effort (`GPT 5 6 Terra
 High`, `GPT 5 6 Luna Max`, `GPT 5 6 Terra Medium`, `GPT 5 6 Sol Low`, or `GPT 5 6 Sol
@@ -83,6 +89,15 @@ disable routing and continue the remaining work directly. Every new chat starts 
 Activation is handled only by the prompt hook. The dispatch contract explicitly
 forbids checking, comparing, or updating Orchestration during user work; a
 version-looking cache directory is a compatibility locator, not version evidence.
+
+When the user adds or corrects instructions while work is running, steering remains in
+the same task. Root first stops the direct Orchestration child so it cannot delegate
+again, then drains the entire active branch from the deepest running descendant upward
+and confirms that none remains before routing the revised request. Unrelated agent
+branches are left alone. The newest instruction is authoritative while compatible
+earlier constraints remain in force, and Terra assigns a fresh score for the revised
+task. Because no completed side effect is rolled back, the replacement agent first
+reconciles the actual files, Git, remote, and deployed state before continuing.
 
 ## Usage measurement
 

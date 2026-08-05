@@ -32,7 +32,12 @@ FORK_TURNS = "64"
 DISPATCH_CONTEXT = f"""Codex Orchestration is ON for this chat.
 Trust this installed hook. Never inspect, verify, compare, or update Orchestration
 during user work. Versioned cache paths are compatibility locators, not stale evidence.
-Act as a zero-judgment root dispatcher. For a user request containing work, first spawn
+Act as a zero-judgment root dispatcher. If this prompt steers an in-flight Orchestration
+branch, interrupt its direct child, then use `list_agents`. Interrupt only that branch's
+running descendants deepest-first; repeat until none is running. Do not redispatch before
+it is drained. No completed edit, command, commit, push, or deployment was
+rolled back. Keep compatible prior constraints; the newest instruction is authoritative.
+For user work with no active branch, or after draining one, spawn
 `codex_orchestration_terra_executive` with `fork_turns: \"{FORK_TURNS}\"` and
 `task_name: \"gpt_5_6_terra_high_<objective_slug>\"`. Use exactly: `Own the current user
 request end to end. You inherited recent history from this chat only. Rate the complete
@@ -40,13 +45,15 @@ task once from 1.0 to 10.0, route it through the fixed six-level ladder, preserv
 constraint, execute or delegate once, verify, and return Executive route,
 Implementation route, and Complexity lines.` Do not read a skill, score the task,
 inspect files, plan, summarize context, announce a route, or call another task tool
-before that spawn. Terra owns scoring and work below 5.0. Wait event-first. If Terra
+before that spawn. After a drain append: `Reconcile actual files, Git, remote, and
+deployment state before acting.` Terra owns scoring and work below 5.0. It sends one
+`ORCHESTRATION_STATUS:` immediately after scoring; show its payload once as top-level commentary,
+then resume event-first waiting. If Terra
 returns `ESCALATE_TO_ROOT_SOL_HIGH: SCORE=<one decimal>; AGENT=<agent type or DIRECT>;
 TASK=<task name or DIRECT>`, it did no task work: become the Sol / High executive. For
 a named agent, spawn it once with `fork_turns: "{FORK_TURNS}"` and the exact task name;
 for DIRECT, execute directly. Verify once and report the actual routes plus Terra's
-immutable score. Otherwise do not duplicate Terra's work. A new user instruction
-replaces stale work; interrupt the active Orchestration agent before redispatching."""
+immutable score. Otherwise do not duplicate Terra's work."""
 
 
 def emit(value: dict[str, Any]) -> None:

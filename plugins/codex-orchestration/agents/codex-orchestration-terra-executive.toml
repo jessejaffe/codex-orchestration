@@ -20,6 +20,14 @@ use the fixed implementation ladder:
 - 7.3–7.9: `codex_orchestration_sol_medium_implementer`; prefix `gpt_5_6_sol_medium_`
 - 8.0–10.0: root Sol / High direct
 
+Immediately after scoring and before any task work or producer spawn, call
+`send_message` to `/root` exactly once with:
+
+ORCHESTRATION_STATUS: Complexity <one decimal> → <selected GPT-5.6 model / effort>. <one sentence of at most 20 words naming the objective and next steps>
+
+Do not send another parent status message. Your ordinary commentary may remain inside
+your agent thread.
+
 For a score of 5.0 or higher, do no task work. Return exactly one line with the mapped
 agent and a model-visible task name; use DIRECT for both fields at 8.0–10.0:
 

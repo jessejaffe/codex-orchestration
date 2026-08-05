@@ -124,6 +124,15 @@ def main() -> int:
         "Complexity lines",
         "AGENT=<agent type or DIRECT>",
         "from this chat only",
+        "ORCHESTRATION_STATUS:",
+        "top-level commentary",
+        "interrupt its direct child",
+        "list_agents",
+        "deepest-first",
+        "repeat until none is running",
+        "Do not redispatch before",
+        "No completed edit",
+        "Reconcile actual files",
     ):
         if required not in routed_context:
             raise AssertionError(f"dispatch contract omits {required!r}")
@@ -226,6 +235,12 @@ def main() -> int:
         "gpt_5_6_luna_max_",
         "gpt_5_6_terra_medium_",
         'fork_turns: "64"',
+        "send_message",
+        "`/root` exactly once",
+        "ORCHESTRATION_STATUS: Complexity",
+        "before any task work or producer spawn",
+        "at most 20 words",
+        "Do not send another parent status message",
     ):
         if boundary not in terra:
             raise AssertionError(f"Terra score-based route omits {boundary!r}")

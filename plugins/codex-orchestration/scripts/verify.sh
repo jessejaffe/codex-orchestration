@@ -120,6 +120,20 @@ grep -Fq 'fork_turns: \"{FORK_TURNS}\"' "$script_dir/prompt-router-hook.py" ||
   fail "root-to-Terra continuity is missing"
 grep -Fq 'fork_turns: "64"' "$agents/codex-orchestration-terra-executive.toml" ||
   fail "low-band producer continuity is missing"
+for guard in \
+  'ORCHESTRATION_STATUS:' \
+  'top-level commentary' \
+  'interrupt its direct child' \
+  'list_agents' \
+  'deepest-first' \
+  'repeat until none is running' \
+  'Do not redispatch before' \
+  'No completed edit' \
+  'Reconcile actual files'
+do
+  grep -Fq "$guard" "$script_dir/prompt-router-hook.py" ||
+    fail "root progress/interruption contract omits: $guard"
+done
 if rg -n 'fork_turns: (none|all)|fork_turns: \\"all\\"|Be conservative: any|without emitting a numeric score' \
   "$script_dir/prompt-router-hook.py" "$agents/codex-orchestration-terra-executive.toml"; then
   fail "runtime contract retains a rejected fork shape or categorical routing"
@@ -136,6 +150,12 @@ for guard in \
   'from this chat only' \
   'routine, fully specified repository catch-up, commit, push, SSH deployment' \
   'does not by itself require Sol' \
+  'send_message' \
+  '`/root` exactly once' \
+  'ORCHESTRATION_STATUS: Complexity' \
+  'before any task work or producer spawn' \
+  'at most 20 words' \
+  'Do not send another parent status message' \
   'ESCALATE_TO_ROOT_SOL_HIGH: SCORE=<one decimal>'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
@@ -171,6 +191,8 @@ grep -Fq 'f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d' "$in
   fail "0.7.4 Terra role is not recognized for safe upgrade"
 grep -Fq 'd336e60b9b703f04c7bfe8aaa212818860b178c25f5b3119cbb6c87d6825e5f8' "$installer" ||
   fail "0.8.0 categorical Terra role is not recognized for safe upgrade"
+grep -Fq 'd843a907029caf949049cca3a9c417aba80a4584aa0af12f1aefbec1a691af28' "$installer" ||
+  fail "0.8.0 numeric Terra role is not recognized for safe upgrade"
 grep -Fq '894823383b6184c3a972e4fff04ad6274dad949699bc32272b2e8f04335c0f84' "$installer" ||
   fail "0.8.0 Terra / High implementation role is not recognized for safe upgrade"
 for file in install-user-hook.py orchestration_state.py prompt-router-hook.py test-fast-dispatch.py triage-cases.json; do
@@ -184,6 +206,9 @@ for phrase in \
   'Terra / High scores the complete' \
   'six implementation lanes' \
   'routine deployment does not force a Sol' \
+  'one root-visible checkpoint' \
+  'drains the entire active branch' \
+  'no completed side effect is rolled back' \
   '64 recent turns' \
   'never reads the offline routing benchmark' \
   'unique cache-busted version' \
