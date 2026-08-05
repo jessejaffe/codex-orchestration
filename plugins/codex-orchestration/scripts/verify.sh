@@ -110,13 +110,15 @@ pass "fast-path and telemetry regression tests"
 
 grep -Fq 'zero-judgment root dispatcher' "$script_dir/prompt-router-hook.py" ||
   fail "root still owns routing analysis"
-grep -Fq 'fork_turns: \"all\"' "$script_dir/prompt-router-hook.py" ||
+grep -Fq 'FORK_TURNS = "64"' "$script_dir/prompt-router-hook.py" ||
+  fail "root-to-Terra history bound is missing"
+grep -Fq 'fork_turns: \"{FORK_TURNS}\"' "$script_dir/prompt-router-hook.py" ||
   fail "root-to-Terra continuity is missing"
-grep -Fq 'fork_turns: all' "$agents/codex-orchestration-terra-executive.toml" ||
+grep -Fq 'fork_turns: "64"' "$agents/codex-orchestration-terra-executive.toml" ||
   fail "low-band producer continuity is missing"
-if rg -n 'fork_turns: none|Complexity: <score>|exact one-decimal score' \
+if rg -n 'fork_turns: (none|all)|fork_turns: \\"all\\"|Complexity: <score>|exact one-decimal score' \
   "$script_dir/prompt-router-hook.py" "$agents/codex-orchestration-terra-executive.toml"; then
-  fail "runtime contract retains lossy context or numeric scoring"
+  fail "runtime contract retains a rejected fork shape or numeric scoring"
 fi
 if rg -n 'codex_orchestration_sol_(low|medium)_implementer' "$agents/codex-orchestration-terra-executive.toml"; then
   fail "Terra can still execute or supervise a complex Sol lane"
@@ -169,7 +171,7 @@ pass "safe companion-agent install and complete package inventory"
 for phrase in \
   'once-per-prompt hook' \
   'Terra is the triage gate, not the executive for complex work' \
-  'full chat' \
+  '64 recent turns' \
   'never reads the offline routing benchmark' \
   'unique cache-busted version' \
   'stable user-level hook' \

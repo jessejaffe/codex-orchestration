@@ -87,6 +87,16 @@ def main() -> int:
     inactive = call(prompt_hook, {**base, "prompt": "ordinary request"}, env)
     if inactive != {"continue": True}:
         raise AssertionError(f"inactive chat was routed: {inactive!r}")
+    mention_only = call(
+        prompt_hook,
+        {**base, "prompt": "Explain why I might turn orchestration on later"},
+        env,
+    )
+    if mention_only != {"continue": True}:
+        raise AssertionError("a narrative Orchestration mention was treated as a command")
+    near_match = call(prompt_hook, {**base, "prompt": "Turn orchestration online"}, env)
+    if near_match != {"continue": True}:
+        raise AssertionError("an activation prefix without a command boundary was accepted")
 
     activated = call(prompt_hook, {**base, "prompt": "Turn Orchestration on"}, env)
     activation_context = context(activated)
@@ -102,7 +112,7 @@ def main() -> int:
     routed_context = context(routed)
     for required in (
         "codex_orchestration_terra_executive",
-        'fork_turns: "all"',
+        'fork_turns: "64"',
         'task_name: "gpt_5_6_terra_high_<objective_slug>"',
         "gpt_5_6_sol_low_<objective_slug>",
         "gpt_5_6_sol_medium_<objective_slug>",
@@ -117,6 +127,7 @@ def main() -> int:
     for forbidden in (
         "Complexity: <score>",
         "fork_turns: none",
+        'fork_turns: "all"',
         "usage-receipt.py",
         "receipt",
     ):
@@ -134,6 +145,58 @@ def main() -> int:
     call(prompt_hook, {**base, "prompt": "Turn Orchestration off"}, env)
     if json.loads(state_file.read_text())["active"]:
         raise AssertionError("deactivation was not persisted")
+
+    combined = call(
+        prompt_hook,
+        {
+            **base,
+            "prompt": (
+                "My workflow is: edit, commit, and deploy.\n\n"
+                "turn Orchestration On, remove the mission statement from the website."
+            ),
+        },
+        env,
+    )
+    combined_context = context(combined)
+    if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
+        raise AssertionError("activation plus work did not acknowledge activation")
+    if "codex_orchestration_terra_executive" not in combined_context:
+        raise AssertionError("activation plus work did not route the work")
+    if not json.loads(state_file.read_text())["active"]:
+        raise AssertionError("combined activation was not persisted")
+
+    combined_off = call(
+        prompt_hook,
+        {
+            **base,
+            "prompt": "Orchestration off. Explain what happened in the last test.",
+        },
+        env,
+    )
+    combined_off_context = context(combined_off)
+    if not combined_off_context.startswith("Begin with `Orchestration: OFF for this chat`"):
+        raise AssertionError("deactivation plus work did not acknowledge deactivation")
+    if "handle the remaining user work directly" not in combined_off_context:
+        raise AssertionError("deactivation plus work discarded the remaining request")
+    if json.loads(state_file.read_text())["active"]:
+        raise AssertionError("combined deactivation was not persisted")
+
+    period_combined = call(
+        prompt_hook,
+        {
+            **base,
+            "prompt": (
+                "Turn orchestration on. Change the sleep and disk sleep settings "
+                "from 45 minutes to 40 minutes."
+            ),
+        },
+        env,
+    )
+    if "codex_orchestration_terra_executive" not in context(period_combined):
+        raise AssertionError("period-separated activation plus work did not route")
+    if not json.loads(state_file.read_text())["active"]:
+        raise AssertionError("period-separated activation was not persisted")
+    call(prompt_hook, {**base, "prompt": "Turn Orchestration off"}, env)
 
     # This executes only in release verification. It never runs in a user task.
     started = time.perf_counter()
@@ -154,6 +217,7 @@ def main() -> int:
         "broad unfamiliar-repository reasoning",
         "gpt_5_6_luna_max_<objective_slug>",
         "gpt_5_6_terra_medium_<objective_slug>",
+        'fork_turns: "64"',
     ):
         if boundary not in terra:
             raise AssertionError(f"Terra under-routing guard omits {boundary!r}")
@@ -162,6 +226,8 @@ def main() -> int:
         or "codex_orchestration_sol_medium_implementer" in terra
     ):
         raise AssertionError("Terra can still execute or supervise a complex Sol lane")
+    if "fork_turns: all" in terra or 'fork_turns: "all"' in terra:
+        raise AssertionError("Terra retains the rejected custom-role full-history fork")
 
     size = len(routed_context.encode())
     print(f"fast-dispatch-ok elapsed={elapsed:.3f}s context_bytes={size}")

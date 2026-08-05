@@ -3,7 +3,7 @@
 Codex Orchestration saves Codex credits by moving settled work to the least expensive
 capable model while keeping complex executive judgment with GPT-5.6 Sol / High.
 
-The 0.8.0 release replaces the former skill-driven router with a minimal, full-context
+The 0.8.0 release replaces the former skill-driven router with a minimal, recent-context
 fast path. The manifest does not advertise a skill, so no Orchestration skill or
 versioned skill locator is injected into a new task. Activation no longer makes the
 model calculate a decimal score, scan the transcript before every tool, construct a
@@ -14,7 +14,8 @@ handoff summary, or call a finish-time receipt tool.
 The active path is intentionally small:
 
 1. A stable user-level, once-per-prompt hook checks one chat-local boolean.
-2. Root Sol immediately gives the full chat to Terra / High with a constant prompt.
+2. Root Sol immediately gives the current request and up to 64 recent turns to Terra /
+   High with a constant prompt.
 3. Terra conservatively decides only whether the request is low-band or complex.
 4. Low-band work stays with Terra as executive. Complex work returns untouched to
    root Sol / High, which owns architecture and acceptance.
@@ -32,14 +33,16 @@ work, cross-system coordination, security or authorization judgment, high-stakes
 advice, or irreversible data/schema changes. Root Sol / High may then use Sol / Low,
 Sol / Medium, or direct Sol / High, while retaining executive ownership.
 
-Both handoffs inherit the full chat. The router does not reconstruct requirements into
-a lossy packet, so corrections, constraints, permissions, and repository context stay
+Both handoffs inherit up to 64 recent turns. This bounded history is used because
+current Codex rejects a custom-model role combined with a
+literal full-history fork. The router does not reconstruct requirements into a lossy
+packet, so active corrections, constraints, permissions, and repository context stay
 available to the selected model.
 
 ```mermaid
 flowchart TD
     U["Active user prompt"] --> H["Stable user-level state hook"]
-    H --> T["Terra / High triage with full chat"]
+    H --> T["Terra / High triage with up to 64 recent turns"]
     T -->|"Settled low-band"| L["Terra executive"]
     L --> P1["Luna / Max, Terra / Medium, or direct Terra / High"]
     T -->|"Complex or uncertain"| S["Root Sol / High executive"]
@@ -54,14 +57,17 @@ producer loop.
 
 ## Controls
 
-Activate a chat with any exact command:
+Activate a chat with any command below, either by itself or at the start of an
+imperative line that also contains work:
 
 - `Turn Orchestration on`
 - `Use Orchestration`
 - `Use Orchestration for this chat`
 
-Activation persists only in that chat. Use `Turn Orchestration off` to disable it.
-Every new chat starts off.
+Activation persists only in that chat. Use `Turn Orchestration off` or
+`Orchestration off` to disable it. Combined forms such as `Turn Orchestration on,
+remove the hero subtitle` activate and route the same prompt; combined off commands
+disable routing and continue the remaining work directly. Every new chat starts off.
 
 Activation is handled only by the prompt hook. The dispatch contract explicitly
 forbids checking, comparing, or updating Orchestration during user work; a
@@ -159,8 +165,9 @@ complete package, installs that exact version, retains complete compatibility ca
 aliases, unconditionally clears orphaned legacy plugin enablement, and refuses unsafe
 or incomplete cache entries. It then atomically refreshes the stable user-level hook
 runtime and proves that the exact hook is enabled and trusted. The plugin itself no
-longer bundles a versioned hook, so the running desktop's plugin registry cannot leave
-new tasks on an older routing definition.
+longer bundles a versioned hook, and the installer checks the user hook from both the
+plugin project and a separate user scope. The running desktop's plugin registry cannot
+leave new tasks on an older routing definition.
 
 The updater never opens settings, sends keystrokes, steals focus, or restarts Codex.
 Once the stable hook definition is installed, later releases keep that definition and

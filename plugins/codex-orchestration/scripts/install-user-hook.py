@@ -320,10 +320,20 @@ def main() -> int:
     else:
         atomic_write_json(hook_path, merged)
 
-    trust_and_check(
-        args.codex_bin, codex_home, plugin_dir, hook_path, command, args.check
+    check_cwds = tuple(dict.fromkeys((plugin_dir, Path.home().resolve())))
+    for check_cwd in check_cwds:
+        trust_and_check(
+            args.codex_bin,
+            codex_home,
+            check_cwd,
+            hook_path,
+            command,
+            args.check,
+        )
+    print(
+        "PASS: stable user-level Orchestration hook is installed, enabled, and "
+        "trusted across project and user scopes"
     )
-    print("PASS: stable user-level Orchestration hook is installed, enabled, and trusted")
     return 0
 
 
