@@ -137,6 +137,12 @@ def main() -> int:
         "ACCEPTANCE_CHECK:",
         "ORCHESTRATION_ACCEPT",
         "ORCHESTRATION_TAKEOVER",
+        "every final answer, including takeover",
+        "Executive route:",
+        "Implementation route:",
+        "Complexity:",
+        "Root appends these",
+        "never rely on executive formatting",
         "selected root model",
         "no more handoffs",
         "Call no",
@@ -244,8 +250,8 @@ def main() -> int:
     elapsed = time.perf_counter() - started
     if elapsed > 2.0:
         raise AssertionError(f"inactive prompt hook exceeded 100 ms average: {elapsed:.3f}s")
-    if len(routed_context.encode()) > 2_000:
-        raise AssertionError("dispatch context exceeds the 2 KB fixed-cost budget")
+    if len(routed_context.encode()) > 2_400:
+        raise AssertionError("dispatch context exceeds the 2.4 KB fixed-cost budget")
 
     terra = (plugin / "agents" / "codex-orchestration-terra-executive.toml").read_text()
     for boundary in (
@@ -273,6 +279,11 @@ def main() -> int:
         "ORCHESTRATION_ACCEPT:",
         "ORCHESTRATION_TAKEOVER:",
         "Never generate an implementation",
+        "untrusted claim",
+        "task-appropriate probe",
+        "rendered",
+        "production page with cache bypass",
+        "root owns final route metadata",
         "zero correction loops",
     ):
         if boundary not in terra:

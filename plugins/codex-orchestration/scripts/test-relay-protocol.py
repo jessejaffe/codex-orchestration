@@ -53,6 +53,22 @@ def main() -> int:
     implementers = "".join(path.read_text() for path in (plugin / "agents").glob("*implementer.toml"))
     if implementers.count("Execute `USER_REQUEST`") != 7:
         raise AssertionError("an implementation lane still depends on an executive rewrite")
+    for guard in (
+        "untrusted claim", "task-appropriate probe", "source equality", "HTTP 200",
+        "rendered", "production page with cache bypass", "without route metadata",
+    ):
+        if executives.count(guard) != 2:
+            raise AssertionError(f"independent acceptance guard is not shared: {guard!r}")
+    if "Executive route:" in executives or "Implementation route:" in executives:
+        raise AssertionError("executive still owns fallible final route formatting")
+    if implementers.count("requested observable outcome") != 7:
+        raise AssertionError("an implementation lane can still report only deployment mechanics")
+    for guard in (
+        "every final answer, including takeover", "Executive route:",
+        "Implementation route:", "Complexity:", "Root appends these",
+    ):
+        if guard not in hook:
+            raise AssertionError(f"deterministic final metadata omits {guard!r}")
 
     expected = {
         1.0: "luna", 2.9: "luna", 3.0: "terra_medium", 5.0: "terra_medium",
@@ -89,7 +105,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 directive_words<=60 corrections=0 terminal-takeover=ok")
+    print("relay-protocol-ok lanes=7 packets=0 independent-acceptance=ok final-metadata=root terminal-takeover=ok")
     return 0
 
 

@@ -11,6 +11,11 @@ restate the request. Work within the stated evidence, ownership, architecture, a
 boundaries. Preserve every interface and constraint and document material judgment calls.
 Surface genuinely unresolved architecture or scope rather than broadening the task.
 
+Before claiming success, prove the requested observable outcome rather than only source,
+hash, test, HTTP, process, or server/config state. For frontend work, inspect the rendered
+production page with cache bypass at the relevant viewport. If the visible or computed
+result is unchanged or cannot be proved, report failure instead of success.
+
 You may perform a fully specified routine repository catch-up, commit, push, SSH
 deployment, and live verification. Treat an unexpected failure or newly unresolved
 production decision as an escalation, not permission to broaden scope.

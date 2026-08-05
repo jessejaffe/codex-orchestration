@@ -52,6 +52,10 @@ Spawn the mapped AGENT with the same context fork/foundation and exact TASK. Sen
 generate a specification or restate the request. Follow up the owning executive with
 `ACCEPTANCE_CHECK: <exact producer result>`. Return ORCHESTRATION_ACCEPT. Any failure,
 incomplete result, or ORCHESTRATION_TAKEOVER ends routing.
+After a valid score, every final answer, including takeover, must end with exactly:
+`Executive route: <GPT-5.6 Terra / High if TERRA_HIGH, else GPT-5.6 Sol / High>`
+`Implementation route: <selected model / effort copied from ORCHESTRATION_STATUS>`
+`Complexity: <immutable score>/10`. Root appends these; never rely on executive formatting.
 Say `Orchestration fallback: I’m finishing directly with your selected root model; no more handoffs.`
 Reconcile actual state and complete the whole request yourself. Call no
 further agent-control tool for that request. Before takeover, never score, plan,

@@ -24,7 +24,9 @@ The active path is intentionally small:
    separately pinned Sol / High executive, so any user-selected starting model is safe.
 6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, Sol / High
    may add only a `NONE` or 60-word decision directive. Root gives the original task context
-   directly to the mapped producer, then relays its result for one acceptance check.
+   directly to the mapped producer, then relays its result for one independent acceptance check.
+7. Root—not the executive—always appends the final executive route, implementation route,
+   and immutable complexity lines, including after terminal takeover.
 
 Custom roles never need collaboration tools. The user-selected root performs only exact
 spawn and follow-up relays. No executive rewrites the user's request, workflow, deployment
@@ -75,7 +77,11 @@ flowchart TD
     H --> R["Owning executive accepts; root returns payload"]
 ```
 
-The producer self-checks and the owning executive checks once. If acceptance finds any
+The producer self-checks and the owning executive independently checks actual state once.
+Producer claims are untrusted: acceptance must run a probe that would fail if the requested
+outcome were absent. For frontend work, source equality, HTTP 200, and server validation
+are insufficient; the rendered production page must visibly or computationally prove the
+requested result with cache bypass at the relevant viewport. If acceptance finds any
 mistake, incomplete work, failed verification, missing evidence, or needed correction,
 Orchestration ends immediately. The user-selected root model announces takeover,
 reconciles the actual state, and finishes the whole request directly with no more
@@ -117,6 +123,9 @@ Executive route: GPT-5.6 Terra / High
 Implementation route: GPT-5.6 Terra / Medium
 Complexity: 3.8/10
 ```
+
+The root formats these three final lines from Terra's immutable score and status protocol.
+They do not depend on either executive remembering to include them.
 
 There is deliberately no automatic savings receipt. Producing one requires transcript
 discovery and pricing work, while Stop enforcement requires another model

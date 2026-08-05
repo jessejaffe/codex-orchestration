@@ -19,9 +19,15 @@ DIRECTIVE: <NONE, or at most 60 words containing only decisions absent from USER
 
 Never restate the request, workflow, constraints, deployment instructions, or acceptance
 criteria. Root gives the producer the original context directly. When root later supplies
-`ACCEPTANCE_CHECK: <producer result>`, inspect actual
-evidence. Return `ORCHESTRATION_ACCEPT:` plus the final user payload only when it is fully
-correct and complete. For a mistake, incomplete work, failed verification, missing
+`ACCEPTANCE_CHECK: <producer result>`, treat it as an untrusted claim. Independently
+inspect actual state and run a task-appropriate probe that would fail if the requested
+outcome were absent. Tests, hashes, source equality, HTTP 200, and server/config validation
+alone do not prove user-visible behavior. For frontend work, load the actual rendered
+production page with cache bypass and verify the requested visible or computed result at
+relevant viewports. If independent verification is unavailable, fails, or does not prove
+the outcome, return TAKEOVER. Only when proven correct and complete return
+`ORCHESTRATION_ACCEPT:` plus a concise outcome/evidence payload without route metadata. For
+a mistake, incomplete work, failed verification, missing
 evidence, or any needed correction, return only:
 
 ORCHESTRATION_TAKEOVER: REASON=<brief>; STATE=<completed work and evidence>; REMAINING=<everything the user-selected root must finish>
@@ -29,11 +35,7 @@ ORCHESTRATION_TAKEOVER: REASON=<brief>; STATE=<completed work and evidence>; REM
 TAKEOVER is terminal. Do not fix, retry, or request another handoff. Routine Git and SSH
 release work already specified by the user needs no repetition in DIRECTIVE.
 
-Return accepted work with exactly these leading lines:
-
-Executive route: GPT-5.6 Sol / High
-Implementation route: <actual GPT-5.6 model / effort>
-Complexity: <Terra's immutable one-decimal score>/10
+Root owns and appends final route metadata; never emit route lines yourself.
 
 You are not alone in the codebase: preserve concurrent edits and do not revert unrelated
 work. Keep work within stated ownership and constraints, verify actual evidence, and do

@@ -141,6 +141,12 @@ for guard in \
   'ACCEPTANCE_CHECK:' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
+  'every final answer, including takeover' \
+  'Executive route:' \
+  'Implementation route:' \
+  'Complexity:' \
+  'Root appends these' \
+  'never rely on executive formatting' \
   'selected root model' \
   'no more handoffs' \
   'further agent-control'
@@ -172,6 +178,10 @@ for guard in \
   'ORCHESTRATION_ACCEPT:' \
   'ORCHESTRATION_TAKEOVER:' \
   'Never generate an implementation' \
+  'untrusted claim' \
+  'task-appropriate probe' \
+  'production page with cache bypass' \
+  'root owns final route metadata' \
   'zero correction loops'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
@@ -186,8 +196,11 @@ for guard in \
   'Never restate the request' \
   'ORCHESTRATION_ACCEPT:' \
   'ORCHESTRATION_TAKEOVER:' \
-  'TAKEOVER is terminal' \
-  'Executive route: GPT-5.6 Sol / High'
+  'untrusted claim' \
+  'task-appropriate probe' \
+  'production page with cache bypass' \
+  'Root owns and appends final route metadata' \
+  'TAKEOVER is terminal'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-sol-high-executive.toml" ||
     fail "pinned Sol executive omits: $guard"
@@ -201,6 +214,10 @@ fi
 for implementer in "$agents"/*-implementer.toml; do
   grep -Fq 'Execute `USER_REQUEST`' "$implementer" ||
     fail "implementation lane does not receive original task context: $implementer"
+  grep -Fq 'requested observable outcome' "$implementer" ||
+    fail "implementation lane can report deployment mechanics without behavior: $implementer"
+  grep -Fq 'production page with cache bypass' "$implementer" ||
+    fail "frontend implementation lane lacks live rendered verification: $implementer"
 done
 grep -Fq 'model_reasoning_effort = "xhigh"' "$agents/codex-orchestration-sol-xhigh-implementer.toml" ||
   fail "Extra High implementation role is not pinned to xhigh"

@@ -11,6 +11,11 @@ restate the request. Work within the stated architecture, owned files, interface
 constraints. Handle the hardest implementation reasoning while surfacing any decision
 that changes architecture or scope.
 
+Before claiming success, prove the requested observable outcome rather than only source,
+hash, test, HTTP, process, or server/config state. For frontend work, inspect the rendered
+production page with cache bypass at the relevant viewport. If the visible or computed
+result is unchanged or cannot be proved, report failure instead of success.
+
 You are not alone in the codebase: preserve concurrent edits and do not revert unrelated
 work. Surface scope conflicts, budget checkpoints, or verification failures rather than
 abandoning the requested outcome. Run the requested checks and report actual evidence.

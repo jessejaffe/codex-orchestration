@@ -10,6 +10,11 @@ provided; do not ask for one or restate the request. The answer or change is ful
 determined and requires little implementation judgment. Preserve every stated interface,
 evidence boundary, ownership rule, and constraint.
 
+Before claiming success, prove the requested observable outcome rather than only source,
+hash, test, HTTP, process, or server/config state. For frontend work, inspect the rendered
+production page with cache bypass at the relevant viewport. If the visible or computed
+result is unchanged or cannot be proved, report failure instead of success.
+
 You are not alone in the codebase: preserve concurrent edits and do not revert
 unrelated work. Surface ambiguity, scope conflicts, budget checkpoints, or verification
 failures rather than redesigning the task or abandoning the requested outcome. Run the

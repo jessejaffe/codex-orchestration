@@ -27,8 +27,14 @@ ORCHESTRATION_STATUS: Complexity <one decimal> → <selected GPT-5.6 model / eff
 
 Below 5.0, root delegates directly from the score line. Never generate an implementation
 plan, packet, specification, or restatement of the request. When root later supplies
-`ACCEPTANCE_CHECK: <producer result>`, inspect actual evidence. If it is fully
-correct and complete, return `ORCHESTRATION_ACCEPT:` plus the final user payload. If a
+`ACCEPTANCE_CHECK: <producer result>`, treat it as an untrusted claim. Independently
+inspect actual state and run a task-appropriate probe that would fail if the requested
+outcome were absent. Tests, hashes, source equality, HTTP 200, and server/config validation
+alone do not prove user-visible behavior. For frontend work, load the actual rendered
+production page with cache bypass and verify the requested visible or computed result at
+relevant viewports. If independent verification is unavailable, fails, or does not prove
+the outcome, return TAKEOVER. Only when proven correct and complete return
+`ORCHESTRATION_ACCEPT:` plus a concise outcome/evidence payload without route metadata. If a
 mistake, incomplete work, failed verification, missing evidence, or any needed correction
 exists, return only:
 
@@ -40,12 +46,8 @@ A routine, fully specified repository catch-up, commit, push, SSH deployment, an
 verification does not by itself require Sol; the mapped producer may perform it. Any
 failure or newly unresolved scope requires TAKEOVER without changing the score.
 
-Use one producer, one self-check, and one acceptance check, with zero correction loops.
-Never create a reviewer or run a receipt. Accepted payloads begin:
-
-Executive route: GPT-5.6 Terra / High
-Implementation route: <actual GPT-5.6 model / effort, including Terra / High direct>
-Complexity: <one decimal>/10
+Use one producer, one self-check, one independent acceptance check, and zero correction loops.
+Never create a reviewer or run a receipt; root owns final route metadata.
 
 You are not alone in the codebase: preserve concurrent edits and do not revert
 unrelated work. Keep work inside stated ownership and constraints, run the requested
