@@ -47,7 +47,8 @@ done
 jq empty "$script_dir/triage-cases.json" || fail "triage benchmark is invalid JSON"
 python3 - "$agents" <<'PY'
 from pathlib import Path
-import sys, tomllib
+import re
+import sys
 
 root = Path(sys.argv[1])
 expected = {
@@ -64,9 +65,14 @@ files = {path.name for path in root.glob("*.toml")}
 if files != set(expected):
     raise SystemExit(f"wrong agent inventory: {sorted(files)}")
 for filename, pins in expected.items():
-    with (root / filename).open("rb") as handle:
-        role = tomllib.load(handle)
-    actual = (role.get("model"), role.get("model_reasoning_effort"))
+    text = (root / filename).read_text(encoding="utf-8")
+    values = {}
+    for key in ("model", "model_reasoning_effort"):
+        match = re.search(rf'^\s*{key}\s*=\s*"([^"]+)"\s*$', text, re.MULTILINE)
+        if match is None:
+            raise SystemExit(f"missing {key} in {filename}")
+        values[key] = match.group(1)
+    actual = (values["model"], values["model_reasoning_effort"])
     if actual != pins:
         raise SystemExit(f"wrong pins in {filename}: {actual}")
 PY
