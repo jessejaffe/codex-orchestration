@@ -1,27 +1,13 @@
 {
-  "description": "Persist Codex Orchestration complexity, enforce receipts, and log completed routed tasks.",
+  "description": "Inject the fast chat-local routing contract once per user prompt.",
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/receipt-stop-hook.py\"",
-            "timeout": 10,
-            "statusMessage": "Saving Codex Orchestration complexity"
-          }
-        ]
-      }
-    ],
-    "Stop": [
+    "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/receipt-stop-hook.py\"",
-            "timeout": 30,
-            "statusMessage": "Checking Codex Orchestration receipt"
+            "command": "python3 \"$PLUGIN_ROOT/scripts/prompt-router-hook.py\"",
+            "timeout": 3
           }
         ]
       }

@@ -95,8 +95,8 @@ def main() -> int:
             session_id,
             "--turn-id",
             turn_id,
-            "--complexity",
-            "4.2",
+            "--route-classification",
+            "low",
             "--implementation",
             "Implementation: GPT-5.6 Terra / Medium",
             "--actual-weekly-usage",
@@ -132,8 +132,8 @@ def main() -> int:
         session_id,
         "--turn-id",
         turn_ids[0],
-        "--complexity",
-        "4.2",
+        "--route-classification",
+        "low",
         "--implementation",
         "Implementation: GPT-5.6 Terra / Medium",
         "--actual-weekly-usage",
@@ -172,8 +172,8 @@ def main() -> int:
         session_id,
         "--turn-id",
         interrupted_turn,
-        "--complexity",
-        "4.2",
+        "--route-classification",
+        "low",
         "--implementation",
         "Implementation: GPT-5.6 Terra / Medium",
         "--actual-weekly-usage",
@@ -222,6 +222,15 @@ def main() -> int:
     report = run(*common, "report")
     if "Completed Codex Orchestration tasks: 2" not in report:
         raise AssertionError(f"stored report is wrong: {report!r}")
+    baseline_path = state / "effectiveness" / "baseline.json"
+    legacy_baseline = json.loads(baseline_path.read_text())
+    legacy_baseline["sol_advisor_completion_metrics"] = legacy_baseline.pop(
+        "codex_orchestration_completion_metrics"
+    )
+    baseline_path.write_text(json.dumps(legacy_baseline) + "\n")
+    legacy_report = run(*common, "report")
+    if "Completed Codex Orchestration tasks: 2" not in legacy_report:
+        raise AssertionError(f"legacy-schema report crashed or drifted: {legacy_report!r}")
     completions = list((state / "effectiveness" / "completions").glob("*.json"))
     if len(completions) != 3:
         raise AssertionError(f"completion ledger is not idempotent: {completions!r}")

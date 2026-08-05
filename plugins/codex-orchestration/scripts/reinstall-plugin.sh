@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration 0.7.4 and safely retire the configured legacy identity.
+# Install Codex Orchestration 0.8.0 and safely retire the configured legacy identity.
 
 set -eu
 
@@ -24,7 +24,7 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-[ "$manifest_version" = 0.7.4 ] || fail "this migration installer requires release 0.7.4: $manifest_version"
+[ "$manifest_version" = 0.8.0 ] || fail "this migration installer requires release 0.8.0: $manifest_version"
 case "$manifest_version" in *+*) fail "plugin version must not contain build metadata: $manifest_version" ;; esac
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
@@ -94,11 +94,13 @@ scripts/daily-upstream-audit.sh
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
-scripts/receipt-stop-hook.py
+scripts/orchestration_state.py
+scripts/prompt-router-hook.py
 scripts/reinstall-plugin.sh
 scripts/state_migration.py
 scripts/test-effectiveness-tracker.py
-scripts/test-receipt-hook.py
+scripts/test-fast-dispatch.py
+scripts/triage-cases.json
 scripts/usage-receipt.py
 scripts/verify.sh
 skills/orchestration/SKILL.md

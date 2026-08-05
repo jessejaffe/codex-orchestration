@@ -41,8 +41,8 @@ role_files() {
       legacy_digests='309d1fd8f0bf17785fff53583d4e42067e637c0922b9f23da0653729e7f809cf'
       ;;
     terra-executive)
-      # Exact 0.7.3 template, safe to replace with the consolidated fast-handoff role.
-      previous_current_digests='ee18e8ce854b5639790932d28c981f340b4b9ced3ea62cee7f03ab2c8f087c63'
+      # Exact 0.7.3 and 0.7.4 templates, safe to replace with the triage-only role.
+      previous_current_digests='ee18e8ce854b5639790932d28c981f340b4b9ced3ea62cee7f03ab2c8f087c63 f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d'
       legacy_digests='4849c6591202290ff63db140b56089e63a4d06e2eaabec7256d016dcb056dbdc'
       ;;
     terra-implementer)

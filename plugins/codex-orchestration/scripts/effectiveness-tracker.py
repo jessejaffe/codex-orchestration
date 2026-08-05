@@ -22,7 +22,6 @@ from state_migration import StateMigrationError, migrate_default_state
 THREAD_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 )
-SCORE_RE = re.compile(r"^(?:10|[1-9])\.\d$")
 
 
 class TrackerUnavailable(RuntimeError):
@@ -335,6 +334,39 @@ def completion_metrics(root: Path) -> dict[str, int | float]:
     return result
 
 
+def snapshot_metrics(snapshot: dict[str, Any]) -> dict[str, int | float]:
+    """Read current snapshots and exact migrated Sol Advisor snapshots."""
+    current = snapshot.get("codex_orchestration_completion_metrics")
+    legacy = snapshot.get("sol_advisor_completion_metrics")
+    observed = current if isinstance(current, dict) else legacy
+    defaults = {
+        "count": 0,
+        "elapsed_seconds": 0,
+        "delegated_starts": 0,
+        "exact_receipts": 0,
+        "actual_percent": 0.0,
+        "all_sol_percent": 0.0,
+        "savings_percent": 0.0,
+        "task_token_records": 0,
+        "task_input_tokens": 0,
+        "task_cached_input_tokens": 0,
+        "task_output_tokens": 0,
+        "task_tokens": 0,
+        "completion_candidates": 0,
+        "interrupted_tasks": 0,
+        "pending_tasks": 0,
+    }
+    if isinstance(observed, dict):
+        defaults.update(
+            {
+                key: value
+                for key, value in observed.items()
+                if key in defaults and isinstance(value, (int, float))
+            }
+        )
+    return defaults
+
+
 def capture_snapshot(
     args: argparse.Namespace, *, label: str, profile_total_chats: int | None
 ) -> dict[str, Any]:
@@ -400,7 +432,7 @@ def print_baseline(snapshot: dict[str, Any]) -> None:
     if days:
         print(f"Previous {len(days)} full days: {prior_tokens:,} tokens")
         print(f"Previous daily average: {integer(prior_tokens / len(days))} tokens")
-    metrics = snapshot["codex_orchestration_completion_metrics"]
+    metrics = snapshot_metrics(snapshot)
     print(f"Logged Codex Orchestration completions: {metrics['count']:,}")
     if snapshot.get("profile_total_chats") is not None:
         print(f"Optional Profile chat context: {snapshot['profile_total_chats']:,}")
@@ -421,8 +453,8 @@ def print_report(baseline: dict[str, Any], latest: dict[str, Any]) -> None:
     start_tokens = lifetime_tokens(baseline)
     end_tokens = lifetime_tokens(latest)
     token_delta = end_tokens - start_tokens
-    start_metrics = baseline["codex_orchestration_completion_metrics"]
-    end_metrics = latest["codex_orchestration_completion_metrics"]
+    start_metrics = snapshot_metrics(baseline)
+    end_metrics = snapshot_metrics(latest)
     completion_delta = int(end_metrics["count"]) - int(start_metrics["count"])
     elapsed_delta = int(end_metrics["elapsed_seconds"]) - int(
         start_metrics["elapsed_seconds"]
@@ -581,8 +613,6 @@ def command_report(args: argparse.Namespace) -> None:
 def command_record_turn(args: argparse.Namespace) -> None:
     if not THREAD_RE.fullmatch(args.session_id) or not THREAD_RE.fullmatch(args.turn_id):
         raise TrackerUnavailable("valid session and turn IDs are required")
-    if not SCORE_RE.fullmatch(args.complexity):
-        raise TrackerUnavailable("an exact one-decimal complexity score is required")
     try:
         task_metrics = json.loads(args.task_metrics_json)
     except json.JSONDecodeError as exc:
@@ -603,7 +633,7 @@ def command_record_turn(args: argparse.Namespace) -> None:
         "recorded_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "session_id": args.session_id,
         "turn_id": args.turn_id,
-        "complexity": args.complexity,
+        "route_classification": args.route_classification,
         "implementation": args.implementation,
         "actual_weekly_usage": args.actual_weekly_usage,
         "all_sol_equivalent": args.all_sol_equivalent,
@@ -643,7 +673,11 @@ def parser() -> argparse.ArgumentParser:
     record = commands.add_parser("record-turn", help=argparse.SUPPRESS)
     record.add_argument("--session-id", required=True)
     record.add_argument("--turn-id", required=True)
-    record.add_argument("--complexity", required=True)
+    record.add_argument(
+        "--route-classification",
+        choices=("low", "sol-low", "sol-medium", "sol-high", "unreported"),
+        default="unreported",
+    )
     record.add_argument("--implementation", required=True)
     record.add_argument("--actual-weekly-usage", required=True)
     record.add_argument("--all-sol-equivalent", required=True)

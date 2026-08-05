@@ -1,7 +1,7 @@
 interface:
   display_name: "Codex Orchestration"
-  short_description: "Credit savings without review spirals"
-  default_prompt: "Use $codex-orchestration:orchestration to read one consolidated contract, score once, hand simple low-band work immediately to Terra High, route substantive implementation to the cheaper score-selected model, check once, allow one correction, then recover the actual task lineage in the savings receipt."
+  short_description: "Fast Terra-first credit routing"
+  default_prompt: "Use $codex-orchestration:orchestration to explain or maintain the fast Terra-first routing workflow."
 
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false
