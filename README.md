@@ -28,9 +28,11 @@ The active path is intentionally small:
 7. Root—not the executive—always appends the final executive route, implementation route,
    and immutable complexity lines, including after terminal takeover.
 
-Custom roles never need collaboration tools. The user-selected root performs only exact
-spawn and follow-up relays. No executive rewrites the user's request, workflow, deployment
-instructions, or acceptance criteria into a duplicated implementation packet.
+The selected implementation role performs the work itself and is forbidden from creating
+Recon, reviewer, helper, replacement, or any other nested subagent. The user-selected root
+alone performs the exact executive and implementation relays. No executive rewrites the
+user's request, workflow, deployment instructions, or acceptance criteria into a duplicated
+implementation packet.
 
 For example, the top-level task may show `Complexity 2.7 → GPT-5.6 Luna / Max. Updating
 the homepage, then committing, deploying, and checking the live site.` This adds one

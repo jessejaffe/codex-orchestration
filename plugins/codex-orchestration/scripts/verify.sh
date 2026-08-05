@@ -218,6 +218,14 @@ for implementer in "$agents"/*-implementer.toml; do
     fail "implementation lane can report deployment mechanics without behavior: $implementer"
   grep -Fq 'production page with cache bypass' "$implementer" ||
     fail "frontend implementation lane lacks live rendered verification: $implementer"
+  grep -Fq 'perform the implementation yourself' "$implementer" ||
+    fail "implementation lane can delegate its work: $implementer"
+  grep -Fq 'Do not use collaboration or agent-control' "$implementer" ||
+    fail "implementation lane can use agent-control tools: $implementer"
+  grep -Fq 'do not spawn, delegate to, message, wait for, list, interrupt' "$implementer" ||
+    fail "implementation lane lacks complete nested-agent guard: $implementer"
+  grep -Fq 'do not create Recon, reviewer, helper, or' "$implementer" ||
+    fail "implementation lane can create a named helper agent: $implementer"
 done
 grep -Fq 'model_reasoning_effort = "xhigh"' "$agents/codex-orchestration-sol-xhigh-implementer.toml" ||
   fail "Extra High implementation role is not pinned to xhigh"

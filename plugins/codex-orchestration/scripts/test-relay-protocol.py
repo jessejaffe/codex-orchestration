@@ -50,7 +50,11 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
-    implementers = "".join(path.read_text() for path in (plugin / "agents").glob("*implementer.toml"))
+    implementer_paths = sorted((plugin / "agents").glob("*implementer.toml"))
+    if len(implementer_paths) != 7:
+        raise AssertionError(f"expected seven implementation lanes, found {len(implementer_paths)}")
+    implementer_texts = [path.read_text() for path in implementer_paths]
+    implementers = "".join(implementer_texts)
     if implementers.count("Execute `USER_REQUEST`") != 7:
         raise AssertionError("an implementation lane still depends on an executive rewrite")
     for guard in (
@@ -63,6 +67,15 @@ def main() -> int:
         raise AssertionError("executive still owns fallible final route formatting")
     if implementers.count("requested observable outcome") != 7:
         raise AssertionError("an implementation lane can still report only deployment mechanics")
+    for path, instructions in zip(implementer_paths, implementer_texts):
+        for guard in (
+            "perform the implementation yourself",
+            "Do not use collaboration or agent-control",
+            "do not spawn, delegate to, message, wait for, list, interrupt",
+            "do not create Recon, reviewer, helper, or",
+        ):
+            if guard not in instructions:
+                raise AssertionError(f"nested-agent guard missing from {path.name}: {guard!r}")
     for guard in (
         "every final answer, including takeover", "Executive route:",
         "Implementation route:", "Complexity:", "Root appends these",
@@ -105,7 +118,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 independent-acceptance=ok final-metadata=root terminal-takeover=ok")
+    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=ok final-metadata=root terminal-takeover=ok")
     return 0
 
 

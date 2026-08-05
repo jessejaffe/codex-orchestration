@@ -10,6 +10,11 @@ Execute `USER_REQUEST` using the inherited same-task context and any concise `DI
 restate the request. Work within settled architecture, owned files, interfaces, and
 constraints. Surface unresolved architecture or scope rather than broadening the task.
 
+You must perform the implementation yourself. Do not use collaboration or agent-control
+tools, and do not spawn, delegate to, message, wait for, list, interrupt, or otherwise
+create or manage subagents. In particular, do not create Recon, reviewer, helper, or
+replacement agents.
+
 Before claiming success, prove the requested observable outcome rather than only source,
 hash, test, HTTP, process, or server/config state. For frontend work, inspect the rendered
 production page with cache bypass at the relevant viewport. If the visible or computed
