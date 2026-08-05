@@ -227,11 +227,12 @@ if rg -n 'reads one consolidated skill|PreToolUse|conservative triage|without.*n
 fi
 pass "user-hook runtime and current documentation"
 
-grep -Fq '17 12 * * *' "$repo_dir/.github/workflows/upstream-review.yml" ||
-  fail "daily upstream review schedule changed"
-if grep -Eq 'git push|gh pr merge|git cherry-pick|git rebase' "$repo_dir/.github/workflows/upstream-review.yml"; then
-  fail "upstream review can mutate the fork"
+[ ! -e "$repo_dir/.github/workflows/upstream-review.yml" ] ||
+  fail "obsolete upstream-review workflow remains"
+if rg -n -i 'daily-upstream-audit|upstream-review|upstream review' \
+  "$script_dir" "$repo_dir/README.md" --glob '!verify.sh'; then
+  fail "obsolete upstream-monitoring behavior remains"
 fi
-pass "read-only upstream review"
+pass "no upstream-monitoring behavior"
 
 pass "Codex Orchestration 0.8.0 numeric-routing release verification complete"

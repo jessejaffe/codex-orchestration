@@ -233,12 +233,8 @@ The prompt hook has a 2 KB injected-context ceiling and the hermetic latency tes
 its subprocess a generous 100 ms average CI budget. These are release checks only;
 they are not additional runtime work.
 
-The daily upstream workflow compares this maintained fork with
-`DannyMac180/sol-advisor` and may open or update a review issue. It never merges or
-pushes upstream changes automatically.
-
 ## Repository
 
-- Maintained fork: `jessejaffe/codex-orchestration`
+- Maintained repository: `jessejaffe/codex-orchestration`
 - Original project: `DannyMac180/sol-advisor`
 - License: MIT

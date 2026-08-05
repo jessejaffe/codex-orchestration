@@ -99,7 +99,6 @@ agents/codex-orchestration-sol-low-implementer.toml
 agents/codex-orchestration-sol-medium-implementer.toml
 agents/codex-orchestration-sol-high-implementer.toml
 agents/codex-orchestration-sol-reviewer.toml
-scripts/daily-upstream-audit.sh
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
