@@ -32,9 +32,10 @@ internally without emitting a numeric score. Choose exactly one path:
 - Spawn `codex_orchestration_terra_medium_implementer` for settled ordinary work that
   benefits from lower reasoning effort.
 
-When spawning, use `fork_turns: all`; name Luna tasks `luna_max_<objective_slug>` and
-Terra / Medium tasks `terra_medium_<objective_slug>` so the UI shows the lane. Full
-chat preserves constraints, so keep the prompt short. Use one producer, one self-check,
+When spawning, use `fork_turns: all`; name Luna tasks
+`gpt_5_6_luna_max_<objective_slug>` and Terra / Medium tasks
+`gpt_5_6_terra_medium_<objective_slug>` so the UI shows the exact model and effort.
+Full chat preserves constraints, so keep the prompt short. Use one producer, one self-check,
 one acceptance check, and at most one correction. If it fails, finish directly when
 safe or return the structured Sol escalation. Never create a reviewer.
 

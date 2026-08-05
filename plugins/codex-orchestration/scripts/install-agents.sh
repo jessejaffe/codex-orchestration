@@ -42,7 +42,7 @@ role_files() {
       ;;
     terra-executive)
       # Exact 0.7.3 and 0.7.4 templates, safe to replace with the triage-only role.
-      previous_current_digests='ee18e8ce854b5639790932d28c981f340b4b9ced3ea62cee7f03ab2c8f087c63 f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d 8caf6c47bcc47d8e9ea2566047233f69cf88a672ff8e400c9698fc911550104e'
+      previous_current_digests='ee18e8ce854b5639790932d28c981f340b4b9ced3ea62cee7f03ab2c8f087c63 f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d 8caf6c47bcc47d8e9ea2566047233f69cf88a672ff8e400c9698fc911550104e ed3042963ef39384293ed072e6531193f8c18a6d48cac6753907efe4ec6dae54'
       legacy_digests='4849c6591202290ff63db140b56089e63a4d06e2eaabec7256d016dcb056dbdc'
       ;;
     terra-implementer)

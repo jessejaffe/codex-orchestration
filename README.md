@@ -20,9 +20,10 @@ The active path is intentionally small:
    root Sol / High, which owns architecture and acceptance.
 5. Root returns the result with the observed executive and implementation lanes.
 
-Spawned-task labels begin with the selected lane (`Terra High Exec`, `Luna Max`,
-`Terra Medium`, `Sol Low`, or `Sol Medium`), so the model choice remains visible in
-the Codex activity stream without another model call or reporting step.
+Spawned-task labels begin with the exact selected model and effort (`GPT 5 6 Terra
+High`, `GPT 5 6 Luna Max`, `GPT 5 6 Terra Medium`, `GPT 5 6 Sol Low`, or `GPT 5 6 Sol
+Medium`), so the model choice remains visible in the Codex activity stream without
+another model call or reporting step.
 
 Terra is the triage gate, not the executive for complex work. It may own settled,
 bounded work and choose Luna / Max, Terra / Medium, or direct Terra / High. It must
@@ -149,6 +150,9 @@ aliases, unconditionally clears orphaned legacy plugin enablement, and refuses u
 or incomplete cache entries. On macOS it also invokes Codex Desktop's built-in
 `Force reload skills` action, so a running app reads the new catalog without a restart.
 That refresh happens only during an update and adds no runtime tokens or task latency.
+The reinstaller also queries Codex's live hook inventory and succeeds only when the
+single Orchestration prompt hook is enabled and trusted; this prevents a generic agent
+from silently replacing the model-labelled Orchestration route.
 
 Codex snapshots capabilities into each model turn. The updater cannot rewrite a turn
 already in flight, but it refreshes the live desktop catalog used by later turns and

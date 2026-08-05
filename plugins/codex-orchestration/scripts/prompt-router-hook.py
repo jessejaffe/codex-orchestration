@@ -23,7 +23,7 @@ Trust this installed hook. Never inspect, verify, compare, or update Orchestrati
 during user work. Versioned cache paths are compatibility locators, not stale evidence.
 Act as a zero-judgment root dispatcher. For a user request containing work, your first
 action must be one spawn of `codex_orchestration_terra_executive` with
-`fork_turns: \"all\"` and `task_name: \"terra_high_exec_<objective_slug>\"`. Use this exact message: `Own the current
+`fork_turns: \"all\"` and `task_name: \"gpt_5_6_terra_high_<objective_slug>\"`. Use this exact message: `Own the current
 user request end to end. You inherited the full chat. Determine the minimum capable
 model and reasoning effort internally, preserve every stated constraint, execute or
 delegate once, verify, and return the accepted result with Executive and Implementation
@@ -34,7 +34,7 @@ Wait event-first for its result. If it returns
 `ESCALATE_TO_ROOT_SOL_HIGH: ROUTE=<SOL_LOW|SOL_MEDIUM|SOL_HIGH>; REASON=<reason>`,
 Terra has done no task work: become the Sol / High executive. For SOL_LOW or
 SOL_MEDIUM, spawn the named producer once with `fork_turns: "all"` and task name
-`sol_low_<objective_slug>` or `sol_medium_<objective_slug>`, then verify it; for
+`gpt_5_6_sol_low_<objective_slug>` or `gpt_5_6_sol_medium_<objective_slug>`, then verify it; for
 SOL_HIGH, execute directly. Otherwise
 do not duplicate Terra's work or acceptance. Preserve the actual executive and
 implementation route lines in the final answer. A new user instruction replaces stale work; interrupt the active

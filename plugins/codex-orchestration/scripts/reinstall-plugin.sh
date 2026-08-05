@@ -101,6 +101,7 @@ agents/codex-orchestration-sol-high-implementer.toml
 agents/codex-orchestration-sol-reviewer.toml
 hooks/hooks.json
 scripts/daily-upstream-audit.sh
+scripts/check-hook-runtime.py
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
@@ -257,8 +258,12 @@ check_current() {
   pass "Codex Orchestration $manifest_version is installed without legacy plugin or marketplace identities"
 }
 
+check_hook_runtime() {
+  python3 "$current_cache/scripts/check-hook-runtime.py" --codex-bin "$codex_bin" --cwd "$plugin_dir"
+}
+
 case "${1:-}" in
-  --check) [ "$#" -eq 1 ] || fail "usage: $0 [--check]"; check_current; exit 0 ;;
+  --check) [ "$#" -eq 1 ] || fail "usage: $0 [--check]"; check_current; check_hook_runtime; exit 0 ;;
   '') [ "$#" -eq 0 ] || fail "usage: $0 [--check]" ;;
   *) fail "usage: $0 [--check]" ;;
 esac
@@ -396,6 +401,7 @@ fi
 check_current
 transaction_committed=1
 sh "$current_cache/scripts/refresh-desktop-skills.sh"
+check_hook_runtime
 pass "staged, atomically activated, and verified every recognized $manifest_version cache alias"
 pass "cleared legacy plugin configuration $legacy_plugin_id after proving the replacement"
 [ "$legacy_marketplace_present" -eq 0 ] || pass "removed legacy marketplace $legacy_marketplace independently"
