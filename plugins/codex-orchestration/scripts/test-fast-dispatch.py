@@ -120,10 +120,9 @@ def main() -> int:
         "zero-judgment relay",
         "alone calls agent-control tools",
         "Do nothing first",
-        "ORCHESTRATION_SCORE:",
         "codex_orchestration_sol_high_executive",
         "gpt_5_6_sol_high_executive_<objective_slug>",
-        "ORCHESTRATION_STATUS:",
+        "Show `ORCHESTRATION_STATUS:` once as top-level commentary",
         "top-level commentary",
         "interrupt and list this request's Orchestration children until none runs",
         "ORCHESTRATION_DELEGATE",
@@ -154,6 +153,7 @@ def main() -> int:
     for forbidden in (
         'fork_turns: "all"', "usage-receipt.py", "receipt", "PACKET:",
         "Create the execution packet", "exact PACKET",
+        "Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`",
     ):
         if forbidden in routed_context:
             raise AssertionError(f"dispatch contract retains {forbidden!r}")

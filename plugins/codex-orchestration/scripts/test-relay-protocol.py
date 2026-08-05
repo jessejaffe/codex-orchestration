@@ -54,6 +54,10 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
+    if "Show `ORCHESTRATION_STATUS:` once as top-level commentary" not in hook:
+        raise AssertionError("human-readable route status is not shown once")
+    if "Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`" in hook:
+        raise AssertionError("internal routing score can leak into commentary")
     implementer_paths = sorted((plugin / "agents").glob("*implementer.toml"))
     if len(implementer_paths) != 7:
         raise AssertionError(f"expected seven implementation lanes, found {len(implementer_paths)}")

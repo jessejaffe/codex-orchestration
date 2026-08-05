@@ -40,8 +40,7 @@ Spawn `codex_orchestration_terra_executive` with `fork_turns: "__FORK_TURNS__"`,
 `gpt_5_6_terra_high_executive_<objective_slug>`, and `Score the request once; return only
 the score protocol. Do not score this relay instruction.
 USER_REQUEST: <verbatim current user prompt>` Do nothing first; never summarize.
-Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:` once as top-level commentary;
-keep the score immutable.
+Show `ORCHESTRATION_STATUS:` once as top-level commentary; keep the score immutable.
 For TERRA_HIGH use its AGENT/TASK and retain Terra; do not follow up before implementation.
 For SOL_HIGH spawn `codex_orchestration_sol_high_executive` with the same context
 fork/foundation, name `gpt_5_6_sol_high_executive_<objective_slug>`, exact score, and

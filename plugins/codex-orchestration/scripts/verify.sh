@@ -125,7 +125,6 @@ grep -Fq 'never full-history' "$script_dir/prompt-router-hook.py" ||
 grep -Fq 'same context fork/foundation' "$script_dir/prompt-router-hook.py" ||
   fail "direct-context producer handoff is missing"
 for guard in \
-  'ORCHESTRATION_SCORE:' \
   'ORCHESTRATION_STATUS:' \
   'top-level commentary' \
   "interrupt and list this request's Orchestration children until none runs" \
@@ -155,6 +154,10 @@ do
   grep -Fq "$guard" "$script_dir/prompt-router-hook.py" ||
     fail "root progress/interruption contract omits: $guard"
 done
+if grep -Fq 'Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`' \
+  "$script_dir/prompt-router-hook.py"; then
+  fail "internal routing score is still exposed in commentary"
+fi
 if rg -n 'fork_turns: (none|all)|fork_turns: \\"all\\"|Be conservative: any|without emitting a numeric score' \
   "$script_dir/prompt-router-hook.py" "$agents/codex-orchestration-terra-executive.toml"; then
   fail "runtime contract retains a rejected fork shape or categorical routing"
