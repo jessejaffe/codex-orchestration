@@ -218,7 +218,17 @@ def allowed_child_role(score: str, agent_type: str) -> bool:
         "codex_orchestration_sol_medium_implementer",
         "codex_orchestration_sol_high_implementer",
     ]
-    start = 0 if float(score) < 3.0 else 1
+    numeric = float(score)
+    if numeric < 3.0:
+        start = 0
+    elif numeric <= 5.0:
+        start = 1
+    elif numeric <= 6.5:
+        start = 2
+    elif numeric <= 7.9:
+        start = 3
+    else:
+        start = 4
     return agent_type in ladder[start:]
 
 
@@ -556,10 +566,20 @@ def pre_tool_gate(hook_input: dict[str, Any]) -> int:
             if not allowed_child_role(score, agent_type):
                 emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Codex Orchestration executive gate: the Terra executive may spawn only the score-mapped producer or an upward producer fallback."}})
                 return 0
+            if agent_type in {
+                "codex_orchestration_terra_implementer",
+                "codex_orchestration_sol_medium_implementer",
+                "codex_orchestration_sol_high_implementer",
+            }:
+                emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Codex Orchestration no-handoff gate: fallback reached the Terra executive's own model, so that executive must implement directly."}})
+                return 0
         elif float(score) < 5.0:
             if str(persisted.get("executive", "")).startswith(TERRA_FALLBACK_PREFIX):
                 if not allowed_child_role(score, agent_type):
                     emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Codex Orchestration executive gate: fallback root Sol may spawn only the score-mapped producer or an upward producer fallback."}})
+                    return 0
+                if agent_type == "codex_orchestration_sol_high_implementer":
+                    emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Codex Orchestration no-handoff gate: fallback root Sol must implement directly when routing reaches Sol / High."}})
                     return 0
             elif not persisted.get("executive_spawned"):
                 if agent_type != "codex_orchestration_terra_executive":
@@ -571,6 +591,13 @@ def pre_tool_gate(hook_input: dict[str, Any]) -> int:
                     return 0
             else:
                 emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Codex Orchestration executive gate: low-band producer descendants belong to the Terra executive session."}})
+                return 0
+        elif agent_type != "codex_orchestration_sol_reviewer":
+            if float(score) >= 8.0 or agent_type == "codex_orchestration_sol_high_implementer":
+                emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Codex Orchestration no-handoff gate: primary Sol must implement directly when routing reaches Sol / High."}})
+                return 0
+            if not allowed_child_role(score, agent_type):
+                emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "Codex Orchestration routing gate: primary Sol may spawn only the score-mapped producer or an upward fallback below its own model."}})
                 return 0
     emit({})
     return 0

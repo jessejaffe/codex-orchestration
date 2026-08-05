@@ -1,71 +1,51 @@
 # Codex Orchestration
 
-**Scores 1.0–4.9 use a dedicated GPT-5.6 Terra / High executive; scores 5.0–10.0
-retain the GPT-5.6 Sol / High executive. Producer routing stays unchanged:
-1.0–2.9 uses Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High,
-6.6–7.9 Sol / Medium, and 8.0–10.0 a separate Sol / High implementer.**
+**Codex Orchestration saves model credits without turning coordination into the task.
+It scores once, gives real work to the lowest selected capable model, checks once,
+allows one correction, and then ends the loop.**
 
-Codex Orchestration is a Codex-native architect workflow for cost-efficient software delivery.
-Its first principle is the minimum sufficient answer or change: minimize total token
-use and elapsed time across Sol, workers, monitoring, and review without sacrificing
-correctness. Root Sol gathers only enough evidence to score. Below 5.0, Terra / High
-owns requirements, architecture, specification, verification, and acceptance; at 5.0
-and above, primary Sol / High owns them.
+Codex Orchestration is a Codex-native workflow for time- and cost-efficient software
+delivery. Its constitution is ordered: complete the requested outcome correctly and
+safely, save credits through score-selected ownership, then minimize elapsed time and
+coordination overhead within that economical route. The user's waiting time is part of
+the budget too.
 
 ## Go deeper
 
 I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=github&utm_medium=readme&utm_campaign=codex-orchestration) — deep, evidence-backed writing on AI, cognition, and agentic engineering. The **Agentic Engineering Field Notes** series is where I publish practical advice on the craft of using AI. [Subscribe](https://attentionheads.substack.com/subscribe?utm_source=github&utm_medium=readme&utm_campaign=codex-orchestration) to get new posts to your inbox.
 
-| Mode | Visible label | Worker | Routing | Primary ownership |
-|---|---|---|---|---|
-| High-band executive | `Sol High` | Primary session | GPT-5.6 Sol / High for 5.0–10.0 and verified low-band executive fallback | Requirements, architecture, directions, verification, review, and acceptance only while it owns the executive route |
-| Low-band executive | `Terra High Exec` | `codex_orchestration_terra_executive` | GPT-5.6 Terra / High for 1.0–4.9 executive ownership | Requirements, architecture, producer coordination, verification, corrections, review, and acceptance |
-| Native Luna / Max | `Luna Max` | `codex_orchestration_luna_implementer` | GPT-5.6 Luna / Max for 1.0–2.9 implementation | Terra / High executive verification and review |
-| Native Terra / Medium | `Terra Medium` | `codex_orchestration_terra_medium_implementer` | GPT-5.6 Terra / Medium for 3.0–5.0 | Terra / High executive through 4.9; Sol / High executive and fresh review at 5.0 |
-| Native Terra / High | `Terra High` | `codex_orchestration_terra_implementer` | GPT-5.6 Terra / High for 5.1–6.5 | Fresh Sol / High review after primary verification |
-| Native Sol / Medium | `Sol Medium` | `codex_orchestration_sol_medium_implementer` | GPT-5.6 Sol / Medium for 6.6–7.9 | Fresh Sol / High review after primary verification |
-| Native Sol / High | `Sol High` | `codex_orchestration_sol_high_implementer` | GPT-5.6 Sol / High for 8.0–10.0 | Fresh Sol / High review after primary verification |
+| Route | When it wins | Implementation |
+|---|---|---|
+| No implementation handoff | Simple conversational answer, or the owning executive is already the selected implementation model | The owning executive |
+| Luna producer | Complexity is 1.0–2.9 | GPT-5.6 Luna / Max |
+| Terra Medium producer | Complexity is 3.0–5.0 | GPT-5.6 Terra / Medium |
+| Terra High producer | Complexity is 5.1–6.5 | GPT-5.6 Terra / High |
+| Sol Medium producer | Complexity is 6.6–7.9 | GPT-5.6 Sol / Medium |
+| Sol High implementation | Complexity is 8.0–10.0 | Primary GPT-5.6 Sol / High, without a same-model handoff |
 
-The root session is GPT-5.6 Sol / High in every mode. Below 5.0 it performs only
-activation, initial evidence and immutable scoring, Terra-executive preflight/handoff,
-monitoring, and result relay. The Terra / High executive owns requirements, architecture,
-the mapped producer, verification, corrections, review, and acceptance. At 5.0 and above
-root Sol retains those executive duties. Producer routing remains:
-1.0–2.9 Luna / Max, 3.0–5.0 Terra / Medium, 5.1–6.5 Terra / High,
-6.6–7.9 Sol / Medium, and 8.0–10.0 a separate Sol / High implementer. Token and time
-estimates shape scope and checkpoints; they do not override the numeric bands unless a
-lane is unavailable or incapable. High-band native implementation receives primary Sol
-verification and a fresh Sol / High final review. The low-band Terra executive reviews
-and accepts its routed result.
-Root Sol registers the Terra executive for the receipt and hands it the root thread ID,
-resolved receipt helper, immutable route lines, producer mapping, and receipt state. The
-executive repeats the exact three-line route in its own session before its first nested
-spawn, then immediately registers every producer/reviewer descendant against the root
-receipt before monitoring or acceptance. Normal `finish` therefore includes nested work
-without relying on transcript recovery.
-Every request with a deliverable is scored, including read-only answers, inspections,
-analyses, and diagnoses. A low score first launches the Terra executive, which launches
-the mapped producer; a high score launches its mapped producer from primary Sol. If that tier is
-unavailable, routing moves upward one tier at a time: Luna Max → Terra Medium → Terra
-High → Sol Medium → Sol High implementer → primary Sol High. It never moves downward,
-and primary Sol completes the work itself after all applicable delegated tiers fail.
-Routine native read-only results return to the owning executive for acceptance without
-an extra reviewer.
+Primary Sol / High scores each deliverable once. At 1.0–4.9 it hands executive
+ownership to Terra / High so routine planning, checking, and acceptance do not consume
+Sol / High credits. At 5.0–10.0 primary Sol keeps executive ownership. The owning
+executive hands implementation to the score-selected cheaper producer whenever the
+models differ. If the selected model is already the executive model, there is no
+same-model handoff. If a producer is unavailable, routing moves upward one tier at a
+time; reaching the executive's own model ends delegation and that executive works
+directly.
 Every delegated activity keeps its colored model icon and starts its visible label with
 the spelled-out model and effort: `Luna Max`, `Terra Medium`, `Terra High`, `Sol Medium`,
 or `Sol High`. The model comes first so it remains readable when Codex truncates a
 longer task objective.
 
-Before the low-band executive handoff, root Sol records route-level checkpoints from
-only the minimum initial evidence needed to score and bound that handoff. The owning
-executive records the minimum sufficient outcome, total-token comparison, and total-time
-comparison before producer delegation, external access, or scope expansion. It repeats
-them after the first material evidence and before expensive or scope-expanding work;
-below 5.0, these post-handoff checkpoints belong to the Terra executive. Checkpoints
-trigger replanning or escalation, never permission to abandon an incomplete outcome. A
-second Sol agent does not watch Terra by default; for long, risky, ambiguous, expanding,
-externally connected, or over-budget work, the owning executive performs one concise
-adherence check and chooses continue, redirect, or escalate.
+The selected producer implements and checks its own work. The owning executive then
+performs one focused acceptance check. If it finds a material mistake, the same
+producer gets one precise correction attempt. If the corrected result still fails,
+that producer is retired for the task and the owning executive completes the work
+directly. There is no replacement-producer loop and no automatic series of reviewers.
+
+Fresh Sol review is exceptional rather than score-triggered. It is reserved for a
+user-requested independent review or a critical security, billing, authorization,
+destructive-data, or irreversible-schema boundary that genuinely requires independent
+context after the owning executive's acceptance.
 
 If the user stops, replaces, or redirects work while a worker is active, that worker
 is interrupted or paused immediately. Root Sol then rereads the newest instruction,
@@ -101,11 +81,10 @@ All-Sol equivalent credits: 50.000 credits
 Estimated routing savings: 60.00%
 ~~~
 
-For scores 5.0–10.0, the first line is instead
-`Executive design and review: GPT-5.6 Sol / High`. Score 5.0 keeps the Terra / Medium
-producer but uses the Sol / High executive. If the Terra executive is unavailable,
-the upward fallback line is
-`Executive design and review: GPT-5.6 Sol / High — Terra executive fallback: <current-turn verified reason>`.
+The executive line is `Executive design and review: GPT-5.6 Terra / High` below 5.0 and
+`Executive design and review: GPT-5.6 Sol / High` at 5.0 and above. When executive and
+implementation models match, the implementation line says `owning executive, no
+handoff`; a delegated fallback appends its short verified reason.
 
 Normal selection rationale, worker identity, review details, and token totals remain
 internal. The complexity score is always shown to one decimal place out of 10. If
@@ -180,9 +159,9 @@ Before implementation Codex Orchestration reports the executive design/review mo
 preflighted implementation model, and the complexity score. At completion it repeats
 those three lines and the three-line calibrated or official-rate receipt.
 
-Below 5.0, the Terra executive performs final review itself. For modifying work at
-5.0+, a fresh Sol / High reviewer checks primary Sol's orchestration after primary
-verification; that review is context-independent, not model-family-independent.
+The producer self-checks and the owning executive performs one focused acceptance
+check. A failed check gets one producer correction; a second failure makes the owning
+executive take over. A fresh Sol / High review is exceptional and risk-triggered.
 
 ## Install from GitHub
 
@@ -269,7 +248,7 @@ sh "$plugin_dir/scripts/reinstall-plugin.sh"
 sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 ~~~
 
-The reinstaller proves every required file in the complete new 0.7.1 package. It accepts
+The reinstaller proves every required file in the complete new 0.7.2 package. It accepts
 only numeric release aliases or the repository's historical `+codex.*` cachebuster
 shape; arbitrary cache directories are refused and untouched. Before legacy removal,
 it first runs the companion installer and proves that all seven new role files are
@@ -292,17 +271,17 @@ plugin or marketplace identities.
 #### Disposable real-CLI migration rehearsal
 
 Before renaming the GitHub repository, the owning executive can rehearse an exact local
-0.6.5-to-0.7.1 migration with two local checkouts. This procedure redirects every Codex,
+0.6.5-to-0.7.2 migration with two local checkouts. This procedure redirects every Codex,
 home, XDG, and temporary path into one disposable directory; it never reads or writes
 the user's real Codex configuration:
 
 ~~~sh
 codex_bin="$(command -v codex)"
 legacy_checkout=/absolute/path/to/sol-advisor-0.6.5
-current_checkout=/absolute/path/to/codex-orchestration-0.7.1
+current_checkout=/absolute/path/to/codex-orchestration-0.7.2
 test -x "$codex_bin"
 test "$(jq -r .version "$legacy_checkout/plugins/sol-advisor/.codex-plugin/plugin.json")" = 0.6.5
-test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.1
+test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.2
 
 sandbox="$(mktemp -d "${TMPDIR:-/tmp}/codex-orchestration-real-cli.XXXXXX")"
 export CODEX_HOME="$sandbox/codex-home"
@@ -324,7 +303,7 @@ sh "$plugin_dir/scripts/install-agents.sh" --check
 sh "$plugin_dir/scripts/reinstall-plugin.sh"
 sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 
-"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.1")] | length == 1'
+"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.2")] | length == 1'
 "$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "sol-advisor@sol-advisor")] | length == 0'
 if "$codex_bin" plugin marketplace list --json | jq -e '.. | strings | select(. == "sol-advisor")' >/dev/null; then exit 1; fi
 for alias in "$CODEX_HOME/plugins/cache/sol-advisor/sol-advisor"/*; do
@@ -402,13 +381,14 @@ exist, they must agree.
 
 ## How routing works
 
-Root Sol scores the complete observed task from minimum initial evidence. Below 5.0,
-Terra / High then settles requirements, architecture, and scope; at 5.0+, primary Sol
-does so. The implementation ladder is Luna / Max at 1.0–2.9,
-Terra / Medium at 3.0–5.0, Terra / High at 5.1–6.5, Sol / Medium at 6.6–7.9, and a
-separate Sol / High implementer at 8.0–10.0. Every band uses the same complete native
-worker contract with exact objective, ownership, interfaces, constraints, efficiency
-boundary, verification, and structured return.
+Root Sol scores the complete observed task from minimum initial evidence. Below 5.0 it
+hands executive ownership to Terra / High; at 5.0 and above it keeps ownership. The
+owning executive starts Luna / Max at 1.0–2.9, Terra / Medium at 3.0–5.0, Terra / High
+at 5.1–6.5, or Sol / Medium at 6.6–7.9. At 8.0–10.0 primary Sol / High already matches
+the implementation band and works directly. A simple conversational answer can also
+skip implementation delegation when the handoff would cost at least as much as the
+answer. Every producer receives the same bounded contract and must self-check before
+returning.
 
 ## Fork main and upstream review
 
@@ -445,17 +425,19 @@ Only the user's decision authorizes applying an upstream change.
 
 ### Native subagent lane
 
-The owning executive selects one native implementation role for scores 1.0–10.0. The
-installed roles pin Luna / Max, Terra / Medium, Terra / High, Sol / Medium, and Sol / High.
-Below 5.0 the Terra executive verifies, reviews, and accepts; at 5.0+ primary Sol verifies
-and a fresh Sol / High reviewer checks modifying work before acceptance.
+The owning Terra or Sol executive selects at most one implementation producer. The
+installed roles pin Luna / Max, Terra / Medium, Terra / High, Sol / Medium, and Sol / High;
+the Sol / High implementer remains installed for compatibility, while new 8.0–10.0
+tasks use primary Sol directly to avoid a same-model handoff. The owning executive
+checks and accepts. Fresh Sol review is exceptional rather than automatic.
 Their schema-safe task names begin with `luna_max_`, `terra_medium_`, `terra_high_`,
 `sol_medium_`, or `sol_high_`; the fresh reviewer
 begins with `sol_high_review_`.
 
-Before delegation and acceptance, the skill requires all of the following:
+Before the first delegation in a task, the skill requires all of the following:
 
-1. The installed role files pass the byte-for-byte companion check.
+1. The installed role files pass one byte-for-byte companion check. It is not repeated
+   unless those files change.
 2. The native spawn tool exposes the exact selected role. Unrelated roles are not
    required; fallback tiers and the reviewer are checked only when attempted.
 3. Public native spawn/details metadata identifies the selected role and, when exposed,
@@ -468,9 +450,9 @@ A missing, stale, conflicting, unavailable, inconsistent, or unobservable select
 role/model/effort makes only that tier unavailable with current-turn evidence. A prior
 turn's failure and an unrelated role cannot block a healthy selected worker. The owning executive then
 tries the next-higher tier, never a lower one, and announces the actual route plus the
-verified fallback reason before implementation. After the Sol / High implementer is
-unavailable, primary Sol / High executes the settled packet directly. Native per-spawn
-calls do not override role pins.
+verified fallback reason before implementation. Fallback stops when it reaches the
+owning executive's model, which executes directly. Native per-spawn calls do not
+override role pins.
 
 The Sol reviewer TOML requests read-only sandboxing, but the host permission profile
 may broaden that request. If the observed sandbox policy type is read-only, review can
@@ -481,13 +463,13 @@ the broader sandbox and permission profile must be reported as residual risk. If
 isolation is required, the sandbox cannot be observed, or any mutation occurs, stop the
 review lane and do not claim enforced read-only isolation.
 
-The owning executive inspects every diff and reruns verification. For modifying work at
-5.0+, a fresh Sol reviewer returns ship, fix-first, or rethink; below 5.0 the Terra
-executive performs final review itself. Codex Orchestration does not
-globally reroute unrelated tasks.
+The producer self-checks. The owning executive inspects the result and reruns the
+smallest decisive verification. One failed acceptance check permits one correction by
+that producer; a second failure causes executive takeover. When an exceptional risk
+trigger requires fresh review, the reviewer returns ship, fix-first, or rethink. Codex
+Orchestration does not globally reroute unrelated tasks.
 
-Every completed task ends with the score-selected executive line—Terra / High below
-5.0 or Sol / High at 5.0+, including verified fallback when applicable—and
+Every completed task ends with the actual Terra / High or Sol / High executive line and
 `Implementation: <actual model / effort>`.
 
 ## Local development

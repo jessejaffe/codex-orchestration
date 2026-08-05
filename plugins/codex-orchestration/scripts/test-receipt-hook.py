@@ -269,6 +269,12 @@ def main() -> int:
             "nested producer spawn was not authorized by the executive's repeated "
             f"route: {child_pre_tool_result!r}"
         )
+    same_model_child = dict(
+        child_pre_tool_input,
+        tool_input={"agent_type": "codex_orchestration_terra_implementer"},
+    )
+    if run_hook(hook, same_model_child, environment).get("hookSpecificOutput", {}).get("permissionDecision") != "deny":
+        raise AssertionError("Terra executive spawned a redundant same-model implementer")
     child_stop_input = {
         "hook_event_name": "Stop",
         "transcript_path": str(child_rollout),
@@ -309,6 +315,44 @@ def main() -> int:
     invalid_low_executive = run_hook(hook, pre_tool_input, environment)
     if invalid_low_executive.get("hookSpecificOutput", {}).get("permissionDecision") != "deny":
         raise AssertionError("executive gate accepted low-band Sol without fallback evidence")
+
+    high_root_id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+    high_turn_id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab"
+    high_rollout = sessions / f"rollout-{high_root_id}.jsonl"
+    write_jsonl(
+        high_rollout,
+        [
+            {"type": "event_msg", "payload": {"type": "task_started", "turn_id": high_turn_id}},
+            {"type": "turn_context", "payload": {"turn_id": high_turn_id, "model": "gpt-5.6-sol"}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "content": [{"type": "output_text", "text": (
+                        "Executive design and review: GPT-5.6 Sol / High\n"
+                        "Implementation: GPT-5.6 Sol / High — owning executive, no handoff\n"
+                        "Complexity: 8.4/10"
+                    )}],
+                },
+            },
+            token_event(50, with_meter=True),
+        ],
+    )
+    high_pre_tool = dict(
+        pre_tool_input,
+        transcript_path=str(high_rollout),
+        session_id=high_root_id,
+        turn_id=high_turn_id,
+        tool_input={"cmd": "read-only-check"},
+    )
+    if run_hook(hook, high_pre_tool, environment) != {}:
+        raise AssertionError("high-band no-handoff route was rejected")
+    high_same_model_spawn = dict(
+        high_pre_tool,
+        tool_input={"agent_type": "codex_orchestration_sol_high_implementer"},
+    )
+    if run_hook(hook, high_same_model_spawn, environment).get("hookSpecificOutput", {}).get("permissionDecision") != "deny":
+        raise AssertionError("primary Sol spawned a redundant same-model implementer")
 
     write_jsonl(root_rollout, root_events(route))
     if run_hook(hook, pre_tool_input, environment) != {}:
@@ -597,6 +641,12 @@ def main() -> int:
     )
     if run_hook(hook, fallback_root_producer, environment) != {}:
         raise AssertionError("verified fallback root could not spawn the mapped producer")
+    fallback_same_model = dict(
+        low_fallback_input,
+        tool_input={"agent_type": "codex_orchestration_sol_high_implementer"},
+    )
+    if run_hook(hook, fallback_same_model, environment).get("hookSpecificOutput", {}).get("permissionDecision") != "deny":
+        raise AssertionError("fallback root Sol spawned a redundant same-model implementer")
 
     transition_session = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
     transition_turn = "ffffffff-ffff-ffff-ffff-ffffffffffff"
@@ -751,9 +801,9 @@ def main() -> int:
             f"{recovered_finish!r}"
         )
     print(
-        "nested executive Stop suppression, root-first routing, monotonic executive "
-        "fallback, root receipt descendant registration, weekly, rate-based, and "
-        "unstarted-task recovery receipts, and completion gate passed"
+        "nested executive Stop suppression, root-first routing, same-model no-handoff, "
+        "monotonic executive fallback, root receipt descendant registration, weekly, "
+        "rate-based, and unstarted-task recovery receipts, and completion gate passed"
     )
     return 0
 
