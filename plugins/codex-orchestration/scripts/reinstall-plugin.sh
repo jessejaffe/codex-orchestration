@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration 0.7.0 and safely retire the configured legacy identity.
+# Install Codex Orchestration 0.7.1 and safely retire the configured legacy identity.
 
 set -eu
 
@@ -24,7 +24,7 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-[ "$manifest_version" = 0.7.0 ] || fail "this migration installer requires release 0.7.0: $manifest_version"
+[ "$manifest_version" = 0.7.1 ] || fail "this migration installer requires release 0.7.1: $manifest_version"
 case "$manifest_version" in *+*) fail "plugin version must not contain build metadata: $manifest_version" ;; esac
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
@@ -166,7 +166,7 @@ prepare_transaction() {
     [ -n "$name" ] || continue
     cp -Rp "$current_cache" "$transaction/staged/$name" || fail "could not stage complete cache alias: $root/$name"
     validate_complete_package "$transaction/staged/$name"
-    diff -qr "$current_cache" "$transaction/staged/$name" >/dev/null || fail "staged cache alias differs from 0.7.0: $root/$name"
+    diff -qr "$current_cache" "$transaction/staged/$name" >/dev/null || fail "staged cache alias differs from $manifest_version: $root/$name"
   done < "$names"
 }
 
@@ -215,7 +215,7 @@ check_aliases() {
     [ -n "$name" ] || continue
     alias=$root/$name
     validate_complete_package "$alias"
-    diff -qr "$current_cache" "$alias" >/dev/null || fail "cache alias differs from 0.7.0: $alias"
+    diff -qr "$current_cache" "$alias" >/dev/null || fail "cache alias differs from $manifest_version: $alias"
   done < "$names"
 }
 
@@ -232,7 +232,7 @@ check_current() {
       name=$(basename "$alias")
       is_version_alias "$name" || continue
       validate_complete_package "$alias"
-      diff -qr "$current_cache" "$alias" >/dev/null || fail "cache alias differs from 0.7.0: $alias"
+      diff -qr "$current_cache" "$alias" >/dev/null || fail "cache alias differs from $manifest_version: $alias"
     done
   done
   installed_version "$legacy_plugin_id" >/dev/null 2>&1 && fail "legacy plugin identity remains installed: $legacy_plugin_id"
@@ -243,7 +243,7 @@ check_current() {
     1) ;;
     *) fail "could not verify configured marketplaces" ;;
   esac
-  pass "Codex Orchestration 0.7.0 is installed without legacy plugin or marketplace identities"
+  pass "Codex Orchestration $manifest_version is installed without legacy plugin or marketplace identities"
 }
 
 case "${1:-}" in
@@ -383,7 +383,7 @@ fi
 
 check_current
 transaction_committed=1
-pass "staged, atomically activated, and verified every recognized 0.7.0 cache alias"
+pass "staged, atomically activated, and verified every recognized $manifest_version cache alias"
 [ -z "$legacy_version" ] || pass "removed legacy plugin $legacy_plugin_id after proving the replacement"
 [ "$legacy_marketplace_present" -eq 0 ] || pass "removed legacy marketplace $legacy_marketplace independently"
-printf '%s\n' "NOTICE: already-open tasks may keep using version-looking paths under plugins/cache/sol-advisor/sol-advisor; every preserved alias contains Codex Orchestration 0.7.0."
+printf '%s\n' "NOTICE: already-open tasks may keep using version-looking paths under plugins/cache/sol-advisor/sol-advisor; every preserved alias contains Codex Orchestration $manifest_version."

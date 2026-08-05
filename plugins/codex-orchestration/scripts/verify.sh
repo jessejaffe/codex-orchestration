@@ -132,14 +132,14 @@ done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.7.0 ] || fail "manifest version is not the required 0.7.0 release: $manifest_version"
+[ "$manifest_version" = 0.7.1 ] || fail "manifest version is not the required 0.7.1 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Direct Orchestration: ON for this chat and Orchestration: OFF for this chat markers' || fail "manifest does not describe Orchestration task activation state"
 grep -Fq 'Scores 1.0\u20134.9 use a dedicated native GPT-5.6 Terra / High executive' "$manifest" || fail "manifest does not describe low-band Terra executive"
 grep -Fq 'Scores 5.0\u201310.0 retain primary GPT-5.6 Sol / High executive ownership' "$manifest" || fail "manifest does not describe high-band Sol executive"
 grep -Fqi 'GPT-5.6 Luna' "$manifest" || fail "manifest does not describe Luna routing"
 grep -Fq 'native GPT-5.6 Luna / Max' "$manifest" || fail "manifest does not describe native Luna routing"
-grep -Fq 'unchanged three-line weekly savings receipt' "$manifest" || fail "manifest does not describe the savings receipt"
+grep -Fq 'three-line savings receipt' "$manifest" || fail "manifest does not describe the savings receipt"
 grep -Fq 'Current-turn preflight checks only attempted roles' "$manifest" || fail "manifest does not describe tier-specific preflight"
 grep -Fq 'persists that immutable one-decimal score' "$manifest" || fail "manifest does not require deterministic complexity persistence"
 grep -Fq 'persisted complexity' "$manifest" || fail "manifest does not describe persisted complexity"
@@ -236,9 +236,9 @@ set -eu
 printf '%s\n' "$*" >> "$CODEX_ORCHESTRATION_TEST_LOG"
 if [ "${1:-}" = plugin ] && [ "${2:-}" = list ] && [ "${3:-}" = --json ]; then
   if [ -e "$CODEX_ORCHESTRATION_TEST_NEW_INSTALLED" ] && [ -e "$CODEX_ORCHESTRATION_TEST_LEGACY_INSTALLED" ]; then
-    printf '{"installed":[{"pluginId":"codex-orchestration@codex-orchestration","version":"0.7.0"},{"pluginId":"sol-advisor@sol-advisor","version":"0.6.5"}]}\n'
+    printf '{"installed":[{"pluginId":"codex-orchestration@codex-orchestration","version":"0.7.1"},{"pluginId":"sol-advisor@sol-advisor","version":"0.6.5"}]}\n'
   elif [ -e "$CODEX_ORCHESTRATION_TEST_NEW_INSTALLED" ]; then
-    printf '{"installed":[{"pluginId":"codex-orchestration@codex-orchestration","version":"0.7.0"}]}\n'
+    printf '{"installed":[{"pluginId":"codex-orchestration@codex-orchestration","version":"0.7.1"}]}\n'
   elif [ -e "$CODEX_ORCHESTRATION_TEST_LEGACY_INSTALLED" ]; then
     printf '{"installed":[{"pluginId":"sol-advisor@sol-advisor","version":"0.6.5"}]}\n'
   else
@@ -341,7 +341,7 @@ CODEX_ORCHESTRATION_TEST_PLUGIN="$plugin_dir" \
   sh "$reinstaller"
 test -f "$reinstall_cache/$manifest_version/skills/orchestration/SKILL.md" || fail "reinstaller lost the current skill cache"
 for alias in "$old_build" "$old_alias" 0.5.1; do
-  diff -qr "$reinstall_cache/$manifest_version" "$legacy_reinstall_cache/$alias" >/dev/null || fail "legacy cache alias is not the complete 0.7.0 package: $alias"
+  diff -qr "$reinstall_cache/$manifest_version" "$legacy_reinstall_cache/$alias" >/dev/null || fail "legacy cache alias is not the complete $manifest_version package: $alias"
 done
 test ! -e "$fake_legacy_installed" || fail "legacy plugin identity was not removed"
 test -e "$fake_marketplace_removed" || fail "legacy marketplace was not removed"
@@ -970,6 +970,8 @@ test ! -e "$plugin_dir/skills/orchestration/references/luna-task-lane.md" || fai
 grep -Fq 'references/usage-receipt.md' "$skill" || fail "skill omits weekly usage receipt"
 grep -Fq 'Actual weekly usage:' "$receipt_contract" || fail "usage receipt omits actual weekly usage"
 grep -Fq 'All-Sol equivalent:' "$receipt_contract" || fail "usage receipt omits all-Sol equivalent"
+grep -Fq 'Estimated task credits:' "$receipt_contract" || fail "usage receipt omits rate-based task credits fallback"
+grep -Fq 'All-Sol equivalent credits:' "$receipt_contract" || fail "usage receipt omits rate-based all-Sol fallback"
 grep -Fq 'Estimated routing savings:' "$receipt_contract" || fail "usage receipt omits routing savings"
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$usage_receipt" || fail "usage receipt script does not compile"
 python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$effectiveness_tracker" || fail "effectiveness tracker does not compile"
@@ -982,6 +984,8 @@ jq -er '.hooks.Stop[0].hooks[0] | select(.type == "command" and (.command | cont
 grep -Fq 'This lifecycle is a completion invariant' "$skill" || fail "skill permits skipping the receipt lifecycle"
 grep -Fq 'Never draft or send the final response before calling' "$skill" || fail "skill permits a final response before receipt finish"
 grep -Fq 'Never omit the receipt' "$receipt_contract" || fail "receipt contract permits silent omission"
+grep -Fq 'calibration did not exclude pre-context replay' "$receipt_hook_test" || fail "receipt fixture omits forked replay calibration regression"
+grep -Fq 'completion gate rejected the rate-based fallback receipt' "$receipt_hook_test" || fail "receipt fixture omits rate-based completion fallback"
 python3 "$receipt_hook_test" "$plugin_dir" "$tmp_dir/receipt-hook" || fail "executive-band, fallback, complexity, receipt, or Stop-hook gate failed"
 pass "both executive bands, fallback, complexity persistence, receipt recovery, and Stop-hook completion gate"
 python3 "$effectiveness_test" "$plugin_dir" "$tmp_dir/effectiveness" || fail "effectiveness baseline, ledger, or comparison failed"
@@ -1067,7 +1071,7 @@ grep -Fq 'keeping the Luna Max, Terra Medium, Terra High, Sol Medium, and Sol Hi
 grep -Fq 'Terra High executive ownership below 5.0 and primary Sol High executive ownership at 5.0 or above' "$ui" || fail "skill UI omits executive score bands"
 grep -Fq 'preflight attempted roles with current-turn evidence' "$ui" || fail "skill UI omits role-specific current-turn preflight"
 grep -Fq 'persist the exact one-decimal complexity score in root and nested executive sessions before work' "$ui" || fail "skill UI omits deterministic nested complexity persistence"
-grep -Fq 'completion-gated three-line weekly savings receipt' "$ui" || fail "skill UI omits concise receipt output"
+grep -Fq 'completion-gated three-line savings receipt' "$ui" || fail "skill UI omits concise receipt output"
 grep -Fq 'register every descendant against the root receipt immediately after spawn' "$ui" || fail "skill UI omits root descendant receipt registration"
 pass "minimum-sufficient, token, time, and checkpoint policy"
 

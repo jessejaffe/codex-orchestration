@@ -16,11 +16,17 @@ from typing import Any
 SOL_EXECUTIVE = "Executive design and review: GPT-5.6 Sol / High"
 TERRA_EXECUTIVE = "Executive design and review: GPT-5.6 Terra / High"
 TERRA_FALLBACK_PREFIX = SOL_EXECUTIVE + " — Terra executive fallback: "
-RECEIPT_LABELS = (
+WEEKLY_RECEIPT_LABELS = (
     "Actual weekly usage:",
     "All-Sol equivalent:",
     "Estimated routing savings:",
 )
+RATE_RECEIPT_LABELS = (
+    "Estimated task credits:",
+    "All-Sol equivalent credits:",
+    "Estimated routing savings:",
+)
+RECEIPT_LABEL_SETS = (WEEKLY_RECEIPT_LABELS, RATE_RECEIPT_LABELS)
 ID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 )
@@ -281,8 +287,13 @@ def record_completion(
     task_metrics: dict[str, Any] | None,
     transcript: Path,
 ) -> None:
-    values = [receipt_value(final_message, label) for label in RECEIPT_LABELS]
-    if any(value is None for value in values):
+    values: list[str | None] | None = None
+    for labels in RECEIPT_LABEL_SETS:
+        candidate = [receipt_value(final_message, label) for label in labels]
+        if all(value is not None for value in candidate):
+            values = candidate
+            break
+    if values is None:
         return
     tracker = Path(__file__).with_name("effectiveness-tracker.py")
     try:
@@ -426,8 +437,9 @@ def recover_receipt(transcript: Path, turn_id: str) -> tuple[list[str], str | No
         timeout=25,
     )
     lines = [line for line in completed.stdout.splitlines() if line.strip()]
-    if completed.returncode == 0 and all(
-        any(line.startswith(label) for line in lines) for label in RECEIPT_LABELS
+    if completed.returncode == 0 and any(
+        all(any(line.startswith(label) for line in lines) for label in labels)
+        for labels in RECEIPT_LABEL_SETS
     ):
         return lines, None
     reason = completed.stderr.strip() or "receipt recovery produced no measurement"
@@ -610,7 +622,10 @@ def main() -> int:
     persisted_executive = persisted.get("executive") if persisted else None
     final_score = normalized_complexity(last_message)
     complexity_present = exact_score is not None and final_score == exact_score
-    receipt_present = all(label in last_message for label in RECEIPT_LABELS)
+    receipt_present = any(
+        all(label in last_message for label in labels)
+        for labels in RECEIPT_LABEL_SETS
+    )
     executive_present = (
         exact_score is not None
         and isinstance(persisted_executive, str)

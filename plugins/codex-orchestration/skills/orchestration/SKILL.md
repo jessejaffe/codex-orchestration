@@ -40,9 +40,10 @@ plugin's PreToolUse gate independently requires and persists the exact one-decim
 complexity score before routed work can start. That saved turn score is immutable even
 if the implementation lane later falls back. The Stop hook reconstructs root and
 delegated usage when the receipt lifecycle was skipped, and keeps the turn open until
-the saved numeric complexity and receipt are visible. A measurement failure remains
-non-blocking, but it must be reported explicitly rather than silently dropping the
-receipt.
+the saved numeric complexity and receipt are visible. Weekly calibration failure uses
+the official-rate task-credit fallback and must not make the receipt unavailable. A
+deeper measurement failure remains non-blocking, but it must be reported explicitly
+rather than silently dropping the receipt.
 
 The effectiveness tracker is exactly
 `skill_dir/../../scripts/effectiveness-tracker.py`. The Stop hook records each
@@ -564,14 +565,24 @@ All-Sol equivalent: <percentage>
 Estimated routing savings: <percentage>
 ~~~
 
+If weekly calibration is unavailable, the successful receipt instead ends with:
+
+~~~text
+Estimated task credits: <credits>
+All-Sol equivalent credits: <credits>
+Estimated routing savings: <percentage>
+~~~
+
 Do not append a heading, activation state, labels, normal selection reason,
 efficiency notes, route evidence, reviewer verdict, task IDs, or token totals. A
 fallback line must include its compact current-turn reason. Append the receipt verbatim
 when its helper succeeds. Never draft or send the final response before calling
 `finish`; a task that merely prints model lines has not completed the Codex Orchestration
-protocol. Never recalculate or replace the saved score at completion. If direct
-measurement reports `receipt-unavailable`, allow the Stop hook to
-recover the turn from its transcript. If both paths are unavailable, include the
-hook's explicit `Savings receipt unavailable: <reason>` line instead of silently
-omitting the receipt. Never claim an implementation model that runtime evidence did
-not confirm.
+protocol. Never recalculate or replace the saved score at completion. Weekly
+calibration failure is not a receipt failure: normal finish and transcript recovery
+must emit the official-rate task-credit form. If direct measurement reports
+`receipt-unavailable` for an unrecoverable transcript, task model, or official-pricing
+failure, allow the Stop hook to recover the turn from its transcript. If both paths
+are unavailable, include the hook's explicit `Savings receipt unavailable: <reason>`
+line instead of silently omitting the receipt. Never claim an implementation model
+that runtime evidence did not confirm.

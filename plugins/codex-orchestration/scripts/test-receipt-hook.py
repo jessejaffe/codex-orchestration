@@ -176,6 +176,86 @@ def main() -> int:
     environment["CODEX_ORCHESTRATION_SESSIONS_DIR"] = str(sessions)
     environment["PLUGIN_DATA"] = str(plugin_data)
     hook = plugin_dir / "scripts" / "receipt-stop-hook.py"
+
+    # Calibration must ignore a forked transcript's replayed parent tokens before
+    # the child model context, while conservatively pricing a genuinely unknown
+    # post-context model at the Sol rate.
+    import importlib.util
+
+    receipt_module_path = plugin_dir / "scripts" / "usage-receipt.py"
+    sys.path.insert(0, str(receipt_module_path.parent))
+    receipt_spec = importlib.util.spec_from_file_location(
+        "codex_orchestration_usage_receipt_test", receipt_module_path
+    )
+    if receipt_spec is None or receipt_spec.loader is None:
+        raise AssertionError("could not load usage receipt module")
+    receipt_module = importlib.util.module_from_spec(receipt_spec)
+    receipt_spec.loader.exec_module(receipt_module)
+    scan_sessions = temporary / "scan-sessions"
+    scan_rollout = scan_sessions / "rollout-scan.jsonl"
+    timestamp = dt.datetime.now(dt.timezone.utc).isoformat()
+
+    def scan_token_event(total: int) -> dict:
+        event = token_event(total)
+        event["timestamp"] = timestamp
+        event["payload"]["info"]["last_token_usage"] = {
+            "input_tokens": total,
+            "cached_input_tokens": 0,
+            "output_tokens": 0,
+        }
+        return event
+
+    write_jsonl(
+        scan_rollout,
+        [
+            scan_token_event(20_000_000),
+            {
+                "timestamp": timestamp,
+                "type": "turn_context",
+                "payload": {"model": "gpt-5.6-terra"},
+            },
+            scan_token_event(1_000_000),
+            {
+                "timestamp": timestamp,
+                "type": "turn_context",
+                "payload": {"model": "future-model"},
+            },
+            scan_token_event(2_000_000),
+        ],
+    )
+    observed, coverage, estimated = receipt_module.scan_weekly_local_credits(
+        scan_sessions, 0, pricing
+    )
+    if observed != 1.0 or coverage != 1 / 3 or estimated != 21.0:
+        raise AssertionError(
+            "calibration did not exclude pre-context replay and conservatively "
+            f"price unknown models: {(observed, coverage, estimated)!r}"
+        )
+    drift_state = temporary / "drift-state"
+    drift_state.mkdir()
+    (drift_state / "weekly-calibration.json").write_text(
+        json.dumps(
+            {
+                "checked_date": today,
+                "pricing_date": today,
+                "resets_at": 1_999_999_999,
+                "used_percent": 50.0,
+                "coverage": 1.0,
+                "capacity_credits": 123.0,
+            }
+        )
+        + "\n"
+    )
+    drift_capacity = receipt_module.weekly_capacity(
+        drift_state,
+        scan_sessions,
+        {"used_percent": 50.0, "window_minutes": 10080, "resets_at": 2_000_000_000},
+        pricing,
+    )
+    if drift_capacity != 123.0:
+        raise AssertionError(
+            f"one-second reset drift invalidated cached calibration: {drift_capacity!r}"
+        )
     child_pre_tool_input = {
         "hook_event_name": "PreToolUse",
         "transcript_path": str(child_rollout),
@@ -573,9 +653,73 @@ def main() -> int:
     downward_result = run_hook(hook, transition_input, environment)
     if downward_result.get("hookSpecificOutput", {}).get("permissionDecision") != "deny":
         raise AssertionError("fallback route moved downward to Terra")
+
+    rate_session = "12121212-1212-4121-8121-121212121212"
+    rate_turn = "34343434-3434-4343-8343-343434343434"
+    rate_rollout = sessions / f"rollout-{rate_session}.jsonl"
+    rate_route = (
+        "Executive design and review: GPT-5.6 Sol / High\n"
+        "Implementation: GPT-5.6 Terra / Medium\nComplexity: 5.0/10"
+    )
+
+    def rate_events(total: int) -> list[dict]:
+        return [
+            {
+                "type": "event_msg",
+                "payload": {"type": "task_started", "turn_id": rate_turn},
+            },
+            {
+                "type": "turn_context",
+                "payload": {"turn_id": rate_turn, "model": "gpt-5.6-terra"},
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "content": [{"type": "output_text", "text": rate_route}],
+                },
+            },
+            token_event(total),
+        ]
+
+    write_jsonl(rate_rollout, rate_events(1_000_000))
+    rate_input = dict(
+        pre_tool_input,
+        transcript_path=str(rate_rollout),
+        session_id=rate_session,
+        turn_id=rate_turn,
+    )
+    if run_hook(hook, rate_input, environment) != {}:
+        raise AssertionError("rate-based receipt fixture could not persist its route")
+    receipt_command("start", "--thread-id", rate_session)
+    rate_state = json.loads((state / "tasks" / f"{rate_session}.json").read_text())
+    if rate_state.get("capacity_credits") is not None:
+        raise AssertionError(f"meterless task unexpectedly had weekly capacity: {rate_state!r}")
+    write_jsonl(rate_rollout, rate_events(3_000_000))
+    rate_receipt = receipt_command(
+        "finish", "--root-thread-id", rate_session, "--keep"
+    ).stdout.strip()
+    expected_rate_receipt = (
+        "Estimated task credits: 2.000 credits\n"
+        "All-Sol equivalent credits: 20.000 credits\n"
+        "Estimated routing savings: 90.00%"
+    )
+    if rate_receipt != expected_rate_receipt:
+        raise AssertionError(f"unexpected rate-based fallback receipt: {rate_receipt!r}")
+    rate_stop = {
+        "hook_event_name": "Stop",
+        "transcript_path": str(rate_rollout),
+        "session_id": rate_session,
+        "turn_id": rate_turn,
+        "last_assistant_message": rate_route + "\n" + rate_receipt,
+        "stop_hook_active": False,
+    }
+    if run_hook(hook, rate_stop, environment) != {"continue": True}:
+        raise AssertionError("completion gate rejected the rate-based fallback receipt")
     print(
         "nested executive Stop suppression, root-first routing, monotonic executive "
-        "fallback, root receipt descendant registration, and completion gate passed"
+        "fallback, root receipt descendant registration, weekly and rate-based "
+        "receipts, and completion gate passed"
     )
     return 0
 

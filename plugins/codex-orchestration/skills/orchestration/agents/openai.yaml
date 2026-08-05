@@ -1,7 +1,7 @@
 interface:
   display_name: "Codex Orchestration"
   short_description: "Sol/High directs, effort-scaled workers implement"
-  default_prompt: "Use $codex-orchestration:orchestration; score once, use native Terra High executive ownership below 5.0 and primary Sol High executive ownership at 5.0 or above, while keeping the Luna Max, Terra Medium, Terra High, Sol Medium, and Sol High producer bands unchanged; preflight attempted roles with current-turn evidence, persist the exact one-decimal complexity score in root and nested executive sessions before work, register every descendant against the root receipt immediately after spawn, and always run the completion-gated three-line weekly savings receipt; activate only when my current message directly says “Turn Orchestration on.”"
+  default_prompt: "Use $codex-orchestration:orchestration; score once, use native Terra High executive ownership below 5.0 and primary Sol High executive ownership at 5.0 or above, while keeping the Luna Max, Terra Medium, Terra High, Sol Medium, and Sol High producer bands unchanged; preflight attempted roles with current-turn evidence, persist the exact one-decimal complexity score in root and nested executive sessions before work, register every descendant against the root receipt immediately after spawn, and always run the completion-gated three-line savings receipt with an official-rate fallback when weekly calibration is unavailable; activate only when my current message directly says “Turn Orchestration on.”"
 
 policy:
   allow_implicit_invocation: true

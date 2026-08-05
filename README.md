@@ -80,7 +80,8 @@ changes as adopt unchanged, adapt, or skip, and recommends a decision. This audi
 not delay or replace the user's requested task and never merges upstream automatically.
 
 Every completed routed task ends with the two models people need to know, the numeric
-complexity score that selected the route, and the compact weekly savings receipt:
+complexity score that selected the route, and the compact savings receipt. With weekly
+calibration it looks like this:
 
 ~~~text
 Executive design and review: GPT-5.6 Terra / High
@@ -89,6 +90,15 @@ Complexity: 4.7/10
 Actual weekly usage: 0.70%
 All-Sol equivalent: 1.00%
 Estimated routing savings: 0.30%
+~~~
+
+If the weekly denominator cannot be calibrated, the receipt still completes using the
+official GPT-5.6 rates and the exact recorded task tokens:
+
+~~~text
+Estimated task credits: 20.000 credits
+All-Sol equivalent credits: 50.000 credits
+Estimated routing savings: 60.00%
 ~~~
 
 For scores 5.0–10.0, the first line is instead
@@ -101,13 +111,17 @@ Normal selection rationale, worker identity, review details, and token totals re
 internal. The complexity score is always shown to one decimal place out of 10. If
 routing falls back, the implementation line includes one short verified reason. The
 receipt measures the task's recorded model usage and compares that same token mix with
-an all-Sol route. A plugin gate now persists the exact announced complexity before
+an all-Sol route. It excludes duplicated pre-model token replay from forked transcripts,
+tolerates harmless weekly-reset timestamp drift, and conservatively prices genuinely
+unknown models at Sol rates. Weekly calibration failure falls back to task credits; it
+does not make the receipt unavailable. A plugin gate now persists the exact announced complexity before
 routed work can begin; that score cannot drift or disappear later, even when the actual
 implementation model changes during a verified fallback. A Stop hook enforces the
 footer mechanically: if a routed task skips the receipt lifecycle, it reconstructs the
 root turn and every spawned worker/reviewer, then keeps the task open for one corrected
-final response containing the saved score and recovered receipt. If recovery is
-genuinely unavailable, the final response shows that reason instead of silently
+final response containing the saved score and recovered receipt. Only an unrecoverable
+transcript, missing task model, or unavailable official pricing can make recovery
+genuinely unavailable; the final response then shows that reason instead of silently
 omitting the receipt.
 
 ## Measure whether Codex Orchestration actually works
@@ -162,7 +176,7 @@ carry into a new chat.
 
 Before implementation Codex Orchestration reports the executive design/review model, the actual
 preflighted implementation model, and the complexity score. At completion it repeats
-those three lines and the three-line weekly usage receipt.
+those three lines and the three-line calibrated or official-rate receipt.
 
 Below 5.0, the Terra executive performs final review itself. For modifying work at
 5.0+, a fresh Sol / High reviewer checks primary Sol's orchestration after primary
@@ -253,7 +267,7 @@ sh "$plugin_dir/scripts/reinstall-plugin.sh"
 sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 ~~~
 
-The reinstaller proves every required file in the complete new 0.7.0 package. It accepts
+The reinstaller proves every required file in the complete new 0.7.1 package. It accepts
 only numeric release aliases or the repository's historical `+codex.*` cachebuster
 shape; arbitrary cache directories are refused and untouched. Before legacy removal,
 it first runs the companion installer and proves that all seven new role files are
@@ -276,17 +290,17 @@ plugin or marketplace identities.
 #### Disposable real-CLI migration rehearsal
 
 Before renaming the GitHub repository, the owning executive can rehearse an exact local
-0.6.5-to-0.7.0 migration with two local checkouts. This procedure redirects every Codex,
+0.6.5-to-0.7.1 migration with two local checkouts. This procedure redirects every Codex,
 home, XDG, and temporary path into one disposable directory; it never reads or writes
 the user's real Codex configuration:
 
 ~~~sh
 codex_bin="$(command -v codex)"
 legacy_checkout=/absolute/path/to/sol-advisor-0.6.5
-current_checkout=/absolute/path/to/codex-orchestration-0.7.0
+current_checkout=/absolute/path/to/codex-orchestration-0.7.1
 test -x "$codex_bin"
 test "$(jq -r .version "$legacy_checkout/plugins/sol-advisor/.codex-plugin/plugin.json")" = 0.6.5
-test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.0
+test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.1
 
 sandbox="$(mktemp -d "${TMPDIR:-/tmp}/codex-orchestration-real-cli.XXXXXX")"
 export CODEX_HOME="$sandbox/codex-home"
@@ -308,7 +322,7 @@ sh "$plugin_dir/scripts/install-agents.sh" --check
 sh "$plugin_dir/scripts/reinstall-plugin.sh"
 sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 
-"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.0")] | length == 1'
+"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.1")] | length == 1'
 "$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "sol-advisor@sol-advisor")] | length == 0'
 if "$codex_bin" plugin marketplace list --json | jq -e '.. | strings | select(. == "sol-advisor")' >/dev/null; then exit 1; fi
 for alias in "$CODEX_HOME/plugins/cache/sol-advisor/sol-advisor"/*; do

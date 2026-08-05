@@ -295,8 +295,9 @@ def priced_credits(usage: dict[str, int], model: str, pricing: dict[str, Any]) -
 
 def scan_weekly_local_credits(
     sessions: Path, window_start: float, pricing: dict[str, Any]
-) -> tuple[float, float]:
+) -> tuple[float, float, float]:
     credits = 0.0
+    estimated_credits = 0.0
     priced_weight = 0
     total_weight = 0
     for path in rollout_files(sessions):
@@ -307,6 +308,7 @@ def scan_weekly_local_credits(
         except OSError:
             continue
         model: str | None = None
+        model_context_seen = False
         with handle:
             for line in handle:
                 if not relevant_event(line):
@@ -319,6 +321,7 @@ def scan_weekly_local_credits(
                     candidate = event.get("payload", {}).get("model")
                     if isinstance(candidate, str):
                         model = normalize_model(candidate)
+                        model_context_seen = True
                     continue
                 payload = event.get("payload", {})
                 if (
@@ -333,13 +336,27 @@ def scan_weekly_local_credits(
                     continue
                 last = (payload.get("info") or {}).get("last_token_usage") or {}
                 usage = {key: max(0, int(last.get(key, 0))) for key in TOKEN_KEYS}
+                # Forked rollout files can replay a parent transcript's token events
+                # before the child records its own model context. Those events belong
+                # to the parent and must not reduce calibration coverage or be counted
+                # twice in the child's history.
+                if not model_context_seen:
+                    continue
                 weight = usage["input_tokens"] + usage["output_tokens"]
                 total_weight += weight
                 if model in pricing["models"]:
-                    credits += priced_credits(usage, model, pricing)
+                    observed = priced_credits(usage, model, pricing)
+                    credits += observed
+                    estimated_credits += observed
                     priced_weight += weight
+                else:
+                    # A transcript with a model context that this release does not
+                    # recognize still has exact token counts. Price those tokens at
+                    # Sol as a conservative calibration estimate instead of making
+                    # the entire task receipt unavailable.
+                    estimated_credits += priced_credits(usage, "sol", pricing)
     coverage = priced_weight / total_weight if total_weight else 0.0
-    return credits, coverage
+    return credits, coverage, estimated_credits
 
 
 def weekly_capacity(
@@ -359,23 +376,37 @@ def weekly_capacity(
             "the weekly Codex usage meter cannot calibrate a receipt yet"
         )
     path = root / "weekly-calibration.json"
+    cached_capacity: float | None = None
     if path.exists():
         cached = read_json(path)
+        value = cached.get("capacity_credits")
+        if (
+            cached.get("pricing_date") == pricing.get("checked_date")
+            and isinstance(value, (int, float))
+            and value > 0
+        ):
+            cached_capacity = float(value)
         if (
             cached.get("checked_date") == local_date()
-            and cached.get("resets_at") == resets_at
+            and isinstance(cached.get("resets_at"), int)
+            and abs(int(cached["resets_at"]) - resets_at) <= 60
             and cached.get("pricing_date") == pricing.get("checked_date")
         ):
-            value = cached.get("capacity_credits")
-            if isinstance(value, (int, float)) and value > 0:
-                return float(value)
+            if cached_capacity is not None:
+                return cached_capacity
     window_start = resets_at - window_minutes * 60
-    local_credits, coverage = scan_weekly_local_credits(sessions, window_start, pricing)
-    if local_credits <= 0 or coverage < 0.95:
+    local_credits, coverage, estimated_credits = scan_weekly_local_credits(
+        sessions, window_start, pricing
+    )
+    if estimated_credits <= 0:
+        if cached_capacity is not None:
+            return cached_capacity
         raise ReceiptUnavailable(
             "local weekly usage is insufficient for a reliable calibration"
         )
-    capacity = local_credits / (used_percent / 100.0)
+    calibration_credits = local_credits if coverage >= 0.95 else estimated_credits
+    basis = "observed" if coverage >= 0.95 else "unrecognized-models-priced-as-sol"
+    capacity = calibration_credits / (used_percent / 100.0)
     atomic_json(
         path,
         {
@@ -384,6 +415,7 @@ def weekly_capacity(
             "resets_at": resets_at,
             "used_percent": used_percent,
             "coverage": coverage,
+            "basis": basis,
             "capacity_credits": capacity,
         },
     )
@@ -413,14 +445,22 @@ def command_start(args: argparse.Namespace) -> None:
     if rollout is None:
         raise ReceiptUnavailable("the primary rollout is unavailable")
     summary = rollout_summary(rollout)
-    if summary["rate_limit"] is None:
-        raise ReceiptUnavailable("the weekly Codex usage meter is unavailable")
-    capacity = weekly_capacity(root, sessions, summary["rate_limit"], pricing)
+    calibration_reason: str | None = None
+    try:
+        capacity = weekly_capacity(
+            root, sessions, summary["rate_limit"] or {}, pricing
+        )
+    except ReceiptUnavailable as exc:
+        # Task token accounting and official model pricing remain sufficient for a
+        # rate-based receipt even when a weekly capacity cannot be calibrated.
+        capacity = None
+        calibration_reason = str(exc)
     state = {
         "root_thread_id": thread_id,
         "started_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "pricing": pricing,
         "capacity_credits": capacity,
+        "calibration_reason": calibration_reason,
         "threads": [
             {
                 "thread_id": thread_id,
@@ -470,7 +510,7 @@ def usage_delta(end: dict[str, int], baseline: dict[str, Any]) -> dict[str, int]
 
 def recover_turn_usage(
     transcript: Path, turn_id: str
-) -> tuple[list[tuple[str, dict[str, int]]], dict[str, Any]]:
+) -> tuple[list[tuple[str, dict[str, int]]], dict[str, Any] | None]:
     """Recover root and delegated usage for one completed or stopping Codex turn."""
     require_thread_id(turn_id)
     if not transcript.is_file() or transcript.is_symlink():
@@ -542,9 +582,6 @@ def recover_turn_usage(
 
     if not active:
         raise ReceiptUnavailable("the requested Codex turn is absent from the transcript")
-    if rate_limit is None:
-        raise ReceiptUnavailable("the weekly Codex usage meter is unavailable")
-
     usages: list[tuple[str, dict[str, int]]] = []
     normalized_root = normalize_model(root_model)
     if normalized_root is None:
@@ -581,10 +618,18 @@ def format_percent(value: float) -> str:
     return f"{value:.2f}%"
 
 
+def format_credits(value: float) -> str:
+    if value <= 0:
+        return "0.000 credits"
+    if value < 0.001:
+        return "<0.001 credits"
+    return f"{value:.3f} credits"
+
+
 def receipt_lines(
     usages: Iterable[tuple[str, dict[str, int]]],
     pricing: dict[str, Any],
-    capacity: float,
+    capacity: float | None,
 ) -> list[str]:
     actual_credits = 0.0
     all_sol_credits = 0.0
@@ -593,12 +638,23 @@ def receipt_lines(
             raise ReceiptUnavailable(f"pricing unavailable for {model}")
         actual_credits += priced_credits(usage, model, pricing)
         all_sol_credits += priced_credits(usage, "sol", pricing)
-    actual_percent = actual_credits / capacity * 100.0
-    all_sol_percent = all_sol_credits / capacity * 100.0
-    savings_percent = max(0.0, all_sol_percent - actual_percent)
+    if isinstance(capacity, (int, float)) and capacity > 0:
+        actual_percent = actual_credits / capacity * 100.0
+        all_sol_percent = all_sol_credits / capacity * 100.0
+        savings_percent = max(0.0, all_sol_percent - actual_percent)
+        return [
+            f"Actual weekly usage: {format_percent(actual_percent)}",
+            f"All-Sol equivalent: {format_percent(all_sol_percent)}",
+            f"Estimated routing savings: {format_percent(savings_percent)}",
+        ]
+    savings_percent = (
+        max(0.0, (all_sol_credits - actual_credits) / all_sol_credits * 100.0)
+        if all_sol_credits > 0
+        else 0.0
+    )
     return [
-        f"Actual weekly usage: {format_percent(actual_percent)}",
-        f"All-Sol equivalent: {format_percent(all_sol_percent)}",
+        f"Estimated task credits: {format_credits(actual_credits)}",
+        f"All-Sol equivalent credits: {format_credits(all_sol_credits)}",
         f"Estimated routing savings: {format_percent(savings_percent)}",
     ]
 
@@ -628,8 +684,10 @@ def command_finish(args: argparse.Namespace) -> None:
     threads = state.get("threads")
     if (
         not isinstance(pricing, dict)
-        or not isinstance(capacity, (int, float))
-        or capacity <= 0
+        or (
+            capacity is not None
+            and (not isinstance(capacity, (int, float)) or capacity <= 0)
+        )
     ):
         raise ReceiptUnavailable("usage receipt calibration is invalid")
     if not isinstance(threads, list) or not threads:
@@ -653,7 +711,7 @@ def command_finish(args: argparse.Namespace) -> None:
                 f"pricing unavailable for recorded thread {thread_id}"
             )
         usages.append((model, usage))
-    print("\n".join(receipt_lines(usages, pricing, float(capacity))))
+    print("\n".join(receipt_lines(usages, pricing, capacity)))
     if not args.keep:
         path.unlink(missing_ok=True)
 
@@ -664,7 +722,10 @@ def command_recover(args: argparse.Namespace) -> None:
     root = state_root()
     sessions = sessions_root()
     pricing = current_pricing(root)
-    capacity = weekly_capacity(root, sessions, rate_limit, pricing)
+    try:
+        capacity = weekly_capacity(root, sessions, rate_limit or {}, pricing)
+    except ReceiptUnavailable:
+        capacity = None
     print("\n".join(receipt_lines(usages, pricing, capacity)))
 
 
@@ -694,7 +755,7 @@ def parser() -> argparse.ArgumentParser:
     add_thread.add_argument("--root-thread-id")
     add_thread.set_defaults(handler=command_add_thread)
     finish = commands.add_parser(
-        "finish", help="print the three-line weekly savings receipt"
+        "finish", help="print the three-line calibrated or rate-based savings receipt"
     )
     finish.add_argument("--root-thread-id")
     finish.add_argument("--keep", action="store_true")
