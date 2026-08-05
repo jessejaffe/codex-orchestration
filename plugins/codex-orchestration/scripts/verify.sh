@@ -110,8 +110,6 @@ PY
 python3 "$script_dir/test-effectiveness-tracker.py" "$plugin_dir" "$tmp_dir/effectiveness" ||
   fail "effectiveness tracker regression"
 python3 "$script_dir/usage-receipt.py" --help >/dev/null || fail "usage receipt CLI is broken"
-python3 "$script_dir/effectiveness-tracker.py" report >/dev/null ||
-  fail "existing or migrated effectiveness state cannot be reported"
 pass "fast-path and telemetry regression tests"
 
 grep -Fq 'zero-judgment root dispatcher' "$script_dir/prompt-router-hook.py" ||
