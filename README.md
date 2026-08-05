@@ -114,7 +114,9 @@ receipt measures the task's recorded model usage and compares that same token mi
 an all-Sol route. It excludes duplicated pre-model token replay from forked transcripts,
 tolerates harmless weekly-reset timestamp drift, and conservatively prices genuinely
 unknown models at Sol rates. Weekly calibration failure falls back to task credits; it
-does not make the receipt unavailable. A plugin gate now persists the exact announced complexity before
+does not make the receipt unavailable. If early measurement could not create task
+state, the mandatory finish command recovers the active turn directly from its
+transcript. A plugin gate now persists the exact announced complexity before
 routed work can begin; that score cannot drift or disappear later, even when the actual
 implementation model changes during a verified fallback. A Stop hook enforces the
 footer mechanically: if a routed task skips the receipt lifecycle, it reconstructs the

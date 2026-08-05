@@ -608,6 +608,32 @@ def recover_turn_usage(
     return usages, rate_limit
 
 
+def active_turn_id(transcript: Path) -> str | None:
+    active: str | None = None
+    try:
+        with transcript.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                payload = event.get("payload") or {}
+                if event.get("type") != "event_msg":
+                    continue
+                event_type = payload.get("type")
+                candidate = payload.get("turn_id")
+                if event_type == "task_started" and isinstance(candidate, str):
+                    active = candidate
+                elif (
+                    event_type in {"task_complete", "turn_aborted"}
+                    and candidate == active
+                ):
+                    active = None
+    except OSError:
+        return None
+    return active if active and THREAD_RE.fullmatch(active) else None
+
+
 def format_percent(value: float) -> str:
     if value <= 0:
         return "0.00%"
@@ -678,7 +704,28 @@ def token_totals(
 
 
 def command_finish(args: argparse.Namespace) -> None:
-    path, state = load_task(args)
+    root_thread_id = require_thread_id(
+        args.root_thread_id or os.environ.get("CODEX_THREAD_ID")
+    )
+    root = state_root()
+    path = task_path(root, root_thread_id)
+    if not path.exists():
+        # An early start can fail before it writes state (for example, while weekly
+        # calibration is unavailable). Finish must still recover the active turn and
+        # emit the official-rate fallback instead of repeating receipt-unavailable.
+        transcript = find_rollout(sessions_root(), root_thread_id)
+        turn_id = active_turn_id(transcript) if transcript is not None else None
+        if transcript is None or turn_id is None:
+            raise ReceiptUnavailable("usage receipt was not started and the active turn cannot be recovered")
+        usages, rate_limit = recover_turn_usage(transcript, turn_id)
+        pricing = current_pricing(root)
+        try:
+            capacity = weekly_capacity(root, sessions_root(), rate_limit or {}, pricing)
+        except ReceiptUnavailable:
+            capacity = None
+        print("\n".join(receipt_lines(usages, pricing, capacity)))
+        return
+    state = read_json(path)
     pricing = state.get("pricing")
     capacity = state.get("capacity_credits")
     threads = state.get("threads")

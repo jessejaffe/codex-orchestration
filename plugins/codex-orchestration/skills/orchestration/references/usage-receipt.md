@@ -20,7 +20,9 @@ python3 "$usage_receipt" start
 
 The helper reads the root identity from `CODEX_THREAD_ID`. A failure is non-blocking.
 Do not retry during the same request. The completion hook has the transcript and can
-recover the task boundary if this early measurement cannot start.
+recover the task boundary if this early measurement cannot start. The mandatory
+`finish` command also recovers the currently active turn directly when no start-state
+file exists, so an early calibration failure cannot reappear at completion.
 
 After every native worker/reviewer spawn or Luna task creation returns a real thread
 ID, register it before monitoring or accepting more work:

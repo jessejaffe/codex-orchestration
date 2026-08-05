@@ -986,6 +986,7 @@ grep -Fq 'Never draft or send the final response before calling' "$skill" || fai
 grep -Fq 'Never omit the receipt' "$receipt_contract" || fail "receipt contract permits silent omission"
 grep -Fq 'calibration did not exclude pre-context replay' "$receipt_hook_test" || fail "receipt fixture omits forked replay calibration regression"
 grep -Fq 'completion gate rejected the rate-based fallback receipt' "$receipt_hook_test" || fail "receipt fixture omits rate-based completion fallback"
+grep -Fq 'finish did not recover an unstarted task' "$receipt_hook_test" || fail "receipt fixture omits direct finish recovery"
 python3 "$receipt_hook_test" "$plugin_dir" "$tmp_dir/receipt-hook" || fail "executive-band, fallback, complexity, receipt, or Stop-hook gate failed"
 pass "both executive bands, fallback, complexity persistence, receipt recovery, and Stop-hook completion gate"
 python3 "$effectiveness_test" "$plugin_dir" "$tmp_dir/effectiveness" || fail "effectiveness baseline, ledger, or comparison failed"

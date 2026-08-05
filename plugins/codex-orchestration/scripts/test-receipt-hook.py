@@ -716,10 +716,44 @@ def main() -> int:
     }
     if run_hook(hook, rate_stop, environment) != {"continue": True}:
         raise AssertionError("completion gate rejected the rate-based fallback receipt")
+
+    recovered_session = "56565656-5656-4565-8565-565656565656"
+    recovered_turn = "78787878-7878-4787-8787-787878787878"
+    recovered_rollout = sessions / f"rollout-{recovered_session}.jsonl"
+    write_jsonl(
+        recovered_rollout,
+        [
+            {
+                "type": "event_msg",
+                "payload": {"type": "task_started", "turn_id": recovered_turn},
+            },
+            {
+                "type": "turn_context",
+                "payload": {
+                    "turn_id": recovered_turn,
+                    "model": "gpt-5.6-terra",
+                },
+            },
+            token_event(3_000_000),
+        ],
+    )
+    recovered_finish = receipt_command(
+        "finish", "--root-thread-id", recovered_session
+    ).stdout.strip()
+    expected_recovered_finish = (
+        "Estimated task credits: 3.000 credits\n"
+        "All-Sol equivalent credits: 30.000 credits\n"
+        "Estimated routing savings: 90.00%"
+    )
+    if recovered_finish != expected_recovered_finish:
+        raise AssertionError(
+            "finish did not recover an unstarted task with the rate-based fallback: "
+            f"{recovered_finish!r}"
+        )
     print(
         "nested executive Stop suppression, root-first routing, monotonic executive "
-        "fallback, root receipt descendant registration, weekly and rate-based "
-        "receipts, and completion gate passed"
+        "fallback, root receipt descendant registration, weekly, rate-based, and "
+        "unstarted-task recovery receipts, and completion gate passed"
     )
     return 0
 
