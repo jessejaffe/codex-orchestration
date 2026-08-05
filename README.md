@@ -145,14 +145,17 @@ Every update uses a unique cache-busted version such as
 `0.8.0+codex.20260805152715`. This is the supported mechanism that prevents a newly
 created task from retaining stale plugin metadata. The reinstaller requires the
 complete package, installs that exact version, retains complete compatibility cache
-aliases, retires the recognized legacy plugin, and refuses unsafe or incomplete cache
-entries.
+aliases, unconditionally clears orphaned legacy plugin enablement, and refuses unsafe
+or incomplete cache entries. On macOS it also invokes Codex Desktop's built-in
+`Force reload skills` action, so a running app reads the new catalog without a restart.
+That refresh happens only during an update and adds no runtime tokens or task latency.
 
-Codex snapshots bundled capabilities when a task starts. No updater can rewrite the
-catalog already injected into an open task. Compatibility cache contents are updated,
-but a new task is the required boundary for refreshed plugin metadata. Once the stable
-hook definition has been trusted, later releases keep that same definition and update
-the script it calls.
+Codex snapshots capabilities into each model turn. The updater cannot rewrite a turn
+already in flight, but it refreshes the live desktop catalog used by later turns and
+new tasks. If macOS Accessibility control is unavailable, the updater fails clearly
+instead of claiming that the live catalog was refreshed. Once the stable hook
+definition has been trusted, later releases keep that same definition and update the
+script it calls.
 
 ## Measure effectiveness
 

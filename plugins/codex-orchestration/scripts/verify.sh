@@ -137,7 +137,7 @@ if sh "$installer" --target-dir "$target" >/dev/null 2>&1; then
 fi
 grep -Fq 'f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d' "$installer" ||
   fail "0.7.4 Terra role is not recognized for safe upgrade"
-for file in orchestration_state.py prompt-router-hook.py test-fast-dispatch.py triage-cases.json; do
+for file in orchestration_state.py prompt-router-hook.py refresh-desktop-skills.sh test-fast-dispatch.py triage-cases.json; do
   grep -Fq "scripts/$file" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package check omits $file"
 done
@@ -149,6 +149,7 @@ for phrase in \
   'full chat' \
   'never reads the offline routing benchmark' \
   'unique cache-busted version' \
+  'Force reload skills' \
   'manifest does not advertise a skill' \
   'Turn Orchestration on' \
   'Turn Orchestration off' \

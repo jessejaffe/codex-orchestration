@@ -44,6 +44,11 @@ elif [ -n "${CODEX_HOME:-}" ]; then
 else
   legacy_cache_root=$HOME/.codex/plugins/cache/sol-advisor/sol-advisor
 fi
+if [ -n "${CODEX_HOME:-}" ]; then
+  codex_config=$CODEX_HOME/config.toml
+else
+  codex_config=$HOME/.codex/config.toml
+fi
 for root in "$cache_root" "$legacy_cache_root"; do case "$root" in /*) ;; *) fail "cache root must be absolute: $root" ;; esac; done
 [ "$cache_root" != "$legacy_cache_root" ] || fail "current and legacy cache roots must be distinct"
 
@@ -58,6 +63,11 @@ marketplace_exists() {
     return 0
   fi
   return 1
+}
+
+legacy_config_enabled() {
+  [ -f "$codex_config" ] || return 1
+  grep -Eq '^[[:space:]]*\[plugins\."sol-advisor@sol-advisor"\][[:space:]]*$' "$codex_config"
 }
 
 is_version_alias() {
@@ -96,6 +106,7 @@ scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
 scripts/orchestration_state.py
 scripts/prompt-router-hook.py
+scripts/refresh-desktop-skills.sh
 scripts/reinstall-plugin.sh
 scripts/state_migration.py
 scripts/test-effectiveness-tracker.py
@@ -235,6 +246,7 @@ check_current() {
     done
   done
   installed_version "$legacy_plugin_id" >/dev/null 2>&1 && fail "legacy plugin identity remains installed: $legacy_plugin_id"
+  legacy_config_enabled && fail "legacy plugin enablement remains in $codex_config"
   marketplace_status=0
   marketplace_exists "$legacy_marketplace" || marketplace_status=$?
   case "$marketplace_status" in
@@ -357,14 +369,15 @@ if ! activate_transaction "$cache_root" "$new_aliases" "$new_transaction"; then
 fi
 check_aliases "$cache_root" "$new_aliases"
 
-if [ -n "$legacy_version" ]; then
-  legacy_removal_started=1
-  remove_status=0
-  "$codex_bin" plugin remove "$legacy_plugin_id" || remove_status=$?
-  if [ "$remove_status" -ne 0 ]; then
-    recover_complete_aliases || fail "legacy plugin removal failed and alias recovery was incomplete"
-    fail "could not remove legacy plugin identity $legacy_plugin_id; complete compatibility aliases were restored"
-  fi
+legacy_removal_started=1
+remove_status=0
+# `plugin remove` is intentionally unconditional and idempotent. A previous updater
+# could remove the legacy marketplace first and leave its enabled config table behind,
+# even though `plugin list` no longer exposed that orphaned identity.
+"$codex_bin" plugin remove "$legacy_plugin_id" || remove_status=$?
+if [ "$remove_status" -ne 0 ]; then
+  recover_complete_aliases || fail "legacy plugin removal failed and alias recovery was incomplete"
+  fail "could not clear legacy plugin identity $legacy_plugin_id; complete compatibility aliases were restored"
 fi
 
 legacy_removal_started=1
@@ -382,7 +395,8 @@ fi
 
 check_current
 transaction_committed=1
+sh "$current_cache/scripts/refresh-desktop-skills.sh"
 pass "staged, atomically activated, and verified every recognized $manifest_version cache alias"
-[ -z "$legacy_version" ] || pass "removed legacy plugin $legacy_plugin_id after proving the replacement"
+pass "cleared legacy plugin configuration $legacy_plugin_id after proving the replacement"
 [ "$legacy_marketplace_present" -eq 0 ] || pass "removed legacy marketplace $legacy_marketplace independently"
-printf '%s\n' "NOTICE: already-open tasks may keep using version-looking paths under plugins/cache/sol-advisor/sol-advisor; every preserved alias contains Codex Orchestration $manifest_version."
+printf '%s\n' "NOTICE: already-injected turns keep their original prompt snapshot; new tasks use the refreshed live catalog and Codex Orchestration $manifest_version."
