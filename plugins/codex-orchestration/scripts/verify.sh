@@ -10,7 +10,6 @@ script_dir=$(CDPATH= cd "$(dirname "$0")" && pwd) || exit 1
 plugin_dir=$(CDPATH= cd "$script_dir/.." && pwd) || exit 1
 repo_dir=$(CDPATH= cd "$plugin_dir/../.." && pwd) || exit 1
 manifest=$plugin_dir/.codex-plugin/plugin.json
-hooks=$plugin_dir/hooks/hooks.json
 agents=$plugin_dir/agents
 installer=$script_dir/install-agents.sh
 
@@ -34,12 +33,9 @@ printf '%s\n' "$manifest_version" | grep -Eq '^0\.8\.0\+codex\.[0-9A-Za-z._-]+$'
 if [ -d "$plugin_dir/skills" ] && find "$plugin_dir/skills" -type f -print | grep -q .; then
   fail "hook-only plugin still contains an auto-discovered skill"
 fi
-jq -e '
-  (.hooks | keys == ["UserPromptSubmit"])
-  and (.hooks.UserPromptSubmit | length == 1)
-' "$hooks" >/dev/null || fail "runtime contains more than the one prompt hook"
-grep -Fq 'prompt-router-hook.py' "$hooks" || fail "prompt router hook is not registered"
-pass "manifest and single-hook runtime topology"
+[ ! -e "$plugin_dir/hooks/hooks.json" ] || fail "versioned plugin still bundles a restart-sensitive prompt hook"
+grep -Fq 'UserPromptSubmit' "$script_dir/install-user-hook.py" || fail "user-level prompt hook installer is missing"
+pass "manifest and stable user-hook runtime topology"
 
 for script in "$script_dir"/*.py; do
   python3 -c 'import pathlib,sys; compile(pathlib.Path(sys.argv[1]).read_text(), sys.argv[1], "exec")' "$script" ||
@@ -78,6 +74,33 @@ pass "script syntax, offline benchmark, and exact eight-role pins"
 
 python3 "$script_dir/test-fast-dispatch.py" "$plugin_dir" "$tmp_dir/hooks" ||
   fail "fast dispatch, continuity, ownership, or latency regression"
+python3 - "$script_dir/install-user-hook.py" <<'PY'
+import importlib.util
+import sys
+
+spec = importlib.util.spec_from_file_location("install_user_hook", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+assert spec.loader is not None
+spec.loader.exec_module(module)
+original = {
+    "description": "existing",
+    "hooks": {
+        "UserPromptSubmit": [
+            {"hooks": [{"type": "command", "command": "python3 /tmp/other.py"}]}
+        ],
+        "Stop": [{"hooks": [{"type": "command", "command": "true"}]}],
+    },
+}
+command = "python3 /tmp/.codex/orchestration/prompt-router-hook.py"
+merged = module.merge_hook_document(original, command)
+assert merged["hooks"]["Stop"][0]["hooks"][0]["command"] == "true"
+groups = merged["hooks"]["UserPromptSubmit"]
+assert len(groups) == 2
+assert groups[0]["hooks"][0]["command"] == "python3 /tmp/other.py"
+assert groups[1]["hooks"][0]["command"] == command
+again = module.merge_hook_document(merged, command)
+assert again == merged
+PY
 python3 "$script_dir/test-effectiveness-tracker.py" "$plugin_dir" "$tmp_dir/effectiveness" ||
   fail "effectiveness tracker regression"
 python3 "$script_dir/usage-receipt.py" --help >/dev/null || fail "usage receipt CLI is broken"
@@ -137,7 +160,7 @@ if sh "$installer" --target-dir "$target" >/dev/null 2>&1; then
 fi
 grep -Fq 'f679d6b97e5f537a9aeec0baf95f2267d9b42241a6e55598c191b2bf6d5f231d' "$installer" ||
   fail "0.7.4 Terra role is not recognized for safe upgrade"
-for file in check-hook-runtime.py orchestration_state.py prompt-router-hook.py refresh-desktop-skills.sh test-fast-dispatch.py triage-cases.json; do
+for file in install-user-hook.py orchestration_state.py prompt-router-hook.py test-fast-dispatch.py triage-cases.json; do
   grep -Fq "scripts/$file" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package check omits $file"
 done
@@ -149,7 +172,7 @@ for phrase in \
   'full chat' \
   'never reads the offline routing benchmark' \
   'unique cache-busted version' \
-  'Force reload skills' \
+  'stable user-level hook' \
   'enabled and trusted' \
   'manifest does not advertise a skill' \
   'Turn Orchestration on' \
@@ -162,7 +185,7 @@ if rg -n 'reads one consolidated skill|score every deliverable once|Complexity: 
   "$repo_dir/README.md" "$manifest"; then
   fail "stale slow-path documentation remains"
 fi
-pass "hook-only runtime and current documentation"
+pass "user-hook runtime and current documentation"
 
 grep -Fq '17 12 * * *' "$repo_dir/.github/workflows/upstream-review.yml" ||
   fail "daily upstream review schedule changed"

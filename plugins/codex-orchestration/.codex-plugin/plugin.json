@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.0+codex.20260805161310",
+  "version": "0.8.0+codex.20260805163227",
   "description": "Fast Terra-first triage with Sol-owned complex work.",
   "author": {
     "name": "Daniel McAteer",
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Fast credit routing with conservative escalation",
-    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Its only runtime hook runs once per prompt and sends the full chat immediately to GPT-5.6 Terra / High without loading the routing skill, scoring numerically, scanning the transcript, running before tools, or generating a receipt. Terra is a conservative triage gate and owns only settled low-band work, using Luna / Max, Terra / Medium, or direct Terra / High. Any uncertain, architectural, security-sensitive, cross-system, irreversible, high-stakes, or broadly diagnostic request returns untouched to root GPT-5.6 Sol / High, which owns design and acceptance and may use Sol / Low, Sol / Medium, or direct Sol / High for implementation. Full chat context is inherited across both handoffs. Each producer self-checks, the owning executive checks once, and at most one correction is sent to the same producer. Detailed usage comparison remains an on-demand offline diagnostic.",
+    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Its stable user-level runtime hook runs once per prompt and sends the full chat immediately to GPT-5.6 Terra / High without loading the routing skill, scoring numerically, scanning the transcript, running before tools, or generating a receipt. Terra is a conservative triage gate and owns only settled low-band work, using Luna / Max, Terra / Medium, or direct Terra / High. Any uncertain, architectural, security-sensitive, cross-system, irreversible, high-stakes, or broadly diagnostic request returns untouched to root GPT-5.6 Sol / High, which owns design and acceptance and may use Sol / Low, Sol / Medium, or direct Sol / High for implementation. Full chat context is inherited across both handoffs. Each producer self-checks, the owning executive checks once, and at most one correction is sent to the same producer. Detailed usage comparison remains an on-demand offline diagnostic.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

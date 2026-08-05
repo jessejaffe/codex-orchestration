@@ -74,6 +74,16 @@ def main() -> int:
         "transcript_path": str(root_transcript),
     }
 
+    stale_plugin_env = env.copy()
+    stale_plugin_env["PLUGIN_ROOT"] = str(plugin)
+    stale_plugin = call(
+        prompt_hook,
+        {**base, "prompt": "Turn Orchestration on and implement the request"},
+        stale_plugin_env,
+    )
+    if stale_plugin != {"continue": True}:
+        raise AssertionError("the former plugin-bundled hook can still duplicate routing")
+
     inactive = call(prompt_hook, {**base, "prompt": "ordinary request"}, env)
     if inactive != {"continue": True}:
         raise AssertionError(f"inactive chat was routed: {inactive!r}")

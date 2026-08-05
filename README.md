@@ -13,7 +13,7 @@ handoff summary, or call a finish-time receipt tool.
 
 The active path is intentionally small:
 
-1. A once-per-prompt hook checks one chat-local boolean.
+1. A stable user-level, once-per-prompt hook checks one chat-local boolean.
 2. Root Sol immediately gives the full chat to Terra / High with a constant prompt.
 3. Terra conservatively decides only whether the request is low-band or complex.
 4. Low-band work stays with Terra as executive. Complex work returns untouched to
@@ -38,7 +38,7 @@ available to the selected model.
 
 ```mermaid
 flowchart TD
-    U["Active user prompt"] --> H["Once-per-prompt state hook"]
+    U["Active user prompt"] --> H["Stable user-level state hook"]
     H --> T["Terra / High triage with full chat"]
     T -->|"Settled low-band"| L["Terra executive"]
     L --> P1["Luna / Max, Terra / Medium, or direct Terra / High"]
@@ -127,9 +127,19 @@ sh "$plugin_dir/scripts/install-agents.sh"
 sh "$plugin_dir/scripts/install-agents.sh" --check
 ```
 
-Review and trust the single `UserPromptSubmit` hook once when Codex asks. Codex skips
-non-managed hooks until their exact definition is trusted. Then open a new task so the
-installed hook and custom agents are included in that task's startup snapshot.
+Install the single stable user-level hook. The installer preserves unrelated hooks,
+copies the two tiny runtime files to `~/.codex/orchestration`, and records trust only
+for the exact installed definition:
+
+```sh
+python3 "$plugin_dir/scripts/install-user-hook.py" --plugin-dir "$plugin_dir"
+python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin_dir"
+```
+
+Open one new task after this first install so Codex includes the user config layer.
+Later releases update the scripts behind the same trusted command path, so existing
+Orchestration-capable tasks and every new task use the current code without a desktop
+restart, settings navigation, skill reload, or version check during user work.
 
 ## Upgrade safely
 
@@ -147,19 +157,15 @@ Every update uses a unique cache-busted version such as
 created task from retaining stale plugin metadata. The reinstaller requires the
 complete package, installs that exact version, retains complete compatibility cache
 aliases, unconditionally clears orphaned legacy plugin enablement, and refuses unsafe
-or incomplete cache entries. On macOS it also invokes Codex Desktop's built-in
-`Force reload skills` action, so a running app reads the new catalog without a restart.
-That refresh happens only during an update and adds no runtime tokens or task latency.
-The reinstaller also queries Codex's live hook inventory and succeeds only when the
-single Orchestration prompt hook is enabled and trusted; this prevents a generic agent
-from silently replacing the model-labelled Orchestration route.
+or incomplete cache entries. It then atomically refreshes the stable user-level hook
+runtime and proves that the exact hook is enabled and trusted. The plugin itself no
+longer bundles a versioned hook, so the running desktop's plugin registry cannot leave
+new tasks on an older routing definition.
 
-Codex snapshots capabilities into each model turn. The updater cannot rewrite a turn
-already in flight, but it refreshes the live desktop catalog used by later turns and
-new tasks. If macOS Accessibility control is unavailable, the updater fails clearly
-instead of claiming that the live catalog was refreshed. Once the stable hook
-definition has been trusted, later releases keep that same definition and update the
-script it calls.
+The updater never opens settings, sends keystrokes, steals focus, or restarts Codex.
+Once the stable hook definition is installed, later releases keep that definition and
+replace only the script it calls. There is no update-time desktop refresh and no
+runtime version-discovery step.
 
 ## Measure effectiveness
 

@@ -99,15 +99,13 @@ agents/codex-orchestration-sol-low-implementer.toml
 agents/codex-orchestration-sol-medium-implementer.toml
 agents/codex-orchestration-sol-high-implementer.toml
 agents/codex-orchestration-sol-reviewer.toml
-hooks/hooks.json
 scripts/daily-upstream-audit.sh
-scripts/check-hook-runtime.py
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
+scripts/install-user-hook.py
 scripts/orchestration_state.py
 scripts/prompt-router-hook.py
-scripts/refresh-desktop-skills.sh
 scripts/reinstall-plugin.sh
 scripts/state_migration.py
 scripts/test-effectiveness-tracker.py
@@ -258,12 +256,12 @@ check_current() {
   pass "Codex Orchestration $manifest_version is installed without legacy plugin or marketplace identities"
 }
 
-check_hook_runtime() {
-  python3 "$current_cache/scripts/check-hook-runtime.py" --codex-bin "$codex_bin" --cwd "$plugin_dir"
+check_user_hook() {
+  python3 "$current_cache/scripts/install-user-hook.py" --check --codex-bin "$codex_bin" --plugin-dir "$current_cache"
 }
 
 case "${1:-}" in
-  --check) [ "$#" -eq 1 ] || fail "usage: $0 [--check]"; check_current; check_hook_runtime; exit 0 ;;
+  --check) [ "$#" -eq 1 ] || fail "usage: $0 [--check]"; check_current; check_user_hook; exit 0 ;;
   '') [ "$#" -eq 0 ] || fail "usage: $0 [--check]" ;;
   *) fail "usage: $0 [--check]" ;;
 esac
@@ -398,11 +396,11 @@ if [ "$legacy_marketplace_present" -eq 1 ]; then
   [ "$marketplace_status" -eq 0 ] || fail "legacy marketplace remains configured: $legacy_marketplace"
 fi
 
+python3 "$current_cache/scripts/install-user-hook.py" --codex-bin "$codex_bin" --plugin-dir "$current_cache"
 check_current
 transaction_committed=1
-sh "$current_cache/scripts/refresh-desktop-skills.sh"
-check_hook_runtime
+check_user_hook
 pass "staged, atomically activated, and verified every recognized $manifest_version cache alias"
 pass "cleared legacy plugin configuration $legacy_plugin_id after proving the replacement"
 [ "$legacy_marketplace_present" -eq 0 ] || pass "removed legacy marketplace $legacy_marketplace independently"
-printf '%s\n' "NOTICE: already-injected turns keep their original prompt snapshot; new tasks use the refreshed live catalog and Codex Orchestration $manifest_version."
+printf '%s\n' "NOTICE: the first user-level hook install is available to new tasks; later releases update the stable runtime in place without desktop UI automation."

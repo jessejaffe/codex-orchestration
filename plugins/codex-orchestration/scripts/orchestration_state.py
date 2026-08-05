@@ -19,13 +19,17 @@ ID_RE = re.compile(
 def state_root() -> Path | None:
     configured = os.environ.get("CODEX_ORCHESTRATION_RUNTIME_STATE_DIR")
     plugin_data = os.environ.get("PLUGIN_DATA")
-    value = configured or plugin_data
-    if not value:
-        return None
+    codex_home = os.environ.get("CODEX_HOME")
+    value = configured or plugin_data or codex_home or str(Path.home() / ".codex")
     root = Path(value).expanduser()
     if not root.is_absolute() or root.is_symlink():
         return None
-    root = root / "chat-state" if not configured else root
+    if configured:
+        pass
+    elif plugin_data:
+        root = root / "chat-state"
+    else:
+        root = root / "orchestration" / "chat-state"
     try:
         root.mkdir(parents=True, exist_ok=True, mode=0o700)
         os.chmod(root, 0o700)

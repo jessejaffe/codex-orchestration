@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from typing import Any
@@ -65,6 +66,12 @@ def main() -> int:
         emit({"continue": True})
         return 0
     if hook_input.get("hook_event_name") != "UserPromptSubmit":
+        emit({"continue": True})
+        return 0
+    # A desktop host may retain the former plugin hook definition until it exits.
+    # Updated cache aliases make that stale source harmless while the stable user
+    # hook owns routing without requiring a desktop restart.
+    if os.environ.get("PLUGIN_ROOT"):
         emit({"continue": True})
         return 0
     session_id = hook_input.get("session_id")
