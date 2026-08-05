@@ -122,8 +122,8 @@ grep -Fq 'MAX_FORK_TURNS = 64' "$script_dir/prompt-router-hook.py" ||
   fail "root-to-executive history bound is missing"
 grep -Fq 'never full-history' "$script_dir/prompt-router-hook.py" ||
   fail "custom-role full-history protection is missing"
-grep -Fq 'fork_turns: "none"' "$script_dir/prompt-router-hook.py" ||
-  fail "isolated producer handoff is missing"
+grep -Fq 'same context fork/foundation' "$script_dir/prompt-router-hook.py" ||
+  fail "direct-context producer handoff is missing"
 for guard in \
   'ORCHESTRATION_SCORE:' \
   'ORCHESTRATION_STATUS:' \
@@ -132,6 +132,13 @@ for guard in \
   'list agents' \
   'repeat until none is running' \
   'ORCHESTRATION_DELEGATE' \
+  'DIRECTIVE' \
+  'at most 60 words' \
+  'do not' \
+  'follow up before implementation' \
+  'never' \
+  'generate a specification or restate the request' \
+  'ACCEPTANCE_CHECK:' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
   'selected root model' \
@@ -162,9 +169,9 @@ for guard in \
   'ORCHESTRATION_STATUS: Complexity' \
   'Return immediately with exactly two lines' \
   'at most 20 words' \
-  'ORCHESTRATION_DELEGATE:' \
   'ORCHESTRATION_ACCEPT:' \
   'ORCHESTRATION_TAKEOVER:' \
+  'Never generate an implementation' \
   'zero correction loops'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
@@ -174,6 +181,9 @@ for guard in \
   'root task may use any model' \
   'Never rescore, remap, or execute implementation directly' \
   'ORCHESTRATION_DELEGATE:' \
+  'DIRECTIVE:' \
+  'at most 60 words' \
+  'Never restate the request' \
   'ORCHESTRATION_ACCEPT:' \
   'ORCHESTRATION_TAKEOVER:' \
   'TAKEOVER is terminal' \
@@ -181,6 +191,16 @@ for guard in \
 do
   grep -Fq "$guard" "$agents/codex-orchestration-sol-high-executive.toml" ||
     fail "pinned Sol executive omits: $guard"
+done
+if rg -n 'PACKET:|execution packet|exact PACKET' \
+  "$script_dir/prompt-router-hook.py" \
+  "$agents/codex-orchestration-terra-executive.toml" \
+  "$agents/codex-orchestration-sol-high-executive.toml"; then
+  fail "runtime still allows duplicated executive implementation packets"
+fi
+for implementer in "$agents"/*-implementer.toml; do
+  grep -Fq 'Execute `USER_REQUEST`' "$implementer" ||
+    fail "implementation lane does not receive original task context: $implementer"
 done
 grep -Fq 'model_reasoning_effort = "xhigh"' "$agents/codex-orchestration-sol-xhigh-implementer.toml" ||
   fail "Extra High implementation role is not pinned to xhigh"

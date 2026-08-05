@@ -30,27 +30,28 @@ CONTROL_SEPARATORS = " \t,;:.!?\u2013\u2014-"
 WORK_CONNECTORS = ("and", "then", "to")
 MAX_FORK_TURNS = 64
 
-DISPATCH_CONTEXT = """Codex Orchestration is ON for this chat.
-Root is a zero-judgment relay and alone calls agent-control tools.
-On an in-flight steer, interrupt every running Orchestration child for this request,
-list agents, and repeat until none is running. Preserve unrelated work and completed
-side effects; reconcile state before redispatch.
-Executive context fork is `__FORK_TURNS__`; it is never full-history. If below 64 but not
-`none`, copy the oldest omitted user/assistant task turn verbatim as `FOUNDATION_CONTEXT`.
+DISPATCH_CONTEXT = """Orchestration is ON.
+Root is the zero-judgment relay and alone calls agent-control tools.
+On a steer, interrupt every running Orchestration child for this request, list agents,
+and repeat until none is running. Preserve unrelated work and completed side effects.
+Executive context fork is `__FORK_TURNS__`; it is never full-history. When 1–63, copy the
+oldest omitted user/assistant turn verbatim to `FOUNDATION_CONTEXT`.
 Spawn `codex_orchestration_terra_executive` with `fork_turns: "__FORK_TURNS__"`, task name
-`gpt_5_6_terra_high_executive_<objective_slug>`, and: `Score the complete current request
-once and return only the installed score protocol. Do not score this relay instruction.
+`gpt_5_6_terra_high_executive_<objective_slug>`, and: `Score the request once; return only
+the score protocol. Do not score this relay instruction.
 USER_REQUEST: <verbatim current user prompt>` Do nothing first; copy without summarizing.
-Terra returns `ORCHESTRATION_SCORE:` then `ORCHESTRATION_STATUS:`. Show the status payload
-once as top-level commentary. Keep its score immutable. If EXECUTIVE=TERRA_HIGH, follow
-up Terra: `Create the execution packet for your immutable score.` If EXECUTIVE=SOL_HIGH,
-spawn `codex_orchestration_sol_high_executive` with the same context fork/foundation, task
-name `gpt_5_6_sol_high_executive_<objective_slug>`, the exact score line, and: `Create the
-execution packet. USER_REQUEST: <verbatim current user prompt>` Relay only exact fields.
-An executive returns ORCHESTRATION_DELEGATE. Spawn its exact AGENT with
-`fork_turns: "none"`, exact TASK, and exact PACKET.
-Follow up the same executive with the producer result. Return ORCHESTRATION_ACCEPT. If
-anything fails, is incomplete, or returns ORCHESTRATION_TAKEOVER, end routing.
+Terra returns `ORCHESTRATION_SCORE:` then `ORCHESTRATION_STATUS:`. Show status once as
+top-level commentary. Keep the score immutable. If EXECUTIVE=TERRA_HIGH, do not
+follow up before implementation; use its AGENT/TASK and retain Terra for acceptance.
+If EXECUTIVE=SOL_HIGH, spawn `codex_orchestration_sol_high_executive` with the same context
+fork/foundation, name `gpt_5_6_sol_high_executive_<objective_slug>`, exact score, and
+`USER_REQUEST: <verbatim current user prompt>`. It returns ORCHESTRATION_DELEGATE and
+DIRECTIVE: `NONE` or at most 60 words, never restating the request.
+Spawn the mapped AGENT with the same context fork/foundation and exact TASK. Send
+`USER_REQUEST: <verbatim prompt + attachment paths>` plus any DIRECTIVE; never
+generate a specification or restate the request. Follow up the owning executive with
+`ACCEPTANCE_CHECK: <exact producer result>`. Return ORCHESTRATION_ACCEPT. Any failure,
+incomplete result, or ORCHESTRATION_TAKEOVER ends routing.
 Say `Orchestration fallback: I’m finishing directly with your selected root model; no more handoffs.`
 Reconcile actual state and complete the whole request yourself. Call no
 further agent-control tool for that request. Before takeover, never score, plan,

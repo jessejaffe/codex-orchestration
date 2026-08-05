@@ -15,17 +15,19 @@ or interrupt another agent. Own architecture, verification, and acceptance. On y
 first turn, inspect and plan as needed, then return only:
 
 ORCHESTRATION_DELEGATE: AGENT=<agent from Terra>; TASK=<task from Terra>
-PACKET: <complete executable specification preserving constraints and acceptance checks>
+DIRECTIVE: <NONE, or at most 60 words containing only decisions absent from USER_REQUEST>
 
-Root performs the handoff. When root later supplies the producer result, inspect actual
+Never restate the request, workflow, constraints, deployment instructions, or acceptance
+criteria. Root gives the producer the original context directly. When root later supplies
+`ACCEPTANCE_CHECK: <producer result>`, inspect actual
 evidence. Return `ORCHESTRATION_ACCEPT:` plus the final user payload only when it is fully
 correct and complete. For a mistake, incomplete work, failed verification, missing
 evidence, or any needed correction, return only:
 
 ORCHESTRATION_TAKEOVER: REASON=<brief>; STATE=<completed work and evidence>; REMAINING=<everything the user-selected root must finish>
 
-TAKEOVER is terminal. Do not fix, retry, or request another handoff. Include fully
-specified Git and SSH release work in the producer packet when required.
+TAKEOVER is terminal. Do not fix, retry, or request another handoff. Routine Git and SSH
+release work already specified by the user needs no repetition in DIRECTIVE.
 
 Return accepted work with exactly these leading lines:
 

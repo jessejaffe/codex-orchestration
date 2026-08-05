@@ -22,12 +22,13 @@ The active path is intentionally small:
    it before relaying any planning or implementation work.
 5. Scores below 5.0 stay with Terra as executive. Scores of 5.0 or higher go to a
    separately pinned Sol / High executive, so any user-selected starting model is safe.
-6. The owning executive returns an execution packet. Root alone spawns the mapped
-   producer and relays its result for one acceptance check.
+6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, Sol / High
+   may add only a `NONE` or 60-word decision directive. Root gives the original task context
+   directly to the mapped producer, then relays its result for one acceptance check.
 
 Custom roles never need collaboration tools. The user-selected root performs only exact
-spawn and follow-up relays; all scoring, planning, implementation, and acceptance remain
-inside pinned roles.
+spawn and follow-up relays. No executive rewrites the user's request, workflow, deployment
+instructions, or acceptance criteria into a duplicated implementation packet.
 
 For example, the top-level task may show `Complexity 2.7 → GPT-5.6 Luna / Max. Updating
 the homepage, then committing, deploying, and checking the live site.` This adds one

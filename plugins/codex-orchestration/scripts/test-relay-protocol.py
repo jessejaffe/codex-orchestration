@@ -32,12 +32,27 @@ def main() -> int:
             raise AssertionError(f"custom executive requires unavailable collaboration tool: {tool}")
     for token in (
         "ORCHESTRATION_SCORE:", "ORCHESTRATION_STATUS:", "ORCHESTRATION_DELEGATE:",
-        "ORCHESTRATION_ACCEPT:", "ORCHESTRATION_TAKEOVER:", "PACKET:",
+        "ORCHESTRATION_ACCEPT:", "ORCHESTRATION_TAKEOVER:", "DIRECTIVE:",
     ):
         if token not in executives + hook:
             raise AssertionError(f"relay protocol omits {token}")
-    if hook.count("<verbatim current user prompt>") != 2 or "Always delegate" not in terra:
+    runtime = executives + hook
+    if "PACKET:" in runtime or "execution packet" in runtime:
+        raise AssertionError("executive can still emit the duplicated implementation packet")
+    if hook.count("<verbatim current user prompt>") != 2:
         raise AssertionError("relay can score itself or bypass the mapped producer")
+    for guard in (
+        "do not\nfollow up before implementation",
+        "same context fork/foundation",
+        "at most 60 words",
+        "never\ngenerate a specification or restate the request",
+        "ACCEPTANCE_CHECK:",
+    ):
+        if guard not in hook:
+            raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
+    implementers = "".join(path.read_text() for path in (plugin / "agents").glob("*implementer.toml"))
+    if implementers.count("Execute `USER_REQUEST`") != 7:
+        raise AssertionError("an implementation lane still depends on an executive rewrite")
 
     expected = {
         1.0: "luna", 2.9: "luna", 3.0: "terra_medium", 5.0: "terra_medium",
@@ -74,7 +89,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 corrections=0 terminal-takeover=ok sibling-drain=ok")
+    print("relay-protocol-ok lanes=7 packets=0 directive_words<=60 corrections=0 terminal-takeover=ok")
     return 0
 
 

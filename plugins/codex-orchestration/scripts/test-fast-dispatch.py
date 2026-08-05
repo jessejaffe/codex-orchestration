@@ -129,6 +129,12 @@ def main() -> int:
         "list agents",
         "repeat until none is running",
         "ORCHESTRATION_DELEGATE",
+        "DIRECTIVE",
+        "at most 60 words",
+        "do not\nfollow up before implementation",
+        "same context fork/foundation",
+        "never\ngenerate a specification or restate the request",
+        "ACCEPTANCE_CHECK:",
         "ORCHESTRATION_ACCEPT",
         "ORCHESTRATION_TAKEOVER",
         "selected root model",
@@ -138,7 +144,10 @@ def main() -> int:
     ):
         if required not in routed_context:
             raise AssertionError(f"dispatch contract omits {required!r}")
-    for forbidden in ('fork_turns: "all"', "usage-receipt.py", "receipt"):
+    for forbidden in (
+        'fork_turns: "all"', "usage-receipt.py", "receipt", "PACKET:",
+        "Create the execution packet", "exact PACKET",
+    ):
         if forbidden in routed_context:
             raise AssertionError(f"dispatch contract retains {forbidden!r}")
 
@@ -261,9 +270,9 @@ def main() -> int:
         "ORCHESTRATION_STATUS: Complexity",
         "Return immediately with exactly two lines",
         "at most 20 words",
-        "ORCHESTRATION_DELEGATE:",
         "ORCHESTRATION_ACCEPT:",
         "ORCHESTRATION_TAKEOVER:",
+        "Never generate an implementation",
         "zero correction loops",
     ):
         if boundary not in terra:

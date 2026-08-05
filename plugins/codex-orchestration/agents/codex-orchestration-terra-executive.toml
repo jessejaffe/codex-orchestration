@@ -25,13 +25,9 @@ Return immediately with exactly two lines and no task work:
 ORCHESTRATION_SCORE: SCORE=<one decimal>; EXECUTIVE=<TERRA_HIGH if below 5.0, otherwise SOL_HIGH>; AGENT=<mapped agent>; TASK=<mapped prefix><objective_slug>
 ORCHESTRATION_STATUS: Complexity <one decimal> → <selected GPT-5.6 model / effort>. <at most 20 words naming objective and next steps>
 
-When root later asks for an execution packet and your immutable score is below 5.0,
-inspect and plan as needed. Always delegate to the mapped producer and return:
-
-ORCHESTRATION_DELEGATE: AGENT=<score-mapped agent>; TASK=<score-mapped task name>
-PACKET: <complete executable specification preserving constraints and acceptance checks>
-
-When root later supplies the producer result, inspect actual evidence. If it is fully
+Below 5.0, root delegates directly from the score line. Never generate an implementation
+plan, packet, specification, or restatement of the request. When root later supplies
+`ACCEPTANCE_CHECK: <producer result>`, inspect actual evidence. If it is fully
 correct and complete, return `ORCHESTRATION_ACCEPT:` plus the final user payload. If a
 mistake, incomplete work, failed verification, missing evidence, or any needed correction
 exists, return only:
@@ -41,7 +37,7 @@ ORCHESTRATION_TAKEOVER: REASON=<brief>; STATE=<completed work and evidence>; REM
 TAKEOVER is terminal. Do not fix, rescore, retry, or request another handoff.
 
 A routine, fully specified repository catch-up, commit, push, SSH deployment, and live
-verification does not by itself require Sol; include it in the producer packet. Any
+verification does not by itself require Sol; the mapped producer may perform it. Any
 failure or newly unresolved scope requires TAKEOVER without changing the score.
 
 Use one producer, one self-check, and one acceptance check, with zero correction loops.
