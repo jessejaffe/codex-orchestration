@@ -1,23 +1,23 @@
 # Native Codex role contracts
 
-Use these contracts after the immutable score selects a cheaper implementation owner.
-Scores 1.0–4.9 use the Terra / High executive; scores 5.0–10.0 use primary Sol / High.
-The goal is one economical producer handoff, producer self-check, one executive
-acceptance check, and no review spiral.
+This is the diagnostic and role-template reference. Normal routing uses the compact
+contract embedded in `SKILL.md` and does not read this file. Scores 1.0–4.9 use the
+Terra / High executive; scores 5.0–10.0 use primary Sol / High.
 
-## One preflight per task
+## Diagnostic preflight after a concrete failure
 
-Before the first native spawn:
+Do not run this during normal routing. If a named role fails to spawn or reports a
+model mismatch:
 
-1. Run the bundled agent installer with `--check` and require all installed role files
-   to match the shipped templates.
-2. Require the exact selected agent type in the current tool surface. For a score below
+1. Run the bundled agent installer with `--check` once and require the installed role
+   files to match the shipped templates.
+2. Require the exact selected agent type. For a score below
    5.0, require and start `codex_orchestration_terra_executive` first.
 3. After spawn, inspect public metadata first. Use the runtime inspector only when
    model or effort is omitted. Accept only the selected pin.
 4. For a reviewer, capture the actual sandbox and permission-profile types.
 
-Do not repeat the installer check during the same task unless agent files changed. A
+Do not repeat the diagnostic check during the same task unless agent files changed. A
 missing selected tier moves immediately upward; unrelated roles do not block a healthy
 tier. When fallback reaches the owning executive's own model, it works directly rather
 than spawning a same-model producer. Never silently substitute an unnamed role.
@@ -168,7 +168,7 @@ before/after state proves no mutation.
 For every immutable score from 1.0 through 4.9, primary Sol starts
 `codex_orchestration_terra_executive` and gives it the original request, constraints,
 relevant evidence, immutable score, selected producer, root thread ID, and resolved
-receipt helper. Terra owns requirements, the producer packet, the one acceptance check,
+route. Terra owns requirements, the producer packet when needed, the one acceptance check,
 the one correction opportunity, direct takeover when correction fails, and final
 acceptance. Root Sol must not duplicate that work.
 
@@ -178,9 +178,10 @@ task_name: terra_high_exec_<objective_slug>
 fork_turns: none
 ~~~
 
-The Terra executive emits the same three-line route before its first nested producer
-call and registers every descendant against the root receipt immediately. Its Stop is
-not a separate task completion. If the selected producer falls upward to Terra / High,
+For simple conversational or bounded tool work, Terra executes directly and does not start a producer.
+Otherwise it emits the same three-line route before its first nested producer call.
+It never starts or registers a receipt; root finish discovers descendants from the
+transcript. Its Stop is not a separate task completion. If the selected producer falls upward to Terra / High,
 the Terra executive implements directly instead of spawning another Terra / High
 agent. If scope materially grows beyond the low band, it escalates to root Sol without
 changing the immutable score.

@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Credit-saving Codex routing with bounded handoffs, checks, and savings receipts.",
   "author": {
     "name": "Daniel McAteer",
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Credit-saving routing without review spirals",
-    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. It scores every deliverable once, hands executive ownership below 5.0 to GPT-5.6 Terra / High, and retains primary GPT-5.6 Sol / High ownership at 5.0 and above. Real implementation goes to the fixed score-selected model whenever that model is cheaper: Luna / Max at 1.0\u20132.9, Terra / Medium at 3.0\u20135.0, Terra / High at 5.1\u20136.5, Sol / Low at 6.6\u20137.2, Sol / Medium at 7.3\u20137.9, and Sol / High at 8.0\u201310.0. Simple conversational answers and routes where the owning executive already matches the implementation model use no implementation handoff. Each producer self-checks; the owning executive checks once, gives at most one correction request, then takes over directly if the correction still fails. Agent exactness is checked once per task, waiting is event-driven, and independent review is exceptional and risk-triggered. Every task retains immutable complexity, interruption handling, and the three-line savings receipt with an official-rate fallback. Completed-task tracking includes exact tokens, elapsed time, and delegation count. Daily upstream review never merges automatically and stays off the user's critical path. Accepted fork changes finish on jessejaffe/codex-orchestration main.",
+    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. It reads one consolidated routing contract, scores every deliverable once, hands executive ownership below 5.0 to GPT-5.6 Terra / High, and retains primary GPT-5.6 Sol / High ownership at 5.0 and above. Simple conversational or bounded tool work below 5.0 gets one immediate Sol-to-Terra handoff and Terra completes it directly; substantive implementation uses the fixed cheaper model ladder: Luna / Max at 1.0\u20132.9, Terra / Medium at 3.0\u20135.0, Terra / High at 5.1\u20136.5, Sol / Low at 6.6\u20137.2, Sol / Medium at 7.3\u20137.9, and Sol / High at 8.0\u201310.0. Normal routing skips reference reads, installer checks, runtime inspection, receipt startup, and manual thread registration. Each producer self-checks; the owning executive checks once, gives at most one correction request, then takes over if correction fails. The finish-time receipt discovers actual descendants from the task transcript, compares the routed model mix with all-Sol pricing, and falls back to official-rate task credits when weekly calibration is unavailable. Daily upstream review never merges automatically and stays off the user's critical path. Accepted fork changes finish on jessejaffe/codex-orchestration main.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

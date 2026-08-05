@@ -16,7 +16,8 @@ I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=gi
 
 | Route | When it wins | Implementation |
 |---|---|---|
-| No implementation handoff | Simple conversational answer, or the owning executive is already the selected implementation model | The owning executive |
+| No implementation handoff | The owning executive is already the selected implementation model | The owning executive |
+| Fast Terra handoff | Simple conversational or bounded tool work below 5.0 | One immediate handoff from root Sol; Terra / High executes directly |
 | Luna producer | Complexity is 1.0–2.9 | GPT-5.6 Luna / Max |
 | Terra Medium producer | Complexity is 3.0–5.0 | GPT-5.6 Terra / Medium |
 | Terra High producer | Complexity is 5.1–6.5 | GPT-5.6 Terra / High |
@@ -36,6 +37,12 @@ models differ. If the selected model is already the executive model, there is no
 same-model handoff. If a producer is unavailable, routing moves upward one tier at a
 time; reaching the executive's own model ends delegation and that executive works
 directly.
+
+Normal routing is intentionally one-pass. Codex reads one consolidated skill, scores
+once, and hands off immediately. It does not load separate role/receipt references,
+run an installer check, refresh pricing, inspect runtime files, or manually register a
+thread before ordinary work. Simple conversational or bounded tool work below 5.0 uses only the first
+Sol-to-Terra executive handoff; Terra completes it instead of adding a second producer.
 Every delegated activity keeps its colored model icon and starts its visible label with
 the spelled-out model and effort: `Luna Max`, `Terra Medium`, `Terra High`, `Sol Low`,
 `Sol Medium`, or `Sol High`. The model comes first so it remains readable when Codex truncates a
@@ -95,12 +102,14 @@ Normal selection rationale, worker identity, review details, and token totals re
 internal. The complexity score is always shown to one decimal place out of 10. If
 routing falls back, the implementation line includes one short verified reason. The
 receipt measures the task's recorded model usage and compares that same token mix with
-an all-Sol route. It excludes duplicated pre-model token replay from forked transcripts,
+an all-Sol route. Its final command discovers root-turn descendants directly from the
+transcript, so a spawn result that exposes only a task name cannot silently omit Terra
+or Luna usage. It excludes duplicated pre-model token replay from forked transcripts,
 tolerates harmless weekly-reset timestamp drift, and conservatively prices genuinely
 unknown models at Sol rates. Weekly calibration failure falls back to task credits; it
-does not make the receipt unavailable. If early measurement could not create task
-state, the mandatory finish command recovers the active turn directly from its
-transcript. A plugin gate now persists the exact announced complexity before
+does not make the receipt unavailable. Normal routing has no receipt-start step; the
+mandatory finish command recovers the active turn directly from its transcript. A
+plugin gate now persists the exact announced complexity before
 routed work can begin; that score cannot drift or disappear later, even when the actual
 implementation model changes during a verified fallback. A Stop hook enforces the
 footer mechanically: if a routed task skips the receipt lifecycle, it reconstructs the
@@ -109,6 +118,11 @@ final response containing the saved score and recovered receipt. Only an unrecov
 transcript, missing task model, or unavailable official pricing can make recovery
 genuinely unavailable; the final response then shows that reason instead of silently
 omitting the receipt.
+
+The visible executive line names the model that owned the task after routing; it does
+not imply that root Sol consumed zero setup tokens. Receipts include both root routing
+tokens and delegated Terra/Luna tokens. Consolidating the routing contract therefore
+improves both speed and measured savings by reducing the expensive Sol setup share.
 
 ## Measure whether Codex Orchestration actually works
 
@@ -161,7 +175,7 @@ repository content, and markers from other chats are ignored, so activation cann
 carry into a new chat.
 
 Before implementation Codex Orchestration reports the executive design/review model, the actual
-preflighted implementation model, and the complexity score. At completion it repeats
+implementation model, and the complexity score. At completion it repeats
 those three lines and the three-line calibrated or official-rate receipt.
 
 The producer self-checks and the owning executive performs one focused acceptance
@@ -254,10 +268,10 @@ sh "$plugin_dir/scripts/reinstall-plugin.sh"
 sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 ~~~
 
-The reinstaller proves every required file in the complete new 0.7.3 package. It accepts
+The reinstaller proves every required file in the complete new 0.7.4 package. It accepts
 only numeric release aliases or the repository's historical `+codex.*` cachebuster
 shape; arbitrary cache directories are refused and untouched. Before legacy removal,
-it preserves existing 0.7.2 aliases as complete 0.7.3 compatibility copies, runs the
+it preserves existing 0.7.2 aliases as complete 0.7.4 compatibility copies, runs the
 companion installer, and proves that all eight new role files are
 current without overwriting any customized legacy agent. It then copies every alias
 replacement into same-filesystem transaction directories, validates the staged
@@ -278,17 +292,17 @@ plugin or marketplace identities.
 #### Disposable real-CLI migration rehearsal
 
 Before renaming the GitHub repository, the owning executive can rehearse an exact local
-0.6.5-to-0.7.3 migration with two local checkouts. This procedure redirects every Codex,
+0.6.5-to-0.7.4 migration with two local checkouts. This procedure redirects every Codex,
 home, XDG, and temporary path into one disposable directory; it never reads or writes
 the user's real Codex configuration:
 
 ~~~sh
 codex_bin="$(command -v codex)"
 legacy_checkout=/absolute/path/to/sol-advisor-0.6.5
-current_checkout=/absolute/path/to/codex-orchestration-0.7.3
+current_checkout=/absolute/path/to/codex-orchestration-0.7.4
 test -x "$codex_bin"
 test "$(jq -r .version "$legacy_checkout/plugins/sol-advisor/.codex-plugin/plugin.json")" = 0.6.5
-test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.3
+test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.4
 
 sandbox="$(mktemp -d "${TMPDIR:-/tmp}/codex-orchestration-real-cli.XXXXXX")"
 export CODEX_HOME="$sandbox/codex-home"
@@ -310,7 +324,7 @@ sh "$plugin_dir/scripts/install-agents.sh" --check
 sh "$plugin_dir/scripts/reinstall-plugin.sh"
 sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 
-"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.3")] | length == 1'
+"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.4")] | length == 1'
 "$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "sol-advisor@sol-advisor")] | length == 0'
 if "$codex_bin" plugin marketplace list --json | jq -e '.. | strings | select(. == "sol-advisor")' >/dev/null; then exit 1; fi
 for alias in "$CODEX_HOME/plugins/cache/sol-advisor/sol-advisor"/*; do
@@ -394,10 +408,12 @@ hands executive ownership to Terra / High; at 5.0 and above it keeps ownership. 
 owning executive starts Luna / Max at 1.0–2.9, Terra / Medium at 3.0–5.0, Terra / High
 at 5.1–6.5, Sol / Low at 6.6–7.2, or Sol / Medium at 7.3–7.9. At 8.0–10.0 primary
 Sol / High already matches
-the implementation band and works directly. A simple conversational answer can also
-skip implementation delegation when the handoff would cost at least as much as the
-answer. Every producer receives the same bounded contract and must self-check before
-returning.
+the implementation band and works directly. Every producer receives the same bounded
+contract and must self-check before returning.
+
+A simple conversational or bounded tool task below 5.0 still saves credits: root Sol hands it immediately
+to the Terra / High executive, and Terra completes it directly. This avoids a second
+producer handoff without avoiding the economical Sol-to-Terra handoff.
 
 ## Fork main and upstream review
 
@@ -444,17 +460,11 @@ Their schema-safe task names begin with `luna_max_`, `terra_medium_`, `terra_hig
 `sol_low_`, `sol_medium_`, or `sol_high_`; the fresh reviewer
 begins with `sol_high_review_`.
 
-Before the first delegation in a task, the skill requires all of the following:
-
-1. The installed role files pass one byte-for-byte companion check. It is not repeated
-   unless those files change.
-2. The native spawn tool exposes the exact selected role. Unrelated roles are not
-   required; fallback tiers and the reviewer are checked only when attempted.
-3. Public native spawn/details metadata identifies the selected role and, when exposed,
-   its expected model and effort. If model or effort is omitted, the exact-rollout local
-   inspector above must provide them instead.
-4. The reviewer’s observed sandbox policy type and permission profile type are captured
-   and reported.
+Normal delegation trusts the installed named role and starts it immediately. The
+byte-for-byte installer check, local runtime inspector, and detailed role reference are
+diagnostic tools used only after a concrete spawn or model mismatch. Installation and
+the native role name provide the normal preflight, so repeated setup does not sit on
+the user's critical path.
 
 A missing, stale, conflicting, unavailable, inconsistent, or unobservable selected
 role/model/effort makes only that tier unavailable with current-turn evidence. A prior

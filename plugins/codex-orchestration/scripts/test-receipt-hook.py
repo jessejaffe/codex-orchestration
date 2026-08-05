@@ -505,6 +505,79 @@ def main() -> int:
             f"normal finish omitted or mispriced a nested descendant: {normal_finish!r}"
         )
 
+    # Native orchestration currently returns a visible task path from spawn rather
+    # than the child's UUID. Prove that a failed manual registration cannot leave a
+    # valid-looking Sol-only receipt: finish must recover the Terra descendant from
+    # the root turn's authoritative sub_agent_activity event.
+    reconciled_root = "abababab-abab-4bab-8bab-abababababab"
+    reconciled_turn = "acacacac-acac-4cac-8cac-acacacacacac"
+    reconciled_child = "adadadad-adad-4dad-8dad-adadadadadad"
+    reconciled_root_rollout = sessions / f"rollout-{reconciled_root}.jsonl"
+    reconciled_child_rollout = sessions / f"rollout-{reconciled_child}.jsonl"
+    write_jsonl(
+        reconciled_root_rollout,
+        [
+            token_event(100, with_meter=True),
+            {
+                "type": "event_msg",
+                "payload": {"type": "task_started", "turn_id": reconciled_turn},
+            },
+            {
+                "type": "turn_context",
+                "payload": {
+                    "turn_id": reconciled_turn,
+                    "model": "gpt-5.6-sol",
+                },
+            },
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "sub_agent_activity",
+                    "kind": "started",
+                    "agent_thread_id": reconciled_child,
+                },
+            },
+            token_event(120, with_meter=True),
+        ],
+    )
+    write_jsonl(
+        reconciled_child_rollout,
+        [
+            {"type": "turn_context", "payload": {"model": "gpt-5.6-terra"}},
+            token_event(50),
+        ],
+    )
+    receipt_command("start", "--thread-id", reconciled_root)
+    failed_registration = subprocess.run(
+        [
+            sys.executable,
+            str(receipt_helper),
+            "add-thread",
+            "/root/terra_high_exec_status_check",
+            "--root-thread-id",
+            reconciled_root,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    if failed_registration.returncode == 0:
+        raise AssertionError("task path unexpectedly passed UUID registration")
+    reconciled_finish = receipt_command(
+        "finish", "--root-thread-id", reconciled_root, "--keep"
+    ).stdout.strip()
+    expected_reconciled_finish = (
+        "Actual weekly usage: 2.50%\n"
+        "All-Sol equivalent: 7.00%\n"
+        "Estimated routing savings: 4.50%"
+    )
+    if reconciled_finish != expected_reconciled_finish:
+        raise AssertionError(
+            "finish trusted incomplete registration instead of recovering Terra: "
+            f"{reconciled_finish!r}"
+        )
+
     receipt = subprocess.run(
         [
             sys.executable,
@@ -856,8 +929,9 @@ def main() -> int:
         )
     print(
         "nested executive Stop suppression, root-first routing, same-model no-handoff, "
-        "monotonic executive fallback, root receipt descendant registration, weekly, "
-        "rate-based, and unstarted-task recovery receipts, and completion gate passed"
+        "monotonic executive fallback, root receipt descendant registration and "
+        "reconciliation, weekly, rate-based, and unstarted-task recovery receipts, "
+        "and completion gate passed"
     )
     return 0
 

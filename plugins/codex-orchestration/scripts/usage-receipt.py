@@ -634,6 +634,60 @@ def active_turn_id(transcript: Path) -> str | None:
     return active if active and THREAD_RE.fullmatch(active) else None
 
 
+def turn_spawned_thread_ids(transcript: Path, turn_id: str) -> list[str]:
+    """Return native descendants started during one exact root turn."""
+    active = False
+    children: list[str] = []
+    try:
+        with transcript.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                payload = event.get("payload") or {}
+                event_type = payload.get("type")
+                if event.get("type") == "event_msg" and event_type == "task_started":
+                    candidate = payload.get("turn_id")
+                    if active and candidate != turn_id:
+                        break
+                    if candidate == turn_id:
+                        active = True
+                    continue
+                if not active or event.get("type") != "event_msg":
+                    continue
+                if event_type == "sub_agent_activity" and payload.get("kind") == "started":
+                    child_id = payload.get("agent_thread_id")
+                    if (
+                        isinstance(child_id, str)
+                        and THREAD_RE.fullmatch(child_id)
+                        and child_id not in children
+                    ):
+                        children.append(child_id)
+                if event_type in {"task_complete", "turn_aborted"} and payload.get(
+                    "turn_id"
+                ) == turn_id:
+                    break
+    except OSError as exc:
+        raise ReceiptUnavailable("the root task transcript cannot be read") from exc
+    sessions = sessions_root()
+    pending = list(children)
+    visited: set[str] = set()
+    while pending:
+        child_id = pending.pop(0)
+        if child_id in visited:
+            continue
+        visited.add(child_id)
+        rollout = find_rollout(sessions, child_id)
+        if rollout is None:
+            continue
+        for descendant_id in spawned_thread_ids(rollout):
+            if descendant_id not in children:
+                children.append(descendant_id)
+                pending.append(descendant_id)
+    return children
+
+
 def format_percent(value: float) -> str:
     if value <= 0:
         return "0.00%"
@@ -739,6 +793,34 @@ def command_finish(args: argparse.Namespace) -> None:
         raise ReceiptUnavailable("usage receipt calibration is invalid")
     if not isinstance(threads, list) or not threads:
         raise ReceiptUnavailable("usage receipt has no recorded threads")
+
+    # Prefer the transcript's authoritative current-turn lineage over the manually
+    # registered list. Native spawn surfaces do not always return a UUID, so a failed
+    # add-thread call must not silently turn a routed Terra/Luna task into a Sol-only
+    # receipt. Recovery also includes descendants spawned by a delegated executive.
+    transcript = find_rollout(sessions_root(), root_thread_id)
+    turn_id = active_turn_id(transcript) if transcript is not None else None
+    recorded_ids = {
+        item.get("thread_id") for item in threads if isinstance(item, dict)
+    }
+    missing_descendants = (
+        set(turn_spawned_thread_ids(transcript, turn_id)) - recorded_ids
+        if transcript is not None and turn_id is not None
+        else set()
+    )
+    if transcript is not None and turn_id is not None and missing_descendants:
+        try:
+            recovered_usages, _ = recover_turn_usage(transcript, turn_id)
+        except ReceiptUnavailable:
+            # Retain the explicit-registration path for older or incomplete rollout
+            # formats. It remains valid when every UUID was recorded successfully.
+            recovered_usages = []
+        if recovered_usages:
+            print("\n".join(receipt_lines(recovered_usages, pricing, capacity)))
+            if not args.keep:
+                path.unlink(missing_ok=True)
+            return
+
     usages: list[tuple[str, dict[str, int]]] = []
     sessions = sessions_root()
     for item in threads:

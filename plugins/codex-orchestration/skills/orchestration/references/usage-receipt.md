@@ -8,51 +8,24 @@ tokens as Sol for the comparison; it does not pretend to know a counterfactual m
 token count. If a weekly denominator cannot be calibrated, it must still produce the
 rate-based task-credit receipt described below.
 
-## Start and register work
+## Normal completion
 
-Resolve `../../../scripts/usage-receipt.py` relative to this reference. Immediately
-after recognizing an activation that includes a task, and before audit, route analysis,
-or delegation, run:
-
-~~~sh
-python3 "$usage_receipt" start
-~~~
-
-The helper reads the root identity from `CODEX_THREAD_ID`. A failure is non-blocking.
-Do not retry during the same request. The completion hook has the transcript and can
-recover the task boundary if this early measurement cannot start. The mandatory
-`finish` command also recovers the currently active turn directly when no start-state
-file exists, so an early calibration failure cannot reappear at completion.
-
-After every native worker/reviewer spawn or Luna task creation returns a real thread
-ID, register it before monitoring or accepting more work:
-
-~~~sh
-python3 "$usage_receipt" add-thread <delegated-thread-id>
-~~~
-
-When a delegated executive spawns a descendant, it must use the root identity supplied
-in its handoff and register immediately after the spawn, before monitoring or accepting:
-
-~~~sh
-python3 "$usage_receipt" add-thread <descendant-thread-id> --root-thread-id <root-thread-id>
-~~~
-
-The root registers the delegated executive itself. Transcript recovery recursion does
-not replace descendant registration in the normal start/register/finish lifecycle.
-
-Registration starts delegated usage at zero so setup tokens already consumed by the
-new thread remain part of the task. Register implementation and review threads. Do not
-register unrelated tasks or use visible task titles as identity.
-
-## Print the receipt
-
-After verification and review, make this the final tool action before composing the
-answer:
+Resolve `../../../scripts/usage-receipt.py` relative to this reference. Normal routing
+has no receipt startup or registration step. After verification, make this the final
+tool action before composing the answer:
 
 ~~~sh
 python3 "$usage_receipt" finish
 ~~~
+
+`finish` uses the active root-turn boundary and authoritative `sub_agent_activity`
+events to discover every native descendant recursively. It therefore remains correct
+when the spawn surface returns only a task path rather than a UUID. A stale or failed
+manual `add-thread` call cannot silently produce a valid-looking Sol-only receipt.
+
+The legacy `start` and `add-thread` commands remain available for diagnostics and older
+automation, but normal orchestration must not spend user time on them. When legacy
+state exists, `finish` reconciles it with transcript descendants before pricing.
 
 This command is mandatory for every completed scored task. Do not draft the final
 answer and do not substitute hand-written model lines until the command has run.
@@ -80,9 +53,9 @@ a weekly-allowance percentage and must not be labeled as one.
 
 Do not add a receipt heading, basis, confidence, token totals, pricing explanation, or
 another savings sentence. The word `Estimated` already carries the necessary caveat.
-The plugin's Stop hook verifies these lines before a routed turn can stop. If the
-normal start/register/finish lifecycle was skipped, it uses the transcript's turn
-boundary and every spawned thread ID to run the equivalent recovery command:
+The plugin's Stop hook verifies these lines before a routed turn can stop. It uses the
+transcript's turn boundary and every spawned thread ID to run the equivalent recovery
+command:
 
 ~~~sh
 python3 "$usage_receipt" recover --transcript <root-rollout.jsonl> --turn-id <turn-id>
@@ -92,8 +65,8 @@ Weekly calibration failure alone must never produce `Savings receipt unavailable
 normal finish and transcript recovery fall back to official-rate task credits. Only an
 unrecoverable task transcript, missing task model, or unavailable official pricing may
 produce one explicit `Savings receipt unavailable: <reason>` line. Never omit the receipt.
-Preserve task state for a later finish only when the current request
-is interrupted rather than completed.
+Preserve legacy task state for a later finish only when the current request is
+interrupted rather than completed.
 
 The calibrated receipt estimates the weekly denominator from local Codex history plus
 the weekly meter. Forked transcripts can replay parent token events before recording a
