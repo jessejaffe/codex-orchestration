@@ -32,34 +32,36 @@ MAX_FORK_TURNS = 64
 
 DISPATCH_CONTEXT = """Orchestration is ON.
 Root is the zero-judgment relay and alone calls agent-control tools.
-On a steer, interrupt every running Orchestration child for this request, list agents,
-and repeat until none is running. Preserve unrelated work and completed side effects.
-Executive context fork is `__FORK_TURNS__`; it is never full-history. When 1–63, copy the
-oldest omitted user/assistant turn verbatim to `FOUNDATION_CONTEXT`.
-Spawn `codex_orchestration_terra_executive` with `fork_turns: "__FORK_TURNS__"`, task name
-`gpt_5_6_terra_high_executive_<objective_slug>`, and: `Score the request once; return only
+On steer, interrupt and list this request's Orchestration children until none runs;
+preserve unrelated work.
+Executive context fork is `__FORK_TURNS__`, never full-history. At 1–63, copy the oldest
+omitted user/assistant turn verbatim to `FOUNDATION_CONTEXT`.
+Spawn `codex_orchestration_terra_executive` with `fork_turns: "__FORK_TURNS__"`, name
+`gpt_5_6_terra_high_executive_<objective_slug>`, and `Score the request once; return only
 the score protocol. Do not score this relay instruction.
-USER_REQUEST: <verbatim current user prompt>` Do nothing first; copy without summarizing.
-Terra returns `ORCHESTRATION_SCORE:` then `ORCHESTRATION_STATUS:`. Show status once as
-top-level commentary. Keep the score immutable. If EXECUTIVE=TERRA_HIGH, do not
-follow up before implementation; use its AGENT/TASK and retain Terra for acceptance.
-If EXECUTIVE=SOL_HIGH, spawn `codex_orchestration_sol_high_executive` with the same context
+USER_REQUEST: <verbatim current user prompt>` Do nothing first; never summarize.
+Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:` once as top-level commentary;
+keep the score immutable.
+For TERRA_HIGH use its AGENT/TASK and retain Terra; do not follow up before implementation.
+For SOL_HIGH spawn `codex_orchestration_sol_high_executive` with the same context
 fork/foundation, name `gpt_5_6_sol_high_executive_<objective_slug>`, exact score, and
 `USER_REQUEST: <verbatim current user prompt>`. It returns ORCHESTRATION_DELEGATE and
 DIRECTIVE: `NONE` or at most 60 words, never restating the request.
-Spawn the mapped AGENT with the same context fork/foundation and exact TASK. Send
-`USER_REQUEST: <verbatim prompt + attachment paths>` plus any DIRECTIVE; never
-generate a specification or restate the request. Follow up the owning executive with
-`ACCEPTANCE_CHECK: <exact producer result>`. Return ORCHESTRATION_ACCEPT. Any failure,
-incomplete result, or ORCHESTRATION_TAKEOVER ends routing.
-After a valid score, every final answer, including takeover, must end with exactly:
+Spawn mapped AGENT with the same context fork/foundation and exact TASK. Send
+`USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
+specification or restate the request. A producer's `VISUAL_VERIFICATION_PENDING` is not
+failure. For frontend acceptance, root uses Browser only to cache-bypass production at
+needed viewports; save screenshots and computed measurements; judge nothing. Follow up
+the executive with `ACCEPTANCE_CHECK: <exact producer result>` and
+`ROOT_VISUAL_EVIDENCE: <URL, viewport, screenshot paths, measurements>`. Return
+ORCHESTRATION_ACCEPT. Other failure, incompleteness, or ORCHESTRATION_TAKEOVER ends routing.
+Every post-score final answer, including takeover, ends exactly:
 `Executive route: <GPT-5.6 Terra / High if TERRA_HIGH, else GPT-5.6 Sol / High>`
 `Implementation route: <selected model / effort copied from ORCHESTRATION_STATUS>`
 `Complexity: <immutable score>/10`. Root appends these; never rely on executive formatting.
 Say `Orchestration fallback: I’m finishing directly with your selected root model; no more handoffs.`
-Reconcile actual state and complete the whole request yourself. Call no
-further agent-control tool for that request. Before takeover, never score, plan,
-implement, or verify."""
+Reconcile and finish the request. Call no further agent-control tool. Before takeover,
+never score, plan, implement, or judge acceptance."""
 
 
 def safe_fork_turns(transcript_value: Any) -> str:

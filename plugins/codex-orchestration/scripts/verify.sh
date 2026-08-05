@@ -128,20 +128,21 @@ for guard in \
   'ORCHESTRATION_SCORE:' \
   'ORCHESTRATION_STATUS:' \
   'top-level commentary' \
-  'interrupt every running Orchestration child' \
-  'list agents' \
-  'repeat until none is running' \
+  "interrupt and list this request's Orchestration children until none runs" \
   'ORCHESTRATION_DELEGATE' \
   'DIRECTIVE' \
   'at most 60 words' \
   'do not' \
   'follow up before implementation' \
   'never' \
-  'generate a specification or restate the request' \
+  'specification or restate the request' \
   'ACCEPTANCE_CHECK:' \
+  'VISUAL_VERIFICATION_PENDING' \
+  'ROOT_VISUAL_EVIDENCE:' \
+  'Browser only' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
-  'every final answer, including takeover' \
+  'Every post-score final answer, including takeover' \
   'Executive route:' \
   'Implementation route:' \
   'Complexity:' \
@@ -180,7 +181,9 @@ for guard in \
   'Never generate an implementation' \
   'untrusted claim' \
   'task-appropriate probe' \
-  'production page with cache bypass' \
+  'ROOT_VISUAL_EVIDENCE' \
+  'view_image' \
+  'Browser list is empty' \
   'root owns final route metadata' \
   'zero correction loops'
 do
@@ -198,7 +201,9 @@ for guard in \
   'ORCHESTRATION_TAKEOVER:' \
   'untrusted claim' \
   'task-appropriate probe' \
-  'production page with cache bypass' \
+  'ROOT_VISUAL_EVIDENCE' \
+  'view_image' \
+  'Browser list is empty' \
   'Root owns and appends final route metadata' \
   'TAKEOVER is terminal'
 do
@@ -218,6 +223,10 @@ for implementer in "$agents"/*-implementer.toml; do
     fail "implementation lane can report deployment mechanics without behavior: $implementer"
   grep -Fq 'production page with cache bypass' "$implementer" ||
     fail "frontend implementation lane lacks live rendered verification: $implementer"
+  grep -Fq 'VISUAL_VERIFICATION_PENDING' "$implementer" ||
+    fail "frontend implementation lane lacks child-browser evidence handoff: $implementer"
+  grep -Fq 'isolated from child threads' "$implementer" ||
+    fail "frontend implementation lane ignores Browser session isolation: $implementer"
   grep -Fq 'perform the implementation yourself' "$implementer" ||
     fail "implementation lane can delegate its work: $implementer"
   grep -Fq 'Do not use collaboration or agent-control' "$implementer" ||

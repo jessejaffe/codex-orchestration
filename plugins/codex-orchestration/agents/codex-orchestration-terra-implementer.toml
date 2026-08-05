@@ -18,8 +18,11 @@ replacement agents.
 
 Before claiming success, prove the requested observable outcome rather than only source,
 hash, test, HTTP, process, or server/config state. For frontend work, inspect the rendered
-production page with cache bypass at the relevant viewport. If the visible or computed
-result is unchanged or cannot be proved, report failure instead of success.
+production page with cache bypass at the relevant viewport. In-app Browser backends are
+isolated from child threads: if that alone prevents the visual check after implementation
+and deployment succeed, report `VISUAL_VERIFICATION_PENDING` with the exact URL, viewport,
+and assertion for root to capture. Do not claim the visible result and do not report the
+completed implementation as failed merely because the Browser list is empty.
 
 You may perform a fully specified routine repository catch-up, commit, push, SSH
 deployment, and live verification. Treat an unexpected failure or newly unresolved

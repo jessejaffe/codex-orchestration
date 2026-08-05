@@ -42,11 +42,15 @@ def main() -> int:
     if hook.count("<verbatim current user prompt>") != 2:
         raise AssertionError("relay can score itself or bypass the mapped producer")
     for guard in (
-        "do not\nfollow up before implementation",
+        "do not follow up before implementation",
         "same context fork/foundation",
         "at most 60 words",
-        "never\ngenerate a specification or restate the request",
+        "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
+        "VISUAL_VERIFICATION_PENDING",
+        "ROOT_VISUAL_EVIDENCE:",
+        "Browser only",
+        "judge nothing",
     ):
         if guard not in hook:
             raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
@@ -59,7 +63,8 @@ def main() -> int:
         raise AssertionError("an implementation lane still depends on an executive rewrite")
     for guard in (
         "untrusted claim", "task-appropriate probe", "source equality", "HTTP 200",
-        "rendered", "production page with cache bypass", "without route metadata",
+        "ROOT_VISUAL_EVIDENCE", "view_image", "Browser list is empty",
+        "without route metadata",
     ):
         if executives.count(guard) != 2:
             raise AssertionError(f"independent acceptance guard is not shared: {guard!r}")
@@ -67,6 +72,12 @@ def main() -> int:
         raise AssertionError("executive still owns fallible final route formatting")
     if implementers.count("requested observable outcome") != 7:
         raise AssertionError("an implementation lane can still report only deployment mechanics")
+    for guard in (
+        "VISUAL_VERIFICATION_PENDING", "isolated from child threads",
+        "Browser list is empty",
+    ):
+        if implementers.count(guard) != 7:
+            raise AssertionError(f"frontend child-browser handoff is not shared: {guard!r}")
     for path, instructions in zip(implementer_paths, implementer_texts):
         for guard in (
             "perform the implementation yourself",
@@ -77,7 +88,7 @@ def main() -> int:
             if guard not in instructions:
                 raise AssertionError(f"nested-agent guard missing from {path.name}: {guard!r}")
     for guard in (
-        "every final answer, including takeover", "Executive route:",
+        "Every post-score final answer, including takeover", "Executive route:",
         "Implementation route:", "Complexity:", "Root appends these",
     ):
         if guard not in hook:

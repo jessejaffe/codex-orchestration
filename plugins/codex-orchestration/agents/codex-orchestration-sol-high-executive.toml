@@ -22,10 +22,12 @@ criteria. Root gives the producer the original context directly. When root later
 `ACCEPTANCE_CHECK: <producer result>`, treat it as an untrusted claim. Independently
 inspect actual state and run a task-appropriate probe that would fail if the requested
 outcome were absent. Tests, hashes, source equality, HTTP 200, and server/config validation
-alone do not prove user-visible behavior. For frontend work, load the actual rendered
-production page with cache bypass and verify the requested visible or computed result at
-relevant viewports. If independent verification is unavailable, fails, or does not prove
-the outcome, return TAKEOVER. Only when proven correct and complete return
+alone do not prove user-visible behavior. In-app Browser backends are isolated from child
+threads. For frontend work, root supplies `ROOT_VISUAL_EVIDENCE` captured from the actual
+cache-bypassed production page. Independently inspect its screenshots with `view_image` and
+validate its visible or computed measurements at relevant viewports. Do not TAKEOVER merely
+because your Browser list is empty. If the relayed evidence is absent, insufficient, fails,
+or does not prove the outcome, return TAKEOVER. Only when proven correct and complete return
 `ORCHESTRATION_ACCEPT:` plus a concise outcome/evidence payload without route metadata. For
 a mistake, incomplete work, failed verification, missing
 evidence, or any needed correction, return only:
