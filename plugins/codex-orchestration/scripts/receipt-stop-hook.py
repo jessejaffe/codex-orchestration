@@ -215,6 +215,7 @@ def allowed_child_role(score: str, agent_type: str) -> bool:
         "codex_orchestration_luna_implementer",
         "codex_orchestration_terra_medium_implementer",
         "codex_orchestration_terra_implementer",
+        "codex_orchestration_sol_low_implementer",
         "codex_orchestration_sol_medium_implementer",
         "codex_orchestration_sol_high_implementer",
     ]
@@ -225,10 +226,12 @@ def allowed_child_role(score: str, agent_type: str) -> bool:
         start = 1
     elif numeric <= 6.5:
         start = 2
-    elif numeric <= 7.9:
+    elif numeric <= 7.2:
         start = 3
-    else:
+    elif numeric <= 7.9:
         start = 4
+    else:
+        start = 5
     return agent_type in ladder[start:]
 
 
@@ -568,6 +571,7 @@ def pre_tool_gate(hook_input: dict[str, Any]) -> int:
                 return 0
             if agent_type in {
                 "codex_orchestration_terra_implementer",
+                "codex_orchestration_sol_low_implementer",
                 "codex_orchestration_sol_medium_implementer",
                 "codex_orchestration_sol_high_implementer",
             }:

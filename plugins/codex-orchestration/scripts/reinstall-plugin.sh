@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration 0.7.2 and safely retire the configured legacy identity.
+# Install Codex Orchestration 0.7.3 and safely retire the configured legacy identity.
 
 set -eu
 
@@ -24,7 +24,7 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-[ "$manifest_version" = 0.7.2 ] || fail "this migration installer requires release 0.7.2: $manifest_version"
+[ "$manifest_version" = 0.7.3 ] || fail "this migration installer requires release 0.7.3: $manifest_version"
 case "$manifest_version" in *+*) fail "plugin version must not contain build metadata: $manifest_version" ;; esac
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
@@ -85,6 +85,7 @@ agents/codex-orchestration-luna-implementer.toml
 agents/codex-orchestration-terra-medium-implementer.toml
 agents/codex-orchestration-terra-executive.toml
 agents/codex-orchestration-terra-implementer.toml
+agents/codex-orchestration-sol-low-implementer.toml
 agents/codex-orchestration-sol-medium-implementer.toml
 agents/codex-orchestration-sol-high-implementer.toml
 agents/codex-orchestration-sol-reviewer.toml
@@ -337,9 +338,9 @@ current=$(installed_version "$current_plugin_id") || fail "new plugin was not li
 current_cache=$cache_root/$manifest_version
 validate_complete_package "$current_cache"
 
-# A complete, conflict-free seven-role install is a prerequisite for retiring either
+# A complete, conflict-free eight-role install is a prerequisite for retiring either
 # legacy configured identity. The companion installer preflights every current and
-# legacy file, proves all seven current files, and only then removes exact shipped
+# legacy file, proves all eight current files, and only then removes exact shipped
 # legacy files. Customized legacy agents therefore stop this migration without being
 # overwritten and before plugin or marketplace removal.
 sh "$current_cache/scripts/install-agents.sh"

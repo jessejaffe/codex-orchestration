@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration's seven custom agents and retire exact shipped legacy files.
+# Install Codex Orchestration's eight custom agents and retire exact shipped legacy files.
 
 set -eu
 
@@ -7,7 +7,7 @@ usage() {
   cat <<'EOF'
 Usage: install-agents.sh [--target-dir PATH] [--check]
 
-Install Codex Orchestration's seven current custom-agent templates. Normal mode also
+Install Codex Orchestration's eight current custom-agent templates. Normal mode also
 removes the exact legacy sol-advisor-* counterpart for each role, but only when its
 content matches a recognized shipped template. User-modified, nonregular, and
 symlinked current or legacy files are conflicts and are never overwritten or deleted.
@@ -17,7 +17,7 @@ otherwise "$HOME/.codex/agents".
 
 Options:
   --target-dir PATH  Explicit destination directory.
-  --check            Require all seven current files and no legacy counterparts.
+  --check            Require all eight current files and no legacy counterparts.
   --help             Show this help text.
 EOF
 }
@@ -30,6 +30,7 @@ sha256_file() { shasum -a 256 "$1" 2>/dev/null | awk 'NF >= 1 && length($1) == 6
 role_files() {
   role=$1
   current_file=codex-orchestration-$role.toml
+  previous_current_digests=''
   # Compatibility migration only: these are the exact pre-0.7.0 shipped filenames.
   legacy_file=sol-advisor-$role.toml
   case "$role" in
@@ -45,7 +46,13 @@ role_files() {
     terra-implementer)
       legacy_digests='7b4549d971ddd7c07a886ebcc01bc9645cc0eedc4e81f32930bee6ec9ab8c44c 4425a8c1f21ce8c6af93f96adc253bbc33ea301f1389b3fa8ce350be08584eca 06c318e5e93f37452635906394e6ea69fb6a65ba9e6ad7172d37b444e0dc871d'
       ;;
+    sol-low-implementer)
+      # This role was introduced after the Sol Advisor identity was retired.
+      legacy_digests=''
+      ;;
     sol-medium-implementer)
+      # Exact 0.7.2 companion template, safe to replace during the band split.
+      previous_current_digests='5360b683128ec2863bdaf95fd1bbb13eda615b67270dbbf3e45c553fbde60562'
       legacy_digests='dd42eaeaac3063c43109c9b45f7d1efda0ef999976d9a2231f8833e42afa3974'
       ;;
     sol-high-implementer)
@@ -61,6 +68,7 @@ role_files() {
 classify_current() {
   destination=$1
   template=$2
+  previous_digests=$3
   if ! path_exists "$destination"; then
     printf '%s\n' missing
   elif [ -L "$destination" ] || [ ! -f "$destination" ]; then
@@ -68,6 +76,13 @@ classify_current() {
   elif cmp -s "$template" "$destination"; then
     printf '%s\n' current
   else
+    digest=$(sha256_file "$destination")
+    for recognized in $previous_digests; do
+      if [ "$digest" = "$recognized" ]; then
+        printf '%s\n' previous
+        return
+      fi
+    done
     printf '%s\n' conflict
   fi
 }
@@ -97,7 +112,7 @@ classify_legacy() {
 install_missing() {
   template=$1
   destination=$2
-  [ "$(classify_current "$destination" "$template")" = missing ] ||
+  [ "$(classify_current "$destination" "$template" '')" = missing ] ||
     fail "current destination changed after preflight: $destination"
   staged=$(mktemp "$target_dir/.codex-orchestration-agent.XXXXXX") ||
     fail "could not stage template: $destination"
@@ -108,6 +123,22 @@ install_missing() {
   fi
   rm -f "$staged" || fail "could not remove staged template: $staged"
   printf '%s\n' "INSTALLED: $destination"
+}
+
+upgrade_previous() {
+  template=$1
+  destination=$2
+  previous_digests=$3
+  [ "$(classify_current "$destination" "$template" "$previous_digests")" = previous ] ||
+    fail "current destination changed after preflight and was not upgraded: $destination"
+  staged=$(mktemp "$(dirname "$destination")/.codex-orchestration-agent.XXXXXX") ||
+    fail "could not stage template: $destination"
+  if ! cp "$template" "$staged"; then rm -f "$staged"; fail "could not stage template: $destination"; fi
+  if ! mv "$staged" "$destination"; then
+    rm -f "$staged"
+    fail "could not upgrade exact previous template: $destination"
+  fi
+  printf '%s\n' "UPGRADED: exact previous shipped template $destination"
 }
 
 remove_legacy() {
@@ -146,7 +177,7 @@ done
 case "$target_dir" in /*) ;; *) target_dir=$(pwd -P)/$target_dir ;; esac
 case "$target_dir" in /|//) fail "refusing the filesystem root as an agent target." ;; esac
 
-roles='luna-implementer terra-medium-implementer terra-executive terra-implementer sol-medium-implementer sol-high-implementer sol-reviewer'
+roles='luna-implementer terra-medium-implementer terra-executive terra-implementer sol-low-implementer sol-medium-implementer sol-high-implementer sol-reviewer'
 preflight_failed=0
 if path_exists "$target_dir" && { [ -L "$target_dir" ] || [ ! -d "$target_dir" ]; }; then
   report_error "target directory is not a real directory: $target_dir"
@@ -158,20 +189,20 @@ for role in $roles; do
   current_destination=$target_dir/$current_file
   legacy_destination=$target_dir/$legacy_file
   [ -f "$template" ] && [ ! -L "$template" ] || report_error "shipped template is missing or unsafe: $template"
-  current_state=$(classify_current "$current_destination" "$template")
+  current_state=$(classify_current "$current_destination" "$template" "$previous_current_digests")
   legacy_state=$(classify_legacy "$legacy_destination" "$legacy_digests")
   if [ "$check_only" -eq 1 ]; then
     [ "$current_state" = current ] || report_error "$current_file is $current_state, not current: $current_destination"
     [ "$legacy_state" = missing ] || report_error "$legacy_file is $legacy_state and must be migrated: $legacy_destination"
   else
-    case "$current_state" in current|missing) ;; *) report_error "$current_file is $current_state and will not be overwritten: $current_destination" ;; esac
+    case "$current_state" in current|missing|previous) ;; *) report_error "$current_file is $current_state and will not be overwritten: $current_destination" ;; esac
     case "$legacy_state" in legacy|missing) ;; *) report_error "$legacy_file is $legacy_state and will not be removed: $legacy_destination" ;; esac
   fi
 done
 [ "$preflight_failed" -eq 0 ] || exit 1
 
 if [ "$check_only" -eq 1 ]; then
-  printf '%s\n' "CHECK PASSED: all seven Codex Orchestration roles are current and legacy files are absent."
+  printf '%s\n' "CHECK PASSED: all eight Codex Orchestration roles are current and legacy files are absent."
   exit 0
 fi
 
@@ -183,22 +214,23 @@ for role in $roles; do
   role_files "$role"
   template=$template_dir/$current_file
   current_destination=$target_dir/$current_file
-  case "$(classify_current "$current_destination" "$template")" in
+  case "$(classify_current "$current_destination" "$template" "$previous_current_digests")" in
     missing) install_missing "$template" "$current_destination" ;;
+    previous) upgrade_previous "$template" "$current_destination" "$previous_current_digests" ;;
     current) printf '%s\n' "ALREADY CURRENT: $current_destination" ;;
     *) fail "current destination changed after preflight: $current_destination" ;;
   esac
 done
 
-# Prove the complete seven-role replacement set before any legacy file is removed.
+# Prove the complete eight-role replacement set before any legacy file is removed.
 for role in $roles; do
   role_files "$role"
   template=$template_dir/$current_file
   current_destination=$target_dir/$current_file
-  [ "$(classify_current "$current_destination" "$template")" = current ] ||
+  [ "$(classify_current "$current_destination" "$template" "$previous_current_digests")" = current ] ||
     fail "could not prove current role before legacy retirement: $current_destination"
 done
-printf '%s\n' "PROVED: all seven Codex Orchestration roles are current before legacy retirement."
+printf '%s\n' "PROVED: all eight Codex Orchestration roles are current before legacy retirement."
 
 for role in $roles; do
   role_files "$role"
@@ -211,4 +243,4 @@ for role in $roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' "INSTALL PASSED: all seven Codex Orchestration roles are current and exact shipped legacy files were removed."
+printf '%s\n' "INSTALL PASSED: all eight Codex Orchestration roles are current and exact shipped legacy files were removed."

@@ -120,7 +120,8 @@ Select implementation from these fixed bands:
 - **1.0–2.9:** Luna / Max
 - **3.0–5.0:** Terra / Medium
 - **5.1–6.5:** Terra / High
-- **6.6–7.9:** Sol / Medium
+- **6.6–7.2:** Sol / Low
+- **7.3–7.9:** Sol / Medium
 - **8.0–10.0:** Sol / High
 
 Anchor ordinary bounded work with settled requirements near 5.0. Do not inflate the
@@ -172,7 +173,7 @@ Before the first native spawn in the task, run the agent installer `--check` onc
 not repeat the installer check unless the installed files change. Require the exact
 selected agent type. If unavailable, move upward only until the owning executive's
 tier. The low-band ladder is `Luna Max → Terra Medium → Terra High executive`; the
-high-band ladder is `Terra Medium → Terra High → Sol Medium → primary Sol High`.
+high-band ladder is `Terra Medium → Terra High → Sol Low → Sol Medium → primary Sol High`.
 
 Use at most one unchanged spawn retry per tier. A failed tier, spawn, or runtime check
 moves upward immediately; do not wait for unrelated concurrent tasks. If a fallback
@@ -196,7 +197,8 @@ Spawn only the one mapped producer with `fork_turns: none`:
 1.0–2.9: agent_type: codex_orchestration_luna_implementer; task_name: luna_max_<objective_slug>
 3.0–5.0: agent_type: codex_orchestration_terra_medium_implementer; task_name: terra_medium_<objective_slug>
 5.1–6.5: agent_type: codex_orchestration_terra_implementer; task_name: terra_high_<objective_slug>
-6.6–7.9: agent_type: codex_orchestration_sol_medium_implementer; task_name: sol_medium_<objective_slug>
+6.6–7.2: agent_type: codex_orchestration_sol_low_implementer; task_name: sol_low_<objective_slug>
+7.3–7.9: agent_type: codex_orchestration_sol_medium_implementer; task_name: sol_medium_<objective_slug>
 8.0–10.0: primary Sol / High implements directly; no producer spawn
 ~~~
 

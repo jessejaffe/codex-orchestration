@@ -101,6 +101,6 @@ child model context; the helper excludes that pre-context replay rather than cou
 it twice. Unknown post-context models are conservatively priced at Sol rates for
 calibration. A cached calibration tolerates up to 60 seconds of reset-timestamp drift.
 Both receipt forms compare identical observed token mixes at different published
-rates. Sol / Medium and Sol / High therefore have no rate-based difference; savings
+rates. Sol / Low, Sol / Medium, and Sol / High therefore have no rate-based difference; savings
 arise from Luna or Terra implementation usage. Explain these details only if the user
 asks.

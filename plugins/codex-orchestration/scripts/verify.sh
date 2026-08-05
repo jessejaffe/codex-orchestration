@@ -1,5 +1,5 @@
 #!/bin/sh
-# Repository-local verification for Codex Orchestration's seven-role companion migration.
+# Repository-local verification for Codex Orchestration's eight-role companion migration.
 
 set -eu
 
@@ -46,6 +46,7 @@ tmp_dir=$(mktemp -d "$tmp_base/codex-orchestration-verify.XXXXXX") || fail "coul
 terra_medium_file=codex-orchestration-terra-medium-implementer.toml
 terra_executive_file=codex-orchestration-terra-executive.toml
 terra_file=codex-orchestration-terra-implementer.toml
+sol_low_file=codex-orchestration-sol-low-implementer.toml
 sol_medium_file=codex-orchestration-sol-medium-implementer.toml
 sol_high_file=codex-orchestration-sol-high-implementer.toml
 sol_file=codex-orchestration-sol-reviewer.toml
@@ -60,6 +61,7 @@ legacy_luna_file=sol-advisor-luna-implementer.toml
 legacy_terra_sha256=4425a8c1f21ce8c6af93f96adc253bbc33ea301f1389b3fa8ce350be08584eca
 legacy_luna_sha256=fba1b42849d93737e83b094a2ab0b1611f87ac37db7438c8bbdf581f0813f8eb
 previous_terra_sha256=06c318e5e93f37452635906394e6ea69fb6a65ba9e6ad7172d37b444e0dc871d
+previous_sol_medium_sha256=5360b683128ec2863bdaf95fd1bbb13eda615b67270dbbf3e45c553fbde60562
 
 snapshot_files() {
   target=$1
@@ -94,7 +96,8 @@ write_legacy_roles() {
     remainder=${mapping#*:}
     legacy=${remainder%%:*}
     expected=${remainder##*:}
-    sed -e 's/Codex Orchestration/Sol Advisor/g' -e 's/codex_orchestration/sol_advisor/g' \
+    sed -e 's/7.3–7.9/6.6–7.9/g' -e 's/7.3 through 7.9/6.6 through 7.9/g' \
+      -e 's/Codex Orchestration/Sol Advisor/g' -e 's/codex_orchestration/sol_advisor/g' \
       "$templates/$current" > "$target/$legacy"
     [ "$(shasum -a 256 "$target/$legacy" | awk '{print $1}')" = "$expected" ] ||
       fail "legacy 0.6.5 fixture digest drifted: $legacy"
@@ -126,13 +129,22 @@ PREVIOUS_TERRA
   [ "$(shasum -a 256 "$target/$legacy_terra_file" | awk '{print $1}')" = "$previous_terra_sha256" ] || fail "previous Terra fixture digest drifted"
 }
 
+write_previous_sol_medium() {
+  target=$1
+  mkdir -p "$target"
+  sed -e 's/7.3–7.9/6.6–7.9/g' -e 's/7.3 through 7.9/6.6 through 7.9/g' \
+    "$templates/$sol_medium_file" > "$target/$sol_medium_file"
+  [ "$(shasum -a 256 "$target/$sol_medium_file" | awk '{print $1}')" = "$previous_sol_medium_sha256" ] ||
+    fail "previous Sol Medium fixture digest drifted"
+}
+
 for required in "$installer" "$reinstaller" "$runtime_inspector" "$daily_audit" "$usage_receipt" "$effectiveness_tracker" "$effectiveness_test" "$receipt_hook" "$receipt_hook_test" "$state_migration" "$hook_config" "$manifest" "$skill" "$contracts" "$receipt_contract" "$readme" "$ui" "$upstream_workflow"; do
   test -f "$required" || fail "required file missing: $required"
 done
 
 jq empty "$manifest"
 manifest_version=$(jq -r '.version' "$manifest")
-[ "$manifest_version" = 0.7.2 ] || fail "manifest version is not the required 0.7.2 release: $manifest_version"
+[ "$manifest_version" = 0.7.3 ] || fail "manifest version is not the required 0.7.3 release: $manifest_version"
 case "$manifest_version" in *+*) fail "manifest version contains incompatible build metadata: $manifest_version" ;; esac
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Turn Orchestration on' || fail "manifest does not describe Orchestration activation"
 jq -r '.interface.longDescription' "$manifest" | grep -Fq 'hands executive ownership below 5.0' || fail "manifest omits low-band Terra ownership"
@@ -169,6 +181,11 @@ expected = {
         "model": "gpt-5.6-terra",
         "model_reasoning_effort": "high",
     },
+    "codex-orchestration-sol-low-implementer.toml": {
+        "name": "codex_orchestration_sol_low_implementer",
+        "model": "gpt-5.6-sol",
+        "model_reasoning_effort": "low",
+    },
     "codex-orchestration-sol-medium-implementer.toml": {
         "name": "codex_orchestration_sol_medium_implementer",
         "model": "gpt-5.6-sol",
@@ -197,21 +214,25 @@ for filename, pins in expected.items():
     for field, value in pins.items():
         if data.get(field) != value:
             raise SystemExit(f"{filename}: {field}={data.get(field)!r}, expected {value!r}")
-print("seven exact role pins are valid")
+print("eight exact role pins are valid")
 PY
-pass "exact seven-role TOML inventory"
+pass "exact eight-role TOML inventory with six implementation levels"
 
 grep -Fq '7b4549d971ddd7c07a886ebcc01bc9645cc0eedc4e81f32930bee6ec9ab8c44c' "$installer" || fail "installer omits shipped 0.6.5 Terra digest"
 grep -Fq 'bc4c6a8c2f3f58288d970d9caba66e2ecc532a59820c08bb958d466ed561500d' "$installer" || fail "installer omits shipped 0.6.5 Luna digest"
 grep -Fq "$legacy_terra_sha256" "$installer" || fail "installer omits recognized historical Terra digest"
 grep -Fq "$legacy_luna_sha256" "$installer" || fail "installer omits recognized historical Luna digest"
 grep -Fq "$previous_terra_sha256" "$installer" || fail "installer omits recognized previous Terra digest"
+grep -Fq "$previous_sol_medium_sha256" "$installer" || fail "installer omits recognized 0.7.2 Sol Medium digest"
 pass "recognized shipped legacy agent fingerprints"
 
 reinstall_cache=$tmp_dir/reinstall-cache
 legacy_reinstall_cache=$tmp_dir/legacy-reinstall-cache
 old_build=0.6.5
 old_alias=0.5.1+codex.20260804022121
+prior_alias=0.7.2
+mkdir -p "$reinstall_cache/$prior_alias/skills/orchestration"
+printf '%s\n' prior-release-open-task-skill > "$reinstall_cache/$prior_alias/skills/orchestration/SKILL.md"
 mkdir -p "$legacy_reinstall_cache/$old_build/skills/orchestration" "$legacy_reinstall_cache/$old_alias/skills/orchestration"
 printf '%s\n' preserved-open-task-skill > "$legacy_reinstall_cache/$old_build/skills/orchestration/SKILL.md"
 printf '%s\n' preserved-open-task-skill > "$legacy_reinstall_cache/$old_alias/skills/orchestration/SKILL.md"
@@ -230,9 +251,9 @@ set -eu
 printf '%s\n' "$*" >> "$CODEX_ORCHESTRATION_TEST_LOG"
 if [ "${1:-}" = plugin ] && [ "${2:-}" = list ] && [ "${3:-}" = --json ]; then
   if [ -e "$CODEX_ORCHESTRATION_TEST_NEW_INSTALLED" ] && [ -e "$CODEX_ORCHESTRATION_TEST_LEGACY_INSTALLED" ]; then
-    printf '{"installed":[{"pluginId":"codex-orchestration@codex-orchestration","version":"0.7.2"},{"pluginId":"sol-advisor@sol-advisor","version":"0.6.5"}]}\n'
+    printf '{"installed":[{"pluginId":"codex-orchestration@codex-orchestration","version":"0.7.3"},{"pluginId":"sol-advisor@sol-advisor","version":"0.6.5"}]}\n'
   elif [ -e "$CODEX_ORCHESTRATION_TEST_NEW_INSTALLED" ]; then
-    printf '{"installed":[{"pluginId":"codex-orchestration@codex-orchestration","version":"0.7.2"}]}\n'
+    printf '{"installed":[{"pluginId":"codex-orchestration@codex-orchestration","version":"0.7.3"}]}\n'
   elif [ -e "$CODEX_ORCHESTRATION_TEST_LEGACY_INSTALLED" ]; then
     printf '{"installed":[{"pluginId":"sol-advisor@sol-advisor","version":"0.6.5"}]}\n'
   else
@@ -337,13 +358,15 @@ test -f "$reinstall_cache/$manifest_version/skills/orchestration/SKILL.md" || fa
 for alias in "$old_build" "$old_alias" 0.5.1; do
   diff -qr "$reinstall_cache/$manifest_version" "$legacy_reinstall_cache/$alias" >/dev/null || fail "legacy cache alias is not the complete $manifest_version package: $alias"
 done
+diff -qr "$reinstall_cache/$manifest_version" "$reinstall_cache/$prior_alias" >/dev/null ||
+  fail "0.7.2 compatibility alias is not the complete $manifest_version package"
 test ! -e "$fake_legacy_installed" || fail "legacy plugin identity was not removed"
 test -e "$fake_marketplace_removed" || fail "legacy marketplace was not removed"
-for role in luna-implementer terra-medium-implementer terra-executive terra-implementer sol-medium-implementer sol-high-implementer sol-reviewer; do
+for role in luna-implementer terra-medium-implementer terra-executive terra-implementer sol-low-implementer sol-medium-implementer sol-high-implementer sol-reviewer; do
   cmp -s "$templates/codex-orchestration-$role.toml" "$reinstall_agent_home/agents/codex-orchestration-$role.toml" ||
     fail "reinstaller did not prove the current agent before identity retirement: $role"
   test ! -e "$reinstall_agent_home/agents/sol-advisor-$role.toml" ||
-    fail "reinstaller left a recognized legacy agent after proving all seven roles: $role"
+    fail "reinstaller left a recognized legacy agent after proving all eight roles: $role"
 done
 remove_line=$(grep -n '^plugin remove sol-advisor@sol-advisor$' "$fake_log" | cut -d: -f1)
 marketplace_line=$(grep -n '^plugin marketplace remove sol-advisor$' "$fake_log" | cut -d: -f1)
@@ -644,6 +667,7 @@ cmp -s "$templates/$luna_file" "$clean_target/$luna_file" || fail "clean Luna/Ma
 cmp -s "$templates/$terra_medium_file" "$clean_target/$terra_medium_file" || fail "clean Terra/Medium install mismatch"
 cmp -s "$templates/$terra_executive_file" "$clean_target/$terra_executive_file" || fail "clean Terra executive install mismatch"
 cmp -s "$templates/$terra_file" "$clean_target/$terra_file" || fail "clean Terra install mismatch"
+cmp -s "$templates/$sol_low_file" "$clean_target/$sol_low_file" || fail "clean Sol/Low install mismatch"
 cmp -s "$templates/$sol_medium_file" "$clean_target/$sol_medium_file" || fail "clean Sol/Medium install mismatch"
 cmp -s "$templates/$sol_high_file" "$clean_target/$sol_high_file" || fail "clean Sol/High implementer install mismatch"
 cmp -s "$templates/$sol_file" "$clean_target/$sol_file" || fail "clean Sol install mismatch"
@@ -665,6 +689,7 @@ cmp -s "$templates/$luna_file" "$codex_home/agents/$luna_file" || fail "CODEX_HO
 cmp -s "$templates/$terra_medium_file" "$codex_home/agents/$terra_medium_file" || fail "CODEX_HOME Terra/Medium mismatch"
 cmp -s "$templates/$terra_executive_file" "$codex_home/agents/$terra_executive_file" || fail "CODEX_HOME Terra executive mismatch"
 cmp -s "$templates/$terra_file" "$codex_home/agents/$terra_file" || fail "CODEX_HOME Terra mismatch"
+cmp -s "$templates/$sol_low_file" "$codex_home/agents/$sol_low_file" || fail "CODEX_HOME Sol/Low mismatch"
 cmp -s "$templates/$sol_medium_file" "$codex_home/agents/$sol_medium_file" || fail "CODEX_HOME Sol/Medium mismatch"
 cmp -s "$templates/$sol_high_file" "$codex_home/agents/$sol_high_file" || fail "CODEX_HOME Sol/High implementer mismatch"
 cmp -s "$templates/$sol_file" "$codex_home/agents/$sol_file" || fail "CODEX_HOME Sol mismatch"
@@ -676,6 +701,7 @@ cmp -s "$templates/$luna_file" "$relative_parent/relative-agents/$luna_file" || 
 cmp -s "$templates/$terra_medium_file" "$relative_parent/relative-agents/$terra_medium_file" || fail "relative target Terra/Medium mismatch"
 cmp -s "$templates/$terra_executive_file" "$relative_parent/relative-agents/$terra_executive_file" || fail "relative target Terra executive mismatch"
 cmp -s "$templates/$terra_file" "$relative_parent/relative-agents/$terra_file" || fail "relative target Terra mismatch"
+cmp -s "$templates/$sol_low_file" "$relative_parent/relative-agents/$sol_low_file" || fail "relative target Sol/Low mismatch"
 pass "CODEX_HOME and relative target behavior"
 
 migration_target=$tmp_dir/migration
@@ -685,6 +711,7 @@ cmp -s "$templates/$luna_file" "$migration_target/$luna_file" || fail "legacy Lu
 cmp -s "$templates/$terra_medium_file" "$migration_target/$terra_medium_file" || fail "Terra/Medium was not added during migration"
 cmp -s "$templates/$terra_executive_file" "$migration_target/$terra_executive_file" || fail "Terra executive was not added during migration"
 cmp -s "$templates/$terra_file" "$migration_target/$terra_file" || fail "legacy Terra was not migrated"
+cmp -s "$templates/$sol_low_file" "$migration_target/$sol_low_file" || fail "Sol/Low was not added during migration"
 cmp -s "$templates/$sol_medium_file" "$migration_target/$sol_medium_file" || fail "Sol/Medium was not added during migration"
 cmp -s "$templates/$sol_high_file" "$migration_target/$sol_high_file" || fail "Sol/High implementer was not added during migration"
 cmp -s "$templates/$sol_file" "$migration_target/$sol_file" || fail "Sol changed during migration"
@@ -702,12 +729,23 @@ cmp -s "$templates/$luna_file" "$previous_target/$luna_file" || fail "Luna/Max w
 cmp -s "$templates/$terra_medium_file" "$previous_target/$terra_medium_file" || fail "Terra/Medium was not added during previous-template migration"
 cmp -s "$templates/$terra_executive_file" "$previous_target/$terra_executive_file" || fail "Terra executive was not added during previous-template migration"
 cmp -s "$templates/$terra_file" "$previous_target/$terra_file" || fail "previous Terra was not migrated"
+cmp -s "$templates/$sol_low_file" "$previous_target/$sol_low_file" || fail "Sol/Low was not added during previous-template migration"
 cmp -s "$templates/$sol_medium_file" "$previous_target/$sol_medium_file" || fail "Sol/Medium was not added during previous-template migration"
 cmp -s "$templates/$sol_high_file" "$previous_target/$sol_high_file" || fail "Sol/High implementer was not added during previous-template migration"
 cmp -s "$templates/$sol_file" "$previous_target/$sol_file" || fail "previous-template migration changed Sol"
 test ! -e "$previous_target/$legacy_terra_file" || fail "recognized previous Terra filename was not removed"
 sh "$installer" --target-dir "$previous_target" --check
 pass "exact previous Terra upgrade migration"
+
+previous_sol_medium_target=$tmp_dir/previous-sol-medium
+write_previous_sol_medium "$previous_sol_medium_target"
+sh "$installer" --target-dir "$previous_sol_medium_target"
+cmp -s "$templates/$sol_low_file" "$previous_sol_medium_target/$sol_low_file" ||
+  fail "Sol/Low was not added during 0.7.2 companion upgrade"
+cmp -s "$templates/$sol_medium_file" "$previous_sol_medium_target/$sol_medium_file" ||
+  fail "exact 0.7.2 Sol/Medium template was not upgraded"
+sh "$installer" --target-dir "$previous_sol_medium_target" --check
+pass "exact 0.7.2 companion upgrade adds Sol/Low and updates Sol/Medium"
 
 modified_luna=$tmp_dir/modified-luna
 write_legacy_roles "$modified_luna"
@@ -749,6 +787,7 @@ test ! -e "$unsafe/$sol_file" || fail "symlink refusal partially installed Sol"
 test ! -e "$unsafe/$luna_file" || fail "symlink refusal partially installed Luna/Max"
 test ! -e "$unsafe/$terra_medium_file" || fail "symlink refusal partially installed Terra/Medium"
 test ! -e "$unsafe/$terra_executive_file" || fail "symlink refusal partially installed Terra executive"
+test ! -e "$unsafe/$sol_low_file" || fail "symlink refusal partially installed Sol/Low"
 test ! -e "$unsafe/$sol_medium_file" || fail "symlink refusal partially installed Sol/Medium"
 test ! -e "$unsafe/$sol_high_file" || fail "symlink refusal partially installed Sol/High implementer"
 pass "unsafe destination refusal with zero partial mutation"
@@ -815,6 +854,7 @@ for document in "$skill" "$contracts"; do
   grep -Fq 'agent_type: codex_orchestration_luna_implementer' "$document" || fail "missing Luna/Max spawn in $document"
   grep -Fq 'agent_type: codex_orchestration_terra_medium_implementer' "$document" || fail "missing Terra/Medium spawn in $document"
   grep -Fq 'agent_type: codex_orchestration_terra_implementer' "$document" || fail "missing Terra/High spawn in $document"
+  grep -Fq 'agent_type: codex_orchestration_sol_low_implementer' "$document" || fail "missing Sol/Low spawn in $document"
   grep -Fq 'agent_type: codex_orchestration_sol_medium_implementer' "$document" || fail "missing Sol/Medium spawn in $document"
   grep -Fq 'agent_type: codex_orchestration_sol_reviewer' "$document" || fail "missing Sol spawn in $document"
   grep -Fq 'fork_turns: none' "$document" || fail "missing fresh context in $document"
@@ -822,6 +862,7 @@ for document in "$skill" "$contracts"; do
   grep -Fq 'task_name: terra_medium_<objective_slug>' "$document" || fail "missing Terra Medium visible task prefix in $document"
   grep -Fq 'task_name: terra_high_<objective_slug>' "$document" || fail "missing Terra High visible task prefix in $document"
   grep -Fq 'task_name: terra_high_exec_<objective_slug>' "$document" || fail "missing Terra High executive task prefix in $document"
+  grep -Fq 'task_name: sol_low_<objective_slug>' "$document" || fail "missing Sol Low visible task prefix in $document"
   grep -Fq 'task_name: sol_medium_<objective_slug>' "$document" || fail "missing Sol Medium visible task prefix in $document"
   grep -Fq 'task_name: sol_high_review_<objective_slug>' "$document" || fail "missing Sol High reviewer task prefix in $document"
   if grep -Eq 'agent_type:.*terra_max' "$document"; then fail "retired implementation spawn remains in $document"; fi
@@ -855,10 +896,12 @@ done
 grep -Fq 'model = "gpt-5.6-luna"' "$templates/$luna_file" || fail "Luna role omits Luna model pin"
 grep -Fq 'model_reasoning_effort = "max"' "$templates/$luna_file" || fail "Luna role omits Max effort pin"
 grep -Fq '| No implementation handoff |' "$readme" || fail "README omits no-handoff route"
-grep -Fq 'the seven exact native role pins' "$readme" || fail "README does not describe the seven-role inventory"
+grep -Fq 'the eight exact native role pins' "$readme" || fail "README does not describe the eight-role inventory"
+grep -Fq 'eight roles: six implementation levels' "$readme" || fail "README omits eight-role/six-level inventory"
 grep -Fq '| Luna producer |' "$readme" || fail "README omits Luna route"
 grep -Fq '| Terra Medium producer |' "$readme" || fail "README omits Terra Medium route"
 grep -Fq '| Terra High producer |' "$readme" || fail "README omits Terra High route"
+grep -Fq '| Sol Low producer |' "$readme" || fail "README omits Sol Low route"
 grep -Fq '| Sol Medium producer |' "$readme" || fail "README omits Sol Medium route"
 grep -Fq '| Sol High implementation |' "$readme" || fail "README omits Sol High route"
 for command in 'Turn Orchestration on' 'Use Orchestration' 'Use Orchestration for this chat'; do
@@ -871,7 +914,7 @@ grep -Fq '$codex-orchestration:orchestration' "$readme" || fail "README omits th
 grep -Fq 'every later request in' "$readme" || fail "README omits persistent chat activation"
 grep -Fq 'Every new chat starts off' "$readme" || fail "README permits cross-chat activation"
 grep -Fq 'allow_implicit_invocation: true' "$ui" || fail "skill UI blocks plain-language activation"
-for label in 'Luna / Max' 'Terra / Medium' 'Terra / High' 'Sol / Medium' 'Sol / High'; do
+for label in 'Luna / Max' 'Terra / Medium' 'Terra / High' 'Sol / Low' 'Sol / Medium' 'Sol / High'; do
   jq -r '.interface.longDescription' "$manifest" | grep -Fq "$label" || fail "manifest UI omits model route: $label"
 done
 grep -Fq 'Terra High executive ownership below 5.0' "$ui" || fail "skill UI omits low-band Terra ownership"
@@ -913,6 +956,8 @@ grep -Fq 'sole completion was not the root task' "$receipt_hook_test" || fail "h
 grep -Fq 'root low route directly spawned a producer before its executive' "$receipt_hook_test" || fail "hook fixture omits root-first executive enforcement"
 grep -Fq 'Terra executive spawned a redundant same-model implementer' "$receipt_hook_test" || fail "hook fixture omits Terra no-handoff enforcement"
 grep -Fq 'primary Sol spawned a redundant same-model implementer' "$receipt_hook_test" || fail "hook fixture omits Sol no-handoff enforcement"
+grep -Fq 'Sol Low boundary route was rejected at score 6.6' "$receipt_hook_test" || fail "hook fixture omits Sol Low lower boundary"
+grep -Fq 'Sol Medium boundary route was rejected at score 7.3' "$receipt_hook_test" || fail "hook fixture omits Sol Medium lower boundary"
 grep -Fq 'fallback root Sol spawned a redundant same-model implementer' "$receipt_hook_test" || fail "hook fixture omits fallback Sol no-handoff enforcement"
 grep -Fq 'valid Terra-to-Sol executive fallback was denied' "$receipt_hook_test" || fail "hook fixture omits monotonic fallback acceptance"
 grep -Fq 'malformed executive fallback was accepted' "$receipt_hook_test" || fail "hook fixture omits malformed fallback denial"
@@ -975,7 +1020,7 @@ grep -Fq 'Minimum sufficient outcome' "$skill" || fail "skill omits minimum-suff
 grep -Fq '**Token budget:**' "$skill" || fail "skill omits token-budget gate"
 grep -Fq '**Time budget:**' "$skill" || fail "skill omits time-budget gate"
 grep -Fq 'Score every deliverable once from 1.0 to 10.0' "$skill" || fail "skill omits numeric complexity"
-for band in '**1.0–2.9:** Luna / Max' '**3.0–5.0:** Terra / Medium' '**5.1–6.5:** Terra / High' '**6.6–7.9:** Sol / Medium' '**8.0–10.0:** Sol / High'; do
+for band in '**1.0–2.9:** Luna / Max' '**3.0–5.0:** Terra / Medium' '**5.1–6.5:** Terra / High' '**6.6–7.2:** Sol / Low' '**7.3–7.9:** Sol / Medium' '**8.0–10.0:** Sol / High'; do
   grep -Fq "$band" "$skill" || fail "skill omits routing band: $band"
 done
 grep -Fq 'Anchor ordinary bounded work with settled requirements near 5.0' "$skill" || fail "skill lacks a score anchor"
@@ -986,7 +1031,7 @@ grep -Fq 'give the same producer one bounded correction attempt' "$skill" || fai
 grep -Fq 'have the owning executive complete and verify' "$skill" || fail "skill omits executive takeover"
 grep -Fq 'Do not spawn a replacement producer' "$skill" || fail "skill permits replacement-agent loops"
 grep -Fq 'Luna Max → Terra Medium → Terra High executive' "$skill" || fail "skill omits low-band upward fallback ladder"
-grep -Fq 'Terra Medium → Terra High → Sol Medium → primary Sol High' "$skill" || fail "skill omits high-band upward fallback ladder"
+grep -Fq 'Terra Medium → Terra High → Sol Low → Sol Medium → primary Sol High' "$skill" || fail "skill omits high-band upward fallback ladder"
 grep -Fq 'interrupt_agent' "$skill" || fail "skill omits interruption"
 grep -Fq 'a stale worker plan automatically' "$skill" || fail "skill permits stale plans"
 grep -Fq 'Only authoritative `task_complete` turns count' "$skill" || fail "skill omits completion authority"
@@ -995,7 +1040,7 @@ grep -Fq 'replanning, not abandonment' "$contracts" || fail "contracts permit bu
 grep -Fq 'saves model credits without turning coordination into the task' "$readme" || fail "README omits balanced objective"
 grep -Fq 'one precise correction attempt' "$readme" || fail "README omits bounded correction"
 grep -Fq 'Terra / High so routine planning' "$readme" || fail "README omits low-band Terra ownership"
-jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Luna / Max at 1.0–2.9, Terra / Medium at 3.0–5.0, Terra / High at 5.1–6.5, Sol / Medium at 6.6–7.9, and Sol / High at 8.0–10.0' || fail "manifest omits numeric routing bands"
+jq -r '.interface.longDescription' "$manifest" | grep -Fq 'Luna / Max at 1.0–2.9, Terra / Medium at 3.0–5.0, Terra / High at 5.1–6.5, Sol / Low at 6.6–7.2, Sol / Medium at 7.3–7.9, and Sol / High at 8.0–10.0' || fail "manifest omits numeric routing bands"
 grep -Fq 'cheaper score-selected model' "$ui" || fail "skill UI omits savings route"
 grep -Fq 'one executive acceptance check' "$ui" || fail "skill UI omits bounded acceptance"
 pass "economical executive routing, self-check, bounded correction, and takeover policy"
@@ -1042,4 +1087,4 @@ sh -n "$daily_audit"
 sh -n "$script_dir/verify.sh"
 pass "shell syntax"
 
-printf '%s\n' "VERIFY PASSED: Codex Orchestration seven-role migration and executive routing checks completed in $tmp_dir"
+printf '%s\n' "VERIFY PASSED: Codex Orchestration eight-role/six-level migration and executive routing checks completed in $tmp_dir"

@@ -354,6 +354,60 @@ def main() -> int:
     if run_hook(hook, high_same_model_spawn, environment).get("hookSpecificOutput", {}).get("permissionDecision") != "deny":
         raise AssertionError("primary Sol spawned a redundant same-model implementer")
 
+    sol_low_session = "abababab-abab-4bab-8bab-abababababab"
+    sol_low_turn = "abababab-abab-4bab-8bab-abababababac"
+    sol_low_rollout = sessions / f"rollout-{sol_low_session}.jsonl"
+    sol_low_route = (
+        "Executive design and review: GPT-5.6 Sol / High\n"
+        "Implementation: GPT-5.6 Sol / Low\nComplexity: 6.6/10"
+    )
+    write_jsonl(sol_low_rollout, [
+        {"type": "event_msg", "payload": {"type": "task_started", "turn_id": sol_low_turn}},
+        {"type": "response_item", "payload": {"type": "message", "content": [{"type": "output_text", "text": sol_low_route}]}},
+    ])
+    sol_low_input = dict(
+        pre_tool_input,
+        transcript_path=str(sol_low_rollout),
+        session_id=sol_low_session,
+        turn_id=sol_low_turn,
+        tool_input={"agent_type": "codex_orchestration_sol_low_implementer"},
+    )
+    if run_hook(hook, sol_low_input, environment) != {}:
+        raise AssertionError("Sol Low boundary route was rejected at score 6.6")
+    sol_low_downward = dict(
+        sol_low_input,
+        tool_input={"agent_type": "codex_orchestration_terra_implementer"},
+    )
+    if run_hook(hook, sol_low_downward, environment).get("hookSpecificOutput", {}).get("permissionDecision") != "deny":
+        raise AssertionError("Sol Low boundary route moved downward at score 6.6")
+
+    sol_medium_session = "cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd"
+    sol_medium_turn = "cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdce"
+    sol_medium_rollout = sessions / f"rollout-{sol_medium_session}.jsonl"
+    sol_medium_route = (
+        "Executive design and review: GPT-5.6 Sol / High\n"
+        "Implementation: GPT-5.6 Sol / Medium\nComplexity: 7.3/10"
+    )
+    write_jsonl(sol_medium_rollout, [
+        {"type": "event_msg", "payload": {"type": "task_started", "turn_id": sol_medium_turn}},
+        {"type": "response_item", "payload": {"type": "message", "content": [{"type": "output_text", "text": sol_medium_route}]}},
+    ])
+    sol_medium_input = dict(
+        pre_tool_input,
+        transcript_path=str(sol_medium_rollout),
+        session_id=sol_medium_session,
+        turn_id=sol_medium_turn,
+        tool_input={"agent_type": "codex_orchestration_sol_medium_implementer"},
+    )
+    if run_hook(hook, sol_medium_input, environment) != {}:
+        raise AssertionError("Sol Medium boundary route was rejected at score 7.3")
+    sol_medium_downward = dict(
+        sol_medium_input,
+        tool_input={"agent_type": "codex_orchestration_sol_low_implementer"},
+    )
+    if run_hook(hook, sol_medium_downward, environment).get("hookSpecificOutput", {}).get("permissionDecision") != "deny":
+        raise AssertionError("Sol Medium boundary route moved downward at score 7.3")
+
     write_jsonl(root_rollout, root_events(route))
     if run_hook(hook, pre_tool_input, environment) != {}:
         raise AssertionError("complexity gate rejected an exact route score")

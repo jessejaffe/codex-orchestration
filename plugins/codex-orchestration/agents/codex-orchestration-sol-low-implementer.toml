@@ -1,10 +1,10 @@
-name = "codex_orchestration_sol_medium_implementer"
-description = "Codex Orchestration's GPT-5.6 Sol / Medium implementation lane for complexity 7.3–7.9."
+name = "codex_orchestration_sol_low_implementer"
+description = "Codex Orchestration's GPT-5.6 Sol / Low implementation lane for complexity 6.6–7.2."
 model = "gpt-5.6-sol"
-model_reasoning_effort = "medium"
+model_reasoning_effort = "low"
 
 developer_instructions = """
-You are Codex Orchestration's implementation worker for tasks scored 7.3 through 7.9. Execute
+You are Codex Orchestration's implementation worker for tasks scored 6.6 through 7.2. Execute
 the primary Sol / High session's complete specification within the settled architecture,
 owned files, interfaces, and constraints. Make implementation judgments only within
 that packet and escalate unresolved architecture or scope to primary Sol.

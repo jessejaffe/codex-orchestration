@@ -67,8 +67,8 @@ Return actual commands and evidence. A completion claim without evidence is inva
 
 WORKER REPORT
 STATUS: complete | partial | blocked
-ROUTE: <GPT-5.6 Luna / Max | Terra / Medium | Terra / High | Sol / Medium | Sol / High> — native subagent
-LABEL: <Luna Max | Terra Medium | Terra High | Sol Medium | Sol High>
+ROUTE: <GPT-5.6 Luna / Max | Terra / Medium | Terra / High | Sol / Low | Sol / Medium | Sol / High> — native subagent
+LABEL: <Luna Max | Terra Medium | Terra High | Sol Low | Sol Medium | Sol High>
 OBJECTIVE: <one line>
 RESULT: <evidence-backed answer or file summary>
 VERIFIED: <exact commands and concrete output>
@@ -89,7 +89,8 @@ Spawn exactly one mapped producer by default, always with `fork_turns: none`:
 1.0–2.9: agent_type: codex_orchestration_luna_implementer; task_name: luna_max_<objective_slug>
 3.0–5.0: agent_type: codex_orchestration_terra_medium_implementer; task_name: terra_medium_<objective_slug>
 5.1–6.5: agent_type: codex_orchestration_terra_implementer; task_name: terra_high_<objective_slug>
-6.6–7.9: agent_type: codex_orchestration_sol_medium_implementer; task_name: sol_medium_<objective_slug>
+6.6–7.2: agent_type: codex_orchestration_sol_low_implementer; task_name: sol_low_<objective_slug>
+7.3–7.9: agent_type: codex_orchestration_sol_medium_implementer; task_name: sol_medium_<objective_slug>
 8.0–10.0: primary Sol / High implements directly; no producer spawn
 ~~~
 

@@ -20,8 +20,13 @@ I write [**Attention Heads**](https://attentionheads.substack.com/?utm_source=gi
 | Luna producer | Complexity is 1.0–2.9 | GPT-5.6 Luna / Max |
 | Terra Medium producer | Complexity is 3.0–5.0 | GPT-5.6 Terra / Medium |
 | Terra High producer | Complexity is 5.1–6.5 | GPT-5.6 Terra / High |
-| Sol Medium producer | Complexity is 6.6–7.9 | GPT-5.6 Sol / Medium |
+| Sol Low producer | Complexity is 6.6–7.2 | GPT-5.6 Sol / Low |
+| Sol Medium producer | Complexity is 7.3–7.9 | GPT-5.6 Sol / Medium |
 | Sol High implementation | Complexity is 8.0–10.0 | Primary GPT-5.6 Sol / High, without a same-model handoff |
+
+The native inventory contains eight roles: six implementation levels (Luna Max,
+Terra Medium, Terra High, Sol Low, Sol Medium, and the Sol High compatibility/direct
+route), plus the Terra executive and Sol reviewer.
 
 Primary Sol / High scores each deliverable once. At 1.0–4.9 it hands executive
 ownership to Terra / High so routine planning, checking, and acceptance do not consume
@@ -32,8 +37,8 @@ same-model handoff. If a producer is unavailable, routing moves upward one tier 
 time; reaching the executive's own model ends delegation and that executive works
 directly.
 Every delegated activity keeps its colored model icon and starts its visible label with
-the spelled-out model and effort: `Luna Max`, `Terra Medium`, `Terra High`, `Sol Medium`,
-or `Sol High`. The model comes first so it remains readable when Codex truncates a
+the spelled-out model and effort: `Luna Max`, `Terra Medium`, `Terra High`, `Sol Low`,
+`Sol Medium`, or `Sol High`. The model comes first so it remains readable when Codex truncates a
 longer task objective.
 
 The selected producer implements and checks its own work. The owning executive then
@@ -170,7 +175,8 @@ Requirements:
 - A current Codex CLI or ChatGPT desktop app with plugins enabled.
 - Access to GPT-5.6 Sol / High for the primary task.
 - Native subagents and custom-agent support enabled.
-- Access to GPT-5.6 Luna / Max, Terra / Medium, Terra / High, Sol / Medium, and Sol / High.
+- Access to GPT-5.6 Luna / Max, Terra / Medium, Terra / High, Sol / Low, Sol / Medium,
+  and Sol / High.
 - jq, which the native companion-install lookup uses to locate the installed plugin
   package.
 
@@ -248,10 +254,11 @@ sh "$plugin_dir/scripts/reinstall-plugin.sh"
 sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 ~~~
 
-The reinstaller proves every required file in the complete new 0.7.2 package. It accepts
+The reinstaller proves every required file in the complete new 0.7.3 package. It accepts
 only numeric release aliases or the repository's historical `+codex.*` cachebuster
 shape; arbitrary cache directories are refused and untouched. Before legacy removal,
-it first runs the companion installer and proves that all seven new role files are
+it preserves existing 0.7.2 aliases as complete 0.7.3 compatibility copies, runs the
+companion installer, and proves that all eight new role files are
 current without overwriting any customized legacy agent. It then copies every alias
 replacement into same-filesystem transaction directories, validates the staged
 packages, and retains recoverable backups. Alias activation uses renames, not
@@ -271,17 +278,17 @@ plugin or marketplace identities.
 #### Disposable real-CLI migration rehearsal
 
 Before renaming the GitHub repository, the owning executive can rehearse an exact local
-0.6.5-to-0.7.2 migration with two local checkouts. This procedure redirects every Codex,
+0.6.5-to-0.7.3 migration with two local checkouts. This procedure redirects every Codex,
 home, XDG, and temporary path into one disposable directory; it never reads or writes
 the user's real Codex configuration:
 
 ~~~sh
 codex_bin="$(command -v codex)"
 legacy_checkout=/absolute/path/to/sol-advisor-0.6.5
-current_checkout=/absolute/path/to/codex-orchestration-0.7.2
+current_checkout=/absolute/path/to/codex-orchestration-0.7.3
 test -x "$codex_bin"
 test "$(jq -r .version "$legacy_checkout/plugins/sol-advisor/.codex-plugin/plugin.json")" = 0.6.5
-test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.2
+test "$(jq -r .version "$current_checkout/plugins/codex-orchestration/.codex-plugin/plugin.json")" = 0.7.3
 
 sandbox="$(mktemp -d "${TMPDIR:-/tmp}/codex-orchestration-real-cli.XXXXXX")"
 export CODEX_HOME="$sandbox/codex-home"
@@ -303,7 +310,7 @@ sh "$plugin_dir/scripts/install-agents.sh" --check
 sh "$plugin_dir/scripts/reinstall-plugin.sh"
 sh "$plugin_dir/scripts/reinstall-plugin.sh" --check
 
-"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.2")] | length == 1'
+"$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration" and .version == "0.7.3")] | length == 1'
 "$codex_bin" plugin list --json | jq -e '[.installed[] | select(.pluginId == "sol-advisor@sol-advisor")] | length == 0'
 if "$codex_bin" plugin marketplace list --json | jq -e '.. | strings | select(. == "sol-advisor")' >/dev/null; then exit 1; fi
 for alias in "$CODEX_HOME/plugins/cache/sol-advisor/sol-advisor"/*; do
@@ -326,13 +333,14 @@ All skill references resolve from the directory containing `SKILL.md`; for examp
 role contract is `skills/orchestration/references/role-contracts.md`, never
 `skills/references/role-contracts.md`.
 
-The current installer recognizes byte-exact companion templates shipped through 0.6.5,
-including the historical Luna and Terra templates. It installs the seven renamed
-`codex-orchestration-*` files, proves all seven exact replacements are present, and
+The current installer recognizes byte-exact legacy companion templates shipped through
+0.6.5, including the historical Luna and Terra templates, plus the exact 0.7.2 Sol
+Medium template superseded by this release. It installs the eight
+`codex-orchestration-*` files, proves all eight exact replacements are present, and
 only then removes each `sol-advisor-*` counterpart whose content matches a recognized
 shipped digest. It refuses user-modified, nonregular,
 or symlinked current or legacy files without partial agent-file mutation. `--check` is
-non-mutating and fails until all seven renamed role files match exactly and legacy
+non-mutating and fails until all eight role files match exactly and legacy
 counterparts are absent.
 
 New persistent audit, receipt, and effectiveness state lives under
@@ -350,7 +358,7 @@ The native routing update was motivated by
 [Eric Provencher's X post](https://x.com/pvncher/status/2083300990350954981).
 
 Do not use a substitute agent as a shortcut. Start a fresh task after every successful
-install or update so Codex discovers all seven roles.
+install or update so Codex discovers all eight roles.
 
 ## Native runtime routing evidence
 
@@ -384,7 +392,8 @@ exist, they must agree.
 Root Sol scores the complete observed task from minimum initial evidence. Below 5.0 it
 hands executive ownership to Terra / High; at 5.0 and above it keeps ownership. The
 owning executive starts Luna / Max at 1.0–2.9, Terra / Medium at 3.0–5.0, Terra / High
-at 5.1–6.5, or Sol / Medium at 6.6–7.9. At 8.0–10.0 primary Sol / High already matches
+at 5.1–6.5, Sol / Low at 6.6–7.2, or Sol / Medium at 7.3–7.9. At 8.0–10.0 primary
+Sol / High already matches
 the implementation band and works directly. A simple conversational answer can also
 skip implementation delegation when the handoff would cost at least as much as the
 answer. Every producer receives the same bounded contract and must self-check before
@@ -426,12 +435,13 @@ Only the user's decision authorizes applying an upstream change.
 ### Native subagent lane
 
 The owning Terra or Sol executive selects at most one implementation producer. The
-installed roles pin Luna / Max, Terra / Medium, Terra / High, Sol / Medium, and Sol / High;
+installed roles pin Luna / Max, Terra / Medium, Terra / High, Sol / Low, Sol / Medium,
+and Sol / High;
 the Sol / High implementer remains installed for compatibility, while new 8.0–10.0
 tasks use primary Sol directly to avoid a same-model handoff. The owning executive
 checks and accepts. Fresh Sol review is exceptional rather than automatic.
 Their schema-safe task names begin with `luna_max_`, `terra_medium_`, `terra_high_`,
-`sol_medium_`, or `sol_high_`; the fresh reviewer
+`sol_low_`, `sol_medium_`, or `sol_high_`; the fresh reviewer
 begins with `sol_high_review_`.
 
 Before the first delegation in a task, the skill requires all of the following:
@@ -526,9 +536,9 @@ uv run --no-project --with pyyaml python "$codex_skills/plugin-creator/scripts/v
 jq empty .agents/plugins/marketplace.json plugins/codex-orchestration/.codex-plugin/plugin.json
 ~~~
 
-The verifier validates JSON and TOML, the seven exact native role pins, clean/current/
+The verifier validates JSON and TOML, the eight exact native role pins, clean/current/
 missing and idempotent installer behavior, exact legacy-agent migration, complete-package
-and version-alias gates, seven-role-before-identity retirement, distinct-marketplace
+and version-alias gates, eight-role-before-identity retirement, distinct-marketplace
 enforcement, plugin/marketplace retirement, persistent-copy and preserved failed-recovery
 transactions, state copy-forward and no-overwrite refusals, runtime-inspector safe fixtures,
 native lane contracts, version/UI metadata,
