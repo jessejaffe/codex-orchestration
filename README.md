@@ -115,7 +115,7 @@ Requirements:
 
 - Current Codex CLI or ChatGPT desktop app with plugins and native subagents enabled.
 - Access to the GPT-5.6 Sol, Terra, and Luna lanes used by the role templates.
-- `jq` for installation and verification scripts.
+- `jq` and `ripgrep` (`rg`) for installation and verification scripts.
 
 Add the repository as a marketplace and install the plugin:
 

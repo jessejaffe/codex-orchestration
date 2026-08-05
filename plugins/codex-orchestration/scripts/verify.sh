@@ -21,7 +21,7 @@ cleanup() {
 }
 trap cleanup 0 HUP INT TERM
 
-for command in jq python3 shasum; do
+for command in jq python3 rg shasum; do
   command -v "$command" >/dev/null 2>&1 || fail "$command is required"
 done
 
