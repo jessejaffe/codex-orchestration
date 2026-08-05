@@ -3,10 +3,11 @@
 Codex Orchestration saves Codex credits by moving settled work to the least expensive
 capable model while keeping complex executive judgment with GPT-5.6 Sol / High.
 
-Version 0.8.0 replaces the former skill-driven router with a minimal, full-context fast
-path. Activation no longer makes the model read the routing skill, calculate a decimal
-score, scan the transcript before every tool, construct a handoff summary, or call a
-finish-time receipt tool.
+The 0.8.0 release replaces the former skill-driven router with a minimal, full-context
+fast path. The manifest does not advertise a skill, so no Orchestration skill or
+versioned skill locator is injected into a new task. Activation no longer makes the
+model calculate a decimal score, scan the transcript before every tool, construct a
+handoff summary, or call a finish-time receipt tool.
 
 ## Runtime architecture
 
@@ -53,14 +54,13 @@ Activate a chat with any exact command:
 - `Turn Orchestration on`
 - `Use Orchestration`
 - `Use Orchestration for this chat`
-- `$codex-orchestration:orchestration`
 
 Activation persists only in that chat. Use `Turn Orchestration off` to disable it.
 Every new chat starts off.
 
-The namespaced skill is now maintenance/help only and implicit invocation is disabled.
-Normal activation is handled by the prompt hook, so the skill file is not loaded on
-the routing path.
+Activation is handled only by the prompt hook. The dispatch contract explicitly
+forbids checking, comparing, or updating Orchestration during user work; a
+version-looking cache directory is a compatibility locator, not version evidence.
 
 ## Usage measurement
 
@@ -122,27 +122,33 @@ sh "$plugin_dir/scripts/install-agents.sh"
 sh "$plugin_dir/scripts/install-agents.sh" --check
 ```
 
-Restart Codex or open a new task after installation so Desktop reloads hooks and custom
-agents.
+Review and trust the single `UserPromptSubmit` hook once when Codex asks. Codex skips
+non-managed hooks until their exact definition is trusted. Then open a new task so the
+installed hook and custom agents are included in that task's startup snapshot.
 
 ## Upgrade safely
 
 From a repository checkout, run:
 
 ```sh
+python3 ~/.codex/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py plugins/codex-orchestration
 sh plugins/codex-orchestration/scripts/verify.sh
 sh plugins/codex-orchestration/scripts/reinstall-plugin.sh
 sh plugins/codex-orchestration/scripts/reinstall-plugin.sh --check
 ```
 
-The reinstaller requires the complete 0.8.0 package, installs the current release,
-retains complete compatibility cache aliases, retires the recognized legacy plugin,
-and refuses unsafe or incomplete cache entries. Releases use plain semantic versions
-without `+` build metadata because Codex Desktop treats version-looking cache paths as
-locators.
+Every update uses a unique cache-busted version such as
+`0.8.0+codex.20260805152715`. This is the supported mechanism that prevents a newly
+created task from retaining stale plugin metadata. The reinstaller requires the
+complete package, installs that exact version, retains complete compatibility cache
+aliases, retires the recognized legacy plugin, and refuses unsafe or incomplete cache
+entries.
 
-Already-open tasks can retain old hook and skill locators. Use a new task after an
-upgrade when validating the installed behavior.
+Codex snapshots bundled capabilities when a task starts. No updater can rewrite the
+catalog already injected into an open task. Compatibility cache contents are updated,
+but a new task is the required boundary for refreshed plugin metadata. Once the stable
+hook definition has been trusted, later releases keep that same definition and update
+the script it calls.
 
 ## Measure effectiveness
 
@@ -173,7 +179,7 @@ continuity, telemetry-migration, safe-installer, and offline-boundary tests:
 sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
-The prompt hook has a 3 KB injected-context ceiling and the hermetic latency test gives
+The prompt hook has a 2 KB injected-context ceiling and the hermetic latency test gives
 its subprocess a generous 100 ms average CI budget. These are release checks only;
 they are not additional runtime work.
 

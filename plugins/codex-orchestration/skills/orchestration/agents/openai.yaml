@@ -1,7 +1,0 @@
-interface:
-  display_name: "Codex Orchestration"
-  short_description: "Fast Terra-first credit routing"
-  default_prompt: "Use $codex-orchestration:orchestration to explain or maintain the fast Terra-first routing workflow."
-
-policy:
-  allow_implicit_invocation: false

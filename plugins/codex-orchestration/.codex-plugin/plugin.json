@@ -1,7 +1,7 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.0",
-  "description": "Fast Terra-first triage with Sol-owned complex work and credit receipts.",
+  "version": "0.8.0+codex.20260805153347",
+  "description": "Fast Terra-first triage with Sol-owned complex work.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -15,7 +15,6 @@
     "multi-agent",
     "gpt-5.6"
   ],
-  "skills": "./skills/",
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Fast credit routing with conservative escalation",

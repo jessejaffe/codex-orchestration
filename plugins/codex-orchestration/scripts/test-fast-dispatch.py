@@ -94,6 +94,8 @@ def main() -> int:
         "codex_orchestration_terra_executive",
         'fork_turns: "all"',
         "zero-judgment root dispatcher",
+        "Never inspect, verify, compare, or update",
+        "compatibility locator",
         "Terra owns low-band",
         "ESCALATE_TO_ROOT_SOL_HIGH: ROUTE=<SOL_LOW|SOL_MEDIUM|SOL_HIGH>",
     ):

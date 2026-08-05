@@ -17,9 +17,11 @@ ON_COMMANDS = {
     "use orchestration for this chat",
 }
 OFF_COMMANDS = {"turn orchestration off"}
-SKILL_TOKEN = "$codex-orchestration:orchestration"
 
 DISPATCH_CONTEXT = """Codex Orchestration is ON for this chat.
+The installed hook is authoritative. Never inspect, verify, compare, or update the
+Orchestration plugin or its version during user work. A version-looking cache directory
+is only a compatibility locator and is not evidence that its contents are stale.
 Act as a zero-judgment root dispatcher. For a user request containing work, your first
 action must be one spawn of `codex_orchestration_terra_executive` with
 `fork_turns: \"all\"`. Use a short task name and this exact message: `Own the current
@@ -71,8 +73,8 @@ def main() -> int:
         emit({"continue": True})
         return 0
     command = normalized_command(prompt)
-    activation_only = command in ON_COMMANDS or command == SKILL_TOKEN
-    activation = activation_only or command.startswith(SKILL_TOKEN + " ")
+    activation_only = command in ON_COMMANDS
+    activation = activation_only
     control = activation or command in OFF_COMMANDS
     # Inactive ordinary prompts return without touching the transcript.
     if not control and not is_active(session_id):

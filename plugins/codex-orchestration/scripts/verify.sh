@@ -12,9 +12,6 @@ repo_dir=$(CDPATH= cd "$plugin_dir/../.." && pwd) || exit 1
 manifest=$plugin_dir/.codex-plugin/plugin.json
 hooks=$plugin_dir/hooks/hooks.json
 agents=$plugin_dir/agents
-skill=$plugin_dir/skills/orchestration/SKILL.md
-contracts=$plugin_dir/skills/orchestration/references/role-contracts.md
-ui=$plugin_dir/skills/orchestration/agents/openai.yaml
 installer=$script_dir/install-agents.sh
 
 tmp_base=${TMPDIR:-/tmp}
@@ -29,9 +26,14 @@ for command in jq python3 shasum; do
   command -v "$command" >/dev/null 2>&1 || fail "$command is required"
 done
 
-jq -e '.name == "codex-orchestration" and .version == "0.8.0"' "$manifest" >/dev/null ||
+jq -e '.name == "codex-orchestration" and (.skills | not)' "$manifest" >/dev/null ||
   fail "manifest identity/version is wrong"
-case "$(jq -r .version "$manifest")" in *+*) fail "release version contains build metadata" ;; esac
+manifest_version=$(jq -r .version "$manifest")
+printf '%s\n' "$manifest_version" | grep -Eq '^0\.8\.0\+codex\.[0-9A-Za-z._-]+$' ||
+  fail "manifest lacks the required unique 0.8.0 cachebuster: $manifest_version"
+if [ -d "$plugin_dir/skills" ] && find "$plugin_dir/skills" -type f -print | grep -q .; then
+  fail "hook-only plugin still contains an auto-discovered skill"
+fi
 jq -e '
   (.hooks | keys == ["UserPromptSubmit"])
   and (.hooks.UserPromptSubmit | length == 1)
@@ -107,7 +109,7 @@ do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
     fail "Terra complex-work boundary omits: $guard"
 done
-grep -Fq 'normal runtime never reads that fixture' "$contracts" ||
+grep -Fq 'never reads the offline routing benchmark' "$repo_dir/README.md" ||
   fail "offline benchmark is not explicitly kept off the runtime path"
 python3 - "$script_dir/triage-cases.json" <<'PY'
 import json, sys
@@ -141,15 +143,13 @@ for file in orchestration_state.py prompt-router-hook.py test-fast-dispatch.py t
 done
 pass "safe companion-agent install and complete package inventory"
 
-grep -Fq 'allow_implicit_invocation: false' "$ui" ||
-  fail "skill can still load implicitly on the normal path"
-skill_lines=$(wc -l < "$skill" | tr -d ' ')
-[ "$skill_lines" -le 30 ] || fail "maintenance skill grew onto the runtime path: $skill_lines lines"
 for phrase in \
   'once-per-prompt hook' \
   'Terra is the triage gate, not the executive for complex work' \
   'full chat' \
   'never reads the offline routing benchmark' \
+  'unique cache-busted version' \
+  'manifest does not advertise a skill' \
   'Turn Orchestration on' \
   'Turn Orchestration off' \
   '0.8.0'
@@ -157,10 +157,10 @@ do
   grep -Fq "$phrase" "$repo_dir/README.md" || fail "README omits: $phrase"
 done
 if rg -n 'reads one consolidated skill|score every deliverable once|Complexity: [<0-9]|PreToolUse' \
-  "$repo_dir/README.md" "$manifest" "$skill" "$contracts"; then
+  "$repo_dir/README.md" "$manifest"; then
   fail "stale slow-path documentation remains"
 fi
-pass "minimal runtime skill and current documentation"
+pass "hook-only runtime and current documentation"
 
 grep -Fq '17 12 * * *' "$repo_dir/.github/workflows/upstream-review.yml" ||
   fail "daily upstream review schedule changed"

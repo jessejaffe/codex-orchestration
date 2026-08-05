@@ -24,8 +24,8 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-[ "$manifest_version" = 0.8.0 ] || fail "this migration installer requires release 0.8.0: $manifest_version"
-case "$manifest_version" in *+*) fail "plugin version must not contain build metadata: $manifest_version" ;; esac
+printf '%s\n' "$manifest_version" | grep -Eq '^0\.8\.0\+codex\.[0-9A-Za-z._-]+$' ||
+  fail "release 0.8.0 requires a unique Codex cachebuster: $manifest_version"
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
   cache_root=$CODEX_ORCHESTRATION_CACHE_ROOT
@@ -103,10 +103,6 @@ scripts/test-fast-dispatch.py
 scripts/triage-cases.json
 scripts/usage-receipt.py
 scripts/verify.sh
-skills/orchestration/SKILL.md
-skills/orchestration/agents/openai.yaml
-skills/orchestration/references/role-contracts.md
-skills/orchestration/references/usage-receipt.md
 EOF
 }
 
