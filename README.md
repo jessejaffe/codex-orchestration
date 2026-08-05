@@ -7,20 +7,20 @@ The 0.8.0 release uses a minimal, recent-context fast path. The manifest does no
 advertise a skill, so no Orchestration skill or versioned skill locator is injected
 into a new task. Activation does not scan the transcript before every tool, construct
 a handoff summary, or call a finish-time receipt tool. Terra / High scores the complete
-task once, then applies the fixed six implementation lanes.
+task once, then applies the fixed seven implementation lanes.
 
 ## Runtime architecture
 
 The active path is intentionally small:
 
 1. A stable user-level, once-per-prompt hook checks one chat-local boolean.
-2. Root Sol immediately gives the current request and up to 64 recent turns from that
+2. The user-selected root model immediately gives the current request and up to 64 recent turns from that
    chat only to Terra / High with a constant prompt.
 3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
 4. Terra sends one root-visible checkpoint with the score, selected lane, objective,
    and immediate next steps. Further working commentary stays inside the agent chip.
-5. Scores below 5.0 stay with Terra as executive. Scores of 5.0 or higher return
-   untouched to root Sol / High, which owns architecture and acceptance.
+5. Scores below 5.0 stay with Terra as executive. Scores of 5.0 or higher go to a
+   separately pinned Sol / High executive, so any user-selected starting model is safe.
 6. The owning executive uses the exact score-selected implementation lane and returns
    the result with the observed route and score.
 
@@ -28,10 +28,9 @@ For example, the top-level task may show `Complexity 2.7 → GPT-5.6 Luna / Max.
 the homepage, then committing, deploying, and checking the live site.` This adds one
 short handoff message rather than duplicating every nested progress update.
 
-Spawned-task labels begin with the exact selected model and effort (`GPT 5 6 Terra
-High`, `GPT 5 6 Luna Max`, `GPT 5 6 Terra Medium`, `GPT 5 6 Sol Low`, or `GPT 5 6 Sol
-Medium`), so the model choice remains visible in the Codex activity stream without
-another model call or reporting step.
+Executive task labels explicitly include `Executive`, and implementation labels include
+`Implementation`, so Terra / High scoring and Terra / High implementation cannot collide.
+Labels also show the exact selected model and effort, including Sol / Extra High.
 
 The numeric implementation ladder is monotonic:
 
@@ -42,7 +41,8 @@ The numeric implementation ladder is monotonic:
 | 5.1–6.5 | Terra / High |
 | 6.6–7.2 | Sol / Low |
 | 7.3–7.9 | Sol / Medium |
-| 8.0–10.0 | primary Sol / High |
+| 8.0–8.9 | Sol / High |
+| 9.0–10.0 | Sol / Extra High |
 
 A fully specified repository catch-up, commit, push, SSH deployment, and live
 verification is a routine release workflow: routine deployment does not force a Sol
@@ -62,8 +62,8 @@ flowchart TD
     H --> T["Terra / High score with up to 64 same-chat turns"]
     T -->|"1.0–4.9"| L["Terra executive"]
     L --> P1["Luna / Max or Terra / Medium"]
-    T -->|"5.0–10.0"| S["Root Sol / High executive"]
-    S --> P2["Terra / Medium, Terra / High, Sol / Low, Sol / Medium, or direct Sol / High"]
+    T -->|"5.0–10.0"| S["Pinned Sol / High executive"]
+    S --> P2["Terra / Medium through Sol / Extra High implementation"]
     P1 --> R["Root returns the accepted result"]
     P2 --> R
 ```
@@ -150,7 +150,7 @@ codex plugin marketplace add jessejaffe/codex-orchestration --ref main
 codex plugin add codex-orchestration@codex-orchestration
 ```
 
-Install the eight native companion roles separately. The installer never overwrites a
+Install the ten native companion roles separately. The installer never overwrites a
 different user-owned role file:
 
 ```sh

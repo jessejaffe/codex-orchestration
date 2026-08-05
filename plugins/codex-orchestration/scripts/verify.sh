@@ -59,6 +59,8 @@ expected = {
     "codex-orchestration-sol-low-implementer.toml": ("gpt-5.6-sol", "low"),
     "codex-orchestration-sol-medium-implementer.toml": ("gpt-5.6-sol", "medium"),
     "codex-orchestration-sol-high-implementer.toml": ("gpt-5.6-sol", "high"),
+    "codex-orchestration-sol-xhigh-implementer.toml": ("gpt-5.6-sol", "xhigh"),
+    "codex-orchestration-sol-high-executive.toml": ("gpt-5.6-sol", "high"),
     "codex-orchestration-sol-reviewer.toml": ("gpt-5.6-sol", "high"),
 }
 files = {path.name for path in root.glob("*.toml")}
@@ -76,7 +78,7 @@ for filename, pins in expected.items():
     if actual != pins:
         raise SystemExit(f"wrong pins in {filename}: {actual}")
 PY
-pass "script syntax, offline benchmark, and exact eight-role pins"
+pass "script syntax, offline benchmark, and exact ten-role pins"
 
 python3 "$script_dir/test-fast-dispatch.py" "$plugin_dir" "$tmp_dir/hooks" ||
   fail "fast dispatch, continuity, ownership, or latency regression"
@@ -146,7 +148,8 @@ for guard in \
   '5.1–6.5' \
   '6.6–7.2' \
   '7.3–7.9' \
-  '8.0–10.0' \
+  '8.0–8.9' \
+  '9.0–10.0' \
   'from this chat only' \
   'routine, fully specified repository catch-up, commit, push, SSH deployment' \
   'does not by itself require Sol' \
@@ -161,6 +164,18 @@ do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
     fail "Terra score-based routing omits: $guard"
 done
+for guard in \
+  'root task may use any model' \
+  'Never rescore, remap, or execute implementation directly' \
+  'Spawn the mapped implementation agent exactly once' \
+  'fork_turns: "64"' \
+  'Executive route: GPT-5.6 Sol / High'
+do
+  grep -Fq "$guard" "$agents/codex-orchestration-sol-high-executive.toml" ||
+    fail "pinned Sol executive omits: $guard"
+done
+grep -Fq 'model_reasoning_effort = "xhigh"' "$agents/codex-orchestration-sol-xhigh-implementer.toml" ||
+  fail "Extra High implementation role is not pinned to xhigh"
 grep -Fq 'never reads the offline routing benchmark' "$repo_dir/README.md" ||
   fail "offline benchmark is not explicitly kept off the runtime path"
 python3 - "$script_dir/triage-cases.json" <<'PY'
@@ -171,10 +186,10 @@ cases = data.get("cases")
 if not isinstance(cases, list) or len(cases) < 10:
     raise SystemExit("too few routing benchmark cases")
 expected = {case.get("expected") for case in cases}
-if not {"LOW", "SOL_LOW", "SOL_MEDIUM", "SOL_HIGH"}.issubset(expected):
+if not {"LOW", "SOL_LOW", "SOL_MEDIUM", "SOL_HIGH", "SOL_XHIGH"}.issubset(expected):
     raise SystemExit(f"routing benchmark misses a lane: {sorted(expected)}")
 PY
-pass "numeric six-lane Terra routing and zero-runtime benchmark"
+pass "numeric seven-lane Terra routing and zero-runtime benchmark"
 
 target=$tmp_dir/agents
 sh "$installer" --target-dir "$target" >/dev/null || fail "fresh agent install failed"
@@ -195,6 +210,20 @@ grep -Fq 'd843a907029caf949049cca3a9c417aba80a4584aa0af12f1aefbec1a691af28' "$in
   fail "0.8.0 numeric Terra role is not recognized for safe upgrade"
 grep -Fq '894823383b6184c3a972e4fff04ad6274dad949699bc32272b2e8f04335c0f84' "$installer" ||
   fail "0.8.0 Terra / High implementation role is not recognized for safe upgrade"
+grep -Fq '31c69fe169e174d61437d1a24bc9323535494048a6c3e3b23877343f6078d389' "$installer" ||
+  fail "current Terra executive role is not recognized for safe upgrade"
+grep -Fq '93eec7e0d93c6db721467d5ad2f6333724625a325c0b1dcf987f1e68c28ba5fe' "$installer" ||
+  fail "current Terra implementation role is not recognized for safe upgrade"
+grep -Fq 'd351037408fb4297f2b9a0336d709812628dfef4dc6d3e3db76fa427ca54d64a' "$installer" ||
+  fail "current Sol / High implementation role is not recognized for safe upgrade"
+for digest in \
+  250759da7eda6a2bde248931ee0c4f781258cc56818dad3e42c6d457a0eb4bd7 \
+  6ada178902fb621b0fb58b8a7bd48ab3f4d397d9192d41dab458924921919c4b \
+  43a1531815e6674a023f9f21c03635253ded90e15eae72ce69776c8f54af8fb3 \
+  5a5897ddcc8d150656591c3f9e4c0327cd38697808d7a21249b4ee7842f1ad08
+do
+  grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
+done
 for file in install-user-hook.py orchestration_state.py prompt-router-hook.py test-fast-dispatch.py triage-cases.json; do
   grep -Fq "scripts/$file" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package check omits $file"
@@ -204,7 +233,9 @@ pass "safe companion-agent install and complete package inventory"
 for phrase in \
   'once-per-prompt hook' \
   'Terra / High scores the complete' \
-  'six implementation lanes' \
+  'seven implementation lanes' \
+  'any user-selected starting model' \
+  'Sol / Extra High' \
   'routine deployment does not force a Sol' \
   'one root-visible checkpoint' \
   'drains the entire active branch' \

@@ -98,6 +98,8 @@ agents/codex-orchestration-terra-implementer.toml
 agents/codex-orchestration-sol-low-implementer.toml
 agents/codex-orchestration-sol-medium-implementer.toml
 agents/codex-orchestration-sol-high-implementer.toml
+agents/codex-orchestration-sol-xhigh-implementer.toml
+agents/codex-orchestration-sol-high-executive.toml
 agents/codex-orchestration-sol-reviewer.toml
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
@@ -350,9 +352,9 @@ current=$(installed_version "$current_plugin_id") || fail "new plugin was not li
 current_cache=$cache_root/$manifest_version
 validate_complete_package "$current_cache"
 
-# A complete, conflict-free eight-role install is a prerequisite for retiring either
+# A complete, conflict-free ten-role install is a prerequisite for retiring either
 # legacy configured identity. The companion installer preflights every current and
-# legacy file, proves all eight current files, and only then removes exact shipped
+# legacy file, proves all ten current files, and only then removes exact shipped
 # legacy files. Customized legacy agents therefore stop this migration without being
 # overwritten and before plugin or marketplace removal.
 sh "$current_cache/scripts/install-agents.sh"

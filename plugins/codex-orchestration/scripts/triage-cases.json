@@ -9,7 +9,7 @@
     {"id": "unknown_repo_bug", "expected": "SOL_MEDIUM", "request": "Read this unfamiliar repository, find why production is intermittently slow, and fix it."},
     {"id": "architecture", "expected": "SOL_HIGH", "request": "Redesign the orchestration architecture to cut latency without losing context."},
     {"id": "auth_boundary", "expected": "SOL_HIGH", "request": "Change authorization and tenant-isolation behavior across the API."},
-    {"id": "schema_migration", "expected": "SOL_HIGH", "request": "Plan and deploy an irreversible production schema migration."},
+    {"id": "schema_migration", "expected": "SOL_XHIGH", "request": "Plan and deploy an irreversible production schema migration."},
     {"id": "security_review", "expected": "SOL_HIGH", "request": "Diagnose a possible credential-exposure vulnerability and remediate it."},
     {"id": "cross_system", "expected": "SOL_MEDIUM", "request": "Coordinate changes across the web app, worker queue, and deployment service."},
     {"id": "ambiguous_scope", "expected": "SOL_LOW", "request": "Make the whole product much faster; the cause is not known."},

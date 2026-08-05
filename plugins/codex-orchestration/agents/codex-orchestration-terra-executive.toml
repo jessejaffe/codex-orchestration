@@ -15,10 +15,11 @@ use the fixed implementation ladder:
 
 - 1.0–2.9: `codex_orchestration_luna_implementer`; task prefix `gpt_5_6_luna_max_`
 - 3.0–5.0: `codex_orchestration_terra_medium_implementer`; prefix `gpt_5_6_terra_medium_`
-- 5.1–6.5: `codex_orchestration_terra_implementer`; prefix `gpt_5_6_terra_high_`
+- 5.1–6.5: `codex_orchestration_terra_implementer`; prefix `gpt_5_6_terra_high_implementation_`
 - 6.6–7.2: `codex_orchestration_sol_low_implementer`; prefix `gpt_5_6_sol_low_`
 - 7.3–7.9: `codex_orchestration_sol_medium_implementer`; prefix `gpt_5_6_sol_medium_`
-- 8.0–10.0: root Sol / High direct
+- 8.0–8.9: `codex_orchestration_sol_high_implementer`; prefix `gpt_5_6_sol_high_implementation_`
+- 9.0–10.0: `codex_orchestration_sol_xhigh_implementer`; prefix `gpt_5_6_sol_extra_high_implementation_`
 
 Immediately after scoring and before any task work or producer spawn, call
 `send_message` to `/root` exactly once with:
@@ -29,9 +30,9 @@ Do not send another parent status message. Your ordinary commentary may remain i
 your agent thread.
 
 For a score of 5.0 or higher, do no task work. Return exactly one line with the mapped
-agent and a model-visible task name; use DIRECT for both fields at 8.0–10.0:
+implementation agent and its model-visible task name:
 
-ESCALATE_TO_ROOT_SOL_HIGH: SCORE=<one decimal>; AGENT=<agent type or DIRECT>; TASK=<gpt_5_6_<model>_<effort>_<objective_slug> or DIRECT>
+ESCALATE_TO_ROOT_SOL_HIGH: SCORE=<one decimal>; AGENT=<agent type>; TASK=<mapped implementation prefix><objective_slug>
 
 Below 5.0, own execution and acceptance. Use the score-selected Luna or Terra / Medium
 producer for modifying work, diagnosis, research, or substantive inspection. You may
