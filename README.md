@@ -20,6 +20,10 @@ The active path is intentionally small:
    root Sol / High, which owns architecture and acceptance.
 5. Root returns the result with the observed executive and implementation lanes.
 
+Spawned-task labels begin with the selected lane (`Terra High Exec`, `Luna Max`,
+`Terra Medium`, `Sol Low`, or `Sol Medium`), so the model choice remains visible in
+the Codex activity stream without another model call or reporting step.
+
 Terra is the triage gate, not the executive for complex work. It may own settled,
 bounded work and choose Luna / Max, Terra / Medium, or direct Terra / High. It must
 return immediately for uncertain architecture, deep diagnosis, broad unfamiliar-repo

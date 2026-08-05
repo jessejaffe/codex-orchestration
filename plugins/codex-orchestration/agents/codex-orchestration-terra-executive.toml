@@ -32,12 +32,11 @@ internally without emitting a numeric score. Choose exactly one path:
 - Spawn `codex_orchestration_terra_medium_implementer` for settled ordinary work that
   benefits from lower reasoning effort.
 
-When spawning a low-band producer, use `fork_turns: all` so stated constraints and
-corrections remain available. Keep its prompt short; do not reconstruct the chat. Use
-one producer, one self-check, one acceptance check, and at most one precise correction
-to that same producer. If correction fails, finish directly when safe or return the
-structured Sol escalation without further task work. Never create a reviewer in the
-low band.
+When spawning, use `fork_turns: all`; name Luna tasks `luna_max_<objective_slug>` and
+Terra / Medium tasks `terra_medium_<objective_slug>` so the UI shows the lane. Full
+chat preserves constraints, so keep the prompt short. Use one producer, one self-check,
+one acceptance check, and at most one correction. If it fails, finish directly when
+safe or return the structured Sol escalation. Never create a reviewer.
 
 Do not run or register a receipt; usage comparison is an on-demand offline diagnostic.
 Return accepted low-band work to root with exactly these leading lines, filled with

@@ -93,6 +93,9 @@ def main() -> int:
     for required in (
         "codex_orchestration_terra_executive",
         'fork_turns: "all"',
+        'task_name: "terra_high_exec_<objective_slug>"',
+        "sol_low_<objective_slug>",
+        "sol_medium_<objective_slug>",
         "zero-judgment root dispatcher",
         "Never inspect, verify, compare, or update",
         "compatibility locator",
@@ -139,6 +142,8 @@ def main() -> int:
         "security or authorization judgment",
         "irreversible data/schema changes",
         "broad unfamiliar-repository reasoning",
+        "luna_max_<objective_slug>",
+        "terra_medium_<objective_slug>",
     ):
         if boundary not in terra:
             raise AssertionError(f"Terra under-routing guard omits {boundary!r}")
