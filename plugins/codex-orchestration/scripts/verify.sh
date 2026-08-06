@@ -61,6 +61,7 @@ expected = {
     "codex-orchestration-sol-high-implementer.toml": ("gpt-5.6-sol", "high"),
     "codex-orchestration-sol-xhigh-implementer.toml": ("gpt-5.6-sol", "xhigh"),
     "codex-orchestration-sol-high-executive.toml": ("gpt-5.6-sol", "high"),
+    "codex-orchestration-sol-xhigh-executive.toml": ("gpt-5.6-sol", "xhigh"),
     "codex-orchestration-sol-reviewer.toml": ("gpt-5.6-sol", "high"),
 }
 files = {path.name for path in root.glob("*.toml")}
@@ -78,7 +79,7 @@ for filename, pins in expected.items():
     if actual != pins:
         raise SystemExit(f"wrong pins in {filename}: {actual}")
 PY
-pass "script syntax, offline benchmark, and exact ten-role pins"
+pass "script syntax, offline benchmark, and exact eleven-role pins"
 
 python3 "$script_dir/test-fast-dispatch.py" "$plugin_dir" "$tmp_dir/hooks" ||
   fail "fast dispatch, continuity, ownership, or latency regression"
@@ -124,6 +125,10 @@ grep -Fq 'never full-history' "$script_dir/prompt-router-hook.py" ||
   fail "custom-role full-history protection is missing"
 grep -Fq 'same context fork/foundation' "$script_dir/prompt-router-hook.py" ||
   fail "direct-context producer handoff is missing"
+for executive in \
+  "$agents/codex-orchestration-sol-high-executive.toml" \
+  "$agents/codex-orchestration-sol-xhigh-executive.toml"
+do
 for guard in \
   'ORCHESTRATION_STATUS:' \
   'top-level commentary' \
@@ -221,13 +226,15 @@ for guard in \
   'Root owns and appends final route metadata' \
   'TAKEOVER is terminal'
 do
-  grep -Fq "$guard" "$agents/codex-orchestration-sol-high-executive.toml" ||
-    fail "pinned Sol executive omits: $guard"
+  grep -Fq "$guard" "$executive" ||
+    fail "pinned Sol executive omits $guard: $executive"
+done
 done
 if rg -n 'PACKET:|execution packet|exact PACKET' \
   "$script_dir/prompt-router-hook.py" \
   "$agents/codex-orchestration-terra-executive.toml" \
-  "$agents/codex-orchestration-sol-high-executive.toml"; then
+  "$agents/codex-orchestration-sol-high-executive.toml" \
+  "$agents/codex-orchestration-sol-xhigh-executive.toml"; then
   fail "runtime still allows duplicated executive implementation packets"
 fi
 for implementer in "$agents"/*-implementer.toml; do

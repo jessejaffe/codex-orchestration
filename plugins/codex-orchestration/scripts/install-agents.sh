@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration's ten custom agents and retire exact shipped legacy files.
+# Install Codex Orchestration's eleven custom agents and retire exact shipped legacy files.
 
 set -eu
 
@@ -7,7 +7,7 @@ usage() {
   cat <<'EOF'
 Usage: install-agents.sh [--target-dir PATH] [--check]
 
-Install Codex Orchestration's ten current custom-agent templates. Normal mode also
+Install Codex Orchestration's eleven current custom-agent templates. Normal mode also
 removes the exact legacy sol-advisor-* counterpart for each role, but only when its
 content matches a recognized shipped template. User-modified, nonregular, and
 symlinked current or legacy files are conflicts and are never overwritten or deleted.
@@ -17,7 +17,7 @@ otherwise "$HOME/.codex/agents".
 
 Options:
   --target-dir PATH  Explicit destination directory.
-  --check            Require all ten current files and no legacy counterparts.
+  --check            Require all eleven current files and no legacy counterparts.
   --help             Show this help text.
 EOF
 }
@@ -71,6 +71,11 @@ role_files() {
       ;;
     sol-high-executive)
       previous_current_digests='707bd6eb38462c2c005cfe6e6f2cc50a9952510b5ab69c83e544bfb9989202b8 9c2ec08dc3b1dc20fb33efca1f16358d0718c5635a2603bb52db56ebd7327deb 293a8e636d7676875e5bf7fff658cc59f4bb22f67bb62dc55f0517780ea775c6 65d6716e859f9636a16b59156f46bdca5a3196837e4514c88303d0f00a9ff64a 1caae6c7741549efe493f72e1d3c05483909747bdb69ab0d821f510e004a0376 cdb1e0401c40703e513059847ae89b047d6fa69e6ef6523d98dee67a3f4ee5a9 9ede0c022e578617b31c511e5967aa42b1bffc1c712697565863667205eee88e'
+      legacy_digests=''
+      ;;
+    sol-xhigh-executive)
+      # Introduced for scores of 8.0 and higher.
+      previous_current_digests=''
       legacy_digests=''
       ;;
     sol-reviewer)
@@ -192,7 +197,7 @@ done
 case "$target_dir" in /*) ;; *) target_dir=$(pwd -P)/$target_dir ;; esac
 case "$target_dir" in /|//) fail "refusing the filesystem root as an agent target." ;; esac
 
-roles='luna-implementer terra-medium-implementer terra-executive terra-implementer sol-low-implementer sol-medium-implementer sol-high-implementer sol-xhigh-implementer sol-high-executive sol-reviewer'
+roles='luna-implementer terra-medium-implementer terra-executive terra-implementer sol-low-implementer sol-medium-implementer sol-high-implementer sol-xhigh-implementer sol-high-executive sol-xhigh-executive sol-reviewer'
 preflight_failed=0
 if path_exists "$target_dir" && { [ -L "$target_dir" ] || [ ! -d "$target_dir" ]; }; then
   report_error "target directory is not a real directory: $target_dir"
@@ -217,7 +222,7 @@ done
 [ "$preflight_failed" -eq 0 ] || exit 1
 
 if [ "$check_only" -eq 1 ]; then
-  printf '%s\n' "CHECK PASSED: all ten Codex Orchestration roles are current and legacy files are absent."
+  printf '%s\n' "CHECK PASSED: all eleven Codex Orchestration roles are current and legacy files are absent."
   exit 0
 fi
 
@@ -237,7 +242,7 @@ for role in $roles; do
   esac
 done
 
-# Prove the complete ten-role replacement set before any legacy file is removed.
+# Prove the complete eleven-role replacement set before any legacy file is removed.
 for role in $roles; do
   role_files "$role"
   template=$template_dir/$current_file
@@ -245,7 +250,7 @@ for role in $roles; do
   [ "$(classify_current "$current_destination" "$template" "$previous_current_digests")" = current ] ||
     fail "could not prove current role before legacy retirement: $current_destination"
 done
-printf '%s\n' "PROVED: all ten Codex Orchestration roles are current before legacy retirement."
+printf '%s\n' "PROVED: all eleven Codex Orchestration roles are current before legacy retirement."
 
 for role in $roles; do
   role_files "$role"
@@ -258,4 +263,4 @@ for role in $roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' "INSTALL PASSED: all ten Codex Orchestration roles are current and exact shipped legacy files were removed."
+printf '%s\n' "INSTALL PASSED: all eleven Codex Orchestration roles are current and exact shipped legacy files were removed."

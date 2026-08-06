@@ -25,8 +25,9 @@ def main() -> int:
     plugin = Path(sys.argv[1])
     hook = (plugin / "scripts/prompt-router-hook.py").read_text()
     terra = (plugin / "agents/codex-orchestration-terra-executive.toml").read_text()
-    sol = (plugin / "agents/codex-orchestration-sol-high-executive.toml").read_text()
-    executives = terra + sol
+    sol_high = (plugin / "agents/codex-orchestration-sol-high-executive.toml").read_text()
+    sol_xhigh = (plugin / "agents/codex-orchestration-sol-xhigh-executive.toml").read_text()
+    executives = terra + sol_high + sol_xhigh
     for tool in ("send_message", "spawn_agent", "wait_agent", "list_agents", "interrupt_agent"):
         if tool in executives:
             raise AssertionError(f"custom executive requires unavailable collaboration tool: {tool}")
@@ -70,7 +71,7 @@ def main() -> int:
         "ROOT_VISUAL_EVIDENCE", "view_image", "Browser list is empty",
         "without route metadata",
     ):
-        if executives.count(guard) != 2:
+        if executives.count(guard) != 3:
             raise AssertionError(f"independent acceptance guard is not shared: {guard!r}")
     for guard in (
         "fresh evidence, not fresh discovery",
@@ -81,14 +82,14 @@ def main() -> int:
         "only for\na named remaining acceptance gap",
         "never duplicate or strengthen sufficient evidence",
     ):
-        if executives.count(guard) != 2:
+        if executives.count(guard) != 3:
             raise AssertionError(f"minimal acceptance guard is not shared: {guard!r}")
     for guard in (
         "Only when the producer supplies no working production path",
         "actual deploy/config scripts", "guessed port, URL, process",
         "deploy command\nreached terminal exit", "still-running deploy is not\nfailure",
     ):
-        if executives.count(guard) != 2:
+        if executives.count(guard) != 3:
             raise AssertionError(f"production acceptance guard is not shared: {guard!r}")
     for guard in (
         "access-path failure is not outcome failure",
@@ -98,7 +99,7 @@ def main() -> int:
         "actions reserved for later user approval",
         "acceptance claim remains unverified after those paths are exhausted",
     ):
-        if executives.count(guard) != 2:
+        if executives.count(guard) != 3:
             raise AssertionError(f"acceptance access fallback is not shared: {guard!r}")
     if "Executive route:" in executives or "Implementation route:" in executives:
         raise AssertionError("executive still owns fallible final route formatting")
@@ -145,6 +146,18 @@ def main() -> int:
         _, prefix = lane(score)
         if fragment not in prefix:
             raise AssertionError(f"wrong lane at {score}: {prefix}")
+
+    if "EXECUTIVE=<TERRA_HIGH if below 5.0, SOL_HIGH from 5.0–7.9, otherwise SOL_XHIGH>" not in terra:
+        raise AssertionError("Terra does not route scores of 8.0 and above to Sol / Extra High")
+    for token in (
+        "codex_orchestration_sol_xhigh_executive",
+        "gpt_5_6_sol_extra_high_executive_",
+        "GPT-5.6 Sol / Extra High",
+    ):
+        if token not in hook:
+            raise AssertionError(f"root relay omits the Sol / Extra High executive: {token}")
+    if 'model_reasoning_effort = "xhigh"' not in sol_xhigh:
+        raise AssertionError("Sol / Extra High executive is not pinned to xhigh")
 
     terra_exec = "gpt_5_6_terra_high_executive_change"
     terra_impl = lane(5.1)[1] + "change"

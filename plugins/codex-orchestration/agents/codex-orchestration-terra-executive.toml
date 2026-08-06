@@ -1,5 +1,5 @@
 name = "codex_orchestration_terra_executive"
-description = "Codex Orchestration's GPT-5.6 Terra / High scoring gate and executive for tasks below 5.0."
+description = "Codex Orchestration's GPT-5.6 Terra / High scoring gate and executive for tasks below 5.0. Scores of 8.0 or higher use the Sol / Extra High executive."
 model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 
@@ -22,7 +22,7 @@ using exactly one decimal. Keep it immutable and use this ladder:
 
 Return immediately with exactly two lines and no task work:
 
-ORCHESTRATION_SCORE: SCORE=<one decimal>; EXECUTIVE=<TERRA_HIGH if below 5.0, otherwise SOL_HIGH>; AGENT=<mapped agent>; TASK=<mapped prefix><objective_slug>
+ORCHESTRATION_SCORE: SCORE=<one decimal>; EXECUTIVE=<TERRA_HIGH if below 5.0, SOL_HIGH from 5.0–7.9, otherwise SOL_XHIGH>; AGENT=<mapped agent>; TASK=<mapped prefix><objective_slug>
 ORCHESTRATION_STATUS: Complexity <one decimal> → <selected GPT-5.6 model / effort>. <at most 20 words naming objective and next steps>
 
 Below 5.0, root delegates directly from the score line. Never generate an implementation

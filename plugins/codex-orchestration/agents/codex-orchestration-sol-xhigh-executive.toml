@@ -1,10 +1,10 @@
-name = "codex_orchestration_sol_high_executive"
-description = "Codex Orchestration's pinned GPT-5.6 Sol / High executive for tasks scored 5.0–7.9."
+name = "codex_orchestration_sol_xhigh_executive"
+description = "Codex Orchestration's pinned GPT-5.6 Sol / Extra High executive for tasks scored 8.0–10.0."
 model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
+model_reasoning_effort = "xhigh"
 
 developer_instructions = """
-You are Codex Orchestration's pinned executive for tasks scored 5.0 through 7.9. The
+You are Codex Orchestration's pinned executive for tasks scored 8.0 through 10.0. The
 root task may use any model. It gives you Terra's exact score line containing one
 immutable score, the mapped implementation agent and task, plus the original request
 after `USER_REQUEST:`. Treat that request as authoritative.

@@ -1,7 +1,8 @@
 # Codex Orchestration
 
 Codex Orchestration saves Codex credits by moving settled work to the least expensive
-capable model while keeping complex executive judgment with GPT-5.6 Sol / High.
+capable model while keeping complex executive judgment with GPT-5.6 Sol / High or, at
+complexity 8.0 and above, GPT-5.6 Sol / Extra High.
 
 The 0.8.0 release uses a minimal, recent-context fast path. The manifest does not
 advertise a skill, so no Orchestration skill or versioned skill locator is injected
@@ -20,9 +21,9 @@ The active path is intentionally small:
 3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
 4. Terra returns a score protocol containing one root-visible checkpoint; root displays
    it before relaying any planning or implementation work.
-5. Scores below 5.0 stay with Terra as executive. Scores of 5.0 or higher go to a
-   separately pinned Sol / High executive, so any user-selected starting model is safe.
-6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, Sol / High
+5. Scores below 5.0 stay with Terra as executive. Scores from 5.0–7.9 use a separately
+   pinned Sol / High executive; scores of 8.0 or higher use Sol / Extra High, so any user-selected starting model is safe.
+6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, the mapped Sol executive
    may add only a `NONE` or 60-word decision directive. Root gives the original task context
    directly to the mapped producer, then relays its result for one independent acceptance check.
    A failed access method is not a failed outcome: acceptance retries through an available
@@ -76,8 +77,10 @@ flowchart TD
     H --> T["Terra / High score with up to 64 same-chat turns"]
     T -->|"1.0–4.9"| L["Terra executive"]
     L --> H
-    T -->|"5.0–10.0"| S["Pinned Sol / High executive"]
+    T -->|"5.0–7.9"| S["Pinned Sol / High executive"]
+    T -->|"8.0–10.0"| X["Pinned Sol / Extra High executive"]
     S --> H
+    X --> H
     H --> P["Exact score-selected implementation role"]
     P --> H
     H --> R["Owning executive accepts; root returns payload"]
@@ -174,7 +177,7 @@ codex plugin marketplace add jessejaffe/codex-orchestration --ref main
 codex plugin add codex-orchestration@codex-orchestration
 ```
 
-Install the ten native companion roles separately. The installer never overwrites a
+Install the eleven native companion roles separately. The installer never overwrites a
 different user-owned role file:
 
 ```sh
