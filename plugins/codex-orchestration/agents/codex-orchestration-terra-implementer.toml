@@ -24,6 +24,9 @@ and deployment succeed, report `VISUAL_VERIFICATION_PENDING` with the exact URL,
 and assertion for root to capture. Do not claim the visible result and do not report the
 completed implementation as failed merely because the Browser list is empty.
 
+If a command reports a running cell or session, resume it until terminal exit and require
+exit code zero before reporting deployment or verification complete.
+
 You may perform a fully specified routine repository catch-up, commit, push, SSH
 deployment, and live verification. Treat an unexpected failure or newly unresolved
 production decision as an escalation, not permission to broaden scope.

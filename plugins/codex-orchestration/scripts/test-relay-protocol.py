@@ -72,13 +72,20 @@ def main() -> int:
     ):
         if executives.count(guard) != 2:
             raise AssertionError(f"independent acceptance guard is not shared: {guard!r}")
+    for guard in (
+        "actual deploy/config scripts", "guessed port, URL, process",
+        "deploy command\nreached terminal exit", "still-running deploy is not\nfailure",
+    ):
+        if executives.count(guard) != 2:
+            raise AssertionError(f"production acceptance guard is not shared: {guard!r}")
     if "Executive route:" in executives or "Implementation route:" in executives:
         raise AssertionError("executive still owns fallible final route formatting")
     if implementers.count("requested observable outcome") != 7:
         raise AssertionError("an implementation lane can still report only deployment mechanics")
     for guard in (
         "VISUAL_VERIFICATION_PENDING", "isolated from child threads",
-        "Browser list is empty",
+        "Browser list is empty", "running cell or session", "terminal exit",
+        "exit code zero",
     ):
         if implementers.count(guard) != 7:
             raise AssertionError(f"frontend child-browser handoff is not shared: {guard!r}")
@@ -92,11 +99,18 @@ def main() -> int:
             if guard not in instructions:
                 raise AssertionError(f"nested-agent guard missing from {path.name}: {guard!r}")
     for guard in (
-        "Every post-score final answer, including takeover", "Executive route:",
-        "Implementation route:", "Complexity:", "Root appends these",
+        "Every routed final ends", "Executive route:", "Implementation route:",
+        "On takeover add", "Route takeover: Activated", "<root model / effort>",
+        "Complexity:", "Root appends these",
     ):
         if guard not in hook:
             raise AssertionError(f"deterministic final metadata omits {guard!r}")
+    metadata_order = [
+        hook.index("Executive route:"), hook.index("Implementation route:"),
+        hook.index("Route takeover: Activated"), hook.index("Complexity:"),
+    ]
+    if metadata_order != sorted(metadata_order):
+        raise AssertionError("takeover metadata is not ordered with the final route lines")
 
     expected = {
         1.0: "luna", 2.9: "luna", 3.0: "terra_medium", 5.0: "terra_medium",

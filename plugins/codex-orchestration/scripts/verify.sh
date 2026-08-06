@@ -141,9 +141,12 @@ for guard in \
   'Browser only' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
-  'Every post-score final answer, including takeover' \
+  'Every routed final ends' \
   'Executive route:' \
   'Implementation route:' \
+  'On takeover add' \
+  'Route takeover: Activated' \
+  '<root model / effort>' \
   'Complexity:' \
   'Root appends these' \
   'never rely on executive formatting' \
@@ -184,6 +187,10 @@ for guard in \
   'Never generate an implementation' \
   'untrusted claim' \
   'task-appropriate probe' \
+  'actual deploy/config scripts' \
+  'guessed port, URL, process' \
+  'reached terminal exit' \
+  'still-running deploy is not' \
   'ROOT_VISUAL_EVIDENCE' \
   'view_image' \
   'Browser list is empty' \
@@ -204,6 +211,10 @@ for guard in \
   'ORCHESTRATION_TAKEOVER:' \
   'untrusted claim' \
   'task-appropriate probe' \
+  'actual deploy/config scripts' \
+  'guessed port, URL, process' \
+  'reached terminal exit' \
+  'still-running deploy is not' \
   'ROOT_VISUAL_EVIDENCE' \
   'view_image' \
   'Browser list is empty' \
@@ -230,6 +241,12 @@ for implementer in "$agents"/*-implementer.toml; do
     fail "frontend implementation lane lacks child-browser evidence handoff: $implementer"
   grep -Fq 'isolated from child threads' "$implementer" ||
     fail "frontend implementation lane ignores Browser session isolation: $implementer"
+  grep -Fq 'running cell or session' "$implementer" ||
+    fail "implementation lane can abandon a running deployment: $implementer"
+  grep -Fq 'terminal exit' "$implementer" ||
+    fail "implementation lane can report before deployment exits: $implementer"
+  grep -Fq 'exit code zero' "$implementer" ||
+    fail "implementation lane can ignore a failed deployment exit: $implementer"
   grep -Fq 'perform the implementation yourself' "$implementer" ||
     fail "implementation lane can delegate its work: $implementer"
   grep -Fq 'Do not use collaboration or agent-control' "$implementer" ||
@@ -285,7 +302,16 @@ for digest in \
   250759da7eda6a2bde248931ee0c4f781258cc56818dad3e42c6d457a0eb4bd7 \
   6ada178902fb621b0fb58b8a7bd48ab3f4d397d9192d41dab458924921919c4b \
   43a1531815e6674a023f9f21c03635253ded90e15eae72ce69776c8f54af8fb3 \
-  5a5897ddcc8d150656591c3f9e4c0327cd38697808d7a21249b4ee7842f1ad08
+  5a5897ddcc8d150656591c3f9e4c0327cd38697808d7a21249b4ee7842f1ad08 \
+  df71d4e728f22fb4f6c690a8c4a584bb172955d98458344aedd1747862aa0a20 \
+  f66ccd707d1d695e44b3709d6987cabc86f59a2a87a8ce6372c98e7decc4e2db \
+  ca9c68dff9bd288a912185d67352fcae8813c38baa2a2b3202f9709a51d4b0a9 \
+  d88c4e5eef3a60f3934c2d0687f4e803d1bcd3f50e4ee533ad941f24097b0842 \
+  1af4d9325b7a561c0bd4b355b12b2165df80c369c0365245d2b002512c48e9ab \
+  1ec3252a3798a68f29a800bec8acf59f4048b6dc4b833c0bc3fd285e42b523a9 \
+  f29efa9089205993a5d1b539190041d41f0619fbc820f80759d97ae62f9d393d \
+  79b9606fcc279eaf835068cda4a9e85aeabe487042dd42832b614167e75cfbcc \
+  9ede0c022e578617b31c511e5967aa42b1bffc1c712697565863667205eee88e
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done

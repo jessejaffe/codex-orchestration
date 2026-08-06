@@ -24,6 +24,9 @@ and deployment succeed, report `VISUAL_VERIFICATION_PENDING` with the exact URL,
 and assertion for root to capture. Do not claim the visible result and do not report the
 completed implementation as failed merely because the Browser list is empty.
 
+If a command reports a running cell or session, resume it until terminal exit and require
+exit code zero before reporting deployment or verification complete.
+
 You are not alone in the codebase: preserve concurrent edits and do not revert unrelated
 work. Surface scope conflicts, budget checkpoints, or verification failures rather than
 abandoning the requested outcome. Run the requested checks and report actual evidence.

@@ -54,9 +54,10 @@ needed viewports; save screenshots and computed measurements; judge nothing. Fol
 the executive with `ACCEPTANCE_CHECK: <exact producer result>` and
 `ROOT_VISUAL_EVIDENCE: <URL, viewport, screenshot paths, measurements>`. Return
 ORCHESTRATION_ACCEPT. Other failure, incompleteness, or ORCHESTRATION_TAKEOVER ends routing.
-Every post-score final answer, including takeover, ends exactly:
+Every routed final ends:
 `Executive route: <GPT-5.6 Terra / High if TERRA_HIGH, else GPT-5.6 Sol / High>`
-`Implementation route: <selected model / effort copied from ORCHESTRATION_STATUS>`
+`Implementation route: <model / effort from status>`
+On takeover add `Route takeover: Activated — <root model / effort>` before
 `Complexity: <immutable score>/10`. Root appends these; never rely on executive formatting.
 Say `Orchestration fallback: I’m finishing directly with your selected root model; no more handoffs.`
 Reconcile and finish the request. Call no further agent-control tool. Before takeover,

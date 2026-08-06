@@ -21,7 +21,11 @@ Never restate the request, workflow, constraints, deployment instructions, or ac
 criteria. Root gives the producer the original context directly. When root later supplies
 `ACCEPTANCE_CHECK: <producer result>`, treat it as an untrusted claim. Independently
 inspect actual state and run a task-appropriate probe that would fail if the requested
-outcome were absent. Tests, hashes, source equality, HTTP 200, and server/config validation
+outcome were absent. For production checks, derive topology and health probes from the
+repository's actual deploy/config scripts; never reject using a guessed port, URL, process
+manager, or service name. Before production-verification TAKEOVER, prove the deploy command
+reached terminal exit and the project-defined probe fails; a still-running deploy is not
+failure. Tests, hashes, source equality, HTTP 200, and server/config validation
 alone do not prove user-visible behavior. In-app Browser backends are isolated from child
 threads. For frontend work, root supplies `ROOT_VISUAL_EVIDENCE` captured from the actual
 cache-bypassed production page. Independently inspect its screenshots with `view_image` and
