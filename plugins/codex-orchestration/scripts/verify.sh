@@ -144,10 +144,12 @@ for guard in \
   'never' \
   'specification or restate the request' \
   'ACCEPTANCE_CHECK:' \
-  'VISUAL_VERIFICATION_PENDING' \
-  'PRODUCER_VISUAL_EVIDENCE' \
-  'PRODUCTION_VISUAL_EVIDENCE:' \
-  'if absent, root uses Browser' \
+  'root never uses Browser' \
+  'code, tests, and deployed revision suffice' \
+  'used for a user-reported rendered mismatch' \
+  'otherwise only when explicitly requested' \
+  'or indispensable to perform the work' \
+  'Missing visual evidence is never failure' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
   'Every routed final ends' \
@@ -203,9 +205,13 @@ for guard in \
   'guessed port, URL, process' \
   'reached terminal exit' \
   'still-running deploy is not' \
-  'PRODUCTION_VISUAL_EVIDENCE' \
+  'deployed revision or artifact contains the change' \
+  'forbidden for routine acceptance' \
+  'user-reported rendered mismatch' \
+  'use visual tools when available' \
+  'explicitly asks for visual inspection' \
+  'Missing visual evidence is never a TAKEOVER reason' \
   'view_image' \
-  'Browser list is empty' \
   'root owns final route metadata' \
   'zero correction loops'
 do
@@ -232,9 +238,13 @@ for guard in \
   'guessed port, URL, process' \
   'reached terminal exit' \
   'still-running deploy is not' \
-  'PRODUCTION_VISUAL_EVIDENCE' \
+  'deployed revision or artifact contains the change' \
+  'forbidden for routine acceptance' \
+  'user-reported rendered mismatch' \
+  'use visual tools when available' \
+  'explicitly asks for visual inspection' \
+  'Missing visual evidence is never a TAKEOVER reason' \
   'view_image' \
-  'Browser list is empty' \
   'Root owns and appends final route metadata' \
   'TAKEOVER is terminal'
 do
@@ -252,16 +262,20 @@ fi
 for implementer in "$agents"/*-implementer.toml; do
   grep -Fq 'Execute `USER_REQUEST`' "$implementer" ||
     fail "implementation lane does not receive original task context: $implementer"
-  grep -Fq 'requested observable outcome' "$implementer" ||
-    fail "implementation lane can report deployment mechanics without behavior: $implementer"
-  grep -Fq 'production page with cache bypass' "$implementer" ||
-    fail "frontend implementation lane lacks live rendered verification: $implementer"
-  grep -Fq 'VISUAL_VERIFICATION_PENDING' "$implementer" ||
-    fail "frontend implementation lane lacks child-browser evidence handoff: $implementer"
-  grep -Fq 'PRODUCER_VISUAL_EVIDENCE' "$implementer" ||
-    fail "frontend implementation lane does not preserve reusable evidence: $implementer"
-  grep -Fq 'isolated from child threads' "$implementer" ||
-    fail "frontend implementation lane ignores Browser session isolation: $implementer"
+  grep -Fq 'verify the requested change in code, configuration, schema, tests' "$implementer" ||
+    fail "implementation lane can skip code-first verification: $implementer"
+  grep -Fq 'deployed code contains the change is sufficient' "$implementer" ||
+    fail "frontend implementation lane can require rendered proof: $implementer"
+  grep -Fq 'visual tools are forbidden for routine verification' "$implementer" ||
+    fail "frontend implementation lane can browse by default: $implementer"
+  grep -Fq 'user-reported rendered mismatch' "$implementer" ||
+    fail "frontend implementation lane ignores a reported visual defect: $implementer"
+  grep -Fq 'use visual tools when available' "$implementer" ||
+    fail "frontend implementation lane cannot visually diagnose a reported defect: $implementer"
+  grep -Fq 'explicitly asks for visual inspection' "$implementer" ||
+    fail "frontend implementation lane lacks the visual opt-in boundary: $implementer"
+  grep -Fq 'Missing visual evidence is never a failure or handoff condition' "$implementer" ||
+    fail "frontend implementation lane can fail on absent screenshots: $implementer"
   grep -Fq 'exact cell or session' "$implementer" ||
     fail "implementation lane can abandon a running deployment: $implementer"
   grep -Fq 'terminal exit' "$implementer" ||
@@ -287,6 +301,10 @@ for implementer in "$agents"/*-implementer.toml; do
   grep -Fq 'do not create Recon, reviewer, helper, or' "$implementer" ||
     fail "implementation lane can create a named helper agent: $implementer"
 done
+if rg -n 'VISUAL_VERIFICATION_PENDING|PRODUCER_VISUAL_EVIDENCE|PRODUCTION_VISUAL_EVIDENCE|production page with cache bypass|saved cache-bypassed payload' \
+  "$script_dir/prompt-router-hook.py" "$agents"/*.toml; then
+  fail "mandatory visual acceptance remains in runtime instructions"
+fi
 grep -Fq 'model_reasoning_effort = "xhigh"' "$agents/codex-orchestration-sol-xhigh-implementer.toml" ||
   fail "Extra High implementation role is not pinned to xhigh"
 grep -Fq 'never reads the offline routing benchmark' "$repo_dir/README.md" ||
@@ -356,7 +374,17 @@ for digest in \
   103029726efd75e1e322de17ae44ff64fcfe2a3ab6b661e3de9daf3d586c7677 \
   711efd898acae62727a70b22ecee159073775840e58c70e83e5d0cf2173298e9 \
   ea03a249d438d4cdacccf9d323cca3df55e63f13e84632b45f9fe53088bee2c7 \
-  1994415d11c7db839d3ac337bf537b9fac145bb6db39f3f23f2705ad5bef597f
+  1994415d11c7db839d3ac337bf537b9fac145bb6db39f3f23f2705ad5bef597f \
+  c9c51d1cfc4a2222b2923b7f4d7d395f5a958f9653d8e1d05074fedc0f3456eb \
+  fdbea6a39f62f52f9433b0b725832ff220efecffb416b2526120d44b781a8aa1 \
+  e8c702fbbd0140358c7c4a2035473b5c0d4fa3517766ad58bbed2b8da6c04068 \
+  6dc11a26d3d27ece385feacef01fd1c64f69723ebfcd210b8165520059217cf5 \
+  c4fe65f91579a5b8d61236eeeb5e4da6fa0d9342199db48f583cd86e97cc49b1 \
+  61edbdbdfac01aedbbe45fa77e361f8a13e34d03d1d4e2b8f1f782fe0e8628a1 \
+  7f848df4de7a409ef22f2a7419f5f33141a00cd73a445cecd2c824c524468069 \
+  b600490a46d47642327bd964f18dd63fed8c5a17db0b7da5cf90c00ab2f8bf22 \
+  f8a22b404c39d51035e88f9cd21409c91d884c3921d559cb83a4936046e876f7 \
+  130f54bd67b8854971e49542dedf460c70d480502a1bdc0b326e48b1c89fe5d9
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done

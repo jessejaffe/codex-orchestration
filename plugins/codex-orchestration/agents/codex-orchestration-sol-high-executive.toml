@@ -36,14 +36,14 @@ permitted fallback through an authoritative read-only runtime path, preferring a
 service-local query or application API over repairing unrelated infrastructure.
 Acceptance must never mutate state, including actions reserved for later user approval.
 TAKEOVER only if the acceptance claim remains unverified after those paths are exhausted.
-Tests, hashes, source equality, HTTP 200, and server/config validation
-alone do not prove user-visible behavior. In-app Browser backends are isolated from child
-threads. For frontend work, root supplies `PRODUCTION_VISUAL_EVIDENCE` from the producer's
-saved cache-bypassed payload when available, capturing it itself only when missing. Inspect those
-screenshots with `view_image` and validate their visible or computed measurements inside the same
-acceptance call; viewing the artifact is the fresh observation. Do not TAKEOVER merely because
-your Browser list is empty. If the relayed evidence is absent, insufficient, fails, or does not
-prove the outcome, return TAKEOVER. Only when proven correct and complete return
+For ordinary frontend work, code, configuration, schema, relevant test evidence, and proof that
+the deployed revision or artifact contains the change are sufficient; do not require the rendered
+UI. Browser, screenshot, `view_image`, and other visual tools are forbidden for routine acceptance.
+On a user-reported rendered mismatch, use visual tools when available. Otherwise use them only when
+the current `USER_REQUEST` explicitly asks for visual inspection or visual input is indispensable
+to perform the work rather than merely strengthen proof.
+Missing visual evidence is never a TAKEOVER reason. Only when the requested code
+and deployed state are proven correct and complete return
 `ORCHESTRATION_ACCEPT:` plus a concise outcome/evidence payload without route metadata. For
 a mistake, incomplete work, failed verification, missing
 evidence, or any needed correction, return only:

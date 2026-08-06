@@ -48,11 +48,12 @@ def main() -> int:
         "at most 60 words",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
-        "VISUAL_VERIFICATION_PENDING",
-        "PRODUCER_VISUAL_EVIDENCE",
-        "PRODUCTION_VISUAL_EVIDENCE:",
-        "if absent, root uses Browser",
-        "judge nothing",
+        "root never uses Browser",
+        "code, tests, and deployed revision suffice",
+        "used for a user-reported rendered mismatch",
+        "otherwise only when explicitly requested",
+        "or indispensable to perform the work",
+        "Missing visual evidence is never failure",
     ):
         if guard not in hook:
             raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
@@ -75,8 +76,9 @@ def main() -> int:
     if implementers.count("Execute `USER_REQUEST`") != 7:
         raise AssertionError("an implementation lane still depends on an executive rewrite")
     for guard in (
-        "untrusted claim", "task-appropriate probe", "source equality", "HTTP 200",
-        "PRODUCTION_VISUAL_EVIDENCE", "view_image", "Browser list is empty",
+        "untrusted claim", "task-appropriate probe", "deployed revision or artifact",
+        "forbidden for routine acceptance", "Missing visual evidence is never a TAKEOVER reason",
+        "user-reported rendered mismatch", "use visual tools when available",
         "without route metadata",
     ):
         if executives.count(guard) != 3:
@@ -86,9 +88,8 @@ def main() -> int:
         "first call fails solely",
         "one fallback task-tool call",
         "do not reread source, rerun tests, rediscover infrastructure",
-        "producer's\nsaved cache-bypassed payload when available",
-        "capturing it itself only when missing",
-        "viewing the artifact is the fresh observation",
+        "explicitly asks for visual inspection",
+        "visual input is indispensable\nto perform the work rather than merely strengthen proof",
     ):
         if executives.count(guard) != 3:
             raise AssertionError(f"minimal acceptance guard is not shared: {guard!r}")
@@ -111,17 +112,28 @@ def main() -> int:
             raise AssertionError(f"acceptance access fallback is not shared: {guard!r}")
     if "Executive route:" in executives or "Implementation route:" in executives:
         raise AssertionError("executive still owns fallible final route formatting")
-    if implementers.count("requested observable outcome") != 7:
-        raise AssertionError("an implementation lane can still report only deployment mechanics")
+    if implementers.count("verify the requested change in code, configuration, schema, tests") != 7:
+        raise AssertionError("an implementation lane can still skip code-first verification")
     for guard in (
-        "VISUAL_VERIFICATION_PENDING", "isolated from child threads",
-        "Browser list is empty", "PRODUCER_VISUAL_EVIDENCE", "exact cell or session until terminal exit",
+        "deployed revision or artifact", "deployed code contains the change is sufficient",
+        "visual tools are forbidden for routine verification", "explicitly asks for visual inspection",
+        "user-reported rendered mismatch", "use visual tools when available",
+        "visual input is indispensable",
+        "Missing visual evidence is never a failure or handoff condition",
+        "exact cell or session until terminal exit",
         "exit code zero", "Deployment is single-owner", "narrowest supported service set",
         "second build or deploy", "`--no-cache`", "another process already",
         "seed, migration, or backfill commands in parallel",
     ):
         if implementers.count(guard) != 7:
-            raise AssertionError(f"frontend child-browser handoff is not shared: {guard!r}")
+            raise AssertionError(f"code-first visual policy is not shared: {guard!r}")
+    for stale in (
+        "VISUAL_VERIFICATION_PENDING", "PRODUCER_VISUAL_EVIDENCE",
+        "PRODUCTION_VISUAL_EVIDENCE", "production page with cache bypass",
+        "saved cache-bypassed payload",
+    ):
+        if stale in runtime + implementers:
+            raise AssertionError(f"mandatory visual acceptance remains: {stale!r}")
     for path, instructions in zip(implementer_paths, implementer_texts):
         for guard in (
             "perform the implementation yourself",
@@ -192,7 +204,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call producer-visuals=reused deployment=single-owner final-metadata=root terminal-takeover=ok")
+    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call visuals=opt-in deployment=single-owner final-metadata=root terminal-takeover=ok")
     return 0
 
 

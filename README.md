@@ -30,7 +30,7 @@ The active path is intentionally small:
    A failed access method is not a failed outcome: acceptance retries through an available
    authoritative read-only runtime path and never performs a mutation reserved for user approval.
    Acceptance is one batched task-tool call, with one fallback call only when the first access path
-   is unavailable. It reuses producer-saved visual artifacts instead of making root recapture them.
+   is unavailable. Routine acceptance uses code, tests, and deployed revision state without a visual handoff.
 7. Root—not the executive—always appends the final executive route, implementation route,
    and immutable complexity lines, including after terminal takeover.
 
@@ -92,13 +92,13 @@ flowchart TD
     H --> R["Owning executive accepts; root returns payload"]
 ```
 
-The producer self-checks and saves minimal cache-bypassed visual evidence when Browser is
-available. Root captures that evidence only when the producer could not. The owning executive
-then independently checks actual state once, in one batched task-tool call.
-Producer claims are untrusted: acceptance must run a probe that would fail if the requested
-outcome were absent. For frontend work, source equality, HTTP 200, and server validation
-are insufficient; the rendered production page must visibly or computationally prove the
-requested result with cache bypass at the relevant viewport. If acceptance finds any
+The producer self-checks code, configuration, schema, tests, and the deployed revision or artifact.
+The owning executive independently checks actual state once, in one batched task-tool call.
+For ordinary frontend work, deployed code containing the requested change is sufficient; neither
+root nor an agent opens Browser or captures screenshots. A user-reported rendered mismatch triggers
+visual diagnosis. Otherwise visual tools are allowed only when the current request explicitly asks
+for visual inspection or visual input is indispensable to perform the work rather than merely
+strengthen acceptance. Missing visual evidence cannot cause takeover. If acceptance finds any
 mistake, incomplete work, failed verification, missing evidence, or needed correction,
 Orchestration ends immediately. The user-selected root model announces takeover,
 reconciles the actual state, and finishes the whole request directly with no more

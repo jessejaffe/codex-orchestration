@@ -50,11 +50,11 @@ ORCHESTRATION_DELEGATE and DIRECTIVE: `NONE` or at most 60 words; never restate 
 Keep Terra's AGENT/TASK immutable; ignore remaps. Spawn those values with the
 fork/foundation. Send
 `USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
-specification or restate the request. `VISUAL_VERIFICATION_PENDING` is not failure. For
-frontend acceptance, relay `PRODUCER_VISUAL_EVIDENCE` as `PRODUCTION_VISUAL_EVIDENCE`;
-if absent, root uses Browser to cache-bypass production viewports, saving
-screenshots/measurements; judge nothing. Follow up: `ACCEPTANCE_CHECK: <exact
-producer result>`; `PRODUCTION_VISUAL_EVIDENCE: <URL, viewport, screenshot paths, measurements>`.
+specification or restate the request. For routine verification, root never uses Browser,
+screenshots, or visual-evidence handoffs; code, tests, and deployed revision suffice. Visual
+tools are used for a user-reported rendered mismatch; otherwise only when explicitly requested
+or indispensable to perform the work. Missing visual evidence is never failure.
+Follow up: `ACCEPTANCE_CHECK: <exact producer result>`.
 Return ORCHESTRATION_ACCEPT. Failure or ORCHESTRATION_TAKEOVER ends routing.
 Every routed final ends:
 `Executive route: <GPT-5.6 Terra / High if TERRA_HIGH, GPT-5.6 Sol / High if SOL_HIGH, else GPT-5.6 Sol / Extra High>`
