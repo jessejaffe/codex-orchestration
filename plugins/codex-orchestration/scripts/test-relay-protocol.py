@@ -78,6 +78,16 @@ def main() -> int:
     ):
         if executives.count(guard) != 2:
             raise AssertionError(f"production acceptance guard is not shared: {guard!r}")
+    for guard in (
+        "access-path failure is not outcome failure",
+        "authoritative read-only runtime path",
+        "prefer an already\nworking service-local query or application API",
+        "Acceptance must never mutate state",
+        "actions reserved for later user approval",
+        "acceptance claim remains unverified after those paths are exhausted",
+    ):
+        if executives.count(guard) != 2:
+            raise AssertionError(f"acceptance access fallback is not shared: {guard!r}")
     if "Executive route:" in executives or "Implementation route:" in executives:
         raise AssertionError("executive still owns fallible final route formatting")
     if implementers.count("requested observable outcome") != 7:

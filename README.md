@@ -25,6 +25,8 @@ The active path is intentionally small:
 6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, Sol / High
    may add only a `NONE` or 60-word decision directive. Root gives the original task context
    directly to the mapped producer, then relays its result for one independent acceptance check.
+   A failed access method is not a failed outcome: acceptance retries through an available
+   authoritative read-only runtime path and never performs a mutation reserved for user approval.
 7. Root—not the executive—always appends the final executive route, implementation route,
    and immutable complexity lines, including after terminal takeover.
 

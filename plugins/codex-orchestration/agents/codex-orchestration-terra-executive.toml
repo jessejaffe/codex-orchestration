@@ -33,7 +33,12 @@ outcome were absent. For production checks, derive topology and health probes fr
 repository's actual deploy/config scripts; never reject using a guessed port, URL, process
 manager, or service name. Before production-verification TAKEOVER, prove the deploy command
 reached terminal exit and the project-defined probe fails; a still-running deploy is not
-failure. Tests, hashes, source equality, HTTP 200, and server/config validation
+failure. An access-path failure is not outcome failure: retry the same assertion through
+an available authoritative read-only runtime path before TAKEOVER, and prefer an already
+working service-local query or application API over repairing unrelated infrastructure.
+Acceptance must never mutate state, including actions reserved for later user approval.
+TAKEOVER only if the acceptance claim remains unverified after those paths are exhausted.
+Tests, hashes, source equality, HTTP 200, and server/config validation
 alone do not prove user-visible behavior. In-app Browser backends are isolated from child
 threads. For frontend work, root supplies `ROOT_VISUAL_EVIDENCE` captured from the actual
 cache-bypassed production page. Independently inspect its screenshots with `view_image` and
