@@ -112,7 +112,7 @@ def main() -> int:
     routed_context = context(routed)
     for required in (
         "codex_orchestration_terra_executive",
-        'Executive fork is `none`',
+        'Executive fork: `none`',
         'fork_turns: "none"',
         "never full-history",
         "FOUNDATION_CONTEXT",
@@ -124,14 +124,16 @@ def main() -> int:
         "gpt_5_6_sol_high_executive_<objective_slug>",
         "codex_orchestration_sol_xhigh_executive",
         "gpt_5_6_sol_extra_high_executive_<objective_slug>",
-        "Show `ORCHESTRATION_STATUS:` once as top-level commentary",
-        "top-level commentary",
-        "interrupt/list this request's Orchestration children until none runs",
+        "Before next spawn, show Terra's exact `ORCHESTRATION_STATUS:` in commentary",
+        "never prewrite/replace it",
+        "drain only this request's Orchestration children",
         "ORCHESTRATION_DELEGATE",
         "DIRECTIVE",
         "at most 60 words",
+        "Keep Terra's AGENT/TASK immutable; ignore remaps",
+        "Spawn those values",
         "do not follow up before implementation",
-        "same context fork/foundation",
+        "both reuse fork/foundation",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
         "VISUAL_VERIFICATION_PENDING",
@@ -172,7 +174,7 @@ def main() -> int:
     partial = context(
         call(prompt_hook, {**base, "transcript_path": str(partial_transcript), "prompt": "work"}, env)
     )
-    if 'Executive fork is `2`' not in partial or 'fork_turns: "2"' not in partial:
+    if 'Executive fork: `2`' not in partial or 'fork_turns: "2"' not in partial:
         raise AssertionError("short-chat context fork is not partial")
 
     long_transcript = temporary / "long.jsonl"
@@ -183,7 +185,7 @@ def main() -> int:
     bounded = context(
         call(prompt_hook, {**base, "transcript_path": str(long_transcript), "prompt": "work"}, env)
     )
-    if 'Executive fork is `64`' not in bounded or 'fork_turns: "64"' not in bounded:
+    if 'Executive fork: `64`' not in bounded or 'fork_turns: "64"' not in bounded:
         raise AssertionError("long-chat context fork is not bounded at 64")
 
     worker = call(

@@ -32,21 +32,23 @@ MAX_FORK_TURNS = 64
 
 DISPATCH_CONTEXT = """Orchestration is ON.
 Root is zero-judgment relay; alone calls agent-control tools.
-On steer, interrupt/list this request's Orchestration children until none runs; preserve unrelated.
-Executive fork is `__FORK_TURNS__`, never full-history. At 1–63, copy oldest omitted
-turn to `FOUNDATION_CONTEXT`.
+On steer, drain only this request's Orchestration children.
+Executive fork: `__FORK_TURNS__`; never full-history. At 1–63 put oldest omitted turn in
+`FOUNDATION_CONTEXT`.
 Spawn `codex_orchestration_terra_executive`; `fork_turns: "__FORK_TURNS__"`; name
 `gpt_5_6_terra_high_executive_<objective_slug>`; message `Score request once; return score
 protocol. Do not score relay.
 USER_REQUEST: <verbatim current user prompt>` Do nothing first; never summarize.
-Show `ORCHESTRATION_STATUS:` once as top-level commentary.
+Before next spawn, show Terra's exact `ORCHESTRATION_STATUS:` in commentary;
+never prewrite/replace it.
 TERRA_HIGH uses AGENT/TASK and Terra; do not follow up before implementation.
 For SOL_HIGH spawn `codex_orchestration_sol_high_executive`; SOL_XHIGH
-`codex_orchestration_sol_xhigh_executive`; both same context fork/foundation. Names
+`codex_orchestration_sol_xhigh_executive`; both reuse fork/foundation. Names
 `gpt_5_6_sol_high_executive_<objective_slug>` / `gpt_5_6_sol_extra_high_executive_<objective_slug>`.
 Give exact score and `USER_REQUEST: <verbatim current user prompt>`. It returns
 ORCHESTRATION_DELEGATE and DIRECTIVE: `NONE` or at most 60 words; never restate request.
-Spawn mapped AGENT with same context fork/foundation and exact TASK. Send
+Keep Terra's AGENT/TASK immutable; ignore remaps. Spawn those values with the
+fork/foundation. Send
 `USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
 specification or restate the request. `VISUAL_VERIFICATION_PENDING` is not failure. For
 frontend acceptance, relay `PRODUCER_VISUAL_EVIDENCE` as `PRODUCTION_VISUAL_EVIDENCE`;

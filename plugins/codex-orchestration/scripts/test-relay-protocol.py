@@ -44,7 +44,7 @@ def main() -> int:
         raise AssertionError("relay can score itself or bypass the mapped producer")
     for guard in (
         "do not follow up before implementation",
-        "same context fork/foundation",
+        "both reuse fork/foundation",
         "at most 60 words",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
@@ -56,8 +56,15 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
-    if "Show `ORCHESTRATION_STATUS:` once as top-level commentary" not in hook:
-        raise AssertionError("human-readable route status is not shown once")
+    if "Before next spawn, show Terra's exact `ORCHESTRATION_STATUS:` in commentary" not in hook:
+        raise AssertionError("Terra's human-readable score checkpoint is not relayed before delegation")
+    if "never prewrite/replace it" not in hook:
+        raise AssertionError("root can replace Terra's scored checkpoint with generic commentary")
+    if "Keep Terra's AGENT/TASK immutable; ignore remaps" not in hook:
+        raise AssertionError("root can accept an executive-generated implementation identity")
+    for guard in ("Copy Terra's AGENT and TASK", "never shorten, relabel, remap"):
+        if executives.count(guard) != 2:
+            raise AssertionError(f"pinned Sol executive can rename Terra's implementation task: {guard!r}")
     if "Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`" in hook:
         raise AssertionError("internal routing score can leak into commentary")
     implementer_paths = sorted((plugin / "agents").glob("*implementer.toml"))

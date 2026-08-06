@@ -123,7 +123,7 @@ grep -Fq 'MAX_FORK_TURNS = 64' "$script_dir/prompt-router-hook.py" ||
   fail "root-to-executive history bound is missing"
 grep -Fq 'never full-history' "$script_dir/prompt-router-hook.py" ||
   fail "custom-role full-history protection is missing"
-grep -Fq 'same context fork/foundation' "$script_dir/prompt-router-hook.py" ||
+grep -Fq 'reuse fork/foundation' "$script_dir/prompt-router-hook.py" ||
   fail "direct-context producer handoff is missing"
 for executive in \
   "$agents/codex-orchestration-sol-high-executive.toml" \
@@ -131,11 +131,14 @@ for executive in \
 do
 for guard in \
   'ORCHESTRATION_STATUS:' \
-  'top-level commentary' \
-  "interrupt/list this request's Orchestration children until none runs" \
+  "show Terra's exact" \
+  'never prewrite/replace it' \
+  "drain only this request's Orchestration children" \
   'ORCHESTRATION_DELEGATE' \
   'DIRECTIVE' \
   'at most 60 words' \
+  "Keep Terra's AGENT/TASK immutable" \
+  'Spawn those values' \
   'do not' \
   'follow up before implementation' \
   'never' \
@@ -211,7 +214,9 @@ do
 done
 for guard in \
   'root task may use any model' \
-  'Never rescore, remap, or execute implementation directly' \
+  "Copy Terra's AGENT and TASK" \
+  'never shorten, relabel, remap' \
+  'Never rescore or execute implementation directly' \
   'ORCHESTRATION_DELEGATE:' \
   'DIRECTIVE:' \
   'at most 60 words' \
@@ -349,7 +354,9 @@ for digest in \
   1d7462700700fdf8c4d8c671d56bacfc51593dc997cc0a5ec1c41e732f1e2182 \
   d32694987e8c22fea5efc2936498fb56ee160d84f4650e927e7c3ebdccc18540 \
   103029726efd75e1e322de17ae44ff64fcfe2a3ab6b661e3de9daf3d586c7677 \
-  711efd898acae62727a70b22ecee159073775840e58c70e83e5d0cf2173298e9
+  711efd898acae62727a70b22ecee159073775840e58c70e83e5d0cf2173298e9 \
+  ea03a249d438d4cdacccf9d323cca3df55e63f13e84632b45f9fe53088bee2c7 \
+  1994415d11c7db839d3ac337bf537b9fac145bb6db39f3f23f2705ad5bef597f
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done

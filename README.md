@@ -19,13 +19,14 @@ The active path is intentionally small:
    chat only to Terra / High. The context fork is always partial; on a short chat the one omitted oldest
    task turn is copied verbatim, avoiding Codex's restriction on pinned models with full-history forks.
 3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
-4. Terra returns a score protocol containing one root-visible checkpoint; root displays
-   it before relaying any planning or implementation work.
+4. Terra returns a score protocol containing one root-visible checkpoint; before any
+   further spawn, root relays that exact checkpoint with its immutable numeric score.
 5. Scores below 5.0 stay with Terra as executive. Scores from 5.0–7.9 use a separately
    pinned Sol / High executive; scores of 8.0 or higher use Sol / Extra High, so any user-selected starting model is safe.
 6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, the mapped Sol executive
    may add only a `NONE` or 60-word decision directive. Root gives the original task context
-   directly to the mapped producer, then relays its result for one independent acceptance check.
+   directly to the mapped producer using Terra's immutable agent and task identity, then relays
+   its result for one independent acceptance check.
    A failed access method is not a failed outcome: acceptance retries through an available
    authoritative read-only runtime path and never performs a mutation reserved for user approval.
    Acceptance is one batched task-tool call, with one fallback call only when the first access path
