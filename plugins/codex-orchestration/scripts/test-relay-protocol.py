@@ -87,8 +87,8 @@ def main() -> int:
         "hard budget of one task-tool call in total",
         "first call fails solely",
         "one fallback task-tool call",
-        "pre-execution tool-wrapper, quoting, or command-construction",
-        "repair it and use one fallback task-tool call",
+        "malformed wrapper, command, or probe",
+        "repair it and\nuse one fallback task-tool call",
         "neither is outcome failure or\nTAKEOVER",
         "reuse the producer's successful command shape",
         "never put shell `${...}` in a JavaScript template literal",
@@ -112,10 +112,26 @@ def main() -> int:
         "preferring an already working service-local query or application API",
         "Acceptance must never mutate state",
         "actions reserved for later user approval",
-        "acceptance claim remains unverified after those paths are exhausted",
     ):
         if executives.count(guard) != 3:
             raise AssertionError(f"acceptance access fallback is not shared: {guard!r}")
+    for guard in (
+        "requested end state already holds in every required destination",
+        "successful no-op", "never require a new diff, commit, or deploy",
+        "revision\nidentifies the state to inspect, not necessarily the change's introduction point",
+        "never substitute\nits patch or provenance for current-tree or artifact evidence",
+        "Every compound probe must emit named\nobservations before failing",
+        "empty, silent, or non-diagnostic result is a malformed probe",
+        "TAKEOVER and corrective REMAINING work require a named observation",
+        "no observation contradicts it, ACCEPT it",
+        "named observation proving a mistake, incomplete work, failed valid verification",
+    ):
+        if executives.count(guard) != 3:
+            raise AssertionError(f"already-satisfied acceptance guard is not shared: {guard!r}")
+    if "acceptance claim remains unverified after those paths are exhausted" in executives:
+        raise AssertionError("mere nonconfirmation can still trigger corrective takeover")
+    if "failed verification, missing\nevidence" in executives or "missing evidence" in executives:
+        raise AssertionError("missing diagnostics can still trigger corrective takeover")
     if "Executive route:" in executives or "Implementation route:" in executives:
         raise AssertionError("executive still owns fallible final route formatting")
     if implementers.count("verify the requested change in code, configuration, schema, tests") != 7:
@@ -214,7 +230,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call syntax-fallback=ok visuals=opt-in deployment=single-owner final-metadata=exact-root terminal-takeover=ok")
+    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call probe-fallback=ok already-satisfied=accept visuals=opt-in deployment=single-owner final-metadata=exact-root terminal-takeover=ok")
     return 0
 
 

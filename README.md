@@ -94,8 +94,12 @@ flowchart TD
 
 The producer self-checks code, configuration, schema, tests, and the deployed revision or artifact.
 The owning executive independently checks actual state once, in one batched task-tool call.
-If that call fails before execution because of wrapper, quoting, or command-construction syntax,
-the executive corrects it with the single fallback call; that is not an outcome failure or takeover.
+If the requested end state already exists everywhere required, that is a successful no-op: no new
+diff, commit, or deployment is required. A revision identifies the current state, not necessarily
+the commit that introduced it, so acceptance checks the revision tree and deployed artifact rather
+than demanding the behavior appear in that revision's patch. If the acceptance call is malformed
+or returns no diagnostic observation, the executive corrects it with the single fallback call;
+that is not evidence against the producer's result and cannot create speculative corrective work.
 For ordinary frontend work, deployed code containing the requested change is sufficient; neither
 root nor an agent opens Browser or captures screenshots. A user-reported rendered mismatch triggers
 visual diagnosis. Otherwise visual tools are allowed only when the current request explicitly asks

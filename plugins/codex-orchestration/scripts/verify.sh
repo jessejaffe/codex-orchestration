@@ -205,13 +205,23 @@ for guard in \
   'task-appropriate probe' \
   'hard budget of one task-tool call in total' \
   'one fallback task-tool call' \
-  'pre-execution tool-wrapper, quoting, or command-construction' \
-  'repair it and use one fallback task-tool call' \
+  'malformed wrapper, command, or probe' \
+  'repair it and' \
+  'use one fallback task-tool call' \
   'neither is outcome failure or' \
   'reuse the producer' \
   'never put shell `${...}` in a JavaScript template literal' \
   'quoted' \
   '`cmd` string or escape every interpolation opener' \
+  'requested end state already holds in every required destination' \
+  'successful no-op' \
+  'never require a new diff, commit, or deploy' \
+  "not necessarily the change's introduction point" \
+  'patch or provenance for current-tree or artifact evidence' \
+  'empty, silent, or non-diagnostic result is a malformed probe' \
+  'corrective REMAINING work require a named observation' \
+  'no observation contradicts it, ACCEPT it' \
+  'named observation proving a mistake, incomplete work, failed valid verification' \
   'do not reread source, rerun tests, rediscover infrastructure' \
   'actual deploy/config scripts' \
   'guessed port, URL, process' \
@@ -245,12 +255,22 @@ for guard in \
   'task-appropriate probe' \
   'hard budget of one task-tool call in total' \
   'one fallback task-tool call' \
-  'pre-execution tool-wrapper, quoting, or command-construction' \
-  'repair it and use one fallback task-tool call' \
+  'malformed wrapper, command, or probe' \
+  'repair it and' \
+  'use one fallback task-tool call' \
   'neither is outcome failure or' \
   'reuse the producer' \
   'never put shell `${...}` in a JavaScript template literal' \
   '`cmd` string or escape every interpolation opener' \
+  'requested end state already holds in every required destination' \
+  'successful no-op' \
+  'never require a new diff, commit, or deploy' \
+  "not necessarily the change's introduction point" \
+  'patch or provenance for current-tree or artifact evidence' \
+  'empty, silent, or non-diagnostic result is a malformed probe' \
+  'corrective REMAINING work require a named observation' \
+  'no observation contradicts it, ACCEPT it' \
+  'named observation proving a mistake, incomplete work, failed valid verification' \
   'do not reread source, rerun tests, rediscover infrastructure' \
   'actual deploy/config scripts' \
   'guessed port, URL, process' \
@@ -405,7 +425,10 @@ for digest in \
   130f54bd67b8854971e49542dedf460c70d480502a1bdc0b326e48b1c89fe5d9 \
   ad993fd210e54300a1b937ee2fcaff672f2cf97c1184a0178711a63467c8375d \
   963e7e8b53189255db8649998a2fbe0d21ece3cf6914ddfb853bd24599d11cb5 \
-  589eb68a6b5b20daee4a828ef5f80bc1190923bff8d00e5f6ed2a3d66e087244
+  589eb68a6b5b20daee4a828ef5f80bc1190923bff8d00e5f6ed2a3d66e087244 \
+  29f94c78aa84e3cd3fa4d9b47f0ee71d5db7a8dfd59cdfe5beecd96b2798f056 \
+  5add5acaefe3c8ef35fa5d6a486257949cd66caa0c6fc5e07612f54913ff88d4 \
+  bc7f257a0776adb3c63e591b33a065d16f1efebd9a3d83179f518cbe26bf0090
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done
