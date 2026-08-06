@@ -132,7 +132,7 @@ do
 for guard in \
   'ORCHESTRATION_STATUS:' \
   'top-level commentary' \
-  "interrupt and list this request's Orchestration children until none runs" \
+  "interrupt/list this request's Orchestration children until none runs" \
   'ORCHESTRATION_DELEGATE' \
   'DIRECTIVE' \
   'at most 60 words' \
@@ -142,8 +142,9 @@ for guard in \
   'specification or restate the request' \
   'ACCEPTANCE_CHECK:' \
   'VISUAL_VERIFICATION_PENDING' \
-  'ROOT_VISUAL_EVIDENCE:' \
-  'Browser only' \
+  'PRODUCER_VISUAL_EVIDENCE' \
+  'PRODUCTION_VISUAL_EVIDENCE:' \
+  'if absent, root uses Browser' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
   'Every routed final ends' \
@@ -153,7 +154,7 @@ for guard in \
   'Route takeover: Activated' \
   '<root model / effort>' \
   'Complexity:' \
-  'Root appends these' \
+  'Root appends' \
   'never rely on executive formatting' \
   'selected root model' \
   'no more handoffs' \
@@ -192,11 +193,14 @@ for guard in \
   'Never generate an implementation' \
   'untrusted claim' \
   'task-appropriate probe' \
+  'hard budget of one task-tool call in total' \
+  'one fallback task-tool call' \
+  'do not reread source, rerun tests, rediscover infrastructure' \
   'actual deploy/config scripts' \
   'guessed port, URL, process' \
   'reached terminal exit' \
   'still-running deploy is not' \
-  'ROOT_VISUAL_EVIDENCE' \
+  'PRODUCTION_VISUAL_EVIDENCE' \
   'view_image' \
   'Browser list is empty' \
   'root owns final route metadata' \
@@ -216,11 +220,14 @@ for guard in \
   'ORCHESTRATION_TAKEOVER:' \
   'untrusted claim' \
   'task-appropriate probe' \
+  'hard budget of one task-tool call in total' \
+  'one fallback task-tool call' \
+  'do not reread source, rerun tests, rediscover infrastructure' \
   'actual deploy/config scripts' \
   'guessed port, URL, process' \
   'reached terminal exit' \
   'still-running deploy is not' \
-  'ROOT_VISUAL_EVIDENCE' \
+  'PRODUCTION_VISUAL_EVIDENCE' \
   'view_image' \
   'Browser list is empty' \
   'Root owns and appends final route metadata' \
@@ -246,14 +253,26 @@ for implementer in "$agents"/*-implementer.toml; do
     fail "frontend implementation lane lacks live rendered verification: $implementer"
   grep -Fq 'VISUAL_VERIFICATION_PENDING' "$implementer" ||
     fail "frontend implementation lane lacks child-browser evidence handoff: $implementer"
+  grep -Fq 'PRODUCER_VISUAL_EVIDENCE' "$implementer" ||
+    fail "frontend implementation lane does not preserve reusable evidence: $implementer"
   grep -Fq 'isolated from child threads' "$implementer" ||
     fail "frontend implementation lane ignores Browser session isolation: $implementer"
-  grep -Fq 'running cell or session' "$implementer" ||
+  grep -Fq 'exact cell or session' "$implementer" ||
     fail "implementation lane can abandon a running deployment: $implementer"
   grep -Fq 'terminal exit' "$implementer" ||
     fail "implementation lane can report before deployment exits: $implementer"
   grep -Fq 'exit code zero' "$implementer" ||
     fail "implementation lane can ignore a failed deployment exit: $implementer"
+  grep -Fq 'Deployment is single-owner' "$implementer" ||
+    fail "implementation lane can start competing deployments: $implementer"
+  grep -Fq 'narrowest supported service set' "$implementer" ||
+    fail "implementation lane can rebuild unrelated services: $implementer"
+  grep -Fq 'second build or deploy' "$implementer" ||
+    fail "implementation lane can replace a running deploy: $implementer"
+  grep -Fq '`--no-cache`' "$implementer" ||
+    fail "implementation lane can force an unnecessary uncached rebuild: $implementer"
+  grep -Fq 'seed, migration, or backfill commands in parallel' "$implementer" ||
+    fail "implementation lane can race project-managed database steps: $implementer"
   grep -Fq 'perform the implementation yourself' "$implementer" ||
     fail "implementation lane can delegate its work: $implementer"
   grep -Fq 'Do not use collaboration or agent-control' "$implementer" ||
@@ -318,7 +337,17 @@ for digest in \
   1ec3252a3798a68f29a800bec8acf59f4048b6dc4b833c0bc3fd285e42b523a9 \
   f29efa9089205993a5d1b539190041d41f0619fbc820f80759d97ae62f9d393d \
   79b9606fcc279eaf835068cda4a9e85aeabe487042dd42832b614167e75cfbcc \
-  9ede0c022e578617b31c511e5967aa42b1bffc1c712697565863667205eee88e
+  9ede0c022e578617b31c511e5967aa42b1bffc1c712697565863667205eee88e \
+  dd0b95d4612b2bfb5ad6f5de2ef95956d39081ae4838810acb3d812be168cbd1 \
+  0618eaaf50040154f3d09371d1c8d4d184d461ccd760a5b85041e7c215fb3c0d \
+  764217265e9c4b56c4d857c56e959f604156533afeb66817667cab9b33109385 \
+  6a16584960723de84f551554943af3999f4578f09db593f66d5e4c0cf9c8960b \
+  4105ad6c0d0cd9af6869efff848ed5ce39370d252fd216e67153f4508df7363c \
+  1ab755e223b3cf942000166e8c339223c208d73f1cce096e78a4a541bd111ce4 \
+  3f68fb41c3997008075de3c6a9b4b735ee378779758b594107ea7445e0c80c36 \
+  443a053164880c3a08cc4cfe07b646569895b2c016d3c5b829de1f208cc2444e \
+  1d7462700700fdf8c4d8c671d56bacfc51593dc997cc0a5ec1c41e732f1e2182 \
+  d32694987e8c22fea5efc2936498fb56ee160d84f4650e927e7c3ebdccc18540
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done

@@ -49,8 +49,9 @@ def main() -> int:
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
         "VISUAL_VERIFICATION_PENDING",
-        "ROOT_VISUAL_EVIDENCE:",
-        "Browser only",
+        "PRODUCER_VISUAL_EVIDENCE",
+        "PRODUCTION_VISUAL_EVIDENCE:",
+        "if absent, root uses Browser",
         "judge nothing",
     ):
         if guard not in hook:
@@ -68,33 +69,33 @@ def main() -> int:
         raise AssertionError("an implementation lane still depends on an executive rewrite")
     for guard in (
         "untrusted claim", "task-appropriate probe", "source equality", "HTTP 200",
-        "ROOT_VISUAL_EVIDENCE", "view_image", "Browser list is empty",
+        "PRODUCTION_VISUAL_EVIDENCE", "view_image", "Browser list is empty",
         "without route metadata",
     ):
         if executives.count(guard) != 3:
             raise AssertionError(f"independent acceptance guard is not shared: {guard!r}")
     for guard in (
-        "fresh evidence, not fresh discovery",
-        "as a map, never\nas proof",
-        "smallest decisive read-only probe",
-        "authoritative interface into one tool call",
-        "stop immediately when every requested\noutcome is proved",
-        "only for\na named remaining acceptance gap",
-        "never duplicate or strengthen sufficient evidence",
+        "hard budget of one task-tool call in total",
+        "first call fails solely",
+        "one fallback task-tool call",
+        "do not reread source, rerun tests, rediscover infrastructure",
+        "producer's\nsaved cache-bypassed payload when available",
+        "capturing it itself only when missing",
+        "viewing the artifact is the fresh observation",
     ):
         if executives.count(guard) != 3:
             raise AssertionError(f"minimal acceptance guard is not shared: {guard!r}")
     for guard in (
-        "Only when the producer supplies no working production path",
+        "producer supplies no working production path",
         "actual deploy/config scripts", "guessed port, URL, process",
-        "deploy command\nreached terminal exit", "still-running deploy is not\nfailure",
+        "deploy command reached terminal exit", "still-running deploy is not failure",
     ):
         if executives.count(guard) != 3:
             raise AssertionError(f"production acceptance guard is not shared: {guard!r}")
     for guard in (
         "access-path failure is not outcome failure",
         "authoritative read-only runtime path",
-        "prefer an already\nworking service-local query or application API",
+        "preferring an already working\nservice-local query or application API",
         "Acceptance must never mutate state",
         "actions reserved for later user approval",
         "acceptance claim remains unverified after those paths are exhausted",
@@ -107,8 +108,10 @@ def main() -> int:
         raise AssertionError("an implementation lane can still report only deployment mechanics")
     for guard in (
         "VISUAL_VERIFICATION_PENDING", "isolated from child threads",
-        "Browser list is empty", "running cell or session", "terminal exit",
-        "exit code zero",
+        "Browser list is empty", "PRODUCER_VISUAL_EVIDENCE", "exact cell or session until terminal exit",
+        "exit code zero", "Deployment is single-owner", "narrowest supported service set",
+        "second build or deploy", "`--no-cache`", "another process already",
+        "seed, migration, or backfill commands in parallel",
     ):
         if implementers.count(guard) != 7:
             raise AssertionError(f"frontend child-browser handoff is not shared: {guard!r}")
@@ -124,7 +127,7 @@ def main() -> int:
     for guard in (
         "Every routed final ends", "Executive route:", "Implementation route:",
         "On takeover add", "Route takeover: Activated", "<root model / effort>",
-        "Complexity:", "Root appends these",
+        "Complexity:", "Root appends",
     ):
         if guard not in hook:
             raise AssertionError(f"deterministic final metadata omits {guard!r}")
@@ -182,7 +185,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=minimal final-metadata=root terminal-takeover=ok")
+    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call producer-visuals=reused deployment=single-owner final-metadata=root terminal-takeover=ok")
     return 0
 
 

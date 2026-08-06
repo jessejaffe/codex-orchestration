@@ -28,8 +28,8 @@ The active path is intentionally small:
    directly to the mapped producer, then relays its result for one independent acceptance check.
    A failed access method is not a failed outcome: acceptance retries through an available
    authoritative read-only runtime path and never performs a mutation reserved for user approval.
-   Independence means one fresh, decisive observation—not rediscovering implementation details or
-   repeating sufficient evidence. Producer-supplied identifiers and endpoints may guide that probe.
+   Acceptance is one batched task-tool call, with one fallback call only when the first access path
+   is unavailable. It reuses producer-saved visual artifacts instead of making root recapture them.
 7. Root—not the executive—always appends the final executive route, implementation route,
    and immutable complexity lines, including after terminal takeover.
 
@@ -65,6 +65,11 @@ route. Terra / High may perform it directly. Unexpected failures and newly unres
 production decisions still return to the owning Sol executive when the immutable
 score is 5.0 or higher or the task can no longer be completed within its original scope.
 
+The producer treats deployment as single-owner work. It inspects the documented helper once,
+uses the narrowest supported service set, and resumes that exact deployment to terminal exit.
+It never starts a competing build, adds `--no-cache` while a deploy is active, or runs the
+deploy helper's seed, migration, or backfill steps in parallel.
+
 Each handoff inherits up to 64 recent turns from the current chat only. It never imports
 history from another chat. This bounded history is used because current Codex rejects a
 custom-model role combined with a literal full-history fork. The router does not
@@ -86,7 +91,9 @@ flowchart TD
     H --> R["Owning executive accepts; root returns payload"]
 ```
 
-The producer self-checks and the owning executive independently checks actual state once.
+The producer self-checks and saves minimal cache-bypassed visual evidence when Browser is
+available. Root captures that evidence only when the producer could not. The owning executive
+then independently checks actual state once, in one batched task-tool call.
 Producer claims are untrusted: acceptance must run a probe that would fail if the requested
 outcome were absent. For frontend work, source equality, HTTP 200, and server validation
 are insufficient; the rendered production page must visibly or computationally prove the

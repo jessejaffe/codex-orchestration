@@ -112,7 +112,7 @@ def main() -> int:
     routed_context = context(routed)
     for required in (
         "codex_orchestration_terra_executive",
-        'Executive context fork is `none`',
+        'Executive fork is `none`',
         'fork_turns: "none"',
         "never full-history",
         "FOUNDATION_CONTEXT",
@@ -126,7 +126,7 @@ def main() -> int:
         "gpt_5_6_sol_extra_high_executive_<objective_slug>",
         "Show `ORCHESTRATION_STATUS:` once as top-level commentary",
         "top-level commentary",
-        "interrupt and list this request's Orchestration children until none runs",
+        "interrupt/list this request's Orchestration children until none runs",
         "ORCHESTRATION_DELEGATE",
         "DIRECTIVE",
         "at most 60 words",
@@ -135,8 +135,9 @@ def main() -> int:
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
         "VISUAL_VERIFICATION_PENDING",
-        "ROOT_VISUAL_EVIDENCE:",
-        "Browser only",
+        "PRODUCER_VISUAL_EVIDENCE",
+        "PRODUCTION_VISUAL_EVIDENCE:",
+        "if absent, root uses Browser",
         "ORCHESTRATION_ACCEPT",
         "ORCHESTRATION_TAKEOVER",
         "Every routed final ends",
@@ -146,7 +147,7 @@ def main() -> int:
         "Route takeover: Activated",
         "<root model / effort>",
         "Complexity:",
-        "Root appends these",
+        "Root appends",
         "never rely on executive formatting",
         "selected root model",
         "no more handoffs",
@@ -171,7 +172,7 @@ def main() -> int:
     partial = context(
         call(prompt_hook, {**base, "transcript_path": str(partial_transcript), "prompt": "work"}, env)
     )
-    if 'Executive context fork is `2`' not in partial or 'fork_turns: "2"' not in partial:
+    if 'Executive fork is `2`' not in partial or 'fork_turns: "2"' not in partial:
         raise AssertionError("short-chat context fork is not partial")
 
     long_transcript = temporary / "long.jsonl"
@@ -182,7 +183,7 @@ def main() -> int:
     bounded = context(
         call(prompt_hook, {**base, "transcript_path": str(long_transcript), "prompt": "work"}, env)
     )
-    if 'Executive context fork is `64`' not in bounded or 'fork_turns: "64"' not in bounded:
+    if 'Executive fork is `64`' not in bounded or 'fork_turns: "64"' not in bounded:
         raise AssertionError("long-chat context fork is not bounded at 64")
 
     worker = call(
@@ -288,7 +289,9 @@ def main() -> int:
         "Never generate an implementation",
         "untrusted claim",
         "task-appropriate probe",
-        "ROOT_VISUAL_EVIDENCE",
+        "PRODUCTION_VISUAL_EVIDENCE",
+        "hard budget of one task-tool call in total",
+        "one fallback task-tool call",
         "view_image",
         "Browser list is empty",
         "root owns final route metadata",

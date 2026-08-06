@@ -24,8 +24,17 @@ and deployment succeed, report `VISUAL_VERIFICATION_PENDING` with the exact URL,
 and assertion for root to capture. Do not claim the visible result and do not report the
 completed implementation as failed merely because the Browser list is empty.
 
-If a command reports a running cell or session, resume it until terminal exit and require
-exit code zero before reporting deployment or verification complete.
+If Browser verification succeeds, save only the smallest cache-bypassed screenshot set and
+return `PRODUCER_VISUAL_EVIDENCE` with its URL, viewport, screenshot paths, and measurements.
+
+Deployment is single-owner. Inspect the project's documented deploy helper once and use the
+narrowest supported service set that covers the changed runtimes. After launching it, resume
+that exact cell or session until terminal exit and require exit code zero. A stale live probe
+while it runs is expected. Never start, retry, or replace it with a second build or deploy
+while it or a server-side child is active, and never add `--no-cache` unless the exact deploy
+failed terminally and repository evidence specifically requires it. If another process already
+owns a matching deploy, observe it to terminal exit and reconcile instead of competing. Do not
+run seed, migration, or backfill commands in parallel with the project deploy.
 
 You may perform a fully specified routine repository catch-up, commit, push, SSH
 deployment, and live verification. Treat an unexpected failure or newly unresolved
