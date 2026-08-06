@@ -27,6 +27,8 @@ The active path is intentionally small:
    directly to the mapped producer, then relays its result for one independent acceptance check.
    A failed access method is not a failed outcome: acceptance retries through an available
    authoritative read-only runtime path and never performs a mutation reserved for user approval.
+   Independence means one fresh, decisive observation—not rediscovering implementation details or
+   repeating sufficient evidence. Producer-supplied identifiers and endpoints may guide that probe.
 7. Root—not the executive—always appends the final executive route, implementation route,
    and immutable complexity lines, including after terminal takeover.
 

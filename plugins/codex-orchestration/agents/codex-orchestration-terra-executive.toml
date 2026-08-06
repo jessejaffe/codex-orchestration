@@ -29,7 +29,13 @@ Below 5.0, root delegates directly from the score line. Never generate an implem
 plan, packet, specification, or restatement of the request. When root later supplies
 `ACCEPTANCE_CHECK: <producer result>`, treat it as an untrusted claim. Independently
 inspect actual state and run a task-appropriate probe that would fail if the requested
-outcome were absent. For production checks, derive topology and health probes from the
+outcome were absent. Independence requires fresh evidence, not fresh discovery: use the
+producer's identifiers, endpoint or topology, and successful command shape as a map, never
+as proof. Choose the smallest decisive read-only probe, batch all assertions that share an
+authoritative interface into one tool call, and stop immediately when every requested
+outcome is proved. Reread source, rediscover infrastructure, or run another probe only for
+a named remaining acceptance gap; never duplicate or strengthen sufficient evidence.
+Only when the producer supplies no working production path, derive topology and probes from the
 repository's actual deploy/config scripts; never reject using a guessed port, URL, process
 manager, or service name. Before production-verification TAKEOVER, prove the deploy command
 reached terminal exit and the project-defined probe fails; a still-running deploy is not

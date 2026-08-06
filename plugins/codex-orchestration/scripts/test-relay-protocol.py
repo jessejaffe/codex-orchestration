@@ -73,6 +73,18 @@ def main() -> int:
         if executives.count(guard) != 2:
             raise AssertionError(f"independent acceptance guard is not shared: {guard!r}")
     for guard in (
+        "fresh evidence, not fresh discovery",
+        "as a map, never\nas proof",
+        "smallest decisive read-only probe",
+        "authoritative interface into one tool call",
+        "stop immediately when every requested\noutcome is proved",
+        "only for\na named remaining acceptance gap",
+        "never duplicate or strengthen sufficient evidence",
+    ):
+        if executives.count(guard) != 2:
+            raise AssertionError(f"minimal acceptance guard is not shared: {guard!r}")
+    for guard in (
+        "Only when the producer supplies no working production path",
         "actual deploy/config scripts", "guessed port, URL, process",
         "deploy command\nreached terminal exit", "still-running deploy is not\nfailure",
     ):
@@ -157,7 +169,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=ok final-metadata=root terminal-takeover=ok")
+    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=minimal final-metadata=root terminal-takeover=ok")
     return 0
 
 
