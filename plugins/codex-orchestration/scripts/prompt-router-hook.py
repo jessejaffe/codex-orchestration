@@ -29,6 +29,19 @@ CONTROL_COMMANDS = tuple(
 CONTROL_SEPARATORS = " \t,;:.!?\u2013\u2014-"
 WORK_CONNECTORS = ("and", "then", "to")
 MAX_FORK_TURNS = 64
+MODEL_LABELS = {
+    "gpt-5.6-sol": "GPT-5.6 Sol",
+    "gpt-5.6-terra": "GPT-5.6 Terra",
+    "gpt-5.6-luna": "GPT-5.6 Luna",
+}
+EFFORT_LABELS = {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "xhigh": "Extra High",
+    "max": "Max",
+    "ultra": "Ultra",
+}
 
 DISPATCH_CONTEXT = """Orchestration is ON.
 Root is zero-judgment relay; alone calls agent-control tools.
@@ -50,30 +63,32 @@ ORCHESTRATION_DELEGATE and DIRECTIVE: `NONE` or at most 60 words; never restate 
 Keep Terra's AGENT/TASK immutable; ignore remaps. Spawn those values with the
 fork/foundation. Send
 `USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
-specification or restate the request. For routine verification, root never uses Browser,
-screenshots, or visual-evidence handoffs; code, tests, and deployed revision suffice. Visual
-tools are used for a user-reported rendered mismatch; otherwise only when explicitly requested
-or indispensable to perform the work. Missing visual evidence is never failure.
+specification or restate the request. Routine verification: code/tests/deployed revision; never
+Browser/screenshots/visual handoff. Visuals only for a reported mismatch, explicit request,
+or indispensable work; absence never fails.
 Follow up: `ACCEPTANCE_CHECK: <exact producer result>`.
 Return ORCHESTRATION_ACCEPT. Failure or ORCHESTRATION_TAKEOVER ends routing.
 Every routed final ends:
 `Executive route: <GPT-5.6 Terra / High if TERRA_HIGH, GPT-5.6 Sol / High if SOL_HIGH, else GPT-5.6 Sol / Extra High>`
 `Implementation route: <model / effort from status>`
-On takeover add `Route takeover: Activated — <root model / effort>` before
+Current root route from `turn_context`: `__ROOT_ROUTE__`.
+On takeover add `Route takeover: Activated — __ROOT_ROUTE__`,
+never `GPT-5 / default effort`, before
 `Complexity: <immutable score>/10`. Root appends; never rely on executive formatting.
 Say `Orchestration fallback: I’m finishing directly with your selected root model; no more handoffs.`
 Reconcile and finish. Call no further agent-control tool. Before takeover,
 never score, plan, implement, or judge acceptance."""
 
 
-def safe_fork_turns(transcript_value: Any) -> str:
-    """Keep up to 64 task turns without ever asking for a full-history fork."""
+def transcript_context(transcript_value: Any) -> tuple[str, str]:
+    """Return the bounded fork and exact current root route in one transcript pass."""
     if not isinstance(transcript_value, str):
-        return "none"
+        return "none", "unavailable"
     transcript = Path(transcript_value)
     if not transcript.is_file() or transcript.is_symlink():
-        return "none"
+        return "none", "unavailable"
     contexts = starts = 0
+    root_route = "unavailable"
     try:
         with transcript.open(encoding="utf-8", errors="replace") as handle:
             for line in handle:
@@ -83,13 +98,22 @@ def safe_fork_turns(transcript_value: Any) -> str:
                     continue
                 if event.get("type") == "turn_context":
                     contexts += 1
+                    payload = event.get("payload") or {}
+                    model = payload.get("model")
+                    effort = payload.get("effort")
+                    if isinstance(model, str) and isinstance(effort, str):
+                        root_route = (
+                            f"{MODEL_LABELS.get(model, model)} / "
+                            f"{EFFORT_LABELS.get(effort, effort)}"
+                        )
                 payload = event.get("payload") or {}
                 if event.get("type") == "event_msg" and payload.get("type") == "task_started":
                     starts += 1
     except OSError:
-        return "none"
+        return "none", "unavailable"
     task_turns = max(contexts, starts)
-    return "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns - 1))
+    fork_turns = "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns - 1))
+    return fork_turns, root_route
 
 
 def emit(value: dict[str, Any]) -> None:
@@ -208,8 +232,11 @@ def main() -> int:
         if activation
         else ""
     )
-    fork_turns = safe_fork_turns(hook_input.get("transcript_path"))
-    emit(additional_context(prefix + DISPATCH_CONTEXT.replace("__FORK_TURNS__", fork_turns)))
+    fork_turns, root_route = transcript_context(hook_input.get("transcript_path"))
+    context = DISPATCH_CONTEXT.replace("__FORK_TURNS__", fork_turns).replace(
+        "__ROOT_ROUTE__", root_route
+    )
+    emit(additional_context(prefix + context))
     return 0
 
 

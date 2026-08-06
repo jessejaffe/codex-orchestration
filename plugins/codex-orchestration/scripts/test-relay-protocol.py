@@ -48,12 +48,12 @@ def main() -> int:
         "at most 60 words",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
-        "root never uses Browser",
-        "code, tests, and deployed revision suffice",
-        "used for a user-reported rendered mismatch",
-        "otherwise only when explicitly requested",
-        "or indispensable to perform the work",
-        "Missing visual evidence is never failure",
+        "Routine verification: code/tests/deployed revision",
+        "Browser/screenshots/visual handoff",
+        "Visuals only for a reported mismatch",
+        "explicit request",
+        "or indispensable work",
+        "absence never fails",
     ):
         if guard not in hook:
             raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
@@ -87,6 +87,12 @@ def main() -> int:
         "hard budget of one task-tool call in total",
         "first call fails solely",
         "one fallback task-tool call",
+        "pre-execution tool-wrapper, quoting, or command-construction",
+        "repair it and use one fallback task-tool call",
+        "neither is outcome failure or\nTAKEOVER",
+        "reuse the producer's successful command shape",
+        "never put shell `${...}` in a JavaScript template literal",
+        "use a quoted\n`cmd` string or escape every interpolation opener",
         "do not reread source, rerun tests, rediscover infrastructure",
         "explicitly asks for visual inspection",
         "visual input is indispensable\nto perform the work rather than merely strengthen proof",
@@ -101,9 +107,9 @@ def main() -> int:
         if executives.count(guard) != 3:
             raise AssertionError(f"production acceptance guard is not shared: {guard!r}")
     for guard in (
-        "access-path failure is not outcome failure",
+        "For an access fallback",
         "authoritative read-only runtime path",
-        "preferring an already working\nservice-local query or application API",
+        "preferring an already working service-local query or application API",
         "Acceptance must never mutate state",
         "actions reserved for later user approval",
         "acceptance claim remains unverified after those paths are exhausted",
@@ -145,11 +151,15 @@ def main() -> int:
                 raise AssertionError(f"nested-agent guard missing from {path.name}: {guard!r}")
     for guard in (
         "Every routed final ends", "Executive route:", "Implementation route:",
-        "On takeover add", "Route takeover: Activated", "<root model / effort>",
-        "Complexity:", "Root appends",
+        "Current root route from `turn_context`", "On takeover add",
+        "Route takeover: Activated — __ROOT_ROUTE__", "gpt-5.6-sol", "xhigh",
+        "GPT-5.6 Sol", "Extra High",
+        "never `GPT-5 / default effort`", "Complexity:", "Root appends",
     ):
         if guard not in hook:
             raise AssertionError(f"deterministic final metadata omits {guard!r}")
+    if "<root model / effort>" in hook or "<exact label>" in hook:
+        raise AssertionError("takeover metadata still permits a guessed root-route label")
     metadata_order = [
         hook.index("Executive route:"), hook.index("Implementation route:"),
         hook.index("Route takeover: Activated"), hook.index("Complexity:"),
@@ -204,7 +214,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call visuals=opt-in deployment=single-owner final-metadata=root terminal-takeover=ok")
+    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call syntax-fallback=ok visuals=opt-in deployment=single-owner final-metadata=exact-root terminal-takeover=ok")
     return 0
 
 

@@ -24,16 +24,20 @@ criteria. Root gives the producer the original context directly. When root later
 inspect actual state and run a task-appropriate probe that would fail if the requested
 outcome were absent. Acceptance has a hard budget of one task-tool call in total: batch every
 fresh, decisive, read-only observation into that call. Only when the first call fails solely
-because its access or transport path is unavailable may you make one fallback task-tool call.
-Use the producer's identifiers, endpoint or topology, successful command shape, and saved
+from unavailable access/transport or pre-execution tool-wrapper, quoting, or command-construction
+syntax may you repair it and use one fallback task-tool call; neither is outcome failure or
+TAKEOVER. Keep the command simple and reuse the producer's successful command shape. When shell
+passes through JavaScript, never put shell `${...}` in a JavaScript template literal; use a quoted
+`cmd` string or escape every interpolation opener. Use the producer's identifiers, endpoint or
+topology, successful command shape, and saved
 evidence as inputs; do not reread source, rerun tests, rediscover infrastructure, or strengthen
 already sufficient evidence. If the producer supplies no working production path, use the one
 call to inspect the repository's actual deploy/config scripts and probe its defined path; never
 reject using a guessed port, URL, process manager, or service name. Before production-verification
 TAKEOVER, prove the deploy command reached terminal exit and the project-defined probe fails; a
-still-running deploy is not failure. An access-path failure is not outcome failure: use the one
-permitted fallback through an authoritative read-only runtime path, preferring an already working
-service-local query or application API over repairing unrelated infrastructure.
+still-running deploy is not failure. For an access fallback, use an authoritative read-only runtime path,
+preferring an already working service-local query or application API over repairing unrelated
+infrastructure.
 Acceptance must never mutate state, including actions reserved for later user approval.
 TAKEOVER only if the acceptance claim remains unverified after those paths are exhausted.
 For ordinary frontend work, code, configuration, schema, relevant test evidence, and proof that

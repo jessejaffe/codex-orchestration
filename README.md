@@ -94,6 +94,8 @@ flowchart TD
 
 The producer self-checks code, configuration, schema, tests, and the deployed revision or artifact.
 The owning executive independently checks actual state once, in one batched task-tool call.
+If that call fails before execution because of wrapper, quoting, or command-construction syntax,
+the executive corrects it with the single fallback call; that is not an outcome failure or takeover.
 For ordinary frontend work, deployed code containing the requested change is sufficient; neither
 root nor an agent opens Browser or captures screenshots. A user-reported rendered mismatch triggers
 visual diagnosis. Otherwise visual tools are allowed only when the current request explicitly asks
@@ -102,7 +104,9 @@ strengthen acceptance. Missing visual evidence cannot cause takeover. If accepta
 mistake, incomplete work, failed verification, missing evidence, or needed correction,
 Orchestration ends immediately. The user-selected root model announces takeover,
 reconciles the actual state, and finishes the whole request directly with no more
-handoffs. There is no correction, reviewer, replacement-producer, or escalation loop.
+handoffs. The takeover footer reports the exact active root model and effort from the task context,
+not a generic default-model label. There is no correction, reviewer, replacement-producer, or
+escalation loop.
 
 ## Controls
 

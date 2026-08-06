@@ -49,7 +49,15 @@ def main() -> int:
 
     root_transcript = temporary / "root.jsonl"
     root_transcript.write_text(
-        json.dumps({"type": "session_meta", "payload": {"id": SESSION}}) + "\n"
+        json.dumps({"type": "session_meta", "payload": {"id": SESSION}})
+        + "\n"
+        + json.dumps(
+            {
+                "type": "turn_context",
+                "payload": {"model": "gpt-5.6-sol", "effort": "xhigh"},
+            }
+        )
+        + "\n"
     )
     worker_transcript = temporary / "worker.jsonl"
     worker_transcript.write_text(
@@ -136,20 +144,20 @@ def main() -> int:
         "both reuse fork/foundation",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
-        "root never uses Browser",
-        "code, tests, and deployed revision suffice",
-        "used for a user-reported rendered mismatch",
-        "otherwise only when explicitly requested",
-        "or indispensable to perform the work",
-        "Missing visual evidence is never failure",
+        "Routine verification: code/tests/deployed revision",
+        "Browser/screenshots/visual handoff",
+        "Visuals only for a reported mismatch",
+        "explicit request",
+        "or indispensable work",
+        "absence never fails",
         "ORCHESTRATION_ACCEPT",
         "ORCHESTRATION_TAKEOVER",
         "Every routed final ends",
         "Executive route:",
         "Implementation route:",
-        "On takeover add",
-        "Route takeover: Activated",
-        "<root model / effort>",
+        "Current root route from `turn_context`: `GPT-5.6 Sol / Extra High`",
+        "On takeover add `Route takeover: Activated — GPT-5.6 Sol / Extra High`",
+        "never `GPT-5 / default effort`",
         "Complexity:",
         "Root appends",
         "never rely on executive formatting",
@@ -166,14 +174,39 @@ def main() -> int:
         "Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`",
         "VISUAL_VERIFICATION_PENDING", "PRODUCER_VISUAL_EVIDENCE",
         "PRODUCTION_VISUAL_EVIDENCE",
+        "__ROOT_ROUTE__", "<root model / effort>", "<exact label>",
     ):
         if forbidden in routed_context:
             raise AssertionError(f"dispatch contract retains {forbidden!r}")
 
+    terra_transcript = temporary / "terra-root.jsonl"
+    terra_transcript.write_text(
+        json.dumps({"type": "session_meta", "payload": {"id": SESSION}})
+        + "\n"
+        + json.dumps(
+            {
+                "type": "turn_context",
+                "payload": {"model": "gpt-5.6-terra", "effort": "high"},
+            }
+        )
+        + "\n"
+    )
+    terra_route = context(
+        call(
+            prompt_hook,
+            {**base, "transcript_path": str(terra_transcript), "prompt": "work"},
+            env,
+        )
+    )
+    if "Route takeover: Activated — GPT-5.6 Terra / High" not in terra_route:
+        raise AssertionError("takeover footer is hard-coded to the screenshot's root route")
+    if "Route takeover: Activated — GPT-5.6 Sol / Extra High" in terra_route:
+        raise AssertionError("takeover footer ignores the current task's root route")
+
     partial_transcript = temporary / "partial.jsonl"
     partial_transcript.write_text(
         root_transcript.read_text()
-        + "".join(json.dumps({"type": "turn_context", "payload": {}}) + "\n" for _ in range(3))
+        + "".join(json.dumps({"type": "turn_context", "payload": {}}) + "\n" for _ in range(2))
     )
     partial = context(
         call(prompt_hook, {**base, "transcript_path": str(partial_transcript), "prompt": "work"}, env)
@@ -184,7 +217,7 @@ def main() -> int:
     long_transcript = temporary / "long.jsonl"
     long_transcript.write_text(
         root_transcript.read_text()
-        + "".join(json.dumps({"type": "turn_context", "payload": {}}) + "\n" for _ in range(70))
+        + "".join(json.dumps({"type": "turn_context", "payload": {}}) + "\n" for _ in range(69))
     )
     bounded = context(
         call(prompt_hook, {**base, "transcript_path": str(long_transcript), "prompt": "work"}, env)
@@ -297,6 +330,10 @@ def main() -> int:
         "task-appropriate probe",
         "hard budget of one task-tool call in total",
         "one fallback task-tool call",
+        "pre-execution tool-wrapper, quoting, or command-construction",
+        "neither is outcome failure or",
+        "never put shell `${...}` in a JavaScript template literal",
+        "quoted\n`cmd` string",
         "deployed revision or artifact contains the change",
         "forbidden for routine acceptance",
         "user-reported rendered mismatch",

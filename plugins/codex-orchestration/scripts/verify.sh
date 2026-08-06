@@ -144,20 +144,25 @@ for guard in \
   'never' \
   'specification or restate the request' \
   'ACCEPTANCE_CHECK:' \
-  'root never uses Browser' \
-  'code, tests, and deployed revision suffice' \
-  'used for a user-reported rendered mismatch' \
-  'otherwise only when explicitly requested' \
-  'or indispensable to perform the work' \
-  'Missing visual evidence is never failure' \
+  'Routine verification: code/tests/deployed revision' \
+  'Browser/screenshots/visual handoff' \
+  'Visuals only for a reported mismatch' \
+  'explicit request' \
+  'or indispensable work' \
+  'absence never fails' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
   'Every routed final ends' \
   'Executive route:' \
   'Implementation route:' \
+  'Current root route from `turn_context`' \
   'On takeover add' \
-  'Route takeover: Activated' \
-  '<root model / effort>' \
+  'Route takeover: Activated — __ROOT_ROUTE__' \
+  'gpt-5.6-sol' \
+  'xhigh' \
+  'GPT-5.6 Sol' \
+  'Extra High' \
+  'never `GPT-5 / default effort`' \
   'Complexity:' \
   'Root appends' \
   'never rely on executive formatting' \
@@ -200,6 +205,13 @@ for guard in \
   'task-appropriate probe' \
   'hard budget of one task-tool call in total' \
   'one fallback task-tool call' \
+  'pre-execution tool-wrapper, quoting, or command-construction' \
+  'repair it and use one fallback task-tool call' \
+  'neither is outcome failure or' \
+  'reuse the producer' \
+  'never put shell `${...}` in a JavaScript template literal' \
+  'quoted' \
+  '`cmd` string or escape every interpolation opener' \
   'do not reread source, rerun tests, rediscover infrastructure' \
   'actual deploy/config scripts' \
   'guessed port, URL, process' \
@@ -233,6 +245,12 @@ for guard in \
   'task-appropriate probe' \
   'hard budget of one task-tool call in total' \
   'one fallback task-tool call' \
+  'pre-execution tool-wrapper, quoting, or command-construction' \
+  'repair it and use one fallback task-tool call' \
+  'neither is outcome failure or' \
+  'reuse the producer' \
+  'never put shell `${...}` in a JavaScript template literal' \
+  '`cmd` string or escape every interpolation opener' \
   'do not reread source, rerun tests, rediscover infrastructure' \
   'actual deploy/config scripts' \
   'guessed port, URL, process' \
@@ -384,7 +402,10 @@ for digest in \
   7f848df4de7a409ef22f2a7419f5f33141a00cd73a445cecd2c824c524468069 \
   b600490a46d47642327bd964f18dd63fed8c5a17db0b7da5cf90c00ab2f8bf22 \
   f8a22b404c39d51035e88f9cd21409c91d884c3921d559cb83a4936046e876f7 \
-  130f54bd67b8854971e49542dedf460c70d480502a1bdc0b326e48b1c89fe5d9
+  130f54bd67b8854971e49542dedf460c70d480502a1bdc0b326e48b1c89fe5d9 \
+  ad993fd210e54300a1b937ee2fcaff672f2cf97c1184a0178711a63467c8375d \
+  963e7e8b53189255db8649998a2fbe0d21ece3cf6914ddfb853bd24599d11cb5 \
+  589eb68a6b5b20daee4a828ef5f80bc1190923bff8d00e5f6ed2a3d66e087244
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done
