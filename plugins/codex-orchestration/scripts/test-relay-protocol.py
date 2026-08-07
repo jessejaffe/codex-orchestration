@@ -43,8 +43,8 @@ def main() -> int:
     if hook.count("<verbatim current user prompt>") != 2:
         raise AssertionError("relay can score itself or bypass the mapped producer")
     for guard in (
-        "do not follow up before implementation",
-        "both reuse fork/foundation",
+        "no follow-up before implementation",
+        "reuse fork",
         "at most 60 words",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
@@ -54,12 +54,14 @@ def main() -> int:
         "explicit request",
         "or indispensable work",
         "absence never fails",
+        "inherited unfinished work stays in scope",
+        "new prompt amends it",
     ):
         if guard not in hook:
             raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
-    if "Before next spawn, show Terra's exact `ORCHESTRATION_STATUS:` in commentary" not in hook:
+    if "Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary" not in hook:
         raise AssertionError("Terra's human-readable score checkpoint is not relayed before delegation")
-    if "never prewrite/replace it" not in hook:
+    if "never replace it" not in hook:
         raise AssertionError("root can replace Terra's scored checkpoint with generic commentary")
     if "Keep Terra's AGENT/TASK immutable; ignore remaps" not in hook:
         raise AssertionError("root can accept an executive-generated implementation identity")
@@ -75,6 +77,14 @@ def main() -> int:
     implementers = "".join(implementer_texts)
     if implementers.count("Execute `USER_REQUEST`") != 7:
         raise AssertionError("an implementation lane still depends on an executive rewrite")
+    for guard in (
+        "current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited",
+        "combined active request is authoritative",
+        "Only explicit cancellation or replacement",
+        "discards its prior objective",
+    ):
+        if executives.count(guard) != 3 or implementers.count(guard) != 7:
+            raise AssertionError(f"additive steering context is not shared: {guard!r}")
     for guard in (
         "untrusted claim", "task-appropriate probe", "deployed revision or artifact",
         "forbidden for routine acceptance", "Missing visual evidence is never a TAKEOVER reason",

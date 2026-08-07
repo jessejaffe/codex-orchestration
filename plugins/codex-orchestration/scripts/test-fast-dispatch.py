@@ -122,8 +122,8 @@ def main() -> int:
         "codex_orchestration_terra_executive",
         'Executive fork: `none`',
         'fork_turns: "none"',
-        "never full-history",
-        "FOUNDATION_CONTEXT",
+        "numeric recent context",
+        "never literal `all`",
         'name\n`gpt_5_6_terra_high_executive_<objective_slug>`',
         "zero-judgment relay",
         "alone calls agent-control tools",
@@ -132,16 +132,18 @@ def main() -> int:
         "gpt_5_6_sol_high_executive_<objective_slug>",
         "codex_orchestration_sol_xhigh_executive",
         "gpt_5_6_sol_extra_high_executive_<objective_slug>",
-        "Before next spawn, show Terra's exact `ORCHESTRATION_STATUS:` in commentary",
-        "never prewrite/replace it",
+        "Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary",
+        "never replace it",
         "drain only this request's Orchestration children",
+        "inherited unfinished work stays in scope",
+        "new prompt amends it",
         "ORCHESTRATION_DELEGATE",
         "DIRECTIVE",
         "at most 60 words",
         "Keep Terra's AGENT/TASK immutable; ignore remaps",
-        "Spawn those values",
-        "do not follow up before implementation",
-        "both reuse fork/foundation",
+        "spawn those values",
+        "no follow-up before implementation",
+        "reuse fork",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
         "Routine verification: code/tests/deployed revision",
@@ -179,6 +181,31 @@ def main() -> int:
         if forbidden in routed_context:
             raise AssertionError(f"dispatch contract retains {forbidden!r}")
 
+    additive_transcript = temporary / "additive.jsonl"
+    additive_transcript.write_text(
+        root_transcript.read_text()
+        + json.dumps(
+            {
+                "type": "turn_context",
+                "payload": {"model": "gpt-5.6-sol", "effort": "xhigh"},
+            }
+        )
+        + "\n"
+    )
+    additive = context(
+        call(
+            prompt_hook,
+            {
+                **base,
+                "transcript_path": str(additive_transcript),
+                "prompt": "I forgot to add one requirement",
+            },
+            env,
+        )
+    )
+    if 'Executive fork: `2`' not in additive or 'fork_turns: "2"' not in additive:
+        raise AssertionError("additive steering omitted the preceding active request")
+
     terra_transcript = temporary / "terra-root.jsonl"
     terra_transcript.write_text(
         json.dumps({"type": "session_meta", "payload": {"id": SESSION}})
@@ -211,8 +238,8 @@ def main() -> int:
     partial = context(
         call(prompt_hook, {**base, "transcript_path": str(partial_transcript), "prompt": "work"}, env)
     )
-    if 'Executive fork: `2`' not in partial or 'fork_turns: "2"' not in partial:
-        raise AssertionError("short-chat context fork is not partial")
+    if 'Executive fork: `3`' not in partial or 'fork_turns: "3"' not in partial:
+        raise AssertionError("short-chat context fork omitted the preceding active turn")
 
     long_transcript = temporary / "long.jsonl"
     long_transcript.write_text(
@@ -327,6 +354,8 @@ def main() -> int:
         "ORCHESTRATION_TAKEOVER:",
         "Never generate an implementation",
         "untrusted claim",
+        "combined active request is authoritative",
+        "Only explicit cancellation or replacement",
         "task-appropriate probe",
         "hard budget of one task-tool call in total",
         "one fallback task-tool call",

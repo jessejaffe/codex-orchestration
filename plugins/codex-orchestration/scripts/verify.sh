@@ -121,9 +121,9 @@ grep -Fq 'zero-judgment relay' "$script_dir/prompt-router-hook.py" ||
   fail "root still owns routing analysis"
 grep -Fq 'MAX_FORK_TURNS = 64' "$script_dir/prompt-router-hook.py" ||
   fail "root-to-executive history bound is missing"
-grep -Fq 'never full-history' "$script_dir/prompt-router-hook.py" ||
-  fail "custom-role full-history protection is missing"
-grep -Fq 'reuse fork/foundation' "$script_dir/prompt-router-hook.py" ||
+grep -Fq 'never literal `all`' "$script_dir/prompt-router-hook.py" ||
+  fail "custom-role literal full-history protection is missing"
+grep -Fq 'reuse fork' "$script_dir/prompt-router-hook.py" ||
   fail "direct-context producer handoff is missing"
 for executive in \
   "$agents/codex-orchestration-sol-high-executive.toml" \
@@ -132,15 +132,18 @@ do
 for guard in \
   'ORCHESTRATION_STATUS:' \
   "show Terra's exact" \
-  'never prewrite/replace it' \
+  'never replace it' \
   "drain only this request's Orchestration children" \
+  'inherited unfinished work stays in scope' \
+  'new prompt amends it' \
   'ORCHESTRATION_DELEGATE' \
   'DIRECTIVE' \
   'at most 60 words' \
   "Keep Terra's AGENT/TASK immutable" \
-  'Spawn those values' \
+  'spawn those values' \
   'do not' \
-  'follow up before implementation' \
+  'follow-up before implementation' \
+  'reuse fork' \
   'never' \
   'specification or restate the request' \
   'ACCEPTANCE_CHECK:' \
@@ -201,6 +204,9 @@ for guard in \
   'ORCHESTRATION_ACCEPT:' \
   'ORCHESTRATION_TAKEOVER:' \
   'Never generate an implementation' \
+  'current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited' \
+  'combined active request is authoritative' \
+  'Only explicit cancellation or replacement' \
   'untrusted claim' \
   'task-appropriate probe' \
   'hard budget of one task-tool call in total' \
@@ -249,6 +255,9 @@ for guard in \
   'DIRECTIVE:' \
   'at most 60 words' \
   'Never restate the request' \
+  'current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited' \
+  'combined active request is authoritative' \
+  'Only explicit cancellation or replacement' \
   'ORCHESTRATION_ACCEPT:' \
   'ORCHESTRATION_TAKEOVER:' \
   'untrusted claim' \
@@ -300,6 +309,12 @@ fi
 for implementer in "$agents"/*-implementer.toml; do
   grep -Fq 'Execute `USER_REQUEST`' "$implementer" ||
     fail "implementation lane does not receive original task context: $implementer"
+  grep -Fq 'current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited' "$implementer" ||
+    fail "implementation lane can discard an additive steering turn: $implementer"
+  grep -Fq 'combined active request is authoritative' "$implementer" ||
+    fail "implementation lane does not preserve the cumulative active request: $implementer"
+  grep -Fq 'Only explicit cancellation or replacement' "$implementer" ||
+    fail "implementation lane can mistake an amendment for replacement: $implementer"
   grep -Fq 'verify the requested change in code, configuration, schema, tests' "$implementer" ||
     fail "implementation lane can skip code-first verification: $implementer"
   grep -Fq 'deployed code contains the change is sufficient' "$implementer" ||
@@ -428,7 +443,17 @@ for digest in \
   589eb68a6b5b20daee4a828ef5f80bc1190923bff8d00e5f6ed2a3d66e087244 \
   29f94c78aa84e3cd3fa4d9b47f0ee71d5db7a8dfd59cdfe5beecd96b2798f056 \
   5add5acaefe3c8ef35fa5d6a486257949cd66caa0c6fc5e07612f54913ff88d4 \
-  bc7f257a0776adb3c63e591b33a065d16f1efebd9a3d83179f518cbe26bf0090
+  bc7f257a0776adb3c63e591b33a065d16f1efebd9a3d83179f518cbe26bf0090 \
+  c64a4788d5c7e8985d788d87cf86c0821e333fa6ff727aa61fbbf02d6020b314 \
+  4c03b64fa48b0d65c2f3e7af61546046bf711c7056c1ed9a48d238f6486d9c6e \
+  69ec4f11fb18e5b24d639bd706b94c4e0b8eb425aa57a8ca33a3d81061c8c586 \
+  be1c6edf4de1d99e588a6ff9a3be5b7e3a9622dec32df38313717bc092693113 \
+  7c0c3ccfc81c59e11262ca162e0adadb1d7ab5ca6c141720986d78d28da5f804 \
+  dd4bacbda3ce8ae092fcf21956702f0493778db85b79cc3a035c4b8896faf7da \
+  020a7aa2c885cb3b28a41134911d70f632007dd509baab5c9e799ab2e2faf5a6 \
+  a1c5665569d2fa1d0b36038abae0228db185e9602acbbebdb2400fd991c6cd66 \
+  b582e40b9d997fded1793d6f306c95c9dc55299d51ee44ef05b29ddd158a399b \
+  8ffb06f0ac1520189f81d6dbabde710f5b3b82362d62485c4f8782665eb3a5a3
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done

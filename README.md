@@ -16,8 +16,8 @@ The active path is intentionally small:
 
 1. A stable user-level, once-per-prompt hook checks one chat-local boolean.
 2. The user-selected root model immediately gives the current request and up to 64 recent turns from that
-   chat only to Terra / High. The context fork is always partial; on a short chat the one omitted oldest
-   task turn is copied verbatim, avoiding Codex's restriction on pinned models with full-history forks.
+   chat only to Terra / High. It uses an explicit numeric fork rather than the unsupported literal
+   full-history fork, so a correction can retain the preceding active-request turn.
 3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
 4. Terra returns a score protocol containing one root-visible checkpoint; before any
    further spawn, root relays that exact checkpoint with its immutable numeric score.
@@ -72,8 +72,9 @@ It never starts a competing build, adds `--no-cache` while a deploy is active, o
 deploy helper's seed, migration, or backfill steps in parallel.
 
 Each handoff inherits up to 64 recent turns from the current chat only. It never imports
-history from another chat. This bounded history is used because current Codex rejects a
-custom-model role combined with a literal full-history fork. The router does not
+history from another chat. Additions, corrections, answers, and permissions amend unfinished
+inherited work; only explicit cancellation or replacement discards that objective. This bounded
+numeric history avoids the unsupported literal full-history fork. The router does not
 reconstruct requirements into a lossy packet, so active corrections, constraints,
 permissions, and repository context stay available to the selected model.
 

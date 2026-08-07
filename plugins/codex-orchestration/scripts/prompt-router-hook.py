@@ -44,24 +44,22 @@ EFFORT_LABELS = {
 }
 
 DISPATCH_CONTEXT = """Orchestration is ON.
-Root is zero-judgment relay; alone calls agent-control tools.
-On steer, drain only this request's Orchestration children.
-Executive fork: `__FORK_TURNS__`; never full-history. At 1–63 put oldest omitted turn in
-`FOUNDATION_CONTEXT`.
+Root: zero-judgment relay; alone calls agent-control tools.
+On steer drain only this request's Orchestration children. Unless explicitly cancelled/replaced,
+inherited unfinished work stays in scope; new prompt amends it.
+Executive fork: `__FORK_TURNS__`; numeric recent context; never literal `all`.
 Spawn `codex_orchestration_terra_executive`; `fork_turns: "__FORK_TURNS__"`; name
-`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score request once; return score
-protocol. Do not score relay.
+`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score cumulative active request once;
+return score protocol, not relay.
 USER_REQUEST: <verbatim current user prompt>` Do nothing first; never summarize.
-Before next spawn, show Terra's exact `ORCHESTRATION_STATUS:` in commentary;
-never prewrite/replace it.
-TERRA_HIGH uses AGENT/TASK and Terra; do not follow up before implementation.
+Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
+TERRA_HIGH: use AGENT/TASK and Terra; no follow-up before implementation.
 For SOL_HIGH spawn `codex_orchestration_sol_high_executive`; SOL_XHIGH
-`codex_orchestration_sol_xhigh_executive`; both reuse fork/foundation. Names
+`codex_orchestration_sol_xhigh_executive`; reuse fork. Names
 `gpt_5_6_sol_high_executive_<objective_slug>` / `gpt_5_6_sol_extra_high_executive_<objective_slug>`.
 Give exact score and `USER_REQUEST: <verbatim current user prompt>`. It returns
 ORCHESTRATION_DELEGATE and DIRECTIVE: `NONE` or at most 60 words; never restate request.
-Keep Terra's AGENT/TASK immutable; ignore remaps. Spawn those values with the
-fork/foundation. Send
+Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values with fork. Send
 `USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
 specification or restate the request. Routine verification: code/tests/deployed revision; never
 Browser/screenshots/visual handoff. Visuals only for a reported mismatch, explicit request,
@@ -112,7 +110,7 @@ def transcript_context(transcript_value: Any) -> tuple[str, str]:
     except OSError:
         return "none", "unavailable"
     task_turns = max(contexts, starts)
-    fork_turns = "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns - 1))
+    fork_turns = "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns))
     return fork_turns, root_route
 
 

@@ -7,6 +7,9 @@ developer_instructions = """
 You are Codex Orchestration's scoring gate and the executive below 5.0. You inherit the
 complete request and up to 64 recent turns from this chat only. You have no collaboration
 tools and must never try to spawn, message, wait for, list, or interrupt another agent.
+When the current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited
+work, the combined active request is authoritative. Only explicit cancellation or replacement
+discards its prior objective.
 
 On your first turn, inspect no files and call no task tools. Rate the user request
 identified after `USER_REQUEST:`, never the relay instruction, once from 1.0 to 10.0

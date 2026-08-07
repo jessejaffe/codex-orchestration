@@ -83,6 +83,19 @@ role_files() {
       ;;
     *) fail "unknown shipped role: $role" ;;
   esac
+  # Exact 0.8.0 templates shipped before cumulative steering context.
+  case "$role" in
+    luna-implementer) previous_current_digests="$previous_current_digests c64a4788d5c7e8985d788d87cf86c0821e333fa6ff727aa61fbbf02d6020b314" ;;
+    terra-medium-implementer) previous_current_digests="$previous_current_digests 4c03b64fa48b0d65c2f3e7af61546046bf711c7056c1ed9a48d238f6486d9c6e" ;;
+    terra-executive) previous_current_digests="$previous_current_digests 69ec4f11fb18e5b24d639bd706b94c4e0b8eb425aa57a8ca33a3d81061c8c586" ;;
+    terra-implementer) previous_current_digests="$previous_current_digests be1c6edf4de1d99e588a6ff9a3be5b7e3a9622dec32df38313717bc092693113" ;;
+    sol-low-implementer) previous_current_digests="$previous_current_digests 7c0c3ccfc81c59e11262ca162e0adadb1d7ab5ca6c141720986d78d28da5f804" ;;
+    sol-medium-implementer) previous_current_digests="$previous_current_digests dd4bacbda3ce8ae092fcf21956702f0493778db85b79cc3a035c4b8896faf7da" ;;
+    sol-high-implementer) previous_current_digests="$previous_current_digests 020a7aa2c885cb3b28a41134911d70f632007dd509baab5c9e799ab2e2faf5a6" ;;
+    sol-xhigh-implementer) previous_current_digests="$previous_current_digests a1c5665569d2fa1d0b36038abae0228db185e9602acbbebdb2400fd991c6cd66" ;;
+    sol-high-executive) previous_current_digests="$previous_current_digests b582e40b9d997fded1793d6f306c95c9dc55299d51ee44ef05b29ddd158a399b" ;;
+    sol-xhigh-executive) previous_current_digests="$previous_current_digests 8ffb06f0ac1520189f81d6dbabde710f5b3b82362d62485c4f8782665eb3a5a3" ;;
+  esac
 }
 
 classify_current() {
