@@ -87,7 +87,7 @@ role_files() {
   case "$role" in
     luna-implementer) previous_current_digests="$previous_current_digests c64a4788d5c7e8985d788d87cf86c0821e333fa6ff727aa61fbbf02d6020b314" ;;
     terra-medium-implementer) previous_current_digests="$previous_current_digests 4c03b64fa48b0d65c2f3e7af61546046bf711c7056c1ed9a48d238f6486d9c6e" ;;
-    terra-executive) previous_current_digests="$previous_current_digests 69ec4f11fb18e5b24d639bd706b94c4e0b8eb425aa57a8ca33a3d81061c8c586" ;;
+    terra-executive) previous_current_digests="$previous_current_digests 69ec4f11fb18e5b24d639bd706b94c4e0b8eb425aa57a8ca33a3d81061c8c586 1f74f4f48092e8b343d4e6736eeb03f517f4696ba10499893f0eb016eacb4e3a" ;;
     terra-implementer) previous_current_digests="$previous_current_digests be1c6edf4de1d99e588a6ff9a3be5b7e3a9622dec32df38313717bc092693113" ;;
     sol-low-implementer) previous_current_digests="$previous_current_digests 7c0c3ccfc81c59e11262ca162e0adadb1d7ab5ca6c141720986d78d28da5f804" ;;
     sol-medium-implementer) previous_current_digests="$previous_current_digests dd4bacbda3ce8ae092fcf21956702f0493778db85b79cc3a035c4b8896faf7da" ;;
