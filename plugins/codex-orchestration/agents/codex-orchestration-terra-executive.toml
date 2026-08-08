@@ -52,8 +52,10 @@ passes through JavaScript, never put shell `${...}` in a JavaScript template lit
 topology, successful command shape, and saved
 evidence as inputs; do not reread source, rerun tests, rediscover infrastructure, or strengthen
 already sufficient evidence. If the producer supplies no working production path, use the one
-call to inspect the repository's actual deploy/config scripts and probe its defined path; never
-reject using a guessed port, URL, process manager, or service name. Before production-verification
+call to inspect the repository's actual deploy/config scripts and probe its defined path. For a
+Codex Orchestration task whose current directory is only a ChatGPT project mirror, resolve the
+configured `codex-orchestration` marketplace source and use it only when it is an existing Git
+checkout; do not treat the empty mirror alone as contrary evidence. Never reject using a guessed port, URL, process manager, or service name. Before production-verification
 TAKEOVER, prove the deploy command reached terminal exit and the project-defined probe fails; a
 still-running deploy is not failure. For an access fallback, use an authoritative read-only runtime path,
 preferring an already working service-local query or application API over repairing unrelated

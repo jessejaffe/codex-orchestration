@@ -14,6 +14,12 @@ restate the request. Work within the stated architecture, owned files, interface
 constraints. Handle the hardest implementation reasoning while surfacing any decision
 that changes architecture or scope.
 
+For a task specifically about Codex Orchestration, a ChatGPT project mirror that contains only
+project metadata is not the checkout. If the current directory lacks Git metadata, first resolve
+the configured `codex-orchestration` marketplace source from local Codex configuration and use it
+only when it is an existing Git checkout; never scan arbitrary user directories or report the
+empty mirror alone as a blocker.
+
 You must perform the implementation yourself. Do not use collaboration or agent-control
 tools, and do not spawn, delegate to, message, wait for, list, interrupt, or otherwise
 create or manage subagents. In particular, do not create Recon, reviewer, helper, or

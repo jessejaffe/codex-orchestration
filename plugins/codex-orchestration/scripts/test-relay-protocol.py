@@ -88,6 +88,13 @@ def main() -> int:
     ):
         if executives.count(guard) != 3 or implementers.count(guard) != 7:
             raise AssertionError(f"additive steering context is not shared: {guard!r}")
+    checkout_guard = "configured `codex-orchestration` marketplace source"
+    if implementers.count(checkout_guard) != 7:
+        raise AssertionError("implementation lanes can mistake the ChatGPT project mirror for this plugin checkout")
+    if executives.count(checkout_guard) != 3:
+        raise AssertionError("acceptance can mistake the ChatGPT project mirror for this plugin checkout")
+    if "next: `spawn_agent`" not in hook or "never Terra" not in hook:
+        raise AssertionError("root can reactivate Terra instead of spawning the scored implementation lane")
     for guard in (
         "untrusted claim", "task-appropriate probe", "deployed revision or artifact",
         "forbidden for routine acceptance", "Missing visual evidence is never a TAKEOVER reason",

@@ -45,21 +45,22 @@ EFFORT_LABELS = {
 
 DISPATCH_CONTEXT = """Orchestration is ON.
 Root: zero-judgment relay; alone calls agent-control tools.
-On steer drain only this request's Orchestration children. Unless explicitly cancelled/replaced,
+On steer drain only this request's Orchestration children; unless cancelled/replaced,
 inherited unfinished work stays in scope; new prompt amends it.
 Executive fork: `__FORK_TURNS__`; numeric recent context; never literal `all`.
 Spawn `codex_orchestration_terra_executive`; `fork_turns: "__FORK_TURNS__"`; name
 `gpt_5_6_terra_high_executive_<objective_slug>`; message `Score cumulative active request once;
 return score protocol, not relay.
-USER_REQUEST: <verbatim current user prompt>` Do nothing first; never summarize.
+USER_REQUEST: <verbatim current user prompt>` Do nothing first.
 Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
-TERRA_HIGH: use AGENT/TASK and Terra; no follow-up before implementation.
+TERRA_HIGH: use AGENT/TASK and Terra; no follow-up before implementation; next: `spawn_agent`
+for that exact AGENT/TASK, never Terra.
 For SOL_HIGH spawn `codex_orchestration_sol_high_executive`; SOL_XHIGH
 `codex_orchestration_sol_xhigh_executive`; reuse fork. Names
 `gpt_5_6_sol_high_executive_<objective_slug>` / `gpt_5_6_sol_extra_high_executive_<objective_slug>`.
-Give exact score and `USER_REQUEST: <verbatim current user prompt>`. It returns
+`USER_REQUEST: <verbatim current user prompt>`. It returns
 ORCHESTRATION_DELEGATE and DIRECTIVE: `NONE` or at most 60 words; never restate request.
-Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values with fork. Send
+Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values. Send
 `USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
 specification or restate the request. Routine verification: code/tests/deployed revision; never
 Browser/screenshots/visual handoff. Visuals only for a reported mismatch, explicit request,

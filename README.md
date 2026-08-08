@@ -40,6 +40,11 @@ alone performs the exact executive and implementation relays. No executive rewri
 user's request, workflow, deployment instructions, or acceptance criteria into a duplicated
 implementation packet.
 
+When the task is specifically about Codex Orchestration but a ChatGPT project mirror contains
+only its project metadata, the implementation role resolves the configured `codex-orchestration`
+marketplace source and uses it only when it is an existing Git checkout. An empty mirror alone is
+not a checkout failure or a reason to trigger root takeover.
+
 For example, the top-level task may show `Complexity 2.7 → GPT-5.6 Luna / Max. Updating
 the homepage, then committing, deploying, and checking the live site.` This adds one
 short handoff message rather than duplicating every nested progress update.

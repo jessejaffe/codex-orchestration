@@ -143,6 +143,8 @@ def main() -> int:
         "Keep Terra's AGENT/TASK immutable; ignore remaps",
         "spawn those values",
         "no follow-up before implementation",
+        "next: `spawn_agent`",
+        "never Terra",
         "reuse fork",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
