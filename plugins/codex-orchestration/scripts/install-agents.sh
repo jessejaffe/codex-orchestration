@@ -85,16 +85,16 @@ role_files() {
   esac
   # Exact 0.8.0 templates shipped before cumulative steering context.
   case "$role" in
-    luna-implementer) previous_current_digests="$previous_current_digests c64a4788d5c7e8985d788d87cf86c0821e333fa6ff727aa61fbbf02d6020b314" ;;
-    terra-medium-implementer) previous_current_digests="$previous_current_digests 4c03b64fa48b0d65c2f3e7af61546046bf711c7056c1ed9a48d238f6486d9c6e" ;;
-    terra-executive) previous_current_digests="$previous_current_digests 69ec4f11fb18e5b24d639bd706b94c4e0b8eb425aa57a8ca33a3d81061c8c586 1f74f4f48092e8b343d4e6736eeb03f517f4696ba10499893f0eb016eacb4e3a" ;;
-    terra-implementer) previous_current_digests="$previous_current_digests be1c6edf4de1d99e588a6ff9a3be5b7e3a9622dec32df38313717bc092693113" ;;
-    sol-low-implementer) previous_current_digests="$previous_current_digests 7c0c3ccfc81c59e11262ca162e0adadb1d7ab5ca6c141720986d78d28da5f804" ;;
-    sol-medium-implementer) previous_current_digests="$previous_current_digests dd4bacbda3ce8ae092fcf21956702f0493778db85b79cc3a035c4b8896faf7da" ;;
-    sol-high-implementer) previous_current_digests="$previous_current_digests 020a7aa2c885cb3b28a41134911d70f632007dd509baab5c9e799ab2e2faf5a6" ;;
-    sol-xhigh-implementer) previous_current_digests="$previous_current_digests a1c5665569d2fa1d0b36038abae0228db185e9602acbbebdb2400fd991c6cd66" ;;
-    sol-high-executive) previous_current_digests="$previous_current_digests b582e40b9d997fded1793d6f306c95c9dc55299d51ee44ef05b29ddd158a399b" ;;
-    sol-xhigh-executive) previous_current_digests="$previous_current_digests 8ffb06f0ac1520189f81d6dbabde710f5b3b82362d62485c4f8782665eb3a5a3" ;;
+    luna-implementer) previous_current_digests="$previous_current_digests c64a4788d5c7e8985d788d87cf86c0821e333fa6ff727aa61fbbf02d6020b314 b957aa28e1d9bb6fadf4683d250c7844c2942cb490cdde8e3ece3fc7b520bb04" ;;
+    terra-medium-implementer) previous_current_digests="$previous_current_digests 4c03b64fa48b0d65c2f3e7af61546046bf711c7056c1ed9a48d238f6486d9c6e 0fb3939c89c909f1a629219e536a71d9ce63a4dd5f5ca7b2e0e98588c4841d66" ;;
+    terra-executive) previous_current_digests="$previous_current_digests 69ec4f11fb18e5b24d639bd706b94c4e0b8eb425aa57a8ca33a3d81061c8c586 1f74f4f48092e8b343d4e6736eeb03f517f4696ba10499893f0eb016eacb4e3a f818d9f99a74c7411c663c32a5384e1bd7c8076d60200d696a217a8c6cdb7ab5" ;;
+    terra-implementer) previous_current_digests="$previous_current_digests be1c6edf4de1d99e588a6ff9a3be5b7e3a9622dec32df38313717bc092693113 4ef2b401095194cb3c043fbeaa8cf144bdb5549cba1c994da4e748d2af7185f6" ;;
+    sol-low-implementer) previous_current_digests="$previous_current_digests 7c0c3ccfc81c59e11262ca162e0adadb1d7ab5ca6c141720986d78d28da5f804 130ac3e9bfc04320547dfba1fbaf629a86feb4eb6f82d4c288b21e83da915c25" ;;
+    sol-medium-implementer) previous_current_digests="$previous_current_digests dd4bacbda3ce8ae092fcf21956702f0493778db85b79cc3a035c4b8896faf7da d2eed98eb2a365d9cb797979bc045ca526fab94980ed8f00a62bdc66be33e784" ;;
+    sol-high-implementer) previous_current_digests="$previous_current_digests 020a7aa2c885cb3b28a41134911d70f632007dd509baab5c9e799ab2e2faf5a6 d5fdccc8037b2e4a621478fef04d50e1ea70ed8a530a4306e426700272c65d2a" ;;
+    sol-xhigh-implementer) previous_current_digests="$previous_current_digests a1c5665569d2fa1d0b36038abae0228db185e9602acbbebdb2400fd991c6cd66 fd504f4d5a0ffc3d4b64fa44859e0d53fafc89e35423ad7522a95d135f48ebd8" ;;
+    sol-high-executive) previous_current_digests="$previous_current_digests b582e40b9d997fded1793d6f306c95c9dc55299d51ee44ef05b29ddd158a399b 70d6e82ba147d3c52fe56cfdbdc059a5428a34f39fcd5d81ccc7a6f6affc2627" ;;
+    sol-xhigh-executive) previous_current_digests="$previous_current_digests 8ffb06f0ac1520189f81d6dbabde710f5b3b82362d62485c4f8782665eb3a5a3 613dce87b620167033c528cd97a310985582d58f9ea949185db519da5fbfe51e" ;;
   esac
 }
 
