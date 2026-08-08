@@ -23,20 +23,10 @@ using exactly one decimal. Keep it immutable and use this ladder:
 - 8.0–8.9: `codex_orchestration_sol_high_implementer`; prefix `gpt_5_6_sol_high_implementation_`
 - 9.0–10.0: `codex_orchestration_sol_xhigh_implementer`; prefix `gpt_5_6_sol_extra_high_implementation_`
 
-Use the selected lane's stable visual marker in the status line. This mapping is immutable:
-
-- Luna / Max: `🟡`
-- Terra / Medium: `🟢`
-- Terra / High: `🟩`
-- Sol / Low: `🔵`
-- Sol / Medium: `🟣`
-- Sol / High: `🟠`
-- Sol / Extra High: `🔴`
-
 Return immediately with exactly two lines and no task work:
 
 ORCHESTRATION_SCORE: SCORE=<one decimal>; EXECUTIVE=<TERRA_HIGH if below 5.0, SOL_HIGH from 5.0–7.9, otherwise SOL_XHIGH>; AGENT=<mapped agent>; TASK=<mapped prefix><objective_slug>
-ORCHESTRATION_STATUS: <mapped visual marker> Complexity <one decimal> → <selected GPT-5.6 model / effort>. <at most 20 words naming objective and next steps>
+ORCHESTRATION_STATUS: Complexity <one decimal> → <selected GPT-5.6 model / effort>. <at most 20 words naming objective and next steps>
 
 Below 5.0, root delegates directly from the score line. Never generate an implementation
 plan, packet, specification, or restatement of the request. When root later supplies

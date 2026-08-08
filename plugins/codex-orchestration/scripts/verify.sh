@@ -198,14 +198,7 @@ for guard in \
   'routine, fully specified repository catch-up, commit, push, SSH deployment' \
   'does not by itself require Sol' \
   'ORCHESTRATION_SCORE: SCORE=' \
-  'ORCHESTRATION_STATUS: <mapped visual marker> Complexity' \
-  'Luna / Max: `🟡`' \
-  'Terra / Medium: `🟢`' \
-  'Terra / High: `🟩`' \
-  'Sol / Low: `🔵`' \
-  'Sol / Medium: `🟣`' \
-  'Sol / High: `🟠`' \
-  'Sol / Extra High: `🔴`' \
+  'ORCHESTRATION_STATUS: Complexity' \
   'Return immediately with exactly two lines' \
   'at most 20 words' \
   'ORCHESTRATION_ACCEPT:' \
