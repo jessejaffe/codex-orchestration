@@ -47,6 +47,18 @@ short handoff message rather than duplicating every nested progress update.
 Executive task labels explicitly include `Executive`, and implementation labels include
 `Implementation`, so Terra / High scoring and Terra / High implementation cannot collide.
 Labels also show the exact selected model and effort, including Sol / Extra High.
+The root-visible status checkpoint also carries a stable lane marker so repeated tasks keep the
+same visual identity even though Codex assigns each native subagent avatar from its new thread ID:
+
+| Marker | Lane |
+|---|---|
+| 🟡 | Luna / Max |
+| 🟢 | Terra / Medium |
+| 🟩 | Terra / High |
+| 🔵 | Sol / Low |
+| 🟣 | Sol / Medium |
+| 🟠 | Sol / High |
+| 🔴 | Sol / Extra High |
 
 The numeric implementation ladder is monotonic:
 

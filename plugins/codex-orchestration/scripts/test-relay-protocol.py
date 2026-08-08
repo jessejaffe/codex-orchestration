@@ -37,6 +37,9 @@ def main() -> int:
     ):
         if token not in executives + hook:
             raise AssertionError(f"relay protocol omits {token}")
+    for marker in ("🟡", "🟢", "🟩", "🔵", "🟣", "🟠", "🔴"):
+        if terra.count(marker) != 1:
+            raise AssertionError(f"stable lane marker mapping is incomplete: {marker}")
     runtime = executives + hook
     if "PACKET:" in runtime or "execution packet" in runtime:
         raise AssertionError("executive can still emit the duplicated implementation packet")
