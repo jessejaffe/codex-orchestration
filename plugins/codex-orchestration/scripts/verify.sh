@@ -60,6 +60,7 @@ expected = {
     "codex-orchestration-sol-medium-implementer.toml": ("gpt-5.6-sol", "medium"),
     "codex-orchestration-sol-high-implementer.toml": ("gpt-5.6-sol", "high"),
     "codex-orchestration-sol-xhigh-implementer.toml": ("gpt-5.6-sol", "xhigh"),
+    "codex-orchestration-sol-low-executive.toml": ("gpt-5.6-sol", "low"),
     "codex-orchestration-sol-high-executive.toml": ("gpt-5.6-sol", "high"),
     "codex-orchestration-sol-xhigh-executive.toml": ("gpt-5.6-sol", "xhigh"),
     "codex-orchestration-sol-reviewer.toml": ("gpt-5.6-sol", "high"),
@@ -79,7 +80,7 @@ for filename, pins in expected.items():
     if actual != pins:
         raise SystemExit(f"wrong pins in {filename}: {actual}")
 PY
-pass "script syntax, offline benchmark, and exact eleven-role pins"
+pass "script syntax, offline benchmark, and exact twelve-role pins"
 
 python3 "$script_dir/test-fast-dispatch.py" "$plugin_dir" "$tmp_dir/hooks" ||
   fail "fast dispatch, continuity, ownership, or latency regression"
@@ -126,6 +127,7 @@ grep -Fq 'never literal `all`' "$script_dir/prompt-router-hook.py" ||
 grep -Fq 'reuse fork' "$script_dir/prompt-router-hook.py" ||
   fail "direct-context producer handoff is missing"
 for executive in \
+  "$agents/codex-orchestration-sol-low-executive.toml" \
   "$agents/codex-orchestration-sol-high-executive.toml" \
   "$agents/codex-orchestration-sol-xhigh-executive.toml"
 do
@@ -151,12 +153,12 @@ for guard in \
   'specification or restate the request' \
   'ACCEPTANCE_CHECK:' \
   'immutable acceptance + exact `IMPLEMENTATION_RESULT:`' \
-  'Routine verification: code/tests/deployed revision' \
-  'Browser/screenshots/visual handoff' \
-  'Visuals only for a reported mismatch' \
-  'explicit request' \
-  'or indispensable work' \
-  'absence never fails' \
+  'Routine non-experience verification: code/tests/deployed' \
+  'Experience contract (interaction/demo/rendered/visual)' \
+  'ORCHESTRATION_ROOT_VERIFY:' \
+  'root-only Browser/visual' \
+  'ROOT_VERIFICATION_RESULT:' \
+  'START, ACTION, RESULT, ARTIFACTS' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
   'same Sol executive role' \
@@ -204,7 +206,7 @@ for guard in \
   '9.0–10.0' \
   'from this chat only' \
   'routine, fully specified repository catch-up, commit, push, SSH deployment' \
-  'does not by itself require Sol' \
+  'does not by itself increase the implementation score' \
   'ORCHESTRATION_SCORE: SCORE=' \
   'ORCHESTRATION_STATUS: Complexity' \
   'Return immediately with exactly three lines' \
@@ -213,48 +215,24 @@ for guard in \
   'immutable, at-most-200-word contract' \
   'never discarded exploration' \
   'never invent a criterion' \
-  'producer redefine done' \
-  'ORCHESTRATION_ACCEPT:' \
-  'ORCHESTRATION_TAKEOVER:' \
-  'Never generate an implementation' \
+  'producer must never' \
+  'redefine done' \
+  'Make `PROOF` test the defining outcome' \
+  '`ROOT_EXPERIENCE:`' \
+  'end-to-end observation' \
+  'HTTP 200' \
+  'button or DOM text' \
+  'supporting' \
+  'evidence only' \
+  'damage-and-recovery demo' \
+  'input genuinely manifests the intended damage or failure' \
+  'never implement, inspect files, call task tools, delegate, or judge' \
+  'Never generate an implementation plan' \
+  'Do not emit `ORCHESTRATION_ACCEPT:`' \
   'current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited' \
   'combined active request is authoritative' \
   'Only explicit cancellation or replacement' \
-  'untrusted claim' \
-  'task-appropriate probe' \
-  'hard budget of one task-tool call in total' \
-  'one fallback task-tool call' \
-  'malformed wrapper, command, or probe' \
-  'repair it and' \
-  'use one fallback task-tool call' \
-  'neither is outcome failure or' \
-  'reuse the producer' \
-  'never put shell `${...}` in a JavaScript template literal' \
-  'quoted' \
-  '`cmd` string or escape every interpolation opener' \
-  'requested end state already holds in every required destination' \
-  'successful no-op' \
-  'never require a new diff, commit, or deploy' \
-  "not necessarily the change's introduction point" \
-  'patch or provenance for current-tree or artifact evidence' \
-  'empty, silent, or non-diagnostic result is a malformed probe' \
-  'corrective REMAINING work require a named observation' \
-  'no observation contradicts it, ACCEPT it' \
-  'named observation proving a mistake, incomplete work, failed valid verification' \
-  'do not reread source, rerun tests, rediscover infrastructure' \
-  'actual deploy/config scripts' \
-  'guessed port, URL, process' \
-  'reached terminal exit' \
-  'still-running deploy is not' \
-  'deployed revision or artifact contains the change' \
-  'forbidden for routine acceptance' \
-  'user-reported rendered mismatch' \
-  'use visual tools when available' \
-  'explicitly asks for visual inspection' \
-  'Missing visual evidence is never a TAKEOVER reason' \
-  'view_image' \
-  'root owns final route metadata' \
-  'zero correction loops'
+  'SOL_LOW if below 5.0'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
     fail "Terra score-based routing omits: $guard"
@@ -308,11 +286,16 @@ for guard in \
   'reached terminal exit' \
   'still-running deploy is not' \
   'deployed revision or artifact contains the change' \
-  'forbidden for routine acceptance' \
-  'user-reported rendered mismatch' \
-  'use visual tools when available' \
-  'explicitly asks for visual inspection' \
-  'Missing visual evidence is never a TAKEOVER reason' \
+  'non-experience frontend work' \
+  'direct experience proof is mandatory' \
+  'root-only capabilities' \
+  'ORCHESTRATION_ROOT_VERIFY:' \
+  'REQUIRED_OBSERVATIONS=START=' \
+  'ROOT_VERIFICATION_RESULT:' \
+  'HTTP 200, asset' \
+  'supporting evidence only and never' \
+  'damage-and-recovery demo' \
+  'exhausted root access' \
   'view_image' \
   'Root owns and appends final route metadata' \
   'TAKEOVER is terminal'
@@ -324,6 +307,7 @@ done
 if rg -n 'PACKET:|execution packet|exact PACKET' \
   "$script_dir/prompt-router-hook.py" \
   "$agents/codex-orchestration-terra-executive.toml" \
+  "$agents/codex-orchestration-sol-low-executive.toml" \
   "$agents/codex-orchestration-sol-high-executive.toml" \
   "$agents/codex-orchestration-sol-xhigh-executive.toml"; then
   fail "runtime still allows duplicated executive implementation packets"
@@ -527,7 +511,7 @@ for phrase in \
   'seven implementation lanes' \
   'any user-selected starting model' \
   'Sol / Extra High' \
-  'routine deployment does not force a Sol' \
+  'routine deployment does not increase the' \
   'one root-visible checkpoint' \
   'immutable acceptance contract' \
   'structured implementation evidence' \

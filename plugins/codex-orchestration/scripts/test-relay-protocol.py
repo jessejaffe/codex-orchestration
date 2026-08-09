@@ -25,9 +25,12 @@ def main() -> int:
     plugin = Path(sys.argv[1])
     hook = (plugin / "scripts/prompt-router-hook.py").read_text()
     terra = (plugin / "agents/codex-orchestration-terra-executive.toml").read_text()
+    sol_low = (plugin / "agents/codex-orchestration-sol-low-executive.toml").read_text()
     sol_high = (plugin / "agents/codex-orchestration-sol-high-executive.toml").read_text()
     sol_xhigh = (plugin / "agents/codex-orchestration-sol-xhigh-executive.toml").read_text()
-    executives = terra + sol_high + sol_xhigh
+    sol_executive_texts = (sol_low, sol_high, sol_xhigh)
+    sol_executives = sol_low + sol_high + sol_xhigh
+    executives = terra + sol_executives
     for tool in ("send_message", "spawn_agent", "wait_agent", "list_agents", "interrupt_agent"):
         if tool in executives:
             raise AssertionError(f"custom executive requires unavailable collaboration tool: {tool}")
@@ -52,12 +55,12 @@ def main() -> int:
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
         "immutable acceptance + exact `IMPLEMENTATION_RESULT:`",
-        "Routine verification: code/tests/deployed revision",
-        "Browser/screenshots/visual handoff",
-        "Visuals only for a reported mismatch",
-        "explicit request",
-        "or indispensable work",
-        "absence never fails",
+        "Routine non-experience verification: code/tests/deployed",
+        "Experience contract (interaction/demo/rendered/visual)",
+        "ORCHESTRATION_ROOT_VERIFY:",
+        "root-only Browser/visual",
+        "ROOT_VERIFICATION_RESULT:",
+        "START, ACTION, RESULT, ARTIFACTS",
         "inherited unfinished work stays in scope",
         "new prompt amends it",
     ):
@@ -71,7 +74,7 @@ def main() -> int:
         raise AssertionError("root can expose or mutate Terra's acceptance contract")
     if "Keep Terra's AGENT/TASK immutable; ignore remaps" not in hook:
         raise AssertionError("root can accept an executive-generated implementation identity")
-    sol_handoff_start = hook.index("SOL_HIGH/SOL_XHIGH: spawn")
+    sol_handoff_start = hook.index("SOL_LOW/SOL_HIGH/SOL_XHIGH: spawn")
     sol_handoff = hook[sol_handoff_start : hook.index("Keep Terra", sol_handoff_start)]
     score_line = "Send exact Terra `ORCHESTRATION_SCORE:`"
     if score_line not in sol_handoff:
@@ -104,7 +107,7 @@ def main() -> int:
     if "loading full task history" not in hook:
         raise AssertionError("root does not announce the exceptional full-history takeover reload")
     for guard in ("Copy Terra's AGENT and TASK", "never shorten, relabel, remap"):
-        if executives.count(guard) != 2:
+        if not all(guard in executive for executive in sol_executive_texts):
             raise AssertionError(f"pinned Sol executive can rename Terra's implementation task: {guard!r}")
     for guard in (
         "use only the supplied score, status, acceptance, and request",
@@ -119,12 +122,12 @@ def main() -> int:
         "reload one same-role takeover instance with full inherited history",
         "Keep Terra's\nacceptance contract authoritative",
     ):
-        if executives.count(guard) != 2:
+        if not all(guard in executive for executive in sol_executive_texts):
             raise AssertionError(f"compact Sol executive fast path omits {guard!r}")
-    if executives.count("producer redefine done") != 3:
+    if not all("producer redefine done" in executive for executive in sol_executive_texts) or "producer must never\nredefine done" not in terra:
         raise AssertionError("an executive can let the producer redefine acceptance")
     if (
-        terra.count("acceptance contract authoritative") != 1
+        sol_low.count("acceptance contract authoritative") != 2
         or sol_high.count("acceptance contract authoritative") != 2
         or sol_xhigh.count("acceptance contract authoritative") != 2
     ):
@@ -160,7 +163,12 @@ def main() -> int:
         "immutable, at-most-200-word contract",
         "never discarded exploration",
         "never invent a criterion",
-        "producer redefine done",
+        "producer must never\nredefine done",
+        "Make `PROOF` test the defining outcome",
+        "`ROOT_EXPERIENCE:`",
+        "end-to-end observation",
+        "damage-and-recovery demo",
+        "input genuinely manifests the intended damage or failure",
     ):
         if guard not in terra:
             raise AssertionError(f"Terra acceptance contract omits {guard!r}")
@@ -170,22 +178,25 @@ def main() -> int:
         "Only explicit cancellation or replacement",
         "discards its prior objective",
     ):
-        if executives.count(guard) != 3 or implementers.count(guard) != 7:
+        if executives.count(guard) != 4 or implementers.count(guard) != 7:
             raise AssertionError(f"additive steering context is not shared: {guard!r}")
     checkout_guard = "configured `codex-orchestration` marketplace source"
     if implementers.count(checkout_guard) != 7:
         raise AssertionError("implementation lanes can mistake the ChatGPT project mirror for this plugin checkout")
-    if executives.count(checkout_guard) != 3:
+    if not all(checkout_guard in executive for executive in sol_executive_texts):
         raise AssertionError("acceptance can mistake the ChatGPT project mirror for this plugin checkout")
     if "next: `spawn_agent`" not in hook or "never Terra" not in hook:
         raise AssertionError("root can reactivate Terra instead of spawning the scored implementation lane")
     for guard in (
         "untrusted claim", "task-appropriate probe", "deployed revision or artifact",
-        "forbidden for routine acceptance", "Missing visual evidence is never a TAKEOVER reason",
-        "user-reported rendered mismatch", "use visual tools when available",
+        "non-experience frontend work", "direct experience proof is mandatory",
+        "root-only capabilities", "ORCHESTRATION_ROOT_VERIFY:",
+        "REQUIRED_OBSERVATIONS=START=", "ROOT_VERIFICATION_RESULT:",
+        "HTTP 200, asset", "supporting evidence only and never",
+        "damage-and-recovery demo", "exhausted root access",
         "without route metadata",
     ):
-        if executives.count(guard) != 3:
+        if not all(guard in executive for executive in sol_executive_texts):
             raise AssertionError(f"independent acceptance guard is not shared: {guard!r}")
     for guard in (
         "hard budget of one task-tool call in total",
@@ -198,17 +209,15 @@ def main() -> int:
         "never put shell `${...}` in a JavaScript template literal",
         "use a quoted\n`cmd` string or escape every interpolation opener",
         "do not reread source, rerun tests, rediscover infrastructure",
-        "explicitly asks for visual inspection",
-        "visual input is indispensable\nto perform the work rather than merely strengthen proof",
     ):
-        if executives.count(guard) != 3:
+        if not all(guard in executive for executive in sol_executive_texts):
             raise AssertionError(f"minimal acceptance guard is not shared: {guard!r}")
     for guard in (
         "producer supplies no working production path",
         "actual deploy/config scripts", "guessed port, URL, process",
         "deploy command reached terminal exit", "still-running deploy is not failure",
     ):
-        if executives.count(guard) != 3:
+        if not all(guard in executive for executive in sol_executive_texts):
             raise AssertionError(f"production acceptance guard is not shared: {guard!r}")
     for guard in (
         "For an access fallback",
@@ -217,7 +226,7 @@ def main() -> int:
         "Acceptance must never mutate state",
         "actions reserved for later user approval",
     ):
-        if executives.count(guard) != 3:
+        if not all(guard in executive for executive in sol_executive_texts):
             raise AssertionError(f"acceptance access fallback is not shared: {guard!r}")
     for guard in (
         "requested end state already holds in every required destination",
@@ -230,7 +239,7 @@ def main() -> int:
         "no observation contradicts it, ACCEPT it",
         "named observation proving a mistake, incomplete work, failed valid verification",
     ):
-        if executives.count(guard) != 3:
+        if not all(guard in executive for executive in sol_executive_texts):
             raise AssertionError(f"already-satisfied acceptance guard is not shared: {guard!r}")
     if "acceptance claim remains unverified after those paths are exhausted" in executives:
         raise AssertionError("mere nonconfirmation can still trigger corrective takeover")
@@ -299,9 +308,12 @@ def main() -> int:
         if fragment not in prefix:
             raise AssertionError(f"wrong lane at {score}: {prefix}")
 
-    if "EXECUTIVE=<TERRA_HIGH if below 5.0, SOL_HIGH from 5.0–7.9, otherwise SOL_XHIGH>" not in terra:
+    if "EXECUTIVE=<SOL_LOW if below 5.0, SOL_HIGH from 5.0–7.9, otherwise SOL_XHIGH>" not in terra:
         raise AssertionError("Terra does not route scores of 8.0 and above to Sol / Extra High")
     for token in (
+        "codex_orchestration_sol_low_executive",
+        "gpt_5_6_sol_low_executive_",
+        "GPT-5.6 Sol / Low",
         "codex_orchestration_sol_xhigh_executive",
         "gpt_5_6_sol_extra_high_executive_",
         "GPT-5.6 Sol / Extra High",
@@ -310,6 +322,8 @@ def main() -> int:
             raise AssertionError(f"root relay omits the Sol / Extra High executive: {token}")
     if 'model_reasoning_effort = "xhigh"' not in sol_xhigh:
         raise AssertionError("Sol / Extra High executive is not pinned to xhigh")
+    if 'model_reasoning_effort = "low"' not in sol_low:
+        raise AssertionError("Sol / Low executive is not pinned to low")
 
     terra_exec = "gpt_5_6_terra_high_executive_change"
     terra_impl = lane(5.1)[1] + "change"
@@ -336,7 +350,7 @@ def main() -> int:
     ):
         if guard not in hook:
             raise AssertionError(f"staged root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call probe-fallback=ok already-satisfied=accept visuals=opt-in deployment=single-owner final-metadata=exact-root staged-takeover=ok")
+    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call probe-fallback=ok already-satisfied=accept visuals=root-relay deployment=single-owner final-metadata=exact-root staged-takeover=ok")
     return 0
 
 

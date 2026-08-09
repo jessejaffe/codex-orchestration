@@ -129,6 +129,8 @@ def main() -> int:
         "alone calls agent-control tools",
         "Do nothing first",
         "codex_orchestration_sol_high_executive",
+        "codex_orchestration_sol_low_executive",
+        "gpt_5_6_sol_low_executive_<objective_slug>",
         "gpt_5_6_sol_high_executive_<objective_slug>",
         "codex_orchestration_sol_xhigh_executive",
         "gpt_5_6_sol_extra_high_executive_<objective_slug>",
@@ -153,12 +155,13 @@ def main() -> int:
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
         "immutable acceptance + exact `IMPLEMENTATION_RESULT:`",
-        "Routine verification: code/tests/deployed revision",
-        "Browser/screenshots/visual handoff",
-        "Visuals only for a reported mismatch",
-        "explicit request",
-        "or indispensable work",
-        "absence never fails",
+        "Routine non-experience verification: code/tests/deployed",
+        "Experience contract (interaction/demo/rendered/visual)",
+        "ORCHESTRATION_ROOT_VERIFY:",
+        "root-only Browser/visual",
+        "ROOT_VERIFICATION_RESULT:",
+        "START, ACTION, RESULT, ARTIFACTS",
+        "HTTP 200/assets/text/tests never substitute",
         "ORCHESTRATION_ACCEPT",
         "ORCHESTRATION_TAKEOVER",
         "same Sol executive role",
@@ -181,7 +184,7 @@ def main() -> int:
     ):
         if required not in routed_context:
             raise AssertionError(f"dispatch contract omits {required!r}")
-    sol_start = routed_context.index("SOL_HIGH/SOL_XHIGH: spawn")
+    sol_start = routed_context.index("SOL_LOW/SOL_HIGH/SOL_XHIGH: spawn")
     sol_handoff = routed_context[sol_start : routed_context.index("Keep Terra", sol_start)]
     if '`fork_turns: "none"`' not in sol_handoff or "reuse fork" in sol_handoff:
         raise AssertionError("Sol executive did not receive the compact no-history handoff")
@@ -320,6 +323,45 @@ def main() -> int:
     if json.loads(state_file.read_text())["active"]:
         raise AssertionError("combined deactivation was not persisted")
 
+    call(prompt_hook, {**base, "prompt": "Turn Orchestration on"}, env)
+    trailing_off = call(
+        prompt_hook,
+        {
+            **base,
+            "prompt": (
+                "Fix the PDF demo so the starting file is visibly damaged. "
+                "Turn orchestration off."
+            ),
+        },
+        env,
+    )
+    trailing_off_context = context(trailing_off)
+    if not trailing_off_context.startswith("Begin with `Orchestration: OFF for this chat`"):
+        raise AssertionError("sentence-final deactivation was not recognized")
+    if "handle the remaining user work directly" not in trailing_off_context:
+        raise AssertionError("work before sentence-final deactivation was discarded")
+    if json.loads(state_file.read_text())["active"]:
+        raise AssertionError("sentence-final deactivation was not persisted")
+
+    narrative_off = call(
+        prompt_hook,
+        {**base, "prompt": "I said turn orchestration off in another chat"},
+        env,
+    )
+    if narrative_off != {"continue": True}:
+        raise AssertionError("a narrative deactivation mention was treated as a command")
+
+    call(prompt_hook, {**base, "prompt": "Turn Orchestration on"}, env)
+    last_control_wins = call(
+        prompt_hook,
+        {**base, "prompt": "Turn orchestration on. Turn orchestration off."},
+        env,
+    )
+    if "Orchestration: OFF for this chat" not in context(last_control_wins):
+        raise AssertionError("the last sentence-level control command did not win")
+    if json.loads(state_file.read_text())["active"]:
+        raise AssertionError("the last sentence-level control command was not persisted")
+
     period_combined = call(
         prompt_hook,
         {
@@ -360,12 +402,13 @@ def main() -> int:
         "9.0–10.0",
         "from this chat only",
         "routine, fully specified repository catch-up, commit, push, SSH deployment",
-        "does not by itself require Sol",
+        "does not by itself increase the implementation score",
         "gpt_5_6_luna_max_",
         "gpt_5_6_terra_medium_",
         "gpt_5_6_terra_high_implementation_",
         "gpt_5_6_sol_high_implementation_",
         "gpt_5_6_sol_extra_high_implementation_",
+        "SOL_LOW",
         "SOL_XHIGH",
         "ORCHESTRATION_SCORE: SCORE=",
         "ORCHESTRATION_STATUS: Complexity",
@@ -374,38 +417,20 @@ def main() -> int:
         "ORCHESTRATION_ACCEPTANCE: OUTCOME=",
         "immutable, at-most-200-word contract",
         "never invent a criterion",
-        "producer redefine done",
-        "ORCHESTRATION_ACCEPT:",
-        "ORCHESTRATION_TAKEOVER:",
+        "producer must never\nredefine done",
         "Never generate an implementation",
-        "untrusted claim",
         "combined active request is authoritative",
         "Only explicit cancellation or replacement",
-        "task-appropriate probe",
-        "hard budget of one task-tool call in total",
-        "one fallback task-tool call",
-        "malformed wrapper, command, or probe",
-        "neither is outcome failure or",
-        "never put shell `${...}` in a JavaScript template literal",
-        "quoted\n`cmd` string",
-        "requested end state already holds in every required destination",
-        "successful no-op",
-        "never require a new diff, commit, or deploy",
-        "not necessarily the change's introduction point",
-        "patch or provenance for current-tree or artifact evidence",
-        "empty, silent, or non-diagnostic result is a malformed probe",
-        "corrective REMAINING work require a named observation",
-        "no observation contradicts it, ACCEPT it",
-        "named observation proving a mistake, incomplete work, failed valid verification",
-        "deployed revision or artifact contains the change",
-        "forbidden for routine acceptance",
-        "user-reported rendered mismatch",
-        "use visual tools when available",
-        "explicitly asks for visual inspection",
-        "Missing visual evidence is never a TAKEOVER reason",
-        "view_image",
-        "root owns final route metadata",
-        "zero correction loops",
+        "Make `PROOF` test the defining outcome",
+        "`ROOT_EXPERIENCE:`",
+        "end-to-end observation",
+        "HTTP 200",
+        "button or DOM text",
+        "supporting\nevidence only",
+        "damage-and-recovery demo",
+        "input genuinely manifests the intended damage or failure",
+        "never implement, inspect files, call task tools, delegate, or judge",
+        "Do not emit `ORCHESTRATION_ACCEPT:`",
     ):
         if boundary not in terra:
             raise AssertionError(f"Terra score-based route omits {boundary!r}")

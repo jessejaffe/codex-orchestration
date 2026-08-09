@@ -1,8 +1,8 @@
 # Codex Orchestration
 
-Codex Orchestration saves Codex credits by moving settled work to the least expensive
-capable model while keeping complex executive judgment with GPT-5.6 Sol / High or, at
-complexity 8.0 and above, GPT-5.6 Sol / Extra High.
+Codex Orchestration saves Codex credits by moving implementation to the least expensive
+capable model while keeping every acceptance decision with GPT-5.6 Sol: Low below 5.0,
+High from 5.0–7.9, and Extra High at 8.0 and above.
 
 The 0.8.0 release uses a minimal, recent-context fast path. The manifest does not
 advertise a skill, so no Orchestration skill or versioned skill locator is injected
@@ -22,12 +22,12 @@ The active path is intentionally small:
 4. Terra returns a score protocol containing one root-visible checkpoint plus an internal,
    immutable acceptance contract (outcome, requirements, prohibitions, destinations, and proof).
    Before any further spawn, root relays the exact checkpoint while keeping the contract internal.
-5. Scores below 5.0 stay with Terra as executive. Scores from 5.0–7.9 use a separately
-   pinned Sol / High executive; scores of 8.0 or higher use Sol / Extra High. Those Sol
+5. Scores below 5.0 use a pinned Sol / Low executive. Scores from 5.0–7.9 use Sol / High;
+   scores of 8.0 or higher use Sol / Extra High. Those Sol
    executives receive Terra's exact score/status/acceptance snapshot and the current request, without
    inheriting the large parent transcript, so any user-selected starting model is safe.
-6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, the mapped Sol executive
-   copies Terra's agent/task immediately and may add only a `NONE` or 60-word decision directive.
+6. The mapped Sol executive copies Terra's agent/task immediately and may add only a `NONE`
+   or 60-word decision directive.
    Root gives the original task context and immutable acceptance contract
    directly to the mapped producer using Terra's immutable agent and task identity, then relays
    its structured implementation evidence for one independent acceptance check. The producer
@@ -39,7 +39,11 @@ The active path is intentionally small:
    A failed access method is not a failed outcome: acceptance retries through an available
    authoritative read-only runtime path and never performs a mutation reserved for user approval.
    Acceptance is one batched task-tool call, with one fallback call only when the first access path
-   is unavailable. Routine acceptance uses code, tests, and deployed revision state without a visual handoff.
+   is unavailable. Routine non-experience acceptance uses code, tests, and deployed revision state.
+   When the requested outcome is a user-facing interaction, demo, rendered result, or recovery flow,
+   the executive requests one exact root verification. The root uses its Browser/visual capability
+   and returns named starting-condition, action, result, and artifact observations to the same compact
+   Sol executive. HTTP 200, asset presence, text, revisions, and tests are supporting evidence, not substitutes.
 7. Root—not the executive—always appends the final executive route, implementation route,
    and immutable complexity lines, including after terminal takeover.
 
@@ -78,10 +82,9 @@ The numeric implementation ladder is monotonic:
 | 9.0–10.0 | Sol / Extra High |
 
 A fully specified repository catch-up, commit, push, SSH deployment, and live
-verification is a routine release workflow: routine deployment does not force a Sol
-route. Terra / High may perform it directly. Unexpected failures and newly unresolved
-production decisions still return to the owning Sol executive when the immutable
-score is 5.0 or higher or the task can no longer be completed within its original scope.
+verification is a routine release workflow: routine deployment does not increase the
+implementation score. Unexpected failures and newly unresolved production decisions
+still return to the owning Sol executive.
 
 The producer treats deployment as single-owner work. It inspects the documented helper once,
 uses the narrowest supported service set, and resumes that exact deployment to terminal exit.
@@ -102,10 +105,10 @@ permissions, and repository context stay available to the selected model.
 flowchart TD
     U["Active user prompt"] --> H["Root relay from any starting model"]
     H --> T["Terra / High score with up to 64 same-chat turns"]
-    T -->|"1.0–4.9"| L["Terra executive"]
-    L --> H
+    T -->|"1.0–4.9 compact snapshot"| L["Pinned Sol / Low executive"]
     T -->|"5.0–7.9 compact snapshot"| S["Pinned Sol / High executive"]
     T -->|"8.0–10.0 compact snapshot"| X["Pinned Sol / Extra High executive"]
+    L --> H
     S --> H
     X --> H
     H --> P["Exact score-selected implementation role"]
@@ -126,11 +129,12 @@ the commit that introduced it, so acceptance checks the revision tree and deploy
 than demanding the behavior appear in that revision's patch. If the acceptance call is malformed
 or returns no diagnostic observation, the executive corrects it with the single fallback call;
 that is not evidence against the producer's result and cannot create speculative corrective work.
-For ordinary frontend work, deployed code containing the requested change is sufficient; neither
-root nor an agent opens Browser or captures screenshots. A user-reported rendered mismatch triggers
-visual diagnosis. Otherwise visual tools are allowed only when the current request explicitly asks
-for visual inspection or visual input is indispensable to perform the work rather than merely
-strengthen acceptance. Missing visual evidence cannot cause takeover. If acceptance finds any
+For frontend work without an experience claim, deployed code containing the requested change is
+sufficient. When the contract depends on interaction, appearance, a demo, or a recovery flow, the
+executive asks the root for one bounded Browser/visual check and judges the returned observations.
+A damage-and-recovery demo must prove
+that the starting input actually manifests damage and that the recovered output succeeds; an HTTP
+response, asset, button label, or passing test alone cannot establish that. If acceptance finds any
 mistake, incomplete work, failed verification, missing evidence, or needed correction,
 Orchestration enters one full-history, same-Sol-role takeover review. That review can accept when
 the inherited context resolves the apparent mismatch; otherwise it returns a context-aware
@@ -142,7 +146,7 @@ escalation loop.
 ## Controls
 
 Activate a chat with any command below, either by itself or at the start of an
-imperative line that also contains work:
+imperative sentence that also contains work:
 
 - `Turn Orchestration on`
 - `Use Orchestration`
@@ -152,6 +156,8 @@ Activation persists only in that chat. Use `Turn Orchestration off` or
 `Orchestration off` to disable it. Combined forms such as `Turn Orchestration on,
 remove the hero subtitle` activate and route the same prompt; combined off commands
 disable routing and continue the remaining work directly. Every new chat starts off.
+Control commands can follow another sentence in the same paragraph; for example,
+`Fix the demo. Turn Orchestration off.` disables routing while root handles the fix directly.
 
 Activation is handled only by the prompt hook. The dispatch contract explicitly
 forbids checking, comparing, or updating Orchestration during user work; a
@@ -171,7 +177,7 @@ reconciles the actual files, Git, remote, and deployed state before continuing.
 Every completed task reports the observed executive and implementation lanes:
 
 ```text
-Executive route: GPT-5.6 Terra / High
+Executive route: GPT-5.6 Sol / Low
 Implementation route: GPT-5.6 Terra / Medium
 Complexity: 3.8/10
 ```
@@ -220,7 +226,7 @@ codex plugin marketplace add jessejaffe/codex-orchestration --ref main
 codex plugin add codex-orchestration@codex-orchestration
 ```
 
-Install the eleven native companion roles separately. The installer never overwrites a
+Install the twelve native companion roles separately. The installer never overwrites a
 different user-owned role file:
 
 ```sh

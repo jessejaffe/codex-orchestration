@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -45,41 +46,43 @@ EFFORT_LABELS = {
 
 DISPATCH_CONTEXT = """Orchestration is ON.
 Root: zero-judgment relay; alone calls agent-control tools.
-On steer drain only this request's Orchestration children; unless cancelled/replaced,
-inherited unfinished work stays in scope; new prompt amends it.
+On steer drain only this request's Orchestration children; inherited unfinished work stays in scope
+unless cancelled/replaced; new prompt amends it.
 Executive fork: `__FORK_TURNS__`; numeric recent context; never literal `all`.
 Spawn `codex_orchestration_terra_executive`; `fork_turns: "__FORK_TURNS__"`; name
-`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score active request once; return score + acceptance protocol.
+`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score active request once; return protocol.
 USER_REQUEST: <verbatim current user prompt>` Do nothing first.
 Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
 Keep Terra's `ORCHESTRATION_ACCEPTANCE:` internal and immutable.
-TERRA_HIGH: use AGENT/TASK and Terra; no follow-up before implementation; next: `spawn_agent`
-for that exact AGENT/TASK, never Terra; send acceptance with USER_REQUEST.
-SOL_HIGH/SOL_XHIGH: spawn `codex_orchestration_sol_high_executive`/
-`codex_orchestration_sol_xhigh_executive`; `fork_turns: "none"`:
+SOL_LOW/SOL_HIGH/SOL_XHIGH: spawn `codex_orchestration_sol_low_executive`/
+`codex_orchestration_sol_high_executive`/`codex_orchestration_sol_xhigh_executive`;
+`fork_turns: "none"`: `gpt_5_6_sol_low_executive_<objective_slug>`/
 `gpt_5_6_sol_high_executive_<objective_slug>`/`gpt_5_6_sol_extra_high_executive_<objective_slug>`.
 Send exact Terra `ORCHESTRATION_SCORE:` + `ORCHESTRATION_STATUS:` + `ORCHESTRATION_ACCEPTANCE:` +
 `USER_REQUEST: <verbatim current user prompt>`. Return
 ORCHESTRATION_DELEGATE + DIRECTIVE: `NONE` or at most 60 words.
-Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values; reuse fork. Send
+Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values; no follow-up before implementation;
+next: `spawn_agent`, never Terra; reuse fork. Send
 `USER_REQUEST: <verbatim prompt + attachment paths>` + immutable acceptance + DIRECTIVE; never generate a
-specification or restate the request. Routine verification: code/tests/deployed revision; never
-Browser/screenshots/visual handoff. Visuals only for a reported mismatch, explicit request,
-or indispensable work; absence never fails.
+specification or restate the request. Routine non-experience verification: code/tests/deployed revision.
+Experience contract (interaction/demo/rendered/visual): Sol may return `ORCHESTRATION_ROOT_VERIFY:`;
+root-only Browser/visual tools perform its exact check, then same Sol gets `ROOT_VERIFICATION_RESULT:`
+with START, ACTION, RESULT, ARTIFACTS. HTTP 200/assets/text/tests never substitute.
 Follow up: `ACCEPTANCE_CHECK:` + immutable acceptance + exact `IMPLEMENTATION_RESULT:`.
-Return ORCHESTRATION_ACCEPT. On Sol ORCHESTRATION_TAKEOVER, spawn the same Sol executive role;
+Return ORCHESTRATION_ACCEPT or service one root check.
+On Sol ORCHESTRATION_TAKEOVER, spawn the same Sol executive role;
 reuse fork; name prior executive task + `_takeover`; send
 `TAKEOVER_CONTEXT: <exact acceptance + takeover + producer result>`. Continue only after
-ORCHESTRATION_ACCEPT or ORCHESTRATION_TAKEOVER_READY. Terra takeover or failure ends routing.
+ORCHESTRATION_ACCEPT or ORCHESTRATION_TAKEOVER_READY.
 Every routed final ends:
-`Executive route: <GPT-5.6 Terra / High if TERRA_HIGH, GPT-5.6 Sol / High if SOL_HIGH, else GPT-5.6 Sol / Extra High>`
+`Executive route: <GPT-5.6 Sol / Low if SOL_LOW, GPT-5.6 Sol / High if SOL_HIGH, else GPT-5.6 Sol / Extra High>`
 `Implementation route: <model / effort from status>`
 Current root route from `turn_context`: `__ROOT_ROUTE__`.
 On takeover add `Route takeover: Activated — __ROOT_ROUTE__`,
 never `GPT-5 / default effort`, before
 `Complexity: <immutable score>/10`. Root appends; never rely on executive formatting.
-Say `Orchestration fallback: the owning Sol executive is loading full task history; then I’m
-finishing directly with your selected root model; no more handoffs.`
+Say `Orchestration fallback: Sol is loading full task history; then the selected root model
+finishes; no more handoffs.`
 Call no further agent-control tool. Before takeover,
 never score, plan, implement, or judge acceptance."""
 
@@ -125,13 +128,20 @@ def emit(value: dict[str, Any]) -> None:
 
 
 def control_request(prompt: str) -> tuple[bool, bool] | None:
-    """Return (activate, has_work) for the last imperative control line."""
-    lines = prompt.splitlines()
-    matched: tuple[bool, bool] | None = None
-    for index, raw_line in enumerate(lines):
-        line = " ".join(raw_line.strip().lower().split())
+    """Return (activate, has_work) for the last imperative control sentence."""
+    clauses = [
+        clause
+        for raw_line in prompt.splitlines()
+        for clause in re.split(r"(?<=[.!?])\s+", raw_line)
+        if clause.strip()
+    ]
+    matched: bool | None = None
+    remaining_work: list[str] = []
+    for raw_clause in clauses:
+        line = " ".join(raw_clause.strip().lower().split())
         if line.startswith(("- ", "* ")):
             line = line[2:].lstrip()
+        clause_match: tuple[bool, str] | None = None
         for command, activate in CONTROL_COMMANDS:
             if not line.startswith(command):
                 continue
@@ -146,10 +156,17 @@ def control_request(prompt: str) -> tuple[bool, bool] | None:
                 if tail.startswith(connector + " "):
                     tail = tail[len(connector) :].lstrip(CONTROL_SEPARATORS)
                     break
-            later_work = any(candidate.strip() for candidate in lines[index + 1 :])
-            matched = (activate, bool(tail) or later_work)
+            clause_match = (activate, tail)
             break
-    return matched
+        if clause_match is None:
+            remaining_work.append(line)
+            continue
+        matched = clause_match[0]
+        if clause_match[1]:
+            remaining_work.append(clause_match[1])
+    if matched is None:
+        return None
+    return matched, any(remaining_work)
 
 
 def additional_context(text: str) -> dict[str, Any]:
