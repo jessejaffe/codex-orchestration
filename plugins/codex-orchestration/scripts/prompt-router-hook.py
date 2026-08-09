@@ -66,7 +66,10 @@ specification or restate the request. Routine verification: code/tests/deployed 
 Browser/screenshots/visual handoff. Visuals only for a reported mismatch, explicit request,
 or indispensable work; absence never fails.
 Follow up: `ACCEPTANCE_CHECK: <exact producer result>`.
-Return ORCHESTRATION_ACCEPT. Failure or ORCHESTRATION_TAKEOVER ends routing.
+Return ORCHESTRATION_ACCEPT. On Sol ORCHESTRATION_TAKEOVER, spawn the same Sol executive role;
+reuse fork; name prior executive task + `_takeover`; send
+`TAKEOVER_CONTEXT: <exact takeover + producer result>`. Continue only after
+ORCHESTRATION_ACCEPT or ORCHESTRATION_TAKEOVER_READY. Terra takeover or failure ends routing.
 Every routed final ends:
 `Executive route: <GPT-5.6 Terra / High if TERRA_HIGH, GPT-5.6 Sol / High if SOL_HIGH, else GPT-5.6 Sol / Extra High>`
 `Implementation route: <model / effort from status>`
@@ -74,7 +77,8 @@ Current root route from `turn_context`: `__ROOT_ROUTE__`.
 On takeover add `Route takeover: Activated — __ROOT_ROUTE__`,
 never `GPT-5 / default effort`, before
 `Complexity: <immutable score>/10`. Root appends; never rely on executive formatting.
-Say `Orchestration fallback: I’m finishing directly with your selected root model; no more handoffs.`
+Say `Orchestration fallback: the owning Sol executive is loading full task history; then I’m
+finishing directly with your selected root model; no more handoffs.`
 Call no further agent-control tool. Before takeover,
 never score, plan, implement, or judge acceptance."""
 

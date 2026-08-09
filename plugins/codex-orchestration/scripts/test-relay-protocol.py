@@ -81,6 +81,17 @@ def main() -> int:
     producer_handoff = hook[hook.index("Keep Terra", sol_handoff_start) : hook.index("Follow up:")]
     if "reuse fork" not in producer_handoff:
         raise AssertionError("mapped producer no longer inherits the active task context")
+    takeover_handoff = hook[hook.index("On Sol ORCHESTRATION_TAKEOVER") : hook.index("Every routed final ends")]
+    for guard in (
+        "same Sol executive role",
+        "reuse fork",
+        "TAKEOVER_CONTEXT:",
+        "ORCHESTRATION_TAKEOVER_READY",
+    ):
+        if guard not in takeover_handoff:
+            raise AssertionError(f"full-history takeover stage omits {guard!r}")
+    if "loading full task history" not in hook:
+        raise AssertionError("root does not announce the exceptional full-history takeover reload")
     for guard in ("Copy Terra's AGENT and TASK", "never shorten, relabel, remap"):
         if executives.count(guard) != 2:
             raise AssertionError(f"pinned Sol executive can rename Terra's implementation task: {guard!r}")
@@ -90,6 +101,11 @@ def main() -> int:
         "Copy AGENT/TASK immediately",
         "absent from both USER_REQUEST and ORCHESTRATION_STATUS",
         "Never restate the request, status",
+        "sole full-history path",
+        "inherited task history",
+        "TAKEOVER_CONTEXT:",
+        "ORCHESTRATION_TAKEOVER_READY:",
+        "reload one same-role takeover instance with full inherited history",
     ):
         if executives.count(guard) != 2:
             raise AssertionError(f"compact Sol executive fast path omits {guard!r}")
@@ -261,18 +277,20 @@ def main() -> int:
     if drained != [terra_impl, terra_exec] or unrelated != ["unrelated_agent"]:
         raise AssertionError("branch-wide sibling drain protocol regressed")
 
-    # An acceptance failure is terminal: root takes over and no producer is retried.
+    # A proven Sol failure gets one full-context executive reload, never another producer.
     producer = terra_impl
     corrections: list[tuple[str, str]] = []
+    takeover_reloads = [("same Sol executive role", "reuse fork")]
     takeover = (producer, "user-selected root finishes whole request")
-    if corrections or takeover[0] != producer:
-        raise AssertionError("acceptance failure retained a correction or replacement loop")
+    if corrections or len(takeover_reloads) != 1 or takeover[0] != producer:
+        raise AssertionError("acceptance failure retained a producer retry or repeated context reload")
     for guard in (
         "selected root model", "no more handoffs", "Call no", "further agent-control",
+        "TAKEOVER_CONTEXT:", "ORCHESTRATION_TAKEOVER_READY",
     ):
         if guard not in hook:
-            raise AssertionError(f"terminal root takeover omits {guard!r}")
-    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call probe-fallback=ok already-satisfied=accept visuals=opt-in deployment=single-owner final-metadata=exact-root terminal-takeover=ok")
+            raise AssertionError(f"staged root takeover omits {guard!r}")
+    print("relay-protocol-ok lanes=7 packets=0 nested-agents=0 independent-acceptance=one-call probe-fallback=ok already-satisfied=accept visuals=opt-in deployment=single-owner final-metadata=exact-root staged-takeover=ok")
     return 0
 
 

@@ -30,6 +30,10 @@ The active path is intentionally small:
    Root gives the original task context
    directly to the mapped producer using Terra's immutable agent and task identity, then relays
    its result for one independent acceptance check.
+   If that compact executive proves a takeover is needed, root creates one same-role takeover
+   review with the full bounded chat history. It reconciles the active request with the named
+   failure evidence before the user-selected root finishes; this history load never occurs on
+   the normal acceptance path.
    A failed access method is not a failed outcome: acceptance retries through an available
    authoritative read-only runtime path and never performs a mutation reserved for user approval.
    Acceptance is one batched task-tool call, with one fallback call only when the first access path
@@ -83,9 +87,10 @@ It never starts a competing build, adds `--no-cache` while a deploy is active, o
 deploy helper's seed, migration, or backfill steps in parallel.
 
 Terra and the mapped implementation agent inherit up to 64 recent turns from the current chat only;
-they never import history from another chat. The intermediate Sol executive deliberately receives
+they never import history from another chat. The initial Sol executive deliberately receives
 no parent-history fork because Terra's exact score/status snapshot already resolves the route and
-active milestone. Additions, corrections, answers, and permissions amend unfinished inherited work;
+active milestone. Only a takeover review reloads the same Sol role with the full bounded history.
+Additions, corrections, answers, and permissions amend unfinished inherited work;
 only explicit cancellation or replacement discards that objective. This bounded numeric history
 avoids the unsupported literal full-history fork. The router does not
 reconstruct requirements into a lossy packet, so active corrections, constraints,
@@ -104,6 +109,8 @@ flowchart TD
     H --> P["Exact score-selected implementation role"]
     P --> H
     H --> R["Owning executive accepts; root returns payload"]
+    R -. "proven failure only" .-> F["Same Sol role reloads full bounded history"]
+    F --> H
 ```
 
 The producer self-checks code, configuration, schema, tests, and the deployed revision or artifact.
@@ -120,9 +127,10 @@ visual diagnosis. Otherwise visual tools are allowed only when the current reque
 for visual inspection or visual input is indispensable to perform the work rather than merely
 strengthen acceptance. Missing visual evidence cannot cause takeover. If acceptance finds any
 mistake, incomplete work, failed verification, missing evidence, or needed correction,
-Orchestration ends immediately. The user-selected root model announces takeover,
-reconciles the actual state, and finishes the whole request directly with no more
-handoffs. The takeover footer reports the exact active root model and effort from the task context,
+Orchestration enters one full-history, same-Sol-role takeover review. That review can accept when
+the inherited context resolves the apparent mismatch; otherwise it returns a context-aware
+remaining-work brief. The user-selected root model then announces takeover, reconciles the actual
+state, and finishes the whole request directly with no more handoffs. The takeover footer reports the exact active root model and effort from the task context,
 not a generic default-model label. There is no correction, reviewer, replacement-producer, or
 escalation loop.
 
@@ -286,7 +294,7 @@ continuity, telemetry-migration, safe-installer, and offline-boundary tests:
 sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
-The prompt hook has a 2.4 KB injected-context ceiling and the hermetic latency test gives
+The prompt hook has a 2.8 KB injected-context ceiling and the hermetic latency test gives
 its subprocess a generous 100 ms average CI budget. These are release checks only;
 they are not additional runtime work.
 

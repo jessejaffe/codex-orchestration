@@ -158,6 +158,10 @@ def main() -> int:
         "absence never fails",
         "ORCHESTRATION_ACCEPT",
         "ORCHESTRATION_TAKEOVER",
+        "same Sol executive role",
+        "TAKEOVER_CONTEXT:",
+        "ORCHESTRATION_TAKEOVER_READY",
+        "loading full task history",
         "Every routed final ends",
         "Executive route:",
         "Implementation route:",
@@ -336,8 +340,8 @@ def main() -> int:
     elapsed = time.perf_counter() - started
     if elapsed > 2.0:
         raise AssertionError(f"inactive prompt hook exceeded 100 ms average: {elapsed:.3f}s")
-    if len(routed_context.encode()) > 2_400:
-        raise AssertionError("dispatch context exceeds the 2.4 KB fixed-cost budget")
+    if len(routed_context.encode()) > 2_800:
+        raise AssertionError("dispatch context exceeds the 2.8 KB fixed-cost budget")
 
     terra = (plugin / "agents" / "codex-orchestration-terra-executive.toml").read_text()
     for boundary in (

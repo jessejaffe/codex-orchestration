@@ -155,6 +155,10 @@ for guard in \
   'absence never fails' \
   'ORCHESTRATION_ACCEPT' \
   'ORCHESTRATION_TAKEOVER' \
+  'same Sol executive role' \
+  'TAKEOVER_CONTEXT:' \
+  'ORCHESTRATION_TAKEOVER_READY' \
+  'loading full task history' \
   'Every routed final ends' \
   'Executive route:' \
   'Implementation route:' \
@@ -251,6 +255,11 @@ for guard in \
   "Copy Terra's AGENT and TASK" \
   'never shorten, relabel, remap' \
   'Never rescore or execute implementation directly' \
+  'sole full-history path' \
+  'inherited task history' \
+  'TAKEOVER_CONTEXT:' \
+  'ORCHESTRATION_TAKEOVER_READY:' \
+  'reload one same-role takeover instance with full inherited history' \
   'ORCHESTRATION_DELEGATE:' \
   'DIRECTIVE:' \
   'at most 60 words' \
@@ -464,7 +473,9 @@ for digest in \
   d5fdccc8037b2e4a621478fef04d50e1ea70ed8a530a4306e426700272c65d2a \
   fd504f4d5a0ffc3d4b64fa44859e0d53fafc89e35423ad7522a95d135f48ebd8 \
   70d6e82ba147d3c52fe56cfdbdc059a5428a34f39fcd5d81ccc7a6f6affc2627 \
-  613dce87b620167033c528cd97a310985582d58f9ea949185db519da5fbfe51e
+  613dce87b620167033c528cd97a310985582d58f9ea949185db519da5fbfe51e \
+  8416da5d2af63a030f6d7c40d271405c4799377f0502a7972b1570fd5dccc50e \
+  f5b25da4720607172380426b56c3a7f15206f462830191c20d4d0fcc5f4073b1
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done
