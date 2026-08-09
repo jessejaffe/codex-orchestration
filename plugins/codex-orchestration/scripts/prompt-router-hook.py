@@ -49,26 +49,27 @@ On steer drain only this request's Orchestration children; unless cancelled/repl
 inherited unfinished work stays in scope; new prompt amends it.
 Executive fork: `__FORK_TURNS__`; numeric recent context; never literal `all`.
 Spawn `codex_orchestration_terra_executive`; `fork_turns: "__FORK_TURNS__"`; name
-`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score active request once; return score protocol.
+`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score active request once; return score + acceptance protocol.
 USER_REQUEST: <verbatim current user prompt>` Do nothing first.
 Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
+Keep Terra's `ORCHESTRATION_ACCEPTANCE:` internal and immutable.
 TERRA_HIGH: use AGENT/TASK and Terra; no follow-up before implementation; next: `spawn_agent`
-for that exact AGENT/TASK, never Terra.
+for that exact AGENT/TASK, never Terra; send acceptance with USER_REQUEST.
 SOL_HIGH/SOL_XHIGH: spawn `codex_orchestration_sol_high_executive`/
 `codex_orchestration_sol_xhigh_executive`; `fork_turns: "none"`:
 `gpt_5_6_sol_high_executive_<objective_slug>`/`gpt_5_6_sol_extra_high_executive_<objective_slug>`.
-Send exact Terra `ORCHESTRATION_SCORE:` + `ORCHESTRATION_STATUS:` +
+Send exact Terra `ORCHESTRATION_SCORE:` + `ORCHESTRATION_STATUS:` + `ORCHESTRATION_ACCEPTANCE:` +
 `USER_REQUEST: <verbatim current user prompt>`. Return
 ORCHESTRATION_DELEGATE + DIRECTIVE: `NONE` or at most 60 words.
 Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values; reuse fork. Send
-`USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
+`USER_REQUEST: <verbatim prompt + attachment paths>` + immutable acceptance + DIRECTIVE; never generate a
 specification or restate the request. Routine verification: code/tests/deployed revision; never
 Browser/screenshots/visual handoff. Visuals only for a reported mismatch, explicit request,
 or indispensable work; absence never fails.
-Follow up: `ACCEPTANCE_CHECK: <exact producer result>`.
+Follow up: `ACCEPTANCE_CHECK:` + immutable acceptance + exact `IMPLEMENTATION_RESULT:`.
 Return ORCHESTRATION_ACCEPT. On Sol ORCHESTRATION_TAKEOVER, spawn the same Sol executive role;
 reuse fork; name prior executive task + `_takeover`; send
-`TAKEOVER_CONTEXT: <exact takeover + producer result>`. Continue only after
+`TAKEOVER_CONTEXT: <exact acceptance + takeover + producer result>`. Continue only after
 ORCHESTRATION_ACCEPT or ORCHESTRATION_TAKEOVER_READY. Terra takeover or failure ends routing.
 Every routed final ends:
 `Executive route: <GPT-5.6 Terra / High if TERRA_HIGH, GPT-5.6 Sol / High if SOL_HIGH, else GPT-5.6 Sol / Extra High>`

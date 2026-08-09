@@ -131,6 +131,9 @@ for executive in \
 do
 for guard in \
   'ORCHESTRATION_STATUS:' \
+  'ORCHESTRATION_ACCEPTANCE:' \
+  'Keep Terra' \
+  'internal and immutable' \
   "show Terra's exact" \
   'never replace it' \
   "drain only this request's Orchestration children" \
@@ -147,6 +150,7 @@ for guard in \
   'never' \
   'specification or restate the request' \
   'ACCEPTANCE_CHECK:' \
+  'immutable acceptance + exact `IMPLEMENTATION_RESULT:`' \
   'Routine verification: code/tests/deployed revision' \
   'Browser/screenshots/visual handoff' \
   'Visuals only for a reported mismatch' \
@@ -203,8 +207,13 @@ for guard in \
   'does not by itself require Sol' \
   'ORCHESTRATION_SCORE: SCORE=' \
   'ORCHESTRATION_STATUS: Complexity' \
-  'Return immediately with exactly two lines' \
+  'Return immediately with exactly three lines' \
   'at most 20 words' \
+  'ORCHESTRATION_ACCEPTANCE: OUTCOME=' \
+  'immutable, at-most-200-word contract' \
+  'never discarded exploration' \
+  'never invent a criterion' \
+  'producer redefine done' \
   'ORCHESTRATION_ACCEPT:' \
   'ORCHESTRATION_TAKEOVER:' \
   'Never generate an implementation' \
@@ -255,6 +264,10 @@ for guard in \
   "Copy Terra's AGENT and TASK" \
   'never shorten, relabel, remap' \
   'Never rescore or execute implementation directly' \
+  'immutable acceptance' \
+  'ORCHESTRATION_ACCEPTANCE' \
+  'exact `IMPLEMENTATION_RESULT:`' \
+  'producer redefine done' \
   'sole full-history path' \
   'inherited task history' \
   'TAKEOVER_CONTEXT:' \
@@ -316,6 +329,19 @@ if rg -n 'PACKET:|execution packet|exact PACKET' \
   fail "runtime still allows duplicated executive implementation packets"
 fi
 for implementer in "$agents"/*-implementer.toml; do
+  for guard in \
+    'immutable `ORCHESTRATION_ACCEPTANCE:` contract' \
+    'never as a replacement for that' \
+    'do not add, remove, or redefine acceptance criteria' \
+    'at-most-300-word final' \
+    'IMPLEMENTATION_RESULT:' \
+    'EVIDENCE=<each acceptance item mapped to an actual observation>' \
+    'INCOMPLETE=<NONE or exact remaining work>' \
+    'Never claim acceptance; the executive judges the immutable contract'
+  do
+    grep -Fq "$guard" "$implementer" ||
+      fail "structured implementation evidence omits $guard: $implementer"
+  done
   grep -Fq 'Execute `USER_REQUEST`' "$implementer" ||
     fail "implementation lane does not receive original task context: $implementer"
   grep -Fq 'current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited' "$implementer" ||
@@ -475,7 +501,17 @@ for digest in \
   70d6e82ba147d3c52fe56cfdbdc059a5428a34f39fcd5d81ccc7a6f6affc2627 \
   613dce87b620167033c528cd97a310985582d58f9ea949185db519da5fbfe51e \
   8416da5d2af63a030f6d7c40d271405c4799377f0502a7972b1570fd5dccc50e \
-  f5b25da4720607172380426b56c3a7f15206f462830191c20d4d0fcc5f4073b1
+  f5b25da4720607172380426b56c3a7f15206f462830191c20d4d0fcc5f4073b1 \
+  554fb66aaeaff8c79ee820792c932039e67a2de81faf9d650468f478494120cb \
+  983f3d6a4a9d674bc46d828b1f5c648a4b77940a4ff51d407302b3761ad010d9 \
+  2e9d3f1f73cfd0348d9f3bf54abd880dc173377899e7bd50046102cfc3eb562e \
+  a24c4a1a67b4730f24d9d883cbbc6fb46b535847ddafa1599ff2127f5ca8b974 \
+  688689237c80eccb4484cd9d2c2a112c90cf3ccd62bf159726926c3069503841 \
+  ae3a117c76d0834baf82e6ee680c02b1ad8cc96c07914df5dd93daf54bb8a74c \
+  b9c8acb6206331972722cba1943c5a86aaaccdbaa85714188e8cfcce2f0a9ec0 \
+  fc5e3b701e30b9287d012b847da429449a8c3822dfa20693c139bc72ead4e4b2 \
+  c1a8aa093923c2d2ddaf09adbac7ad801273f8c92141bff2f12994d56235e134 \
+  35840c3b0dfaa0d25a67bc7de556200e8bf45069853417c9fce91debd1941091
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done
@@ -493,6 +529,9 @@ for phrase in \
   'Sol / Extra High' \
   'routine deployment does not force a Sol' \
   'one root-visible checkpoint' \
+  'immutable acceptance contract' \
+  'structured implementation evidence' \
+  'cannot redefine the acceptance criteria' \
   'drains the entire active branch' \
   'no completed side effect is rolled back' \
   '64 recent turns' \

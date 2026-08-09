@@ -134,6 +134,7 @@ def main() -> int:
         "gpt_5_6_sol_extra_high_executive_<objective_slug>",
         "Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary",
         "never replace it",
+        "Keep Terra's `ORCHESTRATION_ACCEPTANCE:` internal and immutable",
         "drain only this request's Orchestration children",
         "inherited unfinished work stays in scope",
         "new prompt amends it",
@@ -142,6 +143,7 @@ def main() -> int:
         "at most 60 words",
         "Send exact Terra `ORCHESTRATION_SCORE:`",
         "`ORCHESTRATION_STATUS:` +",
+        "`ORCHESTRATION_ACCEPTANCE:` +",
         "Keep Terra's AGENT/TASK immutable; ignore remaps",
         "spawn those values",
         "no follow-up before implementation",
@@ -150,6 +152,7 @@ def main() -> int:
         "reuse fork",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
+        "immutable acceptance + exact `IMPLEMENTATION_RESULT:`",
         "Routine verification: code/tests/deployed revision",
         "Browser/screenshots/visual handoff",
         "Visuals only for a reported mismatch",
@@ -191,6 +194,7 @@ def main() -> int:
         'fork_turns: "all"', "usage-receipt.py", "receipt", "PACKET:",
         "Create the execution packet", "exact PACKET",
         "Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`",
+        "show Terra's exact `ORCHESTRATION_ACCEPTANCE:`",
         "VISUAL_VERIFICATION_PENDING", "PRODUCER_VISUAL_EVIDENCE",
         "PRODUCTION_VISUAL_EVIDENCE",
         "__ROOT_ROUTE__", "<root model / effort>", "<exact label>",
@@ -340,8 +344,8 @@ def main() -> int:
     elapsed = time.perf_counter() - started
     if elapsed > 2.0:
         raise AssertionError(f"inactive prompt hook exceeded 100 ms average: {elapsed:.3f}s")
-    if len(routed_context.encode()) > 2_800:
-        raise AssertionError("dispatch context exceeds the 2.8 KB fixed-cost budget")
+    if len(routed_context.encode()) > 3_000:
+        raise AssertionError("dispatch context exceeds the 3.0 KB fixed-cost budget")
 
     terra = (plugin / "agents" / "codex-orchestration-terra-executive.toml").read_text()
     for boundary in (
@@ -365,8 +369,12 @@ def main() -> int:
         "SOL_XHIGH",
         "ORCHESTRATION_SCORE: SCORE=",
         "ORCHESTRATION_STATUS: Complexity",
-        "Return immediately with exactly two lines",
+        "Return immediately with exactly three lines",
         "at most 20 words",
+        "ORCHESTRATION_ACCEPTANCE: OUTCOME=",
+        "immutable, at-most-200-word contract",
+        "never invent a criterion",
+        "producer redefine done",
         "ORCHESTRATION_ACCEPT:",
         "ORCHESTRATION_TAKEOVER:",
         "Never generate an implementation",

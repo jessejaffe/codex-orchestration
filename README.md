@@ -19,17 +19,19 @@ The active path is intentionally small:
    chat only to Terra / High. It uses an explicit numeric fork rather than the unsupported literal
    full-history fork, so a correction can retain the preceding active-request turn.
 3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
-4. Terra returns a score protocol containing one root-visible checkpoint; before any
-   further spawn, root relays that exact checkpoint with its immutable numeric score.
+4. Terra returns a score protocol containing one root-visible checkpoint plus an internal,
+   immutable acceptance contract (outcome, requirements, prohibitions, destinations, and proof).
+   Before any further spawn, root relays the exact checkpoint while keeping the contract internal.
 5. Scores below 5.0 stay with Terra as executive. Scores from 5.0–7.9 use a separately
    pinned Sol / High executive; scores of 8.0 or higher use Sol / Extra High. Those Sol
-   executives receive Terra's exact score/status snapshot and the current request, without
+   executives receive Terra's exact score/status/acceptance snapshot and the current request, without
    inheriting the large parent transcript, so any user-selected starting model is safe.
 6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, the mapped Sol executive
    copies Terra's agent/task immediately and may add only a `NONE` or 60-word decision directive.
-   Root gives the original task context
+   Root gives the original task context and immutable acceptance contract
    directly to the mapped producer using Terra's immutable agent and task identity, then relays
-   its result for one independent acceptance check.
+   its structured implementation evidence for one independent acceptance check. The producer
+   reports evidence against the contract but cannot redefine the acceptance criteria.
    If that compact executive proves a takeover is needed, root creates one same-role takeover
    review with the full bounded chat history. It reconciles the active request with the named
    failure evidence before the user-selected root finishes; this history load never occurs on
@@ -88,7 +90,7 @@ deploy helper's seed, migration, or backfill steps in parallel.
 
 Terra and the mapped implementation agent inherit up to 64 recent turns from the current chat only;
 they never import history from another chat. The initial Sol executive deliberately receives
-no parent-history fork because Terra's exact score/status snapshot already resolves the route and
+no parent-history fork because Terra's exact score/status/acceptance snapshot already resolves the route and
 active milestone. Only a takeover review reloads the same Sol role with the full bounded history.
 Additions, corrections, answers, and permissions amend unfinished inherited work;
 only explicit cancellation or replacement discards that objective. This bounded numeric history
@@ -113,8 +115,11 @@ flowchart TD
     F --> H
 ```
 
-The producer self-checks code, configuration, schema, tests, and the deployed revision or artifact.
-The owning executive independently checks actual state once, in one batched task-tool call.
+The producer self-checks code, configuration, schema, tests, and the deployed revision or artifact,
+then returns a bounded `IMPLEMENTATION_RESULT` containing state, per-criterion observations,
+revision, tests, deployment, live probe, and incomplete work. The owning executive judges that
+evidence against Terra's original acceptance contract and independently checks actual state once,
+in one batched task-tool call. The producer never defines or changes what counts as done.
 If the requested end state already exists everywhere required, that is a successful no-op: no new
 diff, commit, or deployment is required. A revision identifies the current state, not necessarily
 the commit that introduced it, so acceptance checks the revision tree and deployed artifact rather
@@ -294,7 +299,7 @@ continuity, telemetry-migration, safe-installer, and offline-boundary tests:
 sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
-The prompt hook has a 2.8 KB injected-context ceiling and the hermetic latency test gives
+The prompt hook has a 3.0 KB injected-context ceiling and the hermetic latency test gives
 its subprocess a generous 100 ms average CI budget. These are release checks only;
 they are not additional runtime work.
 

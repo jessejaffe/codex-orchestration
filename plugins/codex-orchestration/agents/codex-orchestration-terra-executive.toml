@@ -23,14 +23,21 @@ using exactly one decimal. Keep it immutable and use this ladder:
 - 8.0–8.9: `codex_orchestration_sol_high_implementer`; prefix `gpt_5_6_sol_high_implementation_`
 - 9.0–10.0: `codex_orchestration_sol_xhigh_implementer`; prefix `gpt_5_6_sol_extra_high_implementation_`
 
-Return immediately with exactly two lines and no task work:
+Return immediately with exactly three lines and no task work:
 
 ORCHESTRATION_SCORE: SCORE=<one decimal>; EXECUTIVE=<TERRA_HIGH if below 5.0, SOL_HIGH from 5.0–7.9, otherwise SOL_XHIGH>; AGENT=<mapped agent>; TASK=<mapped prefix><objective_slug>
 ORCHESTRATION_STATUS: Complexity <one decimal> → <selected GPT-5.6 model / effort>. <at most 20 words naming objective and next steps>
+ORCHESTRATION_ACCEPTANCE: OUTCOME=<observable end state>; MUST=<required behavior and constraints>; MUST_NOT=<forbidden actions>; DESTINATIONS=<required repository, branch, and runtimes>; PROOF=<minimum decisive evidence>
+
+The acceptance line is an immutable, at-most-200-word contract distilled from the combined active
+request. Include only final requirements and explicit constraints, never discarded exploration.
+Use `NONE` or `NOT_APPLICABLE` explicitly; never invent a criterion.
 
 Below 5.0, root delegates directly from the score line. Never generate an implementation
 plan, packet, specification, or restatement of the request. When root later supplies
-`ACCEPTANCE_CHECK: <producer result>`, treat it as an untrusted claim. Independently
+`ACCEPTANCE_CHECK:` plus immutable acceptance and exact `IMPLEMENTATION_RESULT:`, keep your original
+acceptance contract authoritative and treat the producer result as an untrusted claim. Never let
+the producer redefine done. Independently
 inspect actual state and run a task-appropriate probe that would fail if the requested
 outcome were absent. Acceptance has a hard budget of one task-tool call in total: batch every
 fresh, decisive, read-only observation into that call. Only when the first call fails solely

@@ -32,8 +32,9 @@ def main() -> int:
         if tool in executives:
             raise AssertionError(f"custom executive requires unavailable collaboration tool: {tool}")
     for token in (
-        "ORCHESTRATION_SCORE:", "ORCHESTRATION_STATUS:", "ORCHESTRATION_DELEGATE:",
-        "ORCHESTRATION_ACCEPT:", "ORCHESTRATION_TAKEOVER:", "DIRECTIVE:",
+        "ORCHESTRATION_SCORE:", "ORCHESTRATION_STATUS:", "ORCHESTRATION_ACCEPTANCE:",
+        "ORCHESTRATION_DELEGATE:", "IMPLEMENTATION_RESULT:", "ORCHESTRATION_ACCEPT:",
+        "ORCHESTRATION_TAKEOVER:", "DIRECTIVE:",
     ):
         if token not in executives + hook:
             raise AssertionError(f"relay protocol omits {token}")
@@ -50,6 +51,7 @@ def main() -> int:
         "at most 60 words",
         "never generate a\nspecification or restate the request",
         "ACCEPTANCE_CHECK:",
+        "immutable acceptance + exact `IMPLEMENTATION_RESULT:`",
         "Routine verification: code/tests/deployed revision",
         "Browser/screenshots/visual handoff",
         "Visuals only for a reported mismatch",
@@ -65,6 +67,8 @@ def main() -> int:
         raise AssertionError("Terra's human-readable score checkpoint is not relayed before delegation")
     if "never replace it" not in hook:
         raise AssertionError("root can replace Terra's scored checkpoint with generic commentary")
+    if "Keep Terra's `ORCHESTRATION_ACCEPTANCE:` internal and immutable" not in hook:
+        raise AssertionError("root can expose or mutate Terra's acceptance contract")
     if "Keep Terra's AGENT/TASK immutable; ignore remaps" not in hook:
         raise AssertionError("root can accept an executive-generated implementation identity")
     sol_handoff_start = hook.index("SOL_HIGH/SOL_XHIGH: spawn")
@@ -78,15 +82,22 @@ def main() -> int:
         raise AssertionError("Sol executive still inherits the heavy parent transcript")
     if "`ORCHESTRATION_STATUS:`" not in sol_handoff:
         raise AssertionError("compact Sol executive handoff omits Terra's resolved work status")
+    if "`ORCHESTRATION_ACCEPTANCE:`" not in sol_handoff:
+        raise AssertionError("compact Sol executive handoff omits the immutable definition of done")
+    if sol_handoff.index("`ORCHESTRATION_ACCEPTANCE:`") > sol_handoff.index("USER_REQUEST:"):
+        raise AssertionError("Sol executive receives the request before its acceptance contract")
     producer_handoff = hook[hook.index("Keep Terra", sol_handoff_start) : hook.index("Follow up:")]
     if "reuse fork" not in producer_handoff:
         raise AssertionError("mapped producer no longer inherits the active task context")
+    if "immutable acceptance" not in producer_handoff:
+        raise AssertionError("mapped producer cannot report against Terra's acceptance contract")
     takeover_handoff = hook[hook.index("On Sol ORCHESTRATION_TAKEOVER") : hook.index("Every routed final ends")]
     for guard in (
         "same Sol executive role",
         "reuse fork",
         "TAKEOVER_CONTEXT:",
         "ORCHESTRATION_TAKEOVER_READY",
+        "exact acceptance + takeover + producer result",
     ):
         if guard not in takeover_handoff:
             raise AssertionError(f"full-history takeover stage omits {guard!r}")
@@ -96,21 +107,32 @@ def main() -> int:
         if executives.count(guard) != 2:
             raise AssertionError(f"pinned Sol executive can rename Terra's implementation task: {guard!r}")
     for guard in (
-        "use only the supplied score, status, and request",
+        "use only the supplied score, status, acceptance, and request",
         "do not inspect files or call\ntask tools",
         "Copy AGENT/TASK immediately",
-        "absent from both USER_REQUEST and ORCHESTRATION_STATUS",
+        "absent from USER_REQUEST, ORCHESTRATION_STATUS, and ORCHESTRATION_ACCEPTANCE",
         "Never restate the request, status",
         "sole full-history path",
         "inherited task history",
         "TAKEOVER_CONTEXT:",
         "ORCHESTRATION_TAKEOVER_READY:",
         "reload one same-role takeover instance with full inherited history",
+        "Keep Terra's\nacceptance contract authoritative",
     ):
         if executives.count(guard) != 2:
             raise AssertionError(f"compact Sol executive fast path omits {guard!r}")
+    if executives.count("producer redefine done") != 3:
+        raise AssertionError("an executive can let the producer redefine acceptance")
+    if (
+        terra.count("acceptance contract authoritative") != 1
+        or sol_high.count("acceptance contract authoritative") != 2
+        or sol_xhigh.count("acceptance contract authoritative") != 2
+    ):
+        raise AssertionError("an executive can lose Terra's immutable acceptance authority")
     if "Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`" in hook:
         raise AssertionError("internal routing score can leak into commentary")
+    if "show Terra's exact `ORCHESTRATION_ACCEPTANCE:`" in hook:
+        raise AssertionError("internal acceptance contract can leak into commentary")
     implementer_paths = sorted((plugin / "agents").glob("*implementer.toml"))
     if len(implementer_paths) != 7:
         raise AssertionError(f"expected seven implementation lanes, found {len(implementer_paths)}")
@@ -118,6 +140,30 @@ def main() -> int:
     implementers = "".join(implementer_texts)
     if implementers.count("Execute `USER_REQUEST`") != 7:
         raise AssertionError("an implementation lane still depends on an executive rewrite")
+    for guard in (
+        "immutable `ORCHESTRATION_ACCEPTANCE:` contract",
+        "never as a replacement for that\nrequest",
+        "do not add, remove, or redefine acceptance criteria",
+        "at-most-300-word final",
+        "IMPLEMENTATION_RESULT:",
+        "EVIDENCE=<each acceptance item mapped to an actual observation>",
+        "INCOMPLETE=<NONE or exact remaining work>",
+        "Never claim acceptance; the executive judges the immutable contract",
+    ):
+        if implementers.count(guard) != 7:
+            raise AssertionError(f"structured producer evidence contract is not shared: {guard!r}")
+    if "No executive packet" in implementers:
+        raise AssertionError("implementer instructions contradict the compact acceptance contract")
+    for guard in (
+        "Return immediately with exactly three lines",
+        "ORCHESTRATION_ACCEPTANCE: OUTCOME=",
+        "immutable, at-most-200-word contract",
+        "never discarded exploration",
+        "never invent a criterion",
+        "producer redefine done",
+    ):
+        if guard not in terra:
+            raise AssertionError(f"Terra acceptance contract omits {guard!r}")
     for guard in (
         "current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited",
         "combined active request is authoritative",

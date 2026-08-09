@@ -96,6 +96,19 @@ role_files() {
     sol-high-executive) previous_current_digests="$previous_current_digests b582e40b9d997fded1793d6f306c95c9dc55299d51ee44ef05b29ddd158a399b 70d6e82ba147d3c52fe56cfdbdc059a5428a34f39fcd5d81ccc7a6f6affc2627 8416da5d2af63a030f6d7c40d271405c4799377f0502a7972b1570fd5dccc50e" ;;
     sol-xhigh-executive) previous_current_digests="$previous_current_digests 8ffb06f0ac1520189f81d6dbabde710f5b3b82362d62485c4f8782665eb3a5a3 613dce87b620167033c528cd97a310985582d58f9ea949185db519da5fbfe51e f5b25da4720607172380426b56c3a7f15206f462830191c20d4d0fcc5f4073b1" ;;
   esac
+  # Exact templates shipped before immutable acceptance contracts.
+  case "$role" in
+    luna-implementer) previous_current_digests="$previous_current_digests 983f3d6a4a9d674bc46d828b1f5c648a4b77940a4ff51d407302b3761ad010d9" ;;
+    terra-medium-implementer) previous_current_digests="$previous_current_digests 2e9d3f1f73cfd0348d9f3bf54abd880dc173377899e7bd50046102cfc3eb562e" ;;
+    terra-executive) previous_current_digests="$previous_current_digests 554fb66aaeaff8c79ee820792c932039e67a2de81faf9d650468f478494120cb" ;;
+    terra-implementer) previous_current_digests="$previous_current_digests a24c4a1a67b4730f24d9d883cbbc6fb46b535847ddafa1599ff2127f5ca8b974" ;;
+    sol-low-implementer) previous_current_digests="$previous_current_digests 688689237c80eccb4484cd9d2c2a112c90cf3ccd62bf159726926c3069503841" ;;
+    sol-medium-implementer) previous_current_digests="$previous_current_digests ae3a117c76d0834baf82e6ee680c02b1ad8cc96c07914df5dd93daf54bb8a74c" ;;
+    sol-high-implementer) previous_current_digests="$previous_current_digests b9c8acb6206331972722cba1943c5a86aaaccdbaa85714188e8cfcce2f0a9ec0" ;;
+    sol-xhigh-implementer) previous_current_digests="$previous_current_digests fc5e3b701e30b9287d012b847da429449a8c3822dfa20693c139bc72ead4e4b2" ;;
+    sol-high-executive) previous_current_digests="$previous_current_digests c1a8aa093923c2d2ddaf09adbac7ad801273f8c92141bff2f12994d56235e134" ;;
+    sol-xhigh-executive) previous_current_digests="$previous_current_digests 35840c3b0dfaa0d25a67bc7de556200e8bf45069853417c9fce91debd1941091" ;;
+  esac
 }
 
 classify_current() {
