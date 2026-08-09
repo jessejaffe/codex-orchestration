@@ -49,19 +49,18 @@ On steer drain only this request's Orchestration children; unless cancelled/repl
 inherited unfinished work stays in scope; new prompt amends it.
 Executive fork: `__FORK_TURNS__`; numeric recent context; never literal `all`.
 Spawn `codex_orchestration_terra_executive`; `fork_turns: "__FORK_TURNS__"`; name
-`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score cumulative active request once;
-return score protocol, not relay.
+`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score active request once; return score protocol.
 USER_REQUEST: <verbatim current user prompt>` Do nothing first.
 Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
 TERRA_HIGH: use AGENT/TASK and Terra; no follow-up before implementation; next: `spawn_agent`
 for that exact AGENT/TASK, never Terra.
 SOL_HIGH/SOL_XHIGH: spawn `codex_orchestration_sol_high_executive`/
-`codex_orchestration_sol_xhigh_executive`; reuse fork:
+`codex_orchestration_sol_xhigh_executive`; `fork_turns: "none"`:
 `gpt_5_6_sol_high_executive_<objective_slug>`/`gpt_5_6_sol_extra_high_executive_<objective_slug>`.
-Send Terra's exact `ORCHESTRATION_SCORE:` +
+Send exact Terra `ORCHESTRATION_SCORE:` + `ORCHESTRATION_STATUS:` +
 `USER_REQUEST: <verbatim current user prompt>`. Return
 ORCHESTRATION_DELEGATE + DIRECTIVE: `NONE` or at most 60 words.
-Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values. Send
+Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values; reuse fork. Send
 `USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
 specification or restate the request. Routine verification: code/tests/deployed revision; never
 Browser/screenshots/visual handoff. Visuals only for a reported mismatch, explicit request,
@@ -76,7 +75,7 @@ On takeover add `Route takeover: Activated — __ROOT_ROUTE__`,
 never `GPT-5 / default effort`, before
 `Complexity: <immutable score>/10`. Root appends; never rely on executive formatting.
 Say `Orchestration fallback: I’m finishing directly with your selected root model; no more handoffs.`
-Reconcile and finish. Call no further agent-control tool. Before takeover,
+Call no further agent-control tool. Before takeover,
 never score, plan, implement, or judge acceptance."""
 
 

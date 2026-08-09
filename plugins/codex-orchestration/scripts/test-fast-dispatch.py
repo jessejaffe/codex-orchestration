@@ -140,7 +140,8 @@ def main() -> int:
         "ORCHESTRATION_DELEGATE",
         "DIRECTIVE",
         "at most 60 words",
-        "Send Terra's exact `ORCHESTRATION_SCORE:`",
+        "Send exact Terra `ORCHESTRATION_SCORE:`",
+        "`ORCHESTRATION_STATUS:` +",
         "Keep Terra's AGENT/TASK immutable; ignore remaps",
         "spawn those values",
         "no follow-up before implementation",
@@ -173,6 +174,15 @@ def main() -> int:
     ):
         if required not in routed_context:
             raise AssertionError(f"dispatch contract omits {required!r}")
+    sol_start = routed_context.index("SOL_HIGH/SOL_XHIGH: spawn")
+    sol_handoff = routed_context[sol_start : routed_context.index("Keep Terra", sol_start)]
+    if '`fork_turns: "none"`' not in sol_handoff or "reuse fork" in sol_handoff:
+        raise AssertionError("Sol executive did not receive the compact no-history handoff")
+    producer_handoff = routed_context[
+        routed_context.index("Keep Terra", sol_start) : routed_context.index("Follow up:")
+    ]
+    if "reuse fork" not in producer_handoff:
+        raise AssertionError("implementation agent lost the active task context")
     for forbidden in (
         'fork_turns: "all"', "usage-receipt.py", "receipt", "PACKET:",
         "Create the execution packet", "exact PACKET",

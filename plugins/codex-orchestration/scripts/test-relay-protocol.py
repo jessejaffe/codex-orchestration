@@ -69,14 +69,30 @@ def main() -> int:
         raise AssertionError("root can accept an executive-generated implementation identity")
     sol_handoff_start = hook.index("SOL_HIGH/SOL_XHIGH: spawn")
     sol_handoff = hook[sol_handoff_start : hook.index("Keep Terra", sol_handoff_start)]
-    score_line = "Send Terra's exact `ORCHESTRATION_SCORE:`"
+    score_line = "Send exact Terra `ORCHESTRATION_SCORE:`"
     if score_line not in sol_handoff:
         raise AssertionError("root can omit Terra's immutable AGENT/TASK from the Sol executive handoff")
     if sol_handoff.index(score_line) > sol_handoff.index("USER_REQUEST:"):
         raise AssertionError("Sol executive handoff does not place Terra's score line before the request")
+    if '`fork_turns: "none"`' not in sol_handoff:
+        raise AssertionError("Sol executive still inherits the heavy parent transcript")
+    if "`ORCHESTRATION_STATUS:`" not in sol_handoff:
+        raise AssertionError("compact Sol executive handoff omits Terra's resolved work status")
+    producer_handoff = hook[hook.index("Keep Terra", sol_handoff_start) : hook.index("Follow up:")]
+    if "reuse fork" not in producer_handoff:
+        raise AssertionError("mapped producer no longer inherits the active task context")
     for guard in ("Copy Terra's AGENT and TASK", "never shorten, relabel, remap"):
         if executives.count(guard) != 2:
             raise AssertionError(f"pinned Sol executive can rename Terra's implementation task: {guard!r}")
+    for guard in (
+        "use only the supplied score, status, and request",
+        "do not inspect files or call\ntask tools",
+        "Copy AGENT/TASK immediately",
+        "absent from both USER_REQUEST and ORCHESTRATION_STATUS",
+        "Never restate the request, status",
+    ):
+        if executives.count(guard) != 2:
+            raise AssertionError(f"compact Sol executive fast path omits {guard!r}")
     if "Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`" in hook:
         raise AssertionError("internal routing score can leak into commentary")
     implementer_paths = sorted((plugin / "agents").glob("*implementer.toml"))

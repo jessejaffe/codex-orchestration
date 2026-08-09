@@ -22,9 +22,12 @@ The active path is intentionally small:
 4. Terra returns a score protocol containing one root-visible checkpoint; before any
    further spawn, root relays that exact checkpoint with its immutable numeric score.
 5. Scores below 5.0 stay with Terra as executive. Scores from 5.0–7.9 use a separately
-   pinned Sol / High executive; scores of 8.0 or higher use Sol / Extra High, so any user-selected starting model is safe.
+   pinned Sol / High executive; scores of 8.0 or higher use Sol / Extra High. Those Sol
+   executives receive Terra's exact score/status snapshot and the current request, without
+   inheriting the large parent transcript, so any user-selected starting model is safe.
 6. Below 5.0, root delegates directly from Terra's score line. At 5.0 or above, the mapped Sol executive
-   may add only a `NONE` or 60-word decision directive. Root gives the original task context
+   copies Terra's agent/task immediately and may add only a `NONE` or 60-word decision directive.
+   Root gives the original task context
    directly to the mapped producer using Terra's immutable agent and task identity, then relays
    its result for one independent acceptance check.
    A failed access method is not a failed outcome: acceptance retries through an available
@@ -79,10 +82,12 @@ uses the narrowest supported service set, and resumes that exact deployment to t
 It never starts a competing build, adds `--no-cache` while a deploy is active, or runs the
 deploy helper's seed, migration, or backfill steps in parallel.
 
-Each handoff inherits up to 64 recent turns from the current chat only. It never imports
-history from another chat. Additions, corrections, answers, and permissions amend unfinished
-inherited work; only explicit cancellation or replacement discards that objective. This bounded
-numeric history avoids the unsupported literal full-history fork. The router does not
+Terra and the mapped implementation agent inherit up to 64 recent turns from the current chat only;
+they never import history from another chat. The intermediate Sol executive deliberately receives
+no parent-history fork because Terra's exact score/status snapshot already resolves the route and
+active milestone. Additions, corrections, answers, and permissions amend unfinished inherited work;
+only explicit cancellation or replacement discards that objective. This bounded numeric history
+avoids the unsupported literal full-history fork. The router does not
 reconstruct requirements into a lossy packet, so active corrections, constraints,
 permissions, and repository context stay available to the selected model.
 
@@ -92,8 +97,8 @@ flowchart TD
     H --> T["Terra / High score with up to 64 same-chat turns"]
     T -->|"1.0–4.9"| L["Terra executive"]
     L --> H
-    T -->|"5.0–7.9"| S["Pinned Sol / High executive"]
-    T -->|"8.0–10.0"| X["Pinned Sol / Extra High executive"]
+    T -->|"5.0–7.9 compact snapshot"| S["Pinned Sol / High executive"]
+    T -->|"8.0–10.0 compact snapshot"| X["Pinned Sol / Extra High executive"]
     S --> H
     X --> H
     H --> P["Exact score-selected implementation role"]
@@ -281,7 +286,7 @@ continuity, telemetry-migration, safe-installer, and offline-boundary tests:
 sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
-The prompt hook has a 2 KB injected-context ceiling and the hermetic latency test gives
+The prompt hook has a 2.4 KB injected-context ceiling and the hermetic latency test gives
 its subprocess a generous 100 ms average CI budget. These are release checks only;
 they are not additional runtime work.
 

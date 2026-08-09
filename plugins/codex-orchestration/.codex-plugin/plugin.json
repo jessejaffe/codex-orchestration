@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.0+codex.20260809140006",
+  "version": "0.8.0+codex.20260809141612",
   "description": "Fast Terra-first numeric routing across seven model lanes.",
   "author": {
     "name": "Daniel McAteer",
