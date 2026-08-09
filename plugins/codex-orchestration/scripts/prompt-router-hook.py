@@ -36,6 +36,7 @@ POLITE_CONTROL_PREFIX = re.compile(
 )
 INLINE_CONTROL_BOUNDARY = re.compile(r"(?:\band|\bthen|[,;:–—-])\s*$")
 MAX_FORK_TURNS = 64
+MAX_PRIOR_ACCEPTANCE_CHARS = 4_096
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -54,23 +55,36 @@ DISPATCH_CONTEXT = """Orchestration ON.
 Root: zero-judgment relay; alone calls agent-control tools.
 On steer drain only this request's Orchestration children; inherited unfinished work stays in scope
 unless cancelled/replaced; new prompt amends it.
+An interrupted/aborted turn stops execution, never the inherited objective.
 Executive fork: `__FORK_TURNS__`; never literal `all`.
+PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
 Spawn `codex_orchestration_terra_executive`; `fork_turns: "__FORK_TURNS__"`; name
 `gpt_5_6_terra_high_executive_<objective_slug>`; message `Score once; return protocol.
+PRIOR_ACTIVE_ACCEPTANCE: <exact value above>
 USER_REQUEST: <verbatim current user prompt>`.
-Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
-Keep Terra's `ORCHESTRATION_ACCEPTANCE:` internal and immutable.
+Before status/spawn structurally validate Terra. Require four protocol lines. With prior NONE require
+RELATION=NEW, except explicit CANCEL with a valid signal. With prior present require AMEND unless REPLACE/CANCEL has EXPLICIT_SIGNAL as an exact
+nonempty quote from USER_REQUEST; `<turn_aborted>` is never a signal. AMEND requires REMOVED=NONE and
+must preserve the prior unfinished outcome, action mode, prohibitions, and destinations: never turn
+build/change/implement/commit/push/deploy into explanation-only, NOT_APPLICABLE destinations, or a new
+MUST_NOT for those actions. On violation use `followup_task` once on the same Terra with
+`PROTOCOL_REPAIR: <named violation>; return all four corrected lines` plus exact prior, output, and
+USER_REQUEST; do not show status or spawn. If still invalid, stop with a protocol error.
+After a valid result show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
+Keep Terra's `ORCHESTRATION_RELATION:` and `ORCHESTRATION_ACCEPTANCE:` internal and immutable.
+For RELATION=CANCEL, finish after draining; do not spawn an executive or producer.
 SOL_LOW/SOL_MEDIUM/SOL_HIGH/SOL_XHIGH: spawn `codex_orchestration_sol_low_executive`/
 `codex_orchestration_sol_medium_executive`/`codex_orchestration_sol_high_executive`/
 `codex_orchestration_sol_xhigh_executive`; `fork_turns: "none"`:
 `gpt_5_6_sol_low_executive_<objective_slug>`/`gpt_5_6_sol_medium_executive_<objective_slug>`/
 `gpt_5_6_sol_high_executive_<objective_slug>`/`gpt_5_6_sol_extra_high_executive_<objective_slug>`.
-Send exact Terra `ORCHESTRATION_SCORE:` + `ORCHESTRATION_STATUS:` + `ORCHESTRATION_ACCEPTANCE:` +
+Send exact Terra `ORCHESTRATION_RELATION:` + `ORCHESTRATION_SCORE:` + `ORCHESTRATION_STATUS:` +
+`ORCHESTRATION_ACCEPTANCE:` +
 `USER_REQUEST: <verbatim current user prompt>`. Return
 ORCHESTRATION_DELEGATE + DIRECTIVE: `NONE` or at most 60 words.
 Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values; no follow-up before implementation;
 next: `spawn_agent`, never Terra; reuse fork. Send
-`USER_REQUEST: <verbatim prompt + attachment paths>` + immutable acceptance + DIRECTIVE; never generate a
+`USER_REQUEST: <verbatim prompt + attachment paths>` + immutable relation + acceptance + DIRECTIVE; never generate a
 specification or restate the request. Routine non-experience verification: code/tests/deployed revision.
 Experience contract (interaction/demo/rendered/visual): Sol may return `ORCHESTRATION_ROOT_VERIFY:`;
 root-only Browser/visual tools perform its exact check, then same Sol gets `ROOT_VERIFICATION_RESULT:`
@@ -94,15 +108,36 @@ Call no further agent-control tool. Before takeover,
 never score, plan, implement, or judge acceptance."""
 
 
-def transcript_context(transcript_value: Any) -> tuple[str, str]:
-    """Return the bounded fork and exact current root route in one transcript pass."""
+def agent_message_text(event: dict[str, Any]) -> str:
+    """Return trusted child-to-root text, excluding user and list-agents payloads."""
+    if event.get("type") != "response_item":
+        return ""
+    payload = event.get("payload") or {}
+    if payload.get("type") != "agent_message":
+        return ""
+    content = payload.get("content")
+    if not isinstance(content, list):
+        return ""
+    values: list[str] = []
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        value = item.get("text")
+        if isinstance(value, str):
+            values.append(value)
+    return "\n".join(values)
+
+
+def transcript_context(transcript_value: Any) -> tuple[str, str, str]:
+    """Return bounded fork, root route, and latest unfinished acceptance in one pass."""
     if not isinstance(transcript_value, str):
-        return "none", "unavailable"
+        return "none", "unavailable", "NONE"
     transcript = Path(transcript_value)
     if not transcript.is_file() or transcript.is_symlink():
-        return "none", "unavailable"
+        return "none", "unavailable", "NONE"
     contexts = starts = 0
     root_route = "unavailable"
+    prior_acceptance: str | None = None
     try:
         with transcript.open(encoding="utf-8", errors="replace") as handle:
             for line in handle:
@@ -123,11 +158,32 @@ def transcript_context(transcript_value: Any) -> tuple[str, str]:
                 payload = event.get("payload") or {}
                 if event.get("type") == "event_msg" and payload.get("type") == "task_started":
                     starts += 1
+                message = agent_message_text(event)
+                cancelled = False
+                for message_line in message.splitlines():
+                    if message_line.startswith(
+                        "ORCHESTRATION_RELATION: RELATION=CANCEL;"
+                    ):
+                        cancelled = True
+                    if (
+                        message_line.startswith("ORCHESTRATION_ACCEPTANCE: OUTCOME=")
+                        and "; MUST=" in message_line
+                        and "; MUST_NOT=" in message_line
+                        and "; DESTINATIONS=" in message_line
+                        and "; PROOF=" in message_line
+                    ):
+                        prior_acceptance = message_line[
+                            :MAX_PRIOR_ACCEPTANCE_CHARS
+                        ]
+                    elif message_line.startswith("ORCHESTRATION_ACCEPT:"):
+                        prior_acceptance = None
+                if cancelled:
+                    prior_acceptance = None
     except OSError:
-        return "none", "unavailable"
+        return "none", "unavailable", "NONE"
     task_turns = max(contexts, starts)
     fork_turns = "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns))
-    return fork_turns, root_route
+    return fork_turns, root_route, prior_acceptance or "NONE"
 
 
 def emit(value: dict[str, Any]) -> None:
@@ -277,10 +333,13 @@ def main() -> int:
         if activation
         else ""
     )
-    fork_turns, root_route = transcript_context(hook_input.get("transcript_path"))
+    fork_turns, root_route, prior_acceptance = transcript_context(
+        hook_input.get("transcript_path")
+    )
     context = DISPATCH_CONTEXT.replace("__FORK_TURNS__", fork_turns).replace(
         "__ROOT_ROUTE__", root_route
     )
+    context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
     emit(additional_context(prefix + context))
     return 0
 

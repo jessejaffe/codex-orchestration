@@ -134,18 +134,31 @@ def main() -> int:
         "gpt_5_6_sol_high_executive_<objective_slug>",
         "codex_orchestration_sol_xhigh_executive",
         "gpt_5_6_sol_extra_high_executive_<objective_slug>",
-        "Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary",
+        "After a valid result show Terra's exact `ORCHESTRATION_STATUS:` in commentary",
         "never replace it",
-        "Keep Terra's `ORCHESTRATION_ACCEPTANCE:` internal and immutable",
+        "Keep Terra's `ORCHESTRATION_RELATION:` and `ORCHESTRATION_ACCEPTANCE:` internal and immutable",
+        "PRIOR_ACTIVE_ACCEPTANCE: NONE",
+        "ORCHESTRATION_RELATION:",
+        "Require four protocol lines",
+        "RELATION=NEW",
+        "RELATION=CANCEL",
+        "EXPLICIT_SIGNAL as an exact",
+        "AMEND requires REMOVED=NONE",
+        "explanation-only",
+        "followup_task",
+        "PROTOCOL_REPAIR:",
+        "do not spawn an executive or producer",
         "drain only this request's Orchestration children",
         "inherited unfinished work stays in scope",
         "new prompt amends it",
+        "interrupted/aborted turn stops execution, never the inherited objective",
         "ORCHESTRATION_DELEGATE",
         "DIRECTIVE",
         "at most 60 words",
-        "Send exact Terra `ORCHESTRATION_SCORE:`",
+        "`ORCHESTRATION_RELATION:` + `ORCHESTRATION_SCORE:`",
         "`ORCHESTRATION_STATUS:` +",
         "`ORCHESTRATION_ACCEPTANCE:` +",
+        "Send exact Terra `ORCHESTRATION_RELATION:`",
         "Keep Terra's AGENT/TASK immutable; ignore remaps",
         "spawn those values",
         "no follow-up before implementation",
@@ -229,6 +242,106 @@ def main() -> int:
     )
     if 'Executive fork: `2`' not in additive or 'fork_turns: "2"' not in additive:
         raise AssertionError("additive steering omitted the preceding active request")
+
+    prior_acceptance = (
+        "ORCHESTRATION_ACCEPTANCE: OUTCOME=Build and deploy the four-part PDF "
+        "diagnostic framework; MUST=implement, commit, push, and deploy the framework; "
+        "MUST_NOT=discard unfinished implementation; DESTINATIONS=GitHub main and "
+        "Hetzner; PROOF=tests and deployed behavior"
+    )
+    unfinished_transcript = temporary / "unfinished.jsonl"
+    unfinished_transcript.write_text(
+        additive_transcript.read_text()
+        + json.dumps(
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "author": "/root/gpt_5_6_terra_high_executive_pdf_framework",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": (
+                                "ORCHESTRATION_RELATION: RELATION=NEW; "
+                                "ACTIVE_OBJECTIVE=Build the PDF framework; PRESERVED=NONE; "
+                                "ADDED=NONE; REMOVED=NONE; EXPLICIT_SIGNAL=NONE\n"
+                                "ORCHESTRATION_SCORE: SCORE=7.2; EXECUTIVE=SOL_HIGH; "
+                                "AGENT=codex_orchestration_sol_low_implementer; TASK=framework\n"
+                                "ORCHESTRATION_STATUS: Complexity 7.2 → GPT-5.6 Sol / low. "
+                                "Build the PDF framework.\n"
+                                + prior_acceptance
+                            ),
+                        }
+                    ],
+                },
+            }
+        )
+        + "\n"
+        + json.dumps(
+            {
+                "type": "event_msg",
+                "payload": {"type": "turn_aborted", "reason": "interrupted"},
+            }
+        )
+        + "\n"
+    )
+    cross_format = context(
+        call(
+            prompt_hook,
+            {
+                **base,
+                "transcript_path": str(unfinished_transcript),
+                "prompt": "Should this framework also apply to JPEGs and PNGs?",
+            },
+            env,
+        )
+    )
+    if f"PRIOR_ACTIVE_ACCEPTANCE: {prior_acceptance}" not in cross_format:
+        raise AssertionError("interrupted work lost its exact active acceptance contract")
+    for required in (
+        "With prior present require AMEND",
+        "`<turn_aborted>` is never a signal",
+        "AMEND requires REMOVED=NONE",
+        "never turn\nbuild/change/implement/commit/push/deploy into explanation-only",
+        "NOT_APPLICABLE destinations",
+        "new\nMUST_NOT for those actions",
+    ):
+        if required not in cross_format:
+            raise AssertionError(f"cross-format amendment guard omits {required!r}")
+
+    completed_transcript = temporary / "completed.jsonl"
+    completed_transcript.write_text(
+        unfinished_transcript.read_text()
+        + json.dumps(
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "author": "/root/gpt_5_6_sol_high_executive_pdf_framework",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": "ORCHESTRATION_ACCEPT: Framework is complete.",
+                        }
+                    ],
+                },
+            }
+        )
+        + "\n"
+    )
+    after_completion = context(
+        call(
+            prompt_hook,
+            {
+                **base,
+                "transcript_path": str(completed_transcript),
+                "prompt": "Explain a different helper.",
+            },
+            env,
+        )
+    )
+    if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in after_completion:
+        raise AssertionError("accepted work remained incorrectly active")
 
     terra_transcript = temporary / "terra-root.jsonl"
     terra_transcript.write_text(
@@ -419,12 +532,14 @@ def main() -> int:
     elapsed = time.perf_counter() - started
     if elapsed > 2.0:
         raise AssertionError(f"inactive prompt hook exceeded 100 ms average: {elapsed:.3f}s")
-    if len(routed_context.encode()) > 3_000:
-        raise AssertionError("dispatch context exceeds the 3.0 KB fixed-cost budget")
+    if len(routed_context.encode()) > 6_000:
+        raise AssertionError("dispatch context exceeds the 6.0 KB fixed-cost budget")
+    if len(cross_format.encode()) > 10_000:
+        raise AssertionError("carried acceptance exceeds the 10.0 KB continuity budget")
 
     terra = (plugin / "agents" / "codex-orchestration-terra-executive.toml").read_text()
     for boundary in (
-        "Rate the user request",
+        "Rate the combined active objective",
         "exactly one decimal",
         "1.0–2.9",
         "3.0–5.0",
@@ -446,7 +561,14 @@ def main() -> int:
         "SOL_XHIGH",
         "ORCHESTRATION_SCORE: SCORE=",
         "ORCHESTRATION_STATUS: Complexity",
-        "Return immediately with exactly three lines",
+        "Return immediately with exactly four lines",
+        "ORCHESTRATION_RELATION: RELATION=",
+        "`NEW`, `AMEND`, `REPLACE`, or",
+        "A request for an explanation can add an immediate answer",
+        "interrupted or aborted turn stops execution, never its objective",
+        "`REMOVED` must be `NONE`",
+        "never merely the newest interrogative sentence",
+        "EXPLICIT_SIGNAL",
         "at most 20 words",
         "ORCHESTRATION_ACCEPTANCE: OUTCOME=",
         "immutable, at-most-200-word contract",
@@ -454,7 +576,7 @@ def main() -> int:
         "producer must never\nredefine done",
         "Never generate an implementation",
         "combined active request is authoritative",
-        "Only explicit cancellation or replacement",
+        "Only explicit `REPLACE` or `CANCEL`",
         "Make `PROOF` test the defining outcome",
         "`ROOT_EXPERIENCE:`",
         "end-to-end observation",

@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.0+codex.20260809201833",
+  "version": "0.8.0+codex.20260809230114",
   "description": "Fast Terra-first numeric routing across seven model lanes.",
   "author": {
     "name": "Daniel McAteer",
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Fast credit routing with one numeric score",
-    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Its stable user-level hook sends the current request and up to 64 same-chat turns to GPT-5.6 Terra / High using an explicit numeric context fork. Additions, corrections, answers, and permissions amend unfinished inherited work; only explicit cancellation or replacement discards the prior objective. Terra assigns one immutable complexity score and routes through seven implementation lanes from Luna / Max to Sol / Extra High. The user-selected root is a zero-judgment relay, and the chosen producer performs the work without nested subagents. An already-satisfied requested state is a successful no-op. Acceptance uses code, tests, and deployed revision state, avoids routine visual tools, allows one corrected fallback for an unavailable or malformed probe, and requires a named mismatch before takeover. Root appends the exact executive route, implementation route, complexity, and current root route metadata. Routine Git and SSH deployment does not force escalation, steering drains only the active branch, and the root reconciles completed side effects before redispatch.",
+    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Its stable user-level hook sends the current request, the latest unfinished acceptance contract, and up to 64 same-chat turns to GPT-5.6 Terra / High using an explicit numeric context fork. Terra classifies each request as NEW, AMEND, REPLACE, or CANCEL and emits preserved, added, and removed requirements before scoring the combined active objective. Additions, corrections, questions, answers, permissions, and interrupted turns preserve unfinished work; only explicit cancellation or replacement discards the prior objective. The root rejects contradictory amendment contracts before dispatch. Terra assigns one immutable complexity score and routes through seven implementation lanes from Luna / Max to Sol / Extra High. The user-selected root is a zero-judgment relay, and the chosen producer performs the work without nested subagents. An already-satisfied requested state is a successful no-op. Acceptance uses code, tests, and deployed revision state, avoids routine visual tools, allows one corrected fallback for an unavailable or malformed probe, and requires a named mismatch before takeover. Root appends the exact executive route, implementation route, complexity, and current root route metadata. Routine Git and SSH deployment does not force escalation, steering drains only the active branch, and the root reconciles completed side effects before redispatch.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

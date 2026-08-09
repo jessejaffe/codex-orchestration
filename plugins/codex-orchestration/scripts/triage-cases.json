@@ -14,5 +14,66 @@
     {"id": "cross_system", "expected": "SOL_MEDIUM", "request": "Coordinate changes across the web app, worker queue, and deployment service."},
     {"id": "ambiguous_scope", "expected": "SOL_LOW", "request": "Make the whole product much faster; the cause is not known."},
     {"id": "high_stakes_advice", "expected": "SOL_HIGH", "request": "Decide whether this medical workflow is safe to launch."}
+  ],
+  "steering_cases": [
+    {
+      "id": "interrupted_pdf_framework_cross_format_question",
+      "prior_active_acceptance": "OUTCOME=Build, commit, and deploy the four-part PDF diagnostic framework; MUST=implement detector, evidence, recovery-or-refusal, and verification stages; MUST_NOT=discard unfinished implementation; DESTINATIONS=GitHub main and Hetzner; PROOF=end-to-end damaged-input recovery checks",
+      "events": ["turn_aborted"],
+      "request": "Should this framework also go for JPEGs and PNGs?",
+      "expected_relation": "AMEND",
+      "minimum_score": 5.1,
+      "preserve": ["implement", "commit", "deploy", "detector", "verification"],
+      "add": ["JPEG", "PNG"],
+      "remove": [],
+      "forbid": ["MUST_NOT=implement", "DESTINATIONS=NOT_APPLICABLE", "explanation-only"]
+    },
+    {
+      "id": "explain_then_continue_framework",
+      "prior_active_acceptance": "OUTCOME=Implement the recovery framework; MUST=finish and verify the code; MUST_NOT=abandon the build; DESTINATIONS=repository; PROOF=tests",
+      "events": ["turn_aborted"],
+      "request": "Explain what missing page bytes means, then continue the framework.",
+      "expected_relation": "AMEND",
+      "minimum_score": 3.0,
+      "preserve": ["implement", "verify"],
+      "add": ["explain missing page bytes"],
+      "remove": [],
+      "forbid": ["MUST_NOT=implement", "DESTINATIONS=NOT_APPLICABLE"]
+    },
+    {
+      "id": "explicit_replace_with_explanation",
+      "prior_active_acceptance": "OUTCOME=Implement the recovery framework; MUST=commit and deploy; MUST_NOT=abandon implementation; DESTINATIONS=GitHub and Hetzner; PROOF=live verification",
+      "events": ["turn_aborted"],
+      "request": "Stop building the framework; replace that task with only a short explanation of the cross-format idea.",
+      "expected_relation": "REPLACE",
+      "minimum_score": 1.0,
+      "preserve": [],
+      "add": ["short explanation"],
+      "remove": ["implement", "commit", "deploy"],
+      "explicit_signal": "Stop building the framework; replace that task"
+    },
+    {
+      "id": "explicit_cancel_active_work",
+      "prior_active_acceptance": "OUTCOME=Implement the recovery framework; MUST=commit and deploy; MUST_NOT=abandon implementation; DESTINATIONS=GitHub and Hetzner; PROOF=live verification",
+      "events": ["turn_aborted"],
+      "request": "Cancel everything that is still running for this task.",
+      "expected_relation": "CANCEL",
+      "minimum_score": 1.0,
+      "preserve": [],
+      "add": [],
+      "remove": ["all unfinished work"],
+      "explicit_signal": "Cancel everything"
+    },
+    {
+      "id": "new_request_without_active_acceptance",
+      "prior_active_acceptance": null,
+      "events": [],
+      "request": "Explain what this already-identified helper does.",
+      "expected_relation": "NEW",
+      "minimum_score": 1.0,
+      "preserve": [],
+      "add": ["explain helper"],
+      "remove": []
+    }
   ]
 }

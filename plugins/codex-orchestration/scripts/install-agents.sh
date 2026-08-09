@@ -131,6 +131,10 @@ role_files() {
     sol-low-executive) previous_current_digests="$previous_current_digests 7a71eda5e69a9bdf0f693c4a49a09803521f79e270a30eb86c2e552c136b1f6c" ;;
     sol-high-executive) previous_current_digests="$previous_current_digests d0b5a76a6857097e2838504bbb11346b2bc3a109aedf5d9ef395b5497f726914" ;;
   esac
+  # Exact Terra scoring template shipped before explicit active-objective deltas.
+  case "$role" in
+    terra-executive) previous_current_digests="$previous_current_digests 820da651f6cdf3f39b7d4063ba78734cd9a23970d1464dd5cf7e8f8b8d585122" ;;
+  esac
 }
 
 classify_current() {

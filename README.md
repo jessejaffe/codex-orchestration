@@ -15,13 +15,16 @@ task once, then applies the fixed seven implementation lanes.
 The active path is intentionally small:
 
 1. A stable user-level, once-per-prompt hook checks one chat-local boolean.
-2. The user-selected root model immediately gives the current request and up to 64 recent turns from that
-   chat only to Terra / High. It uses an explicit numeric fork rather than the unsupported literal
-   full-history fork, so a correction can retain the preceding active-request turn.
-3. Terra assigns one immutable one-decimal complexity score from 1.0 to 10.0.
-4. Terra returns a score protocol containing one root-visible checkpoint plus an internal,
-   immutable acceptance contract (outcome, requirements, prohibitions, destinations, and proof).
-   Before any further spawn, root relays the exact checkpoint while keeping the contract internal.
+2. The user-selected root model immediately gives the current request, the exact latest unfinished
+   acceptance contract when one exists, and up to 64 recent turns from that chat only to Terra / High.
+   It uses an explicit numeric fork rather than the unsupported literal full-history fork.
+3. Terra classifies the request as `NEW`, `AMEND`, `REPLACE`, or `CANCEL`, emits an explicit
+   preserved/added/removed delta, and assigns one immutable one-decimal complexity score to the
+   combined active objective from 1.0 to 10.0.
+4. Terra returns a score protocol containing one root-visible checkpoint plus internal, immutable
+   relation and acceptance contracts. Before any further spawn, root applies structural continuity
+   checks and relays the exact checkpoint while keeping both contracts internal. A malformed or
+   contradictory result gets one same-Terra protocol repair; it is never dispatched downstream.
 5. Scores below 4.0 use a pinned Sol / Low executive; 4.0–6.0 use Sol / Medium;
    6.1–7.9 use Sol / High; and 8.0 or higher use Sol / Extra High. Those Sol
    executives receive Terra's exact score/status/acceptance snapshot and the current request, without
@@ -93,10 +96,13 @@ deploy helper's seed, migration, or backfill steps in parallel.
 
 Terra and the mapped implementation agent inherit up to 64 recent turns from the current chat only;
 they never import history from another chat. The initial Sol executive deliberately receives
-no parent-history fork because Terra's exact score/status/acceptance snapshot already resolves the route and
+no parent-history fork because Terra's exact relation/score/status/acceptance snapshot resolves the route and
 active milestone. Only a takeover review reloads the same Sol role with the full bounded history.
 Additions, corrections, answers, and permissions amend unfinished inherited work;
-only explicit cancellation or replacement discards that objective. This bounded numeric history
+only explicit cancellation or replacement discards that objective. An interrupted or aborted turn
+stops execution but does not cancel its objective. The prompt hook recovers the latest unfinished
+acceptance from trusted child-to-root protocol messages and passes it explicitly; a completed
+`ORCHESTRATION_ACCEPT:` clears it. This bounded numeric history
 avoids the unsupported literal full-history fork. The router does not
 reconstruct requirements into a lossy packet, so active corrections, constraints,
 permissions, and repository context stay available to the selected model.
@@ -173,8 +179,12 @@ the same task. Root first stops the direct Orchestration child so it cannot dele
 again, then drains the entire active branch from the deepest running descendant upward
 and confirms that none remains before routing the revised request. Unrelated agent
 branches are left alone. The newest instruction is authoritative while compatible
-earlier constraints remain in force, and Terra assigns a fresh score for the revised
-task. Because no completed side effect is rolled back, the replacement agent first
+earlier constraints remain in force. Terra must classify an ordinary follow-up as `AMEND`, preserve
+the unfinished outcome, action mode, prohibitions, destinations, and proof, then score the combined
+task. `REPLACE` and `CANCEL` require a verbatim explicit signal from the newest user request;
+`<turn_aborted>` never qualifies. Root rejects any amendment that silently converts implementation
+into explanation-only work, drops required destinations, or newly forbids implementation, commit,
+push, or deployment. Because no completed side effect is rolled back, the replacement agent first
 reconciles the actual files, Git, remote, and deployed state before continuing.
 
 ## Usage measurement
@@ -213,7 +223,10 @@ public rates mean equal actual credit consumption.
 ## Offline routing evaluation
 
 `scripts/triage-cases.json` is a release-time calibration set for representative route
-boundaries. It is intentionally separate from the live scoring prompt.
+boundaries and multi-turn steering relationships. Its regression sequences cover the exact
+interrupted PDF-framework/JPEG/PNG amendment, an explanation followed by continuation, explicit
+replacement, explicit cancellation, and a new request without active work. It is intentionally
+separate from the live scoring prompt.
 The runtime never reads the offline routing benchmark, so it adds zero task latency and zero task tokens.
 
 ## Install from GitHub
@@ -310,8 +323,9 @@ continuity, telemetry-migration, safe-installer, and offline-boundary tests:
 sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
-The prompt hook has a 3.0 KB injected-context ceiling and the hermetic latency test gives
-its subprocess a generous 100 ms average CI budget. These are release checks only;
+The prompt hook has a 6.0 KB base injected-context ceiling and a 10.0 KB ceiling when it carries
+the exact latest acceptance contract. The hermetic latency test gives its subprocess a generous
+100 ms average CI budget. These are release checks only;
 they are not additional runtime work.
 
 ## Repository

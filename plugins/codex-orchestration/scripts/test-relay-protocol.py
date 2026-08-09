@@ -2,6 +2,7 @@
 """Hermetic root-relay protocol and steering regression test."""
 
 from pathlib import Path
+import json
 import sys
 
 
@@ -25,6 +26,7 @@ def main() -> int:
     plugin = Path(sys.argv[1])
     hook = (plugin / "scripts/prompt-router-hook.py").read_text()
     terra = (plugin / "agents/codex-orchestration-terra-executive.toml").read_text()
+    triage = json.loads((plugin / "scripts/triage-cases.json").read_text())
     sol_low = (plugin / "agents/codex-orchestration-sol-low-executive.toml").read_text()
     sol_medium = (plugin / "agents/codex-orchestration-sol-medium-executive.toml").read_text()
     sol_high = (plugin / "agents/codex-orchestration-sol-high-executive.toml").read_text()
@@ -36,7 +38,8 @@ def main() -> int:
         if tool in executives:
             raise AssertionError(f"custom executive requires unavailable collaboration tool: {tool}")
     for token in (
-        "ORCHESTRATION_SCORE:", "ORCHESTRATION_STATUS:", "ORCHESTRATION_ACCEPTANCE:",
+        "ORCHESTRATION_RELATION:", "ORCHESTRATION_SCORE:", "ORCHESTRATION_STATUS:",
+        "ORCHESTRATION_ACCEPTANCE:",
         "ORCHESTRATION_DELEGATE:", "IMPLEMENTATION_RESULT:", "ORCHESTRATION_ACCEPT:",
         "ORCHESTRATION_TAKEOVER:", "DIRECTIVE:",
     ):
@@ -64,37 +67,46 @@ def main() -> int:
         "START, ACTION, RESULT, ARTIFACTS",
         "inherited unfinished work stays in scope",
         "new prompt amends it",
+        "interrupted/aborted turn stops execution, never the inherited objective",
+        "PRIOR_ACTIVE_ACCEPTANCE:",
+        "Require four protocol lines",
+        "EXPLICIT_SIGNAL as an exact",
+        "AMEND requires REMOVED=NONE",
+        "PROTOCOL_REPAIR:",
+        "do not spawn an executive or producer",
     ):
         if guard not in hook:
             raise AssertionError(f"minimal direct-context handoff omits {guard!r}")
-    if "Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary" not in hook:
+    if "After a valid result show Terra's exact `ORCHESTRATION_STATUS:` in commentary" not in hook:
         raise AssertionError("Terra's human-readable score checkpoint is not relayed before delegation")
     if "never replace it" not in hook:
         raise AssertionError("root can replace Terra's scored checkpoint with generic commentary")
-    if "Keep Terra's `ORCHESTRATION_ACCEPTANCE:` internal and immutable" not in hook:
-        raise AssertionError("root can expose or mutate Terra's acceptance contract")
+    if "Keep Terra's `ORCHESTRATION_RELATION:` and `ORCHESTRATION_ACCEPTANCE:` internal and immutable" not in hook:
+        raise AssertionError("root can expose or mutate Terra's relation/acceptance contract")
     if "Keep Terra's AGENT/TASK immutable; ignore remaps" not in hook:
         raise AssertionError("root can accept an executive-generated implementation identity")
     sol_handoff_start = hook.index("SOL_LOW/SOL_MEDIUM/SOL_HIGH/SOL_XHIGH: spawn")
     sol_handoff = hook[sol_handoff_start : hook.index("Keep Terra", sol_handoff_start)]
-    score_line = "Send exact Terra `ORCHESTRATION_SCORE:`"
-    if score_line not in sol_handoff:
+    relation_line = "Send exact Terra `ORCHESTRATION_RELATION:`"
+    if relation_line not in sol_handoff:
         raise AssertionError("root can omit Terra's immutable AGENT/TASK from the Sol executive handoff")
-    if sol_handoff.index(score_line) > sol_handoff.index("USER_REQUEST:"):
-        raise AssertionError("Sol executive handoff does not place Terra's score line before the request")
+    if sol_handoff.index(relation_line) > sol_handoff.index("USER_REQUEST:"):
+        raise AssertionError("Sol executive handoff does not place Terra's relation before the request")
     if '`fork_turns: "none"`' not in sol_handoff:
         raise AssertionError("Sol executive still inherits the heavy parent transcript")
     if "`ORCHESTRATION_STATUS:`" not in sol_handoff:
         raise AssertionError("compact Sol executive handoff omits Terra's resolved work status")
     if "`ORCHESTRATION_ACCEPTANCE:`" not in sol_handoff:
         raise AssertionError("compact Sol executive handoff omits the immutable definition of done")
+    if "`ORCHESTRATION_RELATION:`" not in sol_handoff:
+        raise AssertionError("compact Sol executive handoff omits the immutable objective delta")
     if sol_handoff.index("`ORCHESTRATION_ACCEPTANCE:`") > sol_handoff.index("USER_REQUEST:"):
         raise AssertionError("Sol executive receives the request before its acceptance contract")
     producer_handoff = hook[hook.index("Keep Terra", sol_handoff_start) : hook.index("Follow up:")]
     if "reuse fork" not in producer_handoff:
         raise AssertionError("mapped producer no longer inherits the active task context")
-    if "immutable acceptance" not in producer_handoff:
-        raise AssertionError("mapped producer cannot report against Terra's acceptance contract")
+    if "immutable relation + acceptance" not in producer_handoff:
+        raise AssertionError("mapped producer cannot preserve Terra's objective delta and acceptance")
     takeover_handoff = hook[hook.index("On Sol ORCHESTRATION_TAKEOVER") : hook.index("Every routed final ends")]
     for guard in (
         "same Sol executive role",
@@ -160,7 +172,13 @@ def main() -> int:
     if "No executive packet" in implementers:
         raise AssertionError("implementer instructions contradict the compact acceptance contract")
     for guard in (
-        "Return immediately with exactly three lines",
+        "Return immediately with exactly four lines",
+        "ORCHESTRATION_RELATION: RELATION=",
+        "ACTIVE_OBJECTIVE=",
+        "PRESERVED=",
+        "ADDED=",
+        "REMOVED=",
+        "EXPLICIT_SIGNAL=",
         "ORCHESTRATION_ACCEPTANCE: OUTCOME=",
         "immutable, at-most-200-word contract",
         "never discarded exploration",
@@ -180,8 +198,41 @@ def main() -> int:
         "Only explicit cancellation or replacement",
         "discards its prior objective",
     ):
-        if executives.count(guard) != 5 or implementers.count(guard) != 7:
+        if sol_executives.count(guard) != 4 or implementers.count(guard) != 7:
             raise AssertionError(f"additive steering context is not shared: {guard!r}")
+    for guard in (
+        "`NEW`, `AMEND`, `REPLACE`, or",
+        "A request for an explanation can add an immediate answer",
+        "interrupted or aborted turn stops execution, never its objective",
+        "`REMOVED` must be `NONE`",
+        "never merely the newest interrogative sentence",
+        "verbatim nonempty\nsubstring of the current `USER_REQUEST`",
+    ):
+        if guard not in terra:
+            raise AssertionError(f"Terra relation contract omits {guard!r}")
+    steering = {case["id"]: case for case in triage.get("steering_cases", [])}
+    required_steering = {
+        "interrupted_pdf_framework_cross_format_question": "AMEND",
+        "explain_then_continue_framework": "AMEND",
+        "explicit_replace_with_explanation": "REPLACE",
+        "explicit_cancel_active_work": "CANCEL",
+        "new_request_without_active_acceptance": "NEW",
+    }
+    if {case_id: steering.get(case_id, {}).get("expected_relation") for case_id in required_steering} != required_steering:
+        raise AssertionError("offline steering benchmark omits amend/replace/cancel/new coverage")
+    cross_format = steering["interrupted_pdf_framework_cross_format_question"]
+    if (
+        "turn_aborted" not in cross_format["events"]
+        or cross_format["minimum_score"] < 5.1
+        or not {"implement", "commit", "deploy"}.issubset(cross_format["preserve"])
+        or "MUST_NOT=implement" not in cross_format["forbid"]
+        or "DESTINATIONS=NOT_APPLICABLE" not in cross_format["forbid"]
+    ):
+        raise AssertionError("PDF/JPEG/PNG interruption regression no longer preserves implementation")
+    for case_id in ("explicit_replace_with_explanation", "explicit_cancel_active_work"):
+        signal = steering[case_id].get("explicit_signal")
+        if not isinstance(signal, str) or signal not in steering[case_id]["request"]:
+            raise AssertionError(f"{case_id} lacks a verbatim replacement/cancellation signal")
     checkout_guard = "configured `codex-orchestration` marketplace source"
     if implementers.count(checkout_guard) != 7:
         raise AssertionError("implementation lanes can mistake the ChatGPT project mirror for this plugin checkout")

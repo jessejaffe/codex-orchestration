@@ -134,8 +134,15 @@ for executive in \
   "$agents/codex-orchestration-sol-xhigh-executive.toml"
 do
 for guard in \
+  'ORCHESTRATION_RELATION:' \
   'ORCHESTRATION_STATUS:' \
   'ORCHESTRATION_ACCEPTANCE:' \
+  'PRIOR_ACTIVE_ACCEPTANCE:' \
+  'Require four protocol lines' \
+  'EXPLICIT_SIGNAL as an exact' \
+  'AMEND requires REMOVED=NONE' \
+  'PROTOCOL_REPAIR:' \
+  'do not spawn an executive or producer' \
   'Keep Terra' \
   'internal and immutable' \
   "show Terra's exact" \
@@ -197,7 +204,7 @@ if rg -n 'fork_turns: (none|all)|fork_turns: \\"all\\"|Be conservative: any|with
   fail "runtime contract retains a rejected fork shape or categorical routing"
 fi
 for guard in \
-  'Rate the user request' \
+  'Rate the combined active objective' \
   'exactly one decimal' \
   '1.0–2.9' \
   '3.0–5.0' \
@@ -210,8 +217,15 @@ for guard in \
   'routine, fully specified repository catch-up, commit, push, SSH deployment' \
   'does not by itself increase the implementation score' \
   'ORCHESTRATION_SCORE: SCORE=' \
+  'ORCHESTRATION_RELATION: RELATION=' \
   'ORCHESTRATION_STATUS: Complexity' \
-  'Return immediately with exactly three lines' \
+  'Return immediately with exactly four lines' \
+  'ACTIVE_OBJECTIVE=' \
+  'PRESERVED=' \
+  'ADDED=' \
+  'REMOVED=' \
+  'EXPLICIT_SIGNAL=' \
+  'never merely the newest interrogative sentence' \
   'at most 20 words' \
   'ORCHESTRATION_ACCEPTANCE: OUTCOME=' \
   'immutable, at-most-200-word contract' \
@@ -231,9 +245,9 @@ for guard in \
   'never implement, inspect files, call task tools, delegate, or judge' \
   'Never generate an implementation plan' \
   'Do not emit `ORCHESTRATION_ACCEPT:`' \
-  'current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited' \
+  'Root supplies `PRIOR_ACTIVE_ACCEPTANCE:` immediately before `USER_REQUEST:`' \
   'combined active request is authoritative' \
-  'Only explicit cancellation or replacement' \
+  'Only explicit `REPLACE` or `CANCEL`' \
   'SOL_LOW if below 4.0' \
   'SOL_MEDIUM from 4.0–6.0' \
   'SOL_HIGH from 6.1–7.9'
@@ -507,7 +521,8 @@ for digest in \
   b9c8acb6206331972722cba1943c5a86aaaccdbaa85714188e8cfcce2f0a9ec0 \
   fc5e3b701e30b9287d012b847da429449a8c3822dfa20693c139bc72ead4e4b2 \
   c1a8aa093923c2d2ddaf09adbac7ad801273f8c92141bff2f12994d56235e134 \
-  35840c3b0dfaa0d25a67bc7de556200e8bf45069853417c9fce91debd1941091
+  35840c3b0dfaa0d25a67bc7de556200e8bf45069853417c9fce91debd1941091 \
+  820da651f6cdf3f39b7d4063ba78734cd9a23970d1464dd5cf7e8f8b8d585122
 do
   grep -Fq "$digest" "$installer" || fail "current renamed-instruction role is not safe to upgrade: $digest"
 done
