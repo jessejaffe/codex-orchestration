@@ -1,8 +1,8 @@
 # Codex Orchestration
 
 Codex Orchestration saves Codex credits by moving implementation to the least expensive
-capable model while keeping every acceptance decision with GPT-5.6 Sol: Low below 5.0,
-High from 5.0–7.9, and Extra High at 8.0 and above.
+capable model while keeping every acceptance decision with GPT-5.6 Sol: Low below 4.0,
+Medium from 4.0–6.0, High from 6.1–7.9, and Extra High at 8.0 and above.
 
 The 0.8.0 release uses a minimal, recent-context fast path. The manifest does not
 advertise a skill, so no Orchestration skill or versioned skill locator is injected
@@ -22,8 +22,8 @@ The active path is intentionally small:
 4. Terra returns a score protocol containing one root-visible checkpoint plus an internal,
    immutable acceptance contract (outcome, requirements, prohibitions, destinations, and proof).
    Before any further spawn, root relays the exact checkpoint while keeping the contract internal.
-5. Scores below 5.0 use a pinned Sol / Low executive. Scores from 5.0–7.9 use Sol / High;
-   scores of 8.0 or higher use Sol / Extra High. Those Sol
+5. Scores below 4.0 use a pinned Sol / Low executive; 4.0–6.0 use Sol / Medium;
+   6.1–7.9 use Sol / High; and 8.0 or higher use Sol / Extra High. Those Sol
    executives receive Terra's exact score/status/acceptance snapshot and the current request, without
    inheriting the large parent transcript, so any user-selected starting model is safe.
 6. The mapped Sol executive copies Terra's agent/task immediately and may add only a `NONE`
@@ -105,10 +105,12 @@ permissions, and repository context stay available to the selected model.
 flowchart TD
     U["Active user prompt"] --> H["Root relay from any starting model"]
     H --> T["Terra / High score with up to 64 same-chat turns"]
-    T -->|"1.0–4.9 compact snapshot"| L["Pinned Sol / Low executive"]
-    T -->|"5.0–7.9 compact snapshot"| S["Pinned Sol / High executive"]
+    T -->|"1.0–3.9 compact snapshot"| L["Pinned Sol / Low executive"]
+    T -->|"4.0–6.0 compact snapshot"| M["Pinned Sol / Medium executive"]
+    T -->|"6.1–7.9 compact snapshot"| S["Pinned Sol / High executive"]
     T -->|"8.0–10.0 compact snapshot"| X["Pinned Sol / Extra High executive"]
     L --> H
+    M --> H
     S --> H
     X --> H
     H --> P["Exact score-selected implementation role"]
@@ -156,8 +158,11 @@ Activation persists only in that chat. Use `Turn Orchestration off` or
 `Orchestration off` to disable it. Combined forms such as `Turn Orchestration on,
 remove the hero subtitle` activate and route the same prompt; combined off commands
 disable routing and continue the remaining work directly. Every new chat starts off.
-Control commands can follow another sentence in the same paragraph; for example,
-`Fix the demo. Turn Orchestration off.` disables routing while root handles the fix directly.
+Both controls can appear later in a paragraph or after preceding work; for example,
+`Review the setup and turn Orchestration on` activates routing, while
+`Fix the demo. Turn Orchestration off.` disables routing and handles the fix directly.
+Common imperative framing such as `please`, `can you`, and `I need you to` is accepted, while
+narrative mentions such as `I said turn orchestration off in another chat` do not change state.
 
 Activation is handled only by the prompt hook. The dispatch contract explicitly
 forbids checking, comparing, or updating Orchestration during user work; a
@@ -226,7 +231,7 @@ codex plugin marketplace add jessejaffe/codex-orchestration --ref main
 codex plugin add codex-orchestration@codex-orchestration
 ```
 
-Install the twelve native companion roles separately. The installer never overwrites a
+Install the thirteen native companion roles separately. The installer never overwrites a
 different user-owned role file:
 
 ```sh

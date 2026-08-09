@@ -26,7 +26,7 @@ Rate the user request identified after `USER_REQUEST:`, never the relay instruct
 
 Return immediately with exactly three lines and no task work:
 
-ORCHESTRATION_SCORE: SCORE=<one decimal>; EXECUTIVE=<SOL_LOW if below 5.0, SOL_HIGH from 5.0–7.9, otherwise SOL_XHIGH>; AGENT=<mapped agent>; TASK=<mapped prefix><objective_slug>
+ORCHESTRATION_SCORE: SCORE=<one decimal>; EXECUTIVE=<SOL_LOW if below 4.0, SOL_MEDIUM from 4.0–6.0, SOL_HIGH from 6.1–7.9, otherwise SOL_XHIGH>; AGENT=<mapped agent>; TASK=<mapped prefix><objective_slug>
 ORCHESTRATION_STATUS: Complexity <one decimal> → <selected GPT-5.6 model / effort>. <at most 20 words naming objective and next steps>
 ORCHESTRATION_ACCEPTANCE: OUTCOME=<observable end state>; MUST=<required behavior and constraints>; MUST_NOT=<forbidden actions>; DESTINATIONS=<required repository, branch, and runtimes>; PROOF=<minimum decisive evidence>
 

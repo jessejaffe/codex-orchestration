@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration's twelve custom agents and retire exact shipped legacy files.
+# Install Codex Orchestration's thirteen custom agents and retire exact shipped legacy files.
 
 set -eu
 
@@ -7,7 +7,7 @@ usage() {
   cat <<'EOF'
 Usage: install-agents.sh [--target-dir PATH] [--check]
 
-Install Codex Orchestration's twelve current custom-agent templates. Normal mode also
+Install Codex Orchestration's thirteen current custom-agent templates. Normal mode also
 removes the exact legacy sol-advisor-* counterpart for each role, but only when its
 content matches a recognized shipped template. User-modified, nonregular, and
 symlinked current or legacy files are conflicts and are never overwritten or deleted.
@@ -17,7 +17,7 @@ otherwise "$HOME/.codex/agents".
 
 Options:
   --target-dir PATH  Explicit destination directory.
-  --check            Require all twelve current files and no legacy counterparts.
+  --check            Require all thirteen current files and no legacy counterparts.
   --help             Show this help text.
 EOF
 }
@@ -78,6 +78,11 @@ role_files() {
       previous_current_digests=''
       legacy_digests=''
       ;;
+    sol-medium-executive)
+      # Introduced when executive supervision gained a balanced middle band.
+      previous_current_digests=''
+      legacy_digests=''
+      ;;
     sol-xhigh-executive)
       # Introduced for scores of 8.0 and higher.
       previous_current_digests='d32694987e8c22fea5efc2936498fb56ee160d84f4650e927e7c3ebdccc18540 1994415d11c7db839d3ac337bf537b9fac145bb6db39f3f23f2705ad5bef597f 130f54bd67b8854971e49542dedf460c70d480502a1bdc0b326e48b1c89fe5d9 589eb68a6b5b20daee4a828ef5f80bc1190923bff8d00e5f6ed2a3d66e087244 bc7f257a0776adb3c63e591b33a065d16f1efebd9a3d83179f518cbe26bf0090'
@@ -119,6 +124,12 @@ role_files() {
     terra-executive) previous_current_digests="$previous_current_digests cd946559fa48432694fb420ecc05ea2a5516e75b1ecb2e05969fffab145feeed" ;;
     sol-high-executive) previous_current_digests="$previous_current_digests c42d421890509b4e68ee2e664f588308341d749520f65ef964570f9a8cc412cd" ;;
     sol-xhigh-executive) previous_current_digests="$previous_current_digests 9ec152a58a5b7943985614f57710ac2560ffec65f8e89ba05346377dcdc96df7" ;;
+  esac
+  # Exact templates shipped before the four-band Sol executive ladder.
+  case "$role" in
+    terra-executive) previous_current_digests="$previous_current_digests f76b6372e86e72ab78cd3e3a9b471a86bf89a9d0368fe77e16ddd9a02a39236d" ;;
+    sol-low-executive) previous_current_digests="$previous_current_digests 7a71eda5e69a9bdf0f693c4a49a09803521f79e270a30eb86c2e552c136b1f6c" ;;
+    sol-high-executive) previous_current_digests="$previous_current_digests d0b5a76a6857097e2838504bbb11346b2bc3a109aedf5d9ef395b5497f726914" ;;
   esac
 }
 
@@ -234,7 +245,7 @@ done
 case "$target_dir" in /*) ;; *) target_dir=$(pwd -P)/$target_dir ;; esac
 case "$target_dir" in /|//) fail "refusing the filesystem root as an agent target." ;; esac
 
-roles='luna-implementer terra-medium-implementer terra-executive terra-implementer sol-low-implementer sol-medium-implementer sol-high-implementer sol-xhigh-implementer sol-low-executive sol-high-executive sol-xhigh-executive sol-reviewer'
+roles='luna-implementer terra-medium-implementer terra-executive terra-implementer sol-low-implementer sol-medium-implementer sol-high-implementer sol-xhigh-implementer sol-low-executive sol-medium-executive sol-high-executive sol-xhigh-executive sol-reviewer'
 preflight_failed=0
 if path_exists "$target_dir" && { [ -L "$target_dir" ] || [ ! -d "$target_dir" ]; }; then
   report_error "target directory is not a real directory: $target_dir"
@@ -259,7 +270,7 @@ done
 [ "$preflight_failed" -eq 0 ] || exit 1
 
 if [ "$check_only" -eq 1 ]; then
-  printf '%s\n' "CHECK PASSED: all twelve Codex Orchestration roles are current and legacy files are absent."
+  printf '%s\n' "CHECK PASSED: all thirteen Codex Orchestration roles are current and legacy files are absent."
   exit 0
 fi
 
@@ -279,7 +290,7 @@ for role in $roles; do
   esac
 done
 
-# Prove the complete twelve-role replacement set before any legacy file is removed.
+# Prove the complete thirteen-role replacement set before any legacy file is removed.
 for role in $roles; do
   role_files "$role"
   template=$template_dir/$current_file
@@ -287,7 +298,7 @@ for role in $roles; do
   [ "$(classify_current "$current_destination" "$template" "$previous_current_digests")" = current ] ||
     fail "could not prove current role before legacy retirement: $current_destination"
 done
-printf '%s\n' "PROVED: all twelve Codex Orchestration roles are current before legacy retirement."
+printf '%s\n' "PROVED: all thirteen Codex Orchestration roles are current before legacy retirement."
 
 for role in $roles; do
   role_files "$role"
@@ -300,4 +311,4 @@ for role in $roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' "INSTALL PASSED: all twelve Codex Orchestration roles are current and exact shipped legacy files were removed."
+printf '%s\n' "INSTALL PASSED: all thirteen Codex Orchestration roles are current and exact shipped legacy files were removed."

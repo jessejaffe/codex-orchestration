@@ -26,10 +26,11 @@ def main() -> int:
     hook = (plugin / "scripts/prompt-router-hook.py").read_text()
     terra = (plugin / "agents/codex-orchestration-terra-executive.toml").read_text()
     sol_low = (plugin / "agents/codex-orchestration-sol-low-executive.toml").read_text()
+    sol_medium = (plugin / "agents/codex-orchestration-sol-medium-executive.toml").read_text()
     sol_high = (plugin / "agents/codex-orchestration-sol-high-executive.toml").read_text()
     sol_xhigh = (plugin / "agents/codex-orchestration-sol-xhigh-executive.toml").read_text()
-    sol_executive_texts = (sol_low, sol_high, sol_xhigh)
-    sol_executives = sol_low + sol_high + sol_xhigh
+    sol_executive_texts = (sol_low, sol_medium, sol_high, sol_xhigh)
+    sol_executives = sol_low + sol_medium + sol_high + sol_xhigh
     executives = terra + sol_executives
     for tool in ("send_message", "spawn_agent", "wait_agent", "list_agents", "interrupt_agent"):
         if tool in executives:
@@ -74,7 +75,7 @@ def main() -> int:
         raise AssertionError("root can expose or mutate Terra's acceptance contract")
     if "Keep Terra's AGENT/TASK immutable; ignore remaps" not in hook:
         raise AssertionError("root can accept an executive-generated implementation identity")
-    sol_handoff_start = hook.index("SOL_LOW/SOL_HIGH/SOL_XHIGH: spawn")
+    sol_handoff_start = hook.index("SOL_LOW/SOL_MEDIUM/SOL_HIGH/SOL_XHIGH: spawn")
     sol_handoff = hook[sol_handoff_start : hook.index("Keep Terra", sol_handoff_start)]
     score_line = "Send exact Terra `ORCHESTRATION_SCORE:`"
     if score_line not in sol_handoff:
@@ -128,6 +129,7 @@ def main() -> int:
         raise AssertionError("an executive can let the producer redefine acceptance")
     if (
         sol_low.count("acceptance contract authoritative") != 2
+        or sol_medium.count("acceptance contract authoritative") != 2
         or sol_high.count("acceptance contract authoritative") != 2
         or sol_xhigh.count("acceptance contract authoritative") != 2
     ):
@@ -178,7 +180,7 @@ def main() -> int:
         "Only explicit cancellation or replacement",
         "discards its prior objective",
     ):
-        if executives.count(guard) != 4 or implementers.count(guard) != 7:
+        if executives.count(guard) != 5 or implementers.count(guard) != 7:
             raise AssertionError(f"additive steering context is not shared: {guard!r}")
     checkout_guard = "configured `codex-orchestration` marketplace source"
     if implementers.count(checkout_guard) != 7:
@@ -308,15 +310,16 @@ def main() -> int:
         if fragment not in prefix:
             raise AssertionError(f"wrong lane at {score}: {prefix}")
 
-    if "EXECUTIVE=<SOL_LOW if below 5.0, SOL_HIGH from 5.0–7.9, otherwise SOL_XHIGH>" not in terra:
-        raise AssertionError("Terra does not route scores of 8.0 and above to Sol / Extra High")
+    if "EXECUTIVE=<SOL_LOW if below 4.0, SOL_MEDIUM from 4.0–6.0, SOL_HIGH from 6.1–7.9, otherwise SOL_XHIGH>" not in terra:
+        raise AssertionError("Terra does not use the requested four-band Sol executive ladder")
     for token in (
         "codex_orchestration_sol_low_executive",
         "gpt_5_6_sol_low_executive_",
-        "GPT-5.6 Sol / Low",
+        "codex_orchestration_sol_medium_executive",
+        "gpt_5_6_sol_medium_executive_",
+        "GPT-5.6 Sol / <Low|Medium|High|Extra High matching executive>",
         "codex_orchestration_sol_xhigh_executive",
         "gpt_5_6_sol_extra_high_executive_",
-        "GPT-5.6 Sol / Extra High",
     ):
         if token not in hook:
             raise AssertionError(f"root relay omits the Sol / Extra High executive: {token}")
@@ -324,6 +327,8 @@ def main() -> int:
         raise AssertionError("Sol / Extra High executive is not pinned to xhigh")
     if 'model_reasoning_effort = "low"' not in sol_low:
         raise AssertionError("Sol / Low executive is not pinned to low")
+    if 'model_reasoning_effort = "medium"' not in sol_medium:
+        raise AssertionError("Sol / Medium executive is not pinned to medium")
 
     terra_exec = "gpt_5_6_terra_high_executive_change"
     terra_impl = lane(5.1)[1] + "change"

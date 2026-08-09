@@ -1,10 +1,10 @@
-name = "codex_orchestration_sol_low_executive"
-description = "Codex Orchestration's pinned GPT-5.6 Sol / Low executive for tasks scored below 4.0."
+name = "codex_orchestration_sol_medium_executive"
+description = "Codex Orchestration's pinned GPT-5.6 Sol / Medium executive for tasks scored 4.0–6.0."
 model = "gpt-5.6-sol"
-model_reasoning_effort = "low"
+model_reasoning_effort = "medium"
 
 developer_instructions = """
-You are Codex Orchestration's pinned executive for tasks scored below 4.0. The
+You are Codex Orchestration's pinned executive for tasks scored 4.0 through 6.0. The
 root task may use any model. It gives you Terra's exact score, status, and immutable acceptance
 contract containing one score, the mapped implementation agent and task, resolved work status,
 definition of done, plus the current request after `USER_REQUEST:`. Treat them as authoritative. Copy Terra's AGENT and TASK
@@ -97,3 +97,4 @@ You are not alone in the codebase: preserve concurrent edits and do not revert u
 work. Keep work within stated ownership and constraints, verify actual evidence, and do
 not silently substitute a different role, model, or effort.
 """
+

@@ -61,6 +61,7 @@ expected = {
     "codex-orchestration-sol-high-implementer.toml": ("gpt-5.6-sol", "high"),
     "codex-orchestration-sol-xhigh-implementer.toml": ("gpt-5.6-sol", "xhigh"),
     "codex-orchestration-sol-low-executive.toml": ("gpt-5.6-sol", "low"),
+    "codex-orchestration-sol-medium-executive.toml": ("gpt-5.6-sol", "medium"),
     "codex-orchestration-sol-high-executive.toml": ("gpt-5.6-sol", "high"),
     "codex-orchestration-sol-xhigh-executive.toml": ("gpt-5.6-sol", "xhigh"),
     "codex-orchestration-sol-reviewer.toml": ("gpt-5.6-sol", "high"),
@@ -80,7 +81,7 @@ for filename, pins in expected.items():
     if actual != pins:
         raise SystemExit(f"wrong pins in {filename}: {actual}")
 PY
-pass "script syntax, offline benchmark, and exact twelve-role pins"
+pass "script syntax, offline benchmark, and exact thirteen-role pins"
 
 python3 "$script_dir/test-fast-dispatch.py" "$plugin_dir" "$tmp_dir/hooks" ||
   fail "fast dispatch, continuity, ownership, or latency regression"
@@ -128,6 +129,7 @@ grep -Fq 'reuse fork' "$script_dir/prompt-router-hook.py" ||
   fail "direct-context producer handoff is missing"
 for executive in \
   "$agents/codex-orchestration-sol-low-executive.toml" \
+  "$agents/codex-orchestration-sol-medium-executive.toml" \
   "$agents/codex-orchestration-sol-high-executive.toml" \
   "$agents/codex-orchestration-sol-xhigh-executive.toml"
 do
@@ -232,7 +234,9 @@ for guard in \
   'current `USER_REQUEST` adds to, corrects, answers, or authorizes unfinished inherited' \
   'combined active request is authoritative' \
   'Only explicit cancellation or replacement' \
-  'SOL_LOW if below 5.0'
+  'SOL_LOW if below 4.0' \
+  'SOL_MEDIUM from 4.0–6.0' \
+  'SOL_HIGH from 6.1–7.9'
 do
   grep -Fq "$guard" "$agents/codex-orchestration-terra-executive.toml" ||
     fail "Terra score-based routing omits: $guard"
@@ -308,6 +312,7 @@ if rg -n 'PACKET:|execution packet|exact PACKET' \
   "$script_dir/prompt-router-hook.py" \
   "$agents/codex-orchestration-terra-executive.toml" \
   "$agents/codex-orchestration-sol-low-executive.toml" \
+  "$agents/codex-orchestration-sol-medium-executive.toml" \
   "$agents/codex-orchestration-sol-high-executive.toml" \
   "$agents/codex-orchestration-sol-xhigh-executive.toml"; then
   fail "runtime still allows duplicated executive implementation packets"
@@ -420,6 +425,13 @@ grep -Fq '93eec7e0d93c6db721467d5ad2f6333724625a325c0b1dcf987f1e68c28ba5fe' "$in
 grep -Fq 'd351037408fb4297f2b9a0336d709812628dfef4dc6d3e3db76fa427ca54d64a' "$installer" ||
   fail "current Sol / High implementation role is not recognized for safe upgrade"
 for digest in \
+  f76b6372e86e72ab78cd3e3a9b471a86bf89a9d0368fe77e16ddd9a02a39236d \
+  7a71eda5e69a9bdf0f693c4a49a09803521f79e270a30eb86c2e552c136b1f6c \
+  d0b5a76a6857097e2838504bbb11346b2bc3a109aedf5d9ef395b5497f726914
+do
+  grep -Fq "$digest" "$installer" || fail "four-band executive predecessor is not safe to upgrade: $digest"
+done
+for digest in \
   250759da7eda6a2bde248931ee0c4f781258cc56818dad3e42c6d457a0eb4bd7 \
   6ada178902fb621b0fb58b8a7bd48ab3f4d397d9192d41dab458924921919c4b \
   43a1531815e6674a023f9f21c03635253ded90e15eae72ce69776c8f54af8fb3 \
@@ -503,6 +515,8 @@ for file in install-user-hook.py orchestration_state.py prompt-router-hook.py te
   grep -Fq "scripts/$file" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package check omits $file"
 done
+grep -Fq 'agents/codex-orchestration-sol-medium-executive.toml' "$script_dir/reinstall-plugin.sh" ||
+  fail "reinstaller package check omits the Sol / Medium executive"
 pass "safe companion-agent install and complete package inventory"
 
 for phrase in \

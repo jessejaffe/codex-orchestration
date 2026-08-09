@@ -122,15 +122,15 @@ def main() -> int:
         "codex_orchestration_terra_executive",
         'Executive fork: `none`',
         'fork_turns: "none"',
-        "numeric recent context",
         "never literal `all`",
         'name\n`gpt_5_6_terra_high_executive_<objective_slug>`',
         "zero-judgment relay",
         "alone calls agent-control tools",
-        "Do nothing first",
         "codex_orchestration_sol_high_executive",
         "codex_orchestration_sol_low_executive",
+        "codex_orchestration_sol_medium_executive",
         "gpt_5_6_sol_low_executive_<objective_slug>",
+        "gpt_5_6_sol_medium_executive_<objective_slug>",
         "gpt_5_6_sol_high_executive_<objective_slug>",
         "codex_orchestration_sol_xhigh_executive",
         "gpt_5_6_sol_extra_high_executive_<objective_slug>",
@@ -184,7 +184,7 @@ def main() -> int:
     ):
         if required not in routed_context:
             raise AssertionError(f"dispatch contract omits {required!r}")
-    sol_start = routed_context.index("SOL_LOW/SOL_HIGH/SOL_XHIGH: spawn")
+    sol_start = routed_context.index("SOL_LOW/SOL_MEDIUM/SOL_HIGH/SOL_XHIGH: spawn")
     sol_handoff = routed_context[sol_start : routed_context.index("Keep Terra", sol_start)]
     if '`fork_turns: "none"`' not in sol_handoff or "reuse fork" in sol_handoff:
         raise AssertionError("Sol executive did not receive the compact no-history handoff")
@@ -287,6 +287,39 @@ def main() -> int:
     call(prompt_hook, {**base, "prompt": "Turn Orchestration off"}, env)
     if json.loads(state_file.read_text())["active"]:
         raise AssertionError("deactivation was not persisted")
+
+    inline_on = call(
+        prompt_hook,
+        {**base, "prompt": "Review the current setup and turn orchestration on."},
+        env,
+    )
+    if "codex_orchestration_terra_executive" not in context(inline_on):
+        raise AssertionError("inline activation did not route preceding work")
+    if not json.loads(state_file.read_text())["active"]:
+        raise AssertionError("inline activation was not persisted")
+    polite_off = call(
+        prompt_hook,
+        {**base, "prompt": "Please turn orchestration off."},
+        env,
+    )
+    if "Orchestration: OFF for this chat" not in context(polite_off):
+        raise AssertionError("polite inline deactivation was not recognized")
+    if json.loads(state_file.read_text())["active"]:
+        raise AssertionError("polite inline deactivation was not persisted")
+
+    trailing_on = call(
+        prompt_hook,
+        {
+            **base,
+            "prompt": "The setup is ready. Turn orchestration on. Implement the next milestone.",
+        },
+        env,
+    )
+    if "codex_orchestration_terra_executive" not in context(trailing_on):
+        raise AssertionError("sentence-middle activation did not route the prompt")
+    if not json.loads(state_file.read_text())["active"]:
+        raise AssertionError("sentence-middle activation was not persisted")
+    call(prompt_hook, {**base, "prompt": "Turn Orchestration off"}, env)
 
     combined = call(
         prompt_hook,
@@ -409,6 +442,7 @@ def main() -> int:
         "gpt_5_6_sol_high_implementation_",
         "gpt_5_6_sol_extra_high_implementation_",
         "SOL_LOW",
+        "SOL_MEDIUM",
         "SOL_XHIGH",
         "ORCHESTRATION_SCORE: SCORE=",
         "ORCHESTRATION_STATUS: Complexity",

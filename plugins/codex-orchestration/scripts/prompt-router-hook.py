@@ -29,6 +29,12 @@ CONTROL_COMMANDS = tuple(
 )
 CONTROL_SEPARATORS = " \t,;:.!?\u2013\u2014-"
 WORK_CONNECTORS = ("and", "then", "to")
+POLITE_CONTROL_PREFIX = re.compile(
+    r"^(?:(?:okay|ok|alright|all right|now|please|then|so)\s*[,;:]?\s+)*"
+    r"(?:(?:can|could|would|will)\s+you(?:\s+please)?\s+|"
+    r"i\s+(?:want|need)\s+you\s+to\s+|go\s+ahead\s+and\s+|let['’]s\s+)?$"
+)
+INLINE_CONTROL_BOUNDARY = re.compile(r"(?:\band|\bthen|[,;:–—-])\s*$")
 MAX_FORK_TURNS = 64
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
@@ -44,19 +50,20 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration is ON.
+DISPATCH_CONTEXT = """Orchestration ON.
 Root: zero-judgment relay; alone calls agent-control tools.
 On steer drain only this request's Orchestration children; inherited unfinished work stays in scope
 unless cancelled/replaced; new prompt amends it.
-Executive fork: `__FORK_TURNS__`; numeric recent context; never literal `all`.
+Executive fork: `__FORK_TURNS__`; never literal `all`.
 Spawn `codex_orchestration_terra_executive`; `fork_turns: "__FORK_TURNS__"`; name
-`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score active request once; return protocol.
-USER_REQUEST: <verbatim current user prompt>` Do nothing first.
+`gpt_5_6_terra_high_executive_<objective_slug>`; message `Score once; return protocol.
+USER_REQUEST: <verbatim current user prompt>`.
 Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
 Keep Terra's `ORCHESTRATION_ACCEPTANCE:` internal and immutable.
-SOL_LOW/SOL_HIGH/SOL_XHIGH: spawn `codex_orchestration_sol_low_executive`/
-`codex_orchestration_sol_high_executive`/`codex_orchestration_sol_xhigh_executive`;
-`fork_turns: "none"`: `gpt_5_6_sol_low_executive_<objective_slug>`/
+SOL_LOW/SOL_MEDIUM/SOL_HIGH/SOL_XHIGH: spawn `codex_orchestration_sol_low_executive`/
+`codex_orchestration_sol_medium_executive`/`codex_orchestration_sol_high_executive`/
+`codex_orchestration_sol_xhigh_executive`; `fork_turns: "none"`:
+`gpt_5_6_sol_low_executive_<objective_slug>`/`gpt_5_6_sol_medium_executive_<objective_slug>`/
 `gpt_5_6_sol_high_executive_<objective_slug>`/`gpt_5_6_sol_extra_high_executive_<objective_slug>`.
 Send exact Terra `ORCHESTRATION_SCORE:` + `ORCHESTRATION_STATUS:` + `ORCHESTRATION_ACCEPTANCE:` +
 `USER_REQUEST: <verbatim current user prompt>`. Return
@@ -75,7 +82,7 @@ reuse fork; name prior executive task + `_takeover`; send
 `TAKEOVER_CONTEXT: <exact acceptance + takeover + producer result>`. Continue only after
 ORCHESTRATION_ACCEPT or ORCHESTRATION_TAKEOVER_READY.
 Every routed final ends:
-`Executive route: <GPT-5.6 Sol / Low if SOL_LOW, GPT-5.6 Sol / High if SOL_HIGH, else GPT-5.6 Sol / Extra High>`
+`Executive route: GPT-5.6 Sol / <Low|Medium|High|Extra High matching executive>`
 `Implementation route: <model / effort from status>`
 Current root route from `turn_context`: `__ROOT_ROUTE__`.
 On takeover add `Route takeover: Activated — __ROOT_ROUTE__`,
@@ -128,7 +135,7 @@ def emit(value: dict[str, Any]) -> None:
 
 
 def control_request(prompt: str) -> tuple[bool, bool] | None:
-    """Return (activate, has_work) for the last imperative control sentence."""
+    """Return (activate, has_work) for the last imperative control phrase."""
     clauses = [
         clause
         for raw_line in prompt.splitlines()
@@ -141,29 +148,46 @@ def control_request(prompt: str) -> tuple[bool, bool] | None:
         line = " ".join(raw_clause.strip().lower().split())
         if line.startswith(("- ", "* ")):
             line = line[2:].lstrip()
-        clause_match: tuple[bool, str] | None = None
+        clause_match: tuple[int, bool, str, str] | None = None
         for command, activate in CONTROL_COMMANDS:
-            if not line.startswith(command):
-                continue
-            tail = line[len(command) :]
-            if tail and tail[0] not in CONTROL_SEPARATORS:
-                continue
-            tail = tail.lstrip(CONTROL_SEPARATORS)
-            for connector in WORK_CONNECTORS:
-                if tail == connector:
-                    tail = ""
+            search_from = 0
+            while True:
+                start = line.find(command, search_from)
+                if start < 0:
                     break
-                if tail.startswith(connector + " "):
-                    tail = tail[len(connector) :].lstrip(CONTROL_SEPARATORS)
-                    break
-            clause_match = (activate, tail)
-            break
+                end = start + len(command)
+                search_from = start + 1
+                if start and line[start - 1].isalnum():
+                    continue
+                tail = line[end:]
+                if tail and tail[0] not in CONTROL_SEPARATORS:
+                    continue
+                prefix = line[:start]
+                polite = bool(POLITE_CONTROL_PREFIX.fullmatch(prefix))
+                inline = bool(INLINE_CONTROL_BOUNDARY.search(prefix))
+                if start and not polite and not inline:
+                    continue
+                prefix_work = "" if polite else INLINE_CONTROL_BOUNDARY.sub("", prefix)
+                prefix_work = prefix_work.strip(CONTROL_SEPARATORS)
+                tail = tail.lstrip(CONTROL_SEPARATORS)
+                for connector in WORK_CONNECTORS:
+                    if tail == connector:
+                        tail = ""
+                        break
+                    if tail.startswith(connector + " "):
+                        tail = tail[len(connector) :].lstrip(CONTROL_SEPARATORS)
+                        break
+                candidate = (start, activate, prefix_work, tail)
+                if clause_match is None or candidate[0] >= clause_match[0]:
+                    clause_match = candidate
         if clause_match is None:
             remaining_work.append(line)
             continue
-        matched = clause_match[0]
-        if clause_match[1]:
-            remaining_work.append(clause_match[1])
+        matched = clause_match[1]
+        if clause_match[2]:
+            remaining_work.append(clause_match[2])
+        if clause_match[3]:
+            remaining_work.append(clause_match[3])
     if matched is None:
         return None
     return matched, any(remaining_work)
