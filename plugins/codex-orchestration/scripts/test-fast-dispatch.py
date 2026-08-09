@@ -140,6 +140,7 @@ def main() -> int:
         "ORCHESTRATION_DELEGATE",
         "DIRECTIVE",
         "at most 60 words",
+        "Send Terra's exact `ORCHESTRATION_SCORE:`",
         "Keep Terra's AGENT/TASK immutable; ignore remaps",
         "spawn those values",
         "no follow-up before implementation",

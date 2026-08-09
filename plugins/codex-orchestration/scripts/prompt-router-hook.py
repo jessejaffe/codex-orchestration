@@ -55,11 +55,12 @@ USER_REQUEST: <verbatim current user prompt>` Do nothing first.
 Before next spawn show Terra's exact `ORCHESTRATION_STATUS:` in commentary; never replace it.
 TERRA_HIGH: use AGENT/TASK and Terra; no follow-up before implementation; next: `spawn_agent`
 for that exact AGENT/TASK, never Terra.
-For SOL_HIGH spawn `codex_orchestration_sol_high_executive`; SOL_XHIGH
-`codex_orchestration_sol_xhigh_executive`; reuse fork. Names
-`gpt_5_6_sol_high_executive_<objective_slug>` / `gpt_5_6_sol_extra_high_executive_<objective_slug>`.
-`USER_REQUEST: <verbatim current user prompt>`. It returns
-ORCHESTRATION_DELEGATE and DIRECTIVE: `NONE` or at most 60 words; never restate request.
+SOL_HIGH/SOL_XHIGH: spawn `codex_orchestration_sol_high_executive`/
+`codex_orchestration_sol_xhigh_executive`; reuse fork:
+`gpt_5_6_sol_high_executive_<objective_slug>`/`gpt_5_6_sol_extra_high_executive_<objective_slug>`.
+Send Terra's exact `ORCHESTRATION_SCORE:` +
+`USER_REQUEST: <verbatim current user prompt>`. Return
+ORCHESTRATION_DELEGATE + DIRECTIVE: `NONE` or at most 60 words.
 Keep Terra's AGENT/TASK immutable; ignore remaps; spawn those values. Send
 `USER_REQUEST: <verbatim prompt + attachment paths>` plus DIRECTIVE; never generate a
 specification or restate the request. Routine verification: code/tests/deployed revision; never

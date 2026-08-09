@@ -67,6 +67,13 @@ def main() -> int:
         raise AssertionError("root can replace Terra's scored checkpoint with generic commentary")
     if "Keep Terra's AGENT/TASK immutable; ignore remaps" not in hook:
         raise AssertionError("root can accept an executive-generated implementation identity")
+    sol_handoff_start = hook.index("SOL_HIGH/SOL_XHIGH: spawn")
+    sol_handoff = hook[sol_handoff_start : hook.index("Keep Terra", sol_handoff_start)]
+    score_line = "Send Terra's exact `ORCHESTRATION_SCORE:`"
+    if score_line not in sol_handoff:
+        raise AssertionError("root can omit Terra's immutable AGENT/TASK from the Sol executive handoff")
+    if sol_handoff.index(score_line) > sol_handoff.index("USER_REQUEST:"):
+        raise AssertionError("Sol executive handoff does not place Terra's score line before the request")
     for guard in ("Copy Terra's AGENT and TASK", "never shorten, relabel, remap"):
         if executives.count(guard) != 2:
             raise AssertionError(f"pinned Sol executive can rename Terra's implementation task: {guard!r}")
