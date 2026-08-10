@@ -1,7 +1,7 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.0+codex.20260809230114",
-  "description": "Fast Terra-first numeric routing across seven model lanes.",
+  "version": "0.8.1",
+  "description": "Terra-first tweak/build routing with continuous read-only supervision.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -17,8 +17,8 @@
   ],
   "interface": {
     "displayName": "Codex Orchestration",
-    "shortDescription": "Fast credit routing with one numeric score",
-    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Its stable user-level hook sends the current request, the latest unfinished acceptance contract, and up to 64 same-chat turns to GPT-5.6 Terra / High using an explicit numeric context fork. Terra classifies each request as NEW, AMEND, REPLACE, or CANCEL and emits preserved, added, and removed requirements before scoring the combined active objective. Additions, corrections, questions, answers, permissions, and interrupted turns preserve unfinished work; only explicit cancellation or replacement discards the prior objective. The root rejects contradictory amendment contracts before dispatch. Terra assigns one immutable complexity score and routes through seven implementation lanes from Luna / Max to Sol / Extra High. The user-selected root is a zero-judgment relay, and the chosen producer performs the work without nested subagents. An already-satisfied requested state is a successful no-op. Acceptance uses code, tests, and deployed revision state, avoids routine visual tools, allows one corrected fallback for an unavailable or malformed probe, and requires a named mismatch before takeover. Root appends the exact executive route, implementation route, complexity, and current root route metadata. Routine Git and SSH deployment does not force escalation, steering drains only the active branch, and the root reconciles completed side effects before redispatch.",
+    "shortDescription": "Tweak/build routing with checkpoint supervision",
+    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. GPT-5.6 Terra / Max receives the bounded same-chat context, preserves unfinished acceptance, and classifies each request as read-only, small tweak, big tweak, small build, or big build. A tweak changes an existing capability; a build adds a capability, including a release whose scope contains a new feature. Classification, not a numeric score, selects the route; a one-decimal complexity estimate remains telemetry only. For change work, the root starts the selected implementer and then immediately starts a full-context read-only supervisor. The implementer pauses at quiescent checkpoints, the supervisor inspects actual state without editing, and any correction goes back to the same implementer. Only the implementer edits, tests, commits, pushes, and deploys. Small tweaks use Luna / Max with Terra / Max supervision; big tweaks use Terra / Max with Terra / Max supervision; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision. The root is a zero-judgment relay and appends exact route metadata.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [
@@ -27,7 +27,7 @@
     ],
     "websiteURL": "https://github.com/jessejaffe/codex-orchestration",
     "defaultPrompt": [
-      "Tell me \u201cTurn Orchestration on\u201d for same-chat, score-based routing across seven model lanes."
+      "Tell me \u201cTurn Orchestration on\u201d for same-chat tweak/build routing with checkpoint supervision."
     ]
   }
 }

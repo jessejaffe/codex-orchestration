@@ -675,7 +675,19 @@ def parser() -> argparse.ArgumentParser:
     record.add_argument("--turn-id", required=True)
     record.add_argument(
         "--route-classification",
-        choices=("low", "sol-low", "sol-medium", "sol-high", "unreported"),
+        choices=(
+            "read_only",
+            "small_tweak",
+            "big_tweak",
+            "small_build",
+            "big_build",
+            # Accept historical receipts during the 0.8.1 transition.
+            "low",
+            "sol-low",
+            "sol-medium",
+            "sol-high",
+            "unreported",
+        ),
         default="unreported",
     )
     record.add_argument("--implementation", required=True)

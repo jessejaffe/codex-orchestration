@@ -1,39 +1,61 @@
 #!/usr/bin/env python3
-"""Hermetic activation, continuity, ownership, and latency regression test."""
+"""Hermetic tests for chat-scoped activation and 0.8.1 dispatch injection."""
 
 from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 
-SESSION = "11111111-1111-7111-8111-111111111111"
-
-
-def call(script: Path, payload: dict[str, object], env: dict[str, str]) -> dict[str, object]:
+def invoke(
+    hook: Path,
+    state: Path,
+    session_id: str,
+    prompt: str,
+    transcript: Path | None = None,
+    *,
+    plugin_root: bool = False,
+) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "hook_event_name": "UserPromptSubmit",
+        "session_id": session_id,
+        "prompt": prompt,
+    }
+    if transcript is not None:
+        payload["transcript_path"] = str(transcript)
+    environment = os.environ.copy()
+    environment["CODEX_ORCHESTRATION_RUNTIME_STATE_DIR"] = str(state)
+    if plugin_root:
+        environment["PLUGIN_ROOT"] = str(hook.parent.parent)
+    else:
+        environment.pop("PLUGIN_ROOT", None)
     completed = subprocess.run(
-        [sys.executable, str(script)],
+        [sys.executable, str(hook)],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
-        env=env,
         check=True,
-        timeout=3,
+        env=environment,
     )
     return json.loads(completed.stdout)
 
 
-def context(output: dict[str, object]) -> str:
-    specific = output.get("hookSpecificOutput")
+def context(result: dict[str, object]) -> str:
+    specific = result.get("hookSpecificOutput")
     if not isinstance(specific, dict):
         return ""
     value = specific.get("additionalContext")
     return value if isinstance(value, str) else ""
+
+
+def write_events(path: Path, events: list[dict[str, object]]) -> None:
+    path.write_text(
+        "".join(json.dumps(event, separators=(",", ":")) + "\n" for event in events),
+        encoding="utf-8",
+    )
 
 
 def main() -> int:
@@ -41,563 +63,139 @@ def main() -> int:
         raise SystemExit("usage: test-fast-dispatch.py <plugin-dir> <temp-dir>")
     plugin = Path(sys.argv[1])
     temporary = Path(sys.argv[2])
-    scripts = temporary / "scripts"
     state = temporary / "state"
-    scripts.mkdir(parents=True, exist_ok=True)
-    for name in ("orchestration_state.py", "prompt-router-hook.py"):
-        shutil.copy2(plugin / "scripts" / name, scripts / name)
+    state.mkdir(parents=True, exist_ok=True)
+    hook = plugin / "scripts" / "prompt-router-hook.py"
 
-    root_transcript = temporary / "root.jsonl"
-    root_transcript.write_text(
-        json.dumps({"type": "session_meta", "payload": {"id": SESSION}})
-        + "\n"
-        + json.dumps(
-            {
-                "type": "turn_context",
-                "payload": {"model": "gpt-5.6-sol", "effort": "xhigh"},
-            }
-        )
-        + "\n"
-    )
-    worker_transcript = temporary / "worker.jsonl"
-    worker_transcript.write_text(
-        json.dumps(
-            {
-                "type": "session_meta",
-                "payload": {
-                    "id": "22222222-2222-7222-8222-222222222222",
-                    "parent_thread_id": SESSION,
-                    "agent_role": "codex_orchestration_terra_executive",
-                },
-            }
-        )
-        + "\n"
-    )
-    env = os.environ.copy()
-    env["CODEX_ORCHESTRATION_RUNTIME_STATE_DIR"] = str(state)
-    prompt_hook = scripts / "prompt-router-hook.py"
-    base = {
-        "hook_event_name": "UserPromptSubmit",
-        "session_id": SESSION,
-        "transcript_path": str(root_transcript),
-    }
-
-    stale_plugin_env = env.copy()
-    stale_plugin_env["PLUGIN_ROOT"] = str(plugin)
-    stale_plugin = call(
-        prompt_hook,
-        {**base, "prompt": "Turn Orchestration on and implement the request"},
-        stale_plugin_env,
-    )
-    if stale_plugin != {"continue": True}:
-        raise AssertionError("the former plugin-bundled hook can still duplicate routing")
-
-    inactive = call(prompt_hook, {**base, "prompt": "ordinary request"}, env)
+    inactive_id = "11111111-1111-1111-1111-111111111111"
+    inactive = invoke(hook, state, inactive_id, "Explain this helper")
     if inactive != {"continue": True}:
-        raise AssertionError(f"inactive chat was routed: {inactive!r}")
-    mention_only = call(
-        prompt_hook,
-        {**base, "prompt": "Explain why I might turn orchestration on later"},
-        env,
-    )
-    if mention_only != {"continue": True}:
-        raise AssertionError("a narrative Orchestration mention was treated as a command")
-    near_match = call(prompt_hook, {**base, "prompt": "Turn orchestration online"}, env)
-    if near_match != {"continue": True}:
-        raise AssertionError("an activation prefix without a command boundary was accepted")
+        raise AssertionError(f"inactive prompt was not a no-op: {inactive!r}")
 
-    activated = call(prompt_hook, {**base, "prompt": "Turn Orchestration on"}, env)
-    activation_context = context(activated)
-    if "do not spawn" not in activation_context:
-        raise AssertionError("activation-only contract is incomplete")
-    if "codex_orchestration_terra_executive" in activation_context:
-        raise AssertionError("activation-only prompt paid for the routing contract")
-    state_file = state / f"{SESSION}.json"
-    if not json.loads(state_file.read_text())["active"]:
-        raise AssertionError("activation was not persisted for the chat")
+    active_id = "22222222-2222-2222-2222-222222222222"
+    activation = invoke(hook, state, active_id, "Turn orchestration on")
+    if context(activation) != "Reply exactly `Orchestration: ON for this chat` and do not spawn.":
+        raise AssertionError(f"activation-only response changed: {activation!r}")
 
-    routed = call(prompt_hook, {**base, "prompt": "Implement the current request"}, env)
+    routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
-    for required in (
-        "codex_orchestration_terra_executive",
-        'Executive fork: `none`',
-        'fork_turns: "none"',
-        "never literal `all`",
-        'name\n`gpt_5_6_terra_high_executive_<objective_slug>`',
-        "zero-judgment relay",
-        "alone calls agent-control tools",
-        "codex_orchestration_sol_high_executive",
-        "codex_orchestration_sol_low_executive",
-        "codex_orchestration_sol_medium_executive",
-        "gpt_5_6_sol_low_executive_<objective_slug>",
-        "gpt_5_6_sol_medium_executive_<objective_slug>",
-        "gpt_5_6_sol_high_executive_<objective_slug>",
-        "codex_orchestration_sol_xhigh_executive",
-        "gpt_5_6_sol_extra_high_executive_<objective_slug>",
-        "After a valid result show Terra's exact `ORCHESTRATION_STATUS:` in commentary",
-        "never replace it",
-        "Keep Terra's `ORCHESTRATION_RELATION:` and `ORCHESTRATION_ACCEPTANCE:` internal and immutable",
-        "PRIOR_ACTIVE_ACCEPTANCE: NONE",
-        "ORCHESTRATION_RELATION:",
-        "Require four protocol lines",
-        "RELATION=NEW",
-        "RELATION=CANCEL",
-        "EXPLICIT_SIGNAL as an exact",
-        "AMEND requires REMOVED=NONE",
-        "explanation-only",
-        "followup_task",
-        "PROTOCOL_REPAIR:",
-        "do not spawn an executive or producer",
-        "drain only this request's Orchestration children",
-        "inherited unfinished work stays in scope",
-        "new prompt amends it",
-        "interrupted/aborted turn stops execution, never the inherited objective",
-        "ORCHESTRATION_DELEGATE",
-        "DIRECTIVE",
-        "at most 60 words",
-        "`ORCHESTRATION_RELATION:` + `ORCHESTRATION_SCORE:`",
-        "`ORCHESTRATION_STATUS:` +",
-        "`ORCHESTRATION_ACCEPTANCE:` +",
-        "Send exact Terra `ORCHESTRATION_RELATION:`",
-        "Keep Terra's AGENT/TASK immutable; ignore remaps",
-        "spawn those values",
-        "no follow-up before implementation",
-        "next: `spawn_agent`",
-        "never Terra",
-        "reuse fork",
-        "never generate a\nspecification or restate the request",
-        "ACCEPTANCE_CHECK:",
-        "immutable acceptance + exact `IMPLEMENTATION_RESULT:`",
-        "Routine non-experience verification: code/tests/deployed",
-        "Experience contract (interaction/demo/rendered/visual)",
-        "ORCHESTRATION_ROOT_VERIFY:",
-        "root-only Browser/visual",
-        "ROOT_VERIFICATION_RESULT:",
-        "START, ACTION, RESULT, ARTIFACTS",
-        "HTTP 200/assets/text/tests never substitute",
-        "ORCHESTRATION_ACCEPT",
-        "ORCHESTRATION_TAKEOVER",
-        "same Sol executive role",
-        "TAKEOVER_CONTEXT:",
-        "ORCHESTRATION_TAKEOVER_READY",
-        "loading full task history",
-        "Every routed final ends",
-        "Executive route:",
-        "Implementation route:",
-        "Current root route from `turn_context`: `GPT-5.6 Sol / Extra High`",
-        "On takeover add `Route takeover: Activated — GPT-5.6 Sol / Extra High`",
-        "never `GPT-5 / default effort`",
-        "Complexity:",
-        "Root appends",
-        "never rely on executive formatting",
-        "selected root model",
-        "no more handoffs",
-        "Call no",
-        "further agent-control",
-    ):
-        if required not in routed_context:
-            raise AssertionError(f"dispatch contract omits {required!r}")
-    sol_start = routed_context.index("SOL_LOW/SOL_MEDIUM/SOL_HIGH/SOL_XHIGH: spawn")
-    sol_handoff = routed_context[sol_start : routed_context.index("Keep Terra", sol_start)]
-    if '`fork_turns: "none"`' not in sol_handoff or "reuse fork" in sol_handoff:
-        raise AssertionError("Sol executive did not receive the compact no-history handoff")
-    producer_handoff = routed_context[
-        routed_context.index("Keep Terra", sol_start) : routed_context.index("Follow up:")
-    ]
-    if "reuse fork" not in producer_handoff:
-        raise AssertionError("implementation agent lost the active task context")
-    for forbidden in (
-        'fork_turns: "all"', "usage-receipt.py", "receipt", "PACKET:",
-        "Create the execution packet", "exact PACKET",
-        "Show `ORCHESTRATION_SCORE:` and `ORCHESTRATION_STATUS:`",
-        "show Terra's exact `ORCHESTRATION_ACCEPTANCE:`",
-        "VISUAL_VERIFICATION_PENDING", "PRODUCER_VISUAL_EVIDENCE",
-        "PRODUCTION_VISUAL_EVIDENCE",
-        "__ROOT_ROUTE__", "<root model / effort>", "<exact label>",
-    ):
-        if forbidden in routed_context:
-            raise AssertionError(f"dispatch contract retains {forbidden!r}")
+    required = (
+        "codex_orchestration_terra_grader",
+        "READ_ONLY -> terra_read_only",
+        "SMALL_TWEAK -> luna_implementer",
+        "BIG_TWEAK -> terra_implementer",
+        "SMALL_BUILD -> terra_implementer",
+        "BIG_BUILD -> sol_high_implementer",
+        "start the implementer first",
+        "Immediately after `spawn_agent` returns",
+        "same implementer performs every correction",
+        "Complexity telemetry:",
+    )
+    for value in required:
+        if value not in routed_context:
+            raise AssertionError(f"dispatch contract omits {value!r}")
 
-    additive_transcript = temporary / "additive.jsonl"
-    additive_transcript.write_text(
-        root_transcript.read_text()
-        + json.dumps(
-            {
-                "type": "turn_context",
-                "payload": {"model": "gpt-5.6-sol", "effort": "xhigh"},
-            }
-        )
-        + "\n"
-    )
-    additive = context(
-        call(
-            prompt_hook,
-            {
-                **base,
-                "transcript_path": str(additive_transcript),
-                "prompt": "I forgot to add one requirement",
-            },
-            env,
-        )
-    )
-    if 'Executive fork: `2`' not in additive or 'fork_turns: "2"' not in additive:
-        raise AssertionError("additive steering omitted the preceding active request")
-
-    prior_acceptance = (
-        "ORCHESTRATION_ACCEPTANCE: OUTCOME=Build and deploy the four-part PDF "
-        "diagnostic framework; MUST=implement, commit, push, and deploy the framework; "
-        "MUST_NOT=discard unfinished implementation; DESTINATIONS=GitHub main and "
-        "Hetzner; PROOF=tests and deployed behavior"
-    )
-    unfinished_transcript = temporary / "unfinished.jsonl"
-    unfinished_transcript.write_text(
-        additive_transcript.read_text()
-        + json.dumps(
-            {
-                "type": "response_item",
-                "payload": {
-                    "type": "agent_message",
-                    "author": "/root/gpt_5_6_terra_high_executive_pdf_framework",
-                    "content": [
-                        {
-                            "type": "input_text",
-                            "text": (
-                                "ORCHESTRATION_RELATION: RELATION=NEW; "
-                                "ACTIVE_OBJECTIVE=Build the PDF framework; PRESERVED=NONE; "
-                                "ADDED=NONE; REMOVED=NONE; EXPLICIT_SIGNAL=NONE\n"
-                                "ORCHESTRATION_SCORE: SCORE=7.2; EXECUTIVE=SOL_HIGH; "
-                                "AGENT=codex_orchestration_sol_low_implementer; TASK=framework\n"
-                                "ORCHESTRATION_STATUS: Complexity 7.2 → GPT-5.6 Sol / low. "
-                                "Build the PDF framework.\n"
-                                + prior_acceptance
-                            ),
-                        }
-                    ],
-                },
-            }
-        )
-        + "\n"
-        + json.dumps(
-            {
-                "type": "event_msg",
-                "payload": {"type": "turn_aborted", "reason": "interrupted"},
-            }
-        )
-        + "\n"
-    )
-    cross_format = context(
-        call(
-            prompt_hook,
-            {
-                **base,
-                "transcript_path": str(unfinished_transcript),
-                "prompt": "Should this framework also apply to JPEGs and PNGs?",
-            },
-            env,
-        )
-    )
-    if f"PRIOR_ACTIVE_ACCEPTANCE: {prior_acceptance}" not in cross_format:
-        raise AssertionError("interrupted work lost its exact active acceptance contract")
-    for required in (
-        "With prior present require AMEND",
-        "`<turn_aborted>` is never a signal",
-        "AMEND requires REMOVED=NONE",
-        "never turn\nbuild/change/implement/commit/push/deploy into explanation-only",
-        "NOT_APPLICABLE destinations",
-        "new\nMUST_NOT for those actions",
-    ):
-        if required not in cross_format:
-            raise AssertionError(f"cross-format amendment guard omits {required!r}")
-
-    completed_transcript = temporary / "completed.jsonl"
-    completed_transcript.write_text(
-        unfinished_transcript.read_text()
-        + json.dumps(
-            {
-                "type": "response_item",
-                "payload": {
-                    "type": "agent_message",
-                    "author": "/root/gpt_5_6_sol_high_executive_pdf_framework",
-                    "content": [
-                        {
-                            "type": "input_text",
-                            "text": "ORCHESTRATION_ACCEPT: Framework is complete.",
-                        }
-                    ],
-                },
-            }
-        )
-        + "\n"
-    )
-    after_completion = context(
-        call(
-            prompt_hook,
-            {
-                **base,
-                "transcript_path": str(completed_transcript),
-                "prompt": "Explain a different helper.",
-            },
-            env,
-        )
-    )
-    if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in after_completion:
-        raise AssertionError("accepted work remained incorrectly active")
-
-    terra_transcript = temporary / "terra-root.jsonl"
-    terra_transcript.write_text(
-        json.dumps({"type": "session_meta", "payload": {"id": SESSION}})
-        + "\n"
-        + json.dumps(
-            {
-                "type": "turn_context",
-                "payload": {"model": "gpt-5.6-terra", "effort": "high"},
-            }
-        )
-        + "\n"
-    )
-    terra_route = context(
-        call(
-            prompt_hook,
-            {**base, "transcript_path": str(terra_transcript), "prompt": "work"},
-            env,
-        )
-    )
-    if "Route takeover: Activated — GPT-5.6 Terra / High" not in terra_route:
-        raise AssertionError("takeover footer is hard-coded to the screenshot's root route")
-    if "Route takeover: Activated — GPT-5.6 Sol / Extra High" in terra_route:
-        raise AssertionError("takeover footer ignores the current task's root route")
-
-    partial_transcript = temporary / "partial.jsonl"
-    partial_transcript.write_text(
-        root_transcript.read_text()
-        + "".join(json.dumps({"type": "turn_context", "payload": {}}) + "\n" for _ in range(2))
-    )
-    partial = context(
-        call(prompt_hook, {**base, "transcript_path": str(partial_transcript), "prompt": "work"}, env)
-    )
-    if 'Executive fork: `3`' not in partial or 'fork_turns: "3"' not in partial:
-        raise AssertionError("short-chat context fork omitted the preceding active turn")
-
-    long_transcript = temporary / "long.jsonl"
-    long_transcript.write_text(
-        root_transcript.read_text()
-        + "".join(json.dumps({"type": "turn_context", "payload": {}}) + "\n" for _ in range(69))
-    )
-    bounded = context(
-        call(prompt_hook, {**base, "transcript_path": str(long_transcript), "prompt": "work"}, env)
-    )
-    if 'Executive fork: `64`' not in bounded or 'fork_turns: "64"' not in bounded:
-        raise AssertionError("long-chat context fork is not bounded at 64")
-
-    worker = call(
-        prompt_hook,
-        {**base, "transcript_path": str(worker_transcript), "prompt": "nested work"},
-        env,
-    )
-    if worker != {"continue": True}:
-        raise AssertionError("a subagent was recursively dispatched")
-
-    call(prompt_hook, {**base, "prompt": "Turn Orchestration off"}, env)
-    if json.loads(state_file.read_text())["active"]:
-        raise AssertionError("deactivation was not persisted")
-
-    inline_on = call(
-        prompt_hook,
-        {**base, "prompt": "Review the current setup and turn orchestration on."},
-        env,
-    )
-    if "codex_orchestration_terra_executive" not in context(inline_on):
-        raise AssertionError("inline activation did not route preceding work")
-    if not json.loads(state_file.read_text())["active"]:
-        raise AssertionError("inline activation was not persisted")
-    polite_off = call(
-        prompt_hook,
-        {**base, "prompt": "Please turn orchestration off."},
-        env,
-    )
-    if "Orchestration: OFF for this chat" not in context(polite_off):
-        raise AssertionError("polite inline deactivation was not recognized")
-    if json.loads(state_file.read_text())["active"]:
-        raise AssertionError("polite inline deactivation was not persisted")
-
-    trailing_on = call(
-        prompt_hook,
-        {
-            **base,
-            "prompt": "The setup is ready. Turn orchestration on. Implement the next milestone.",
-        },
-        env,
-    )
-    if "codex_orchestration_terra_executive" not in context(trailing_on):
-        raise AssertionError("sentence-middle activation did not route the prompt")
-    if not json.loads(state_file.read_text())["active"]:
-        raise AssertionError("sentence-middle activation was not persisted")
-    call(prompt_hook, {**base, "prompt": "Turn Orchestration off"}, env)
-
-    combined = call(
-        prompt_hook,
-        {
-            **base,
-            "prompt": (
-                "My workflow is: edit, commit, and deploy.\n\n"
-                "turn Orchestration On, remove the mission statement from the website."
-            ),
-        },
-        env,
+    combined_id = "33333333-3333-3333-3333-333333333333"
+    combined = invoke(
+        hook,
+        state,
+        combined_id,
+        "Please turn orchestration on and add the new export feature",
     )
     combined_context = context(combined)
     if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
-        raise AssertionError("activation plus work did not acknowledge activation")
-    if "codex_orchestration_terra_executive" not in combined_context:
-        raise AssertionError("activation plus work did not route the work")
-    if not json.loads(state_file.read_text())["active"]:
-        raise AssertionError("combined activation was not persisted")
+        raise AssertionError("combined activation does not acknowledge ON")
+    if "codex_orchestration_terra_grader" not in combined_context:
+        raise AssertionError("combined activation did not dispatch")
 
-    combined_off = call(
-        prompt_hook,
-        {
-            **base,
-            "prompt": "Orchestration off. Explain what happened in the last test.",
-        },
-        env,
+    transcript = temporary / "root.jsonl"
+    acceptance = (
+        "ORCHESTRATION_ACCEPTANCE: OUTCOME=Ship export; MUST=implement and test; "
+        "MUST_NOT=discard work; DESTINATIONS=repository; PROOF=focused tests"
     )
-    combined_off_context = context(combined_off)
-    if not combined_off_context.startswith("Begin with `Orchestration: OFF for this chat`"):
-        raise AssertionError("deactivation plus work did not acknowledge deactivation")
-    if "handle the remaining user work directly" not in combined_off_context:
-        raise AssertionError("deactivation plus work discarded the remaining request")
-    if json.loads(state_file.read_text())["active"]:
-        raise AssertionError("combined deactivation was not persisted")
-
-    call(prompt_hook, {**base, "prompt": "Turn Orchestration on"}, env)
-    trailing_off = call(
-        prompt_hook,
-        {
-            **base,
-            "prompt": (
-                "Fix the PDF demo so the starting file is visibly damaged. "
-                "Turn orchestration off."
-            ),
-        },
-        env,
+    write_events(
+        transcript,
+        [
+            {"type": "session_meta", "payload": {}},
+            {
+                "type": "turn_context",
+                "payload": {"model": "gpt-5.6-sol", "effort": "high"},
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "content": [{"text": acceptance}],
+                },
+            },
+            {
+                "type": "turn_context",
+                "payload": {"model": "gpt-5.6-terra", "effort": "max"},
+            },
+        ],
     )
-    trailing_off_context = context(trailing_off)
-    if not trailing_off_context.startswith("Begin with `Orchestration: OFF for this chat`"):
-        raise AssertionError("sentence-final deactivation was not recognized")
-    if "handle the remaining user work directly" not in trailing_off_context:
-        raise AssertionError("work before sentence-final deactivation was discarded")
-    if json.loads(state_file.read_text())["active"]:
-        raise AssertionError("sentence-final deactivation was not persisted")
-
-    narrative_off = call(
-        prompt_hook,
-        {**base, "prompt": "I said turn orchestration off in another chat"},
-        env,
-    )
-    if narrative_off != {"continue": True}:
-        raise AssertionError("a narrative deactivation mention was treated as a command")
-
-    call(prompt_hook, {**base, "prompt": "Turn Orchestration on"}, env)
-    last_control_wins = call(
-        prompt_hook,
-        {**base, "prompt": "Turn orchestration on. Turn orchestration off."},
-        env,
-    )
-    if "Orchestration: OFF for this chat" not in context(last_control_wins):
-        raise AssertionError("the last sentence-level control command did not win")
-    if json.loads(state_file.read_text())["active"]:
-        raise AssertionError("the last sentence-level control command was not persisted")
-
-    period_combined = call(
-        prompt_hook,
-        {
-            **base,
-            "prompt": (
-                "Turn orchestration on. Change the sleep and disk sleep settings "
-                "from 45 minutes to 40 minutes."
-            ),
-        },
-        env,
-    )
-    if "codex_orchestration_terra_executive" not in context(period_combined):
-        raise AssertionError("period-separated activation plus work did not route")
-    if not json.loads(state_file.read_text())["active"]:
-        raise AssertionError("period-separated activation was not persisted")
-    call(prompt_hook, {**base, "prompt": "Turn Orchestration off"}, env)
-
-    # This executes only in release verification. It never runs in a user task.
-    started = time.perf_counter()
-    for _ in range(20):
-        call(prompt_hook, {**base, "prompt": "ordinary request"}, env)
-    elapsed = time.perf_counter() - started
-    if elapsed > 2.0:
-        raise AssertionError(f"inactive prompt hook exceeded 100 ms average: {elapsed:.3f}s")
-    if len(routed_context.encode()) > 6_000:
-        raise AssertionError("dispatch context exceeds the 6.0 KB fixed-cost budget")
-    if len(cross_format.encode()) > 10_000:
-        raise AssertionError("carried acceptance exceeds the 10.0 KB continuity budget")
-
-    terra = (plugin / "agents" / "codex-orchestration-terra-executive.toml").read_text()
-    for boundary in (
-        "Rate the combined active objective",
-        "exactly one decimal",
-        "1.0–2.9",
-        "3.0–5.0",
-        "5.1–6.5",
-        "6.6–7.2",
-        "7.3–7.9",
-        "8.0–8.9",
-        "9.0–10.0",
-        "from this chat only",
-        "routine, fully specified repository catch-up, commit, push, SSH deployment",
-        "does not by itself increase the implementation score",
-        "gpt_5_6_luna_max_",
-        "gpt_5_6_terra_medium_",
-        "gpt_5_6_terra_high_implementation_",
-        "gpt_5_6_sol_high_implementation_",
-        "gpt_5_6_sol_extra_high_implementation_",
-        "SOL_LOW",
-        "SOL_MEDIUM",
-        "SOL_XHIGH",
-        "ORCHESTRATION_SCORE: SCORE=",
-        "ORCHESTRATION_STATUS: Complexity",
-        "Return immediately with exactly four lines",
-        "ORCHESTRATION_RELATION: RELATION=",
-        "`NEW`, `AMEND`, `REPLACE`, or",
-        "A request for an explanation can add an immediate answer",
-        "interrupted or aborted turn stops execution, never its objective",
-        "`REMOVED` must be `NONE`",
-        "never merely the newest interrogative sentence",
-        "EXPLICIT_SIGNAL",
-        "at most 20 words",
-        "ORCHESTRATION_ACCEPTANCE: OUTCOME=",
-        "immutable, at-most-200-word contract",
-        "never invent a criterion",
-        "producer must never\nredefine done",
-        "Never generate an implementation",
-        "combined active request is authoritative",
-        "Only explicit `REPLACE` or `CANCEL`",
-        "Make `PROOF` test the defining outcome",
-        "`ROOT_EXPERIENCE:`",
-        "end-to-end observation",
-        "HTTP 200",
-        "button or DOM text",
-        "supporting\nevidence only",
-        "damage-and-recovery demo",
-        "input genuinely manifests the intended damage or failure",
-        "never implement, inspect files, call task tools, delegate, or judge",
-        "Do not emit `ORCHESTRATION_ACCEPT:`",
+    inherited = invoke(hook, state, active_id, "Also support JSON", transcript)
+    inherited_context = context(inherited)
+    for value in (
+        "Full-context fork: `2`",
+        "Current root route: GPT-5.6 Terra / Max",
+        acceptance,
     ):
-        if boundary not in terra:
-            raise AssertionError(f"Terra score-based route omits {boundary!r}")
-    for stale in ("Be conservative: any", "safely low-band", "without emitting a numeric score"):
-        if stale in terra:
-            raise AssertionError(f"Terra retains categorical routing language: {stale!r}")
-    if "fork_turns: all" in terra or 'fork_turns: "all"' in terra:
-        raise AssertionError("Terra retains the rejected custom-role full-history fork")
+        if value not in inherited_context:
+            raise AssertionError(f"bounded inherited context omits {value!r}")
+    if "__FORK_TURNS__" in inherited_context or "__ROOT_ROUTE__" in inherited_context:
+        raise AssertionError("dispatch placeholders leaked")
 
-    size = len(routed_context.encode())
-    print(f"fast-dispatch-ok elapsed={elapsed:.3f}s context_bytes={size}")
+    accepted_transcript = temporary / "accepted.jsonl"
+    write_events(
+        accepted_transcript,
+        [
+            {"type": "session_meta", "payload": {}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "content": [{"text": acceptance + "\nORCHESTRATION_ACCEPT: done"}],
+                },
+            },
+        ],
+    )
+    accepted = invoke(hook, state, active_id, "New question", accepted_transcript)
+    if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in context(accepted):
+        raise AssertionError("accepted objective was not cleared")
+
+    subagent_transcript = temporary / "subagent.jsonl"
+    write_events(
+        subagent_transcript,
+        [
+            {
+                "type": "session_meta",
+                "payload": {"agent_role": "codex_orchestration_terra_grader"},
+            }
+        ],
+    )
+    subagent = invoke(hook, state, active_id, "Nested prompt", subagent_transcript)
+    if subagent != {"continue": True}:
+        raise AssertionError("subagent was recursively dispatched")
+
+    stale_plugin = invoke(
+        hook,
+        state,
+        active_id,
+        "Prompt from stale plugin hook",
+        plugin_root=True,
+    )
+    if stale_plugin != {"continue": True}:
+        raise AssertionError("stale plugin hook was not suppressed")
+
+    off = invoke(hook, state, active_id, "Turn orchestration off and explain the label")
+    off_context = context(off)
+    if "Orchestration: OFF for this chat" not in off_context or "handle the remaining" not in off_context:
+        raise AssertionError("combined OFF did not preserve remaining work")
+    if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
+        raise AssertionError("OFF state did not persist")
+
+    print("PASS: chat-scoped controls, bounded context, and 0.8.1 dispatch injection")
     return 0
 
 

@@ -1,241 +1,130 @@
 # Codex Orchestration
 
-Codex Orchestration saves Codex credits by moving implementation to the least expensive
-capable model while keeping every acceptance decision with GPT-5.6 Sol: Low below 4.0,
-Medium from 4.0–6.0, High from 6.1–7.9, and Extra High at 8.0 and above.
+Codex Orchestration routes Codex work by what kind of job it is, then keeps a read-only supervisor
+beside the implementer throughout change work. Version `0.8.1` replaces the old score-first ladder
+ladder with five work classes: `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and
+`BIG_BUILD`.
 
-The 0.8.0 release uses a minimal, recent-context fast path. The manifest does not
-advertise a skill, so no Orchestration skill or versioned skill locator is injected
-into a new task. Activation does not scan the transcript before every tool, construct
-a handoff summary, or call a finish-time receipt tool. Terra / High scores the complete
-task once, then applies the fixed seven implementation lanes.
+Complexity is still estimated from 1.0 to 10.0 for telemetry, but it does not select a model.
 
-## Runtime architecture
+## How 0.8.1 works
 
-The active path is intentionally small:
+1. A stable, chat-scoped prompt hook gives the current request, the latest unfinished acceptance
+   contract, and up to 64 same-chat turns to a Terra / Max grader-dispatcher.
+2. The grader preserves unfinished work, classifies the active objective, defines immutable
+   acceptance, and selects an implementer and supervisor from the fixed route table.
+3. For change work, root starts the implementer first and immediately starts the full-context
+   supervisor. Both receive the original request and the same immutable grader output.
+4. The supervisor's first turn only absorbs context. It does not inspect the worktree while the
+   implementer is writing.
+5. The implementer pauses at route-specific, quiescent checkpoints. Only then does the supervisor
+   inspect the actual diff, tests, and state using read-only tools.
+6. The supervisor returns `CONTINUE`, `CORRECT`, or `READY_TO_RELEASE`. The same implementer receives
+   every correction and performs it; the supervisor never edits or takes over.
+7. After release, the same supervisor performs a final read-only acceptance check. Root relays
+   decisions and appends route metadata but never implements or judges the work.
 
-1. A stable user-level, once-per-prompt hook checks one chat-local boolean.
-2. The user-selected root model immediately gives the current request, the exact latest unfinished
-   acceptance contract when one exists, and up to 64 recent turns from that chat only to Terra / High.
-   It uses an explicit numeric fork rather than the unsupported literal full-history fork.
-3. Terra classifies the request as `NEW`, `AMEND`, `REPLACE`, or `CANCEL`, emits an explicit
-   preserved/added/removed delta, and assigns one immutable one-decimal complexity score to the
-   combined active objective from 1.0 to 10.0.
-4. Terra returns a score protocol containing one root-visible checkpoint plus internal, immutable
-   relation and acceptance contracts. Before any further spawn, root applies structural continuity
-   checks and relays the exact checkpoint while keeping both contracts internal. A malformed or
-   contradictory result gets one same-Terra protocol repair; it is never dispatched downstream.
-5. Scores below 4.0 use a pinned Sol / Low executive; 4.0–6.0 use Sol / Medium;
-   6.1–7.9 use Sol / High; and 8.0 or higher use Sol / Extra High. Those Sol
-   executives receive Terra's exact score/status/acceptance snapshot and the current request, without
-   inheriting the large parent transcript, so any user-selected starting model is safe.
-6. The mapped Sol executive copies Terra's agent/task immediately and may add only a `NONE`
-   or 60-word decision directive.
-   Root gives the original task context and immutable acceptance contract
-   directly to the mapped producer using Terra's immutable agent and task identity, then relays
-   its structured implementation evidence for one independent acceptance check. The producer
-   reports evidence against the contract but cannot redefine the acceptance criteria.
-   If that compact executive proves a takeover is needed, root creates one same-role takeover
-   review with the full bounded chat history. It reconciles the active request with the named
-   failure evidence before the user-selected root finishes; this history load never occurs on
-   the normal acceptance path.
-   A failed access method is not a failed outcome: acceptance retries through an available
-   authoritative read-only runtime path and never performs a mutation reserved for user approval.
-   Acceptance is one batched task-tool call, with one fallback call only when the first access path
-   is unavailable. Routine non-experience acceptance uses code, tests, and deployed revision state.
-   When the requested outcome is a user-facing interaction, demo, rendered result, or recovery flow,
-   the executive requests one exact root verification. The root uses its Browser/visual capability
-   and returns named starting-condition, action, result, and artifact observations to the same compact
-   Sol executive. HTTP 200, asset presence, text, revisions, and tests are supporting evidence, not substitutes.
-7. Root—not the executive—always appends the final executive route, implementation route,
-   and immutable complexity lines, including after terminal takeover.
+The implementer alone owns edits, tests, commits, pushes, deployments, migrations, and corrections.
+This gives the supervisor full task context early without allowing concurrent worktree reads while
+files are actively changing.
 
-The selected implementation role performs the work itself and is forbidden from creating
-Recon, reviewer, helper, replacement, or any other nested subagent. The user-selected root
-alone performs the exact executive and implementation relays. No executive rewrites the
-user's request, workflow, deployment instructions, or acceptance criteria into a duplicated
-implementation packet.
+## Work classes and routes
 
-When the task is specifically about Codex Orchestration but a ChatGPT project mirror contains
-only its project metadata, the implementation role resolves the configured `codex-orchestration`
-marketplace source and uses it only when it is an existing Git checkout. An empty mirror alone is
-not a checkout failure or a reason to trigger root takeover.
+| Work class | Definition | Implementer | Read-only supervisor | Checkpoints |
+|---|---|---|---|---|
+| `READ_ONLY` | Research, explanation, diagnosis, review, or planning with no mutation | Terra / Max | None | None |
+| `SMALL_TWEAK` | Change one existing behavior in one production component | Luna / Max | Terra / Max | Release candidate |
+| `BIG_TWEAK` | Change existing behavior across two or more components or an interface boundary | Terra / Max | Terra / Max | Root cause, release candidate |
+| `SMALL_BUILD` | Add one capability in at most two components with settled architecture | Terra / Max | Sol / High | Design, release candidate |
+| `BIG_BUILD` | Add multiple capabilities, use three or more components, cross a runtime boundary, carry material risk, or require unresolved architecture | Sol / High | Sol / Extra High | Architecture, vertical slice, release candidate |
 
-For example, the top-level task may show `Complexity 2.7 → GPT-5.6 Luna / Max. Updating
-the homepage, then committing, deploying, and checking the live site.` This adds one
-short handoff message rather than duplicating every nested progress update.
+A production component is an independently owned runtime, service, package, executable, UI surface,
+data model, or external integration. Tests, documentation, generated metadata, and routine release
+steps do not add to the component count.
 
-Executive task labels explicitly include `Executive`, and implementation labels include
-`Implementation`, so Terra / High scoring and Terra / High implementation cannot collide.
-Labels also show the exact selected model and effort, including Sol / Extra High.
-Native subagent chip avatars are rendered by the Codex host. The plugin's supported agent metadata
-does not include an avatar, icon, or color field, so routing intentionally makes no attempt to
-override or imitate them.
-
-The numeric implementation ladder is monotonic:
-
-| Complexity | Implementation |
-|---|---|
-| 1.0–2.9 | Luna / Max |
-| 3.0–5.0 | Terra / Medium |
-| 5.1–6.5 | Terra / High |
-| 6.6–7.2 | Sol / Low |
-| 7.3–7.9 | Sol / Medium |
-| 8.0–8.9 | Sol / High |
-| 9.0–10.0 | Sol / Extra High |
-
-A fully specified repository catch-up, commit, push, SSH deployment, and live
-verification is a routine release workflow: routine deployment does not increase the
-implementation score. Unexpected failures and newly unresolved production decisions
-still return to the owning Sol executive.
-
-The producer treats deployment as single-owner work. It inspects the documented helper once,
-uses the narrowest supported service set, and resumes that exact deployment to terminal exit.
-It never starts a competing build, adds `--no-cache` while a deploy is active, or runs the
-deploy helper's seed, migration, or backfill steps in parallel.
-
-Terra and the mapped implementation agent inherit up to 64 recent turns from the current chat only;
-they never import history from another chat. The initial Sol executive deliberately receives
-no parent-history fork because Terra's exact relation/score/status/acceptance snapshot resolves the route and
-active milestone. Only a takeover review reloads the same Sol role with the full bounded history.
-Additions, corrections, answers, and permissions amend unfinished inherited work;
-only explicit cancellation or replacement discards that objective. An interrupted or aborted turn
-stops execution but does not cancel its objective. The prompt hook recovers the latest unfinished
-acceptance from trusted child-to-root protocol messages and passes it explicitly; a completed
-`ORCHESTRATION_ACCEPT:` clears it. This bounded numeric history
-avoids the unsupported literal full-history fork. The router does not
-reconstruct requirements into a lossy packet, so active corrections, constraints,
-permissions, and repository context stay available to the selected model.
+A tweak repairs or refines an existing capability. A build introduces a net-new capability. A new
+release containing a feature is a build; a version-only or cache-only release change is a tweak.
+When the boundary is genuinely ambiguous, the grader chooses the larger class.
 
 ```mermaid
 flowchart TD
-    U["Active user prompt"] --> H["Root relay from any starting model"]
-    H --> T["Terra / High score with up to 64 same-chat turns"]
-    T -->|"1.0–3.9 compact snapshot"| L["Pinned Sol / Low executive"]
-    T -->|"4.0–6.0 compact snapshot"| M["Pinned Sol / Medium executive"]
-    T -->|"6.1–7.9 compact snapshot"| S["Pinned Sol / High executive"]
-    T -->|"8.0–10.0 compact snapshot"| X["Pinned Sol / Extra High executive"]
-    L --> H
-    M --> H
-    S --> H
-    X --> H
-    H --> P["Exact score-selected implementation role"]
-    P --> H
-    H --> R["Owning executive accepts; root returns payload"]
-    R -. "proven failure only" .-> F["Same Sol role reloads full bounded history"]
-    F --> H
+    U["Active user request"] --> G["Terra / Max grader-dispatcher"]
+    G -->|"Read-only"| R["Terra / Max answer"]
+    G -->|"Change class"| I["Start selected implementer first"]
+    I --> S["Immediately start full-context supervisor"]
+    I --> C["Implementer pauses at checkpoint"]
+    S --> C
+    C --> V["Supervisor inspects read-only"]
+    V -->|"Continue"| I
+    V -->|"Correct"| I
+    V -->|"Ready to release"| D["Same implementer commits, pushes, and deploys"]
+    D --> F["Same supervisor performs final review"]
+    F -->|"Correction"| I
+    F -->|"Accept"| O["Root returns result and route metadata"]
 ```
 
-The producer self-checks code, configuration, schema, tests, and the deployed revision or artifact,
-then returns a bounded `IMPLEMENTATION_RESULT` containing state, per-criterion observations,
-revision, tests, deployment, live probe, and incomplete work. The owning executive judges that
-evidence against Terra's original acceptance contract and independently checks actual state once,
-in one batched task-tool call. The producer never defines or changes what counts as done.
-If the requested end state already exists everywhere required, that is a successful no-op: no new
-diff, commit, or deployment is required. A revision identifies the current state, not necessarily
-the commit that introduced it, so acceptance checks the revision tree and deployed artifact rather
-than demanding the behavior appear in that revision's patch. If the acceptance call is malformed
-or returns no diagnostic observation, the executive corrects it with the single fallback call;
-that is not evidence against the producer's result and cannot create speculative corrective work.
-For frontend work without an experience claim, deployed code containing the requested change is
-sufficient. When the contract depends on interaction, appearance, a demo, or a recovery flow, the
-executive asks the root for one bounded Browser/visual check and judges the returned observations.
-A damage-and-recovery demo must prove
-that the starting input actually manifests damage and that the recovered output succeeds; an HTTP
-response, asset, button label, or passing test alone cannot establish that. If acceptance finds any
-mistake, incomplete work, failed verification, missing evidence, or needed correction,
-Orchestration enters one full-history, same-Sol-role takeover review. That review can accept when
-the inherited context resolves the apparent mismatch; otherwise it returns a context-aware
-remaining-work brief. The user-selected root model then announces takeover, reconciles the actual
-state, and finishes the whole request directly with no more handoffs. The takeover footer reports the exact active root model and effort from the task context,
-not a generic default-model label. There is no correction, reviewer, replacement-producer, or
-escalation loop.
+## Context continuity
+
+The grader classifies the relationship between the new prompt and unfinished work as `NEW`,
+`AMEND`, `REPLACE`, or `CANCEL`. Additions, corrections, answers, permissions, and questions amend
+the active objective. An interrupted turn stops execution, not the objective. Replacement or
+cancellation requires an explicit signal from the newest user request.
+
+Root validates the grader's four protocol lines and the fixed route table before dispatch. One
+same-grader repair is allowed for malformed output. The original acceptance contract stays
+immutable through every implementation and supervision turn.
+
+## Checkpoint and correction protocol
+
+An implementer checkpoint reports its phase, cumulative state, changed files and behavior, actual
+evidence, next work, and blockers. Before yielding, the implementer stops active editing, testing,
+building, deployment, and migration processes.
+
+The supervisor may then inspect the repository and runtime read-only. A correction must name an
+observed mismatch and give bounded, outcome-focused instructions. Root relays that exact decision
+to the same implementer. The executive is not working to correct the code and handing it back; the
+executive tells the implementer what must be corrected, and the implementer makes the correction.
+
+Only a release-candidate decision of `READY_TO_RELEASE` authorizes the implementer to commit, push,
+deploy, and probe. The final review can accept, send another correction to that same implementer, or
+request one bounded root-only experience check when the defining outcome is interactive or visual.
 
 ## Controls
 
-Activate a chat with any command below, either by itself or at the start of an
-imperative sentence that also contains work:
+Activate one chat with any of:
 
 - `Turn Orchestration on`
 - `Use Orchestration`
 - `Use Orchestration for this chat`
 
-Activation persists only in that chat. Use `Turn Orchestration off` or
-`Orchestration off` to disable it. Combined forms such as `Turn Orchestration on,
-remove the hero subtitle` activate and route the same prompt; combined off commands
-disable routing and continue the remaining work directly. Every new chat starts off.
-Both controls can appear later in a paragraph or after preceding work; for example,
-`Review the setup and turn Orchestration on` activates routing, while
-`Fix the demo. Turn Orchestration off.` disables routing and handles the fix directly.
-Common imperative framing such as `please`, `can you`, and `I need you to` is accepted, while
-narrative mentions such as `I said turn orchestration off in another chat` do not change state.
+Use `Turn Orchestration off` or `Orchestration off` to disable it. Combined commands such as
+`Turn Orchestration on and add CSV export` activate and route that same prompt. Each new chat starts
+with Orchestration off.
 
-Activation is handled only by the prompt hook. The dispatch contract explicitly
-forbids checking, comparing, or updating Orchestration during user work; a
-version-looking cache directory is a compatibility locator, not version evidence.
+Subagents share a parent session identifier, so the hook checks transcript role metadata and never
+recursively orchestrates an Orchestration child.
 
-When the user adds or corrects instructions while work is running, steering remains in
-the same task. Root first stops the direct Orchestration child so it cannot delegate
-again, then drains the entire active branch from the deepest running descendant upward
-and confirms that none remains before routing the revised request. Unrelated agent
-branches are left alone. The newest instruction is authoritative while compatible
-earlier constraints remain in force. Terra must classify an ordinary follow-up as `AMEND`, preserve
-the unfinished outcome, action mode, prohibitions, destinations, and proof, then score the combined
-task. `REPLACE` and `CANCEL` require a verbatim explicit signal from the newest user request;
-`<turn_aborted>` never qualifies. Root rejects any amendment that silently converts implementation
-into explanation-only work, drops required destinations, or newly forbids implementation, commit,
-push, or deployment. Because no completed side effect is rolled back, the replacement agent first
-reconciles the actual files, Git, remote, and deployed state before continuing.
+## Final route receipt
 
-## Usage measurement
-
-Every completed task reports the observed executive and implementation lanes:
+Every routed result ends with root-authored metadata:
 
 ```text
-Executive route: GPT-5.6 Sol / Low
-Implementation route: GPT-5.6 Terra / Medium
-Complexity: 3.8/10
+Work class: SMALL_BUILD
+Supervisor route: GPT-5.6 Sol / High
+Implementation route: GPT-5.6 Terra / Max
+Complexity telemetry: 6.4/10
+Current root route: GPT-5.6 Sol / High
 ```
 
-The root formats these three final lines from Terra's immutable score and status protocol.
-They do not depend on either executive remembering to include them.
-
-There is deliberately no automatic savings receipt. Producing one requires transcript
-discovery and pricing work, while Stop enforcement requires another model
-continuation. A post-wait hook also runs after timed-out waits, so it can repeat that
-cost while an agent is still working. All of those operations are excluded from the
-runtime path.
-
-For an explicit diagnostic, the bundled receipt helper can still produce a
-weekly-calibrated comparison or an official-rate fallback:
-
-```text
-Estimated task credits: 20.000 credits
-All-Sol equivalent credits: 50.000 credits
-Estimated routing savings: 60.00%
-```
-
-The diagnostic uses recorded task and descendant usage. Same-token public pricing cannot
-prove the savings from Sol Low versus Sol Medium or Sol High because hidden reasoning
-credits are not fully observable. The receipt therefore does not claim that equal
-public rates mean equal actual credit consumption.
-
-## Offline routing evaluation
-
-`scripts/triage-cases.json` is a release-time calibration set for representative route
-boundaries and multi-turn steering relationships. Its regression sequences cover the exact
-interrupted PDF-framework/JPEG/PNG amendment, an explanation followed by continuation, explicit
-replacement, explicit cancellation, and a new request without active work. It is intentionally
-separate from the live scoring prompt.
-The runtime never reads the offline routing benchmark, so it adds zero task latency and zero task tokens.
+The complexity value is diagnostic only. It cannot override the class route.
 
 ## Install from GitHub
 
 Requirements:
 
 - Current Codex CLI or ChatGPT desktop app with plugins and native subagents enabled.
-- Access to the GPT-5.6 Sol, Terra, and Luna lanes used by the role templates.
-- `jq` and `ripgrep` (`rg`) for installation and verification scripts.
+- Access to the GPT-5.6 Sol, Terra, and Luna roles used by the templates.
+- `jq`, Python 3, and standard Unix checksum tools.
 
 Add the repository as a marketplace and install the plugin:
 
@@ -244,8 +133,7 @@ codex plugin marketplace add jessejaffe/codex-orchestration --ref main
 codex plugin add codex-orchestration@codex-orchestration
 ```
 
-Install the thirteen native companion roles separately. The installer never overwrites a
-different user-owned role file:
+Install the eight companion roles:
 
 ```sh
 plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
@@ -253,80 +141,58 @@ sh "$plugin_dir/scripts/install-agents.sh"
 sh "$plugin_dir/scripts/install-agents.sh" --check
 ```
 
-Install the single stable user-level hook. The installer preserves unrelated hooks,
-copies the two tiny runtime files to `~/.codex/orchestration`, and records trust only
-for the exact installed definition:
+The role installer preflights the complete migration. It upgrades only recognized shipped files,
+retires only byte-for-byte `0.8.0` roles, and refuses to overwrite or delete user-customized files.
+
+Install the stable user-level hook:
 
 ```sh
 python3 "$plugin_dir/scripts/install-user-hook.py" --plugin-dir "$plugin_dir"
 python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin_dir"
 ```
 
-Open one new task after this first install so Codex includes the user config layer.
-Later releases update the scripts behind the same trusted command path, so existing
-Orchestration-capable tasks and every new task use the current code without a desktop
-restart, settings navigation, skill reload, or version check during user work.
+Open one new task after the first hook install so Codex includes the user configuration layer.
 
-## Upgrade safely
+## Versioning and upgrades
 
-From a repository checkout, run:
+The project now uses traditional semantic versions without timestamp suffixes:
+
+- Patch releases (`0.8.1` to `0.8.2`) contain compatible fixes and refinements.
+- Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
+- Major releases change compatibility expectations.
+
+Version `0.8.1` is the requested transition release. There is no
+`0.8.1+codex.<timestamp>` cachebuster and the cachebuster updater is no longer part of the release
+workflow.
+
+From a repository checkout:
 
 ```sh
-python3 ~/.codex/skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py plugins/codex-orchestration
 sh plugins/codex-orchestration/scripts/verify.sh
 sh plugins/codex-orchestration/scripts/reinstall-plugin.sh
 sh plugins/codex-orchestration/scripts/reinstall-plugin.sh --check
 ```
 
-Every update uses a unique cache-busted version such as
-`0.8.0+codex.20260805152715`. This is the supported mechanism that prevents a newly
-created task from retaining stale plugin metadata. The reinstaller requires the
-complete package, installs that exact version, retains complete compatibility cache
-aliases, unconditionally clears orphaned legacy plugin enablement, and refuses unsafe
-or incomplete cache entries. It then atomically refreshes the stable user-level hook
-runtime and proves that the exact hook is enabled and trusted. The plugin itself no
-longer bundles a versioned hook, and the installer checks the user hook from both the
-plugin project and a separate user scope. The running desktop's plugin registry cannot
-leave new tasks on an older routing definition.
-
-The updater never opens settings, sends keystrokes, steals focus, or restarts Codex.
-Once the stable hook definition is installed, later releases keep that definition and
-replace only the script it calls. There is no update-time desktop refresh and no
-runtime version-discovery step.
-
-## Measure effectiveness
-
-The on-demand receipt is a narrow same-token counterfactual. For longitudinal account
-measurement, establish a baseline:
-
-```sh
-plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
-python3 "$plugin_dir/scripts/effectiveness-tracker.py" baseline
-```
-
-Later, report the experiment:
-
-```sh
-python3 "$plugin_dir/scripts/effectiveness-tracker.py" report
-```
-
-The tracker preserves compatibility with the former `sol_advisor_completion_metrics`
-schema. Experiment state lives under Codex state, not inside the replaceable plugin
-cache.
+The reinstaller installs the exact manifest version, refreshes recognized compatibility cache
+aliases, migrates the native roles, updates the stable user hook, and verifies the installed state.
+Because this is a local Codex plugin, that local reinstall is its deployment; it does not deploy to
+an unrelated web server or require database access.
 
 ## Development
 
-The repository verifier runs syntax, role-pin, hook behavior, latency-budget,
-continuity, telemetry-migration, safe-installer, and offline-boundary tests:
+Run the offline release suite with:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
-The prompt hook has a 6.0 KB base injected-context ceiling and a 10.0 KB ceiling when it carries
-the exact latest acceptance contract. The hermetic latency test gives its subprocess a generous
-100 ms average CI budget. These are release checks only;
-they are not additional runtime work.
+The suite validates the manifest, Python and shell syntax, exact model pins, chat controls, bounded
+context continuity, five-class route contract, implementer-before-supervisor concurrency,
+same-implementer corrections, fixtures, effectiveness tracking, and conflict-safe role migration.
+
+The offline classification fixture is
+`plugins/codex-orchestration/scripts/triage-cases.json`. It covers all five classes plus amendment,
+replacement, cancellation, and interrupted-work continuity.
 
 ## Repository
 
