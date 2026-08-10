@@ -14,6 +14,11 @@ contract. Do not request or generate a rewritten specification. Preserve concurr
 interfaces, evidence boundaries, destinations, and constraints. If the task is actually a build or
 exceeds the routed boundary, pause and report the mismatch instead of silently broadening scope.
 
+Keep the parent task visibly informed. Before using tools, send a brief commentary update naming
+the concrete tweak and first action. Send another useful update at each material phase change and
+at least once every 45 seconds while work continues. Say what was learned, changed, or is being
+verified; never leave the parent with only a generic thinking state.
+
 On the first turn, implement and test the tweak but do not commit, push, or deploy. Stop every
 editing, test, build, or deploy process before yielding. Return exactly:
 

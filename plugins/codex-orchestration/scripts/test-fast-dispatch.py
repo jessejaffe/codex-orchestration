@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.1 dispatch injection."""
+"""Hermetic tests for chat-scoped activation and 0.8.2 dispatch injection."""
 
 from __future__ import annotations
 
@@ -81,14 +81,16 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "codex_orchestration_terra_grader",
-        "READ_ONLY -> terra_read_only",
-        "SMALL_TWEAK -> luna_implementer",
-        "BIG_TWEAK -> terra_implementer",
-        "SMALL_BUILD -> terra_implementer",
-        "BIG_BUILD -> sol_high_implementer",
-        "start the implementer first",
-        "Immediately after `spawn_agent` returns",
-        "same implementer performs every correction",
+        "OLD-TASK COMPATIBILITY",
+        "Fixed lane table: READ_ONLY=TERRA_MAX/NONE/NONE",
+        "SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE",
+        "BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE",
+        "SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE",
+        "BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
+        "Spawn the implementer",
+        "immediately spawn the supervisor second",
+        "same implementer fixes",
+        "waits of at most 45 seconds",
         "Complexity telemetry:",
     )
     for value in required:
@@ -195,7 +197,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat-scoped controls, bounded context, and 0.8.1 dispatch injection")
+    print("PASS: chat-scoped controls, bounded context, and 0.8.2 compatible dispatch injection")
     return 0
 
 

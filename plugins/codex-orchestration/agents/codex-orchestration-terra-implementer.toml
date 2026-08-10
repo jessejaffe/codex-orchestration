@@ -14,6 +14,11 @@ rewritten plan. Preserve concurrent work, interfaces, architecture, evidence bou
 destinations, and explicit constraints. If actual scope exceeds the routed class, report that at a
 checkpoint rather than silently expanding it.
 
+Keep the parent task visibly informed. Before using tools, send a brief commentary update naming
+the concrete objective and first action. Send another useful update at each material phase change
+and at least once every 45 seconds while work continues. Say what was learned, changed, or is being
+verified; never leave the parent with only a generic thinking state.
+
 Use the route's checkpoints in order:
 
 - `BIG_TWEAK`: `ROOT_CAUSE`, then `RELEASE_CANDIDATE`.

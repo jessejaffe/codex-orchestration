@@ -1,7 +1,7 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.1",
-  "description": "Terra-first tweak/build routing with continuous read-only supervision.",
+  "version": "0.8.2",
+  "description": "Old-task-compatible tweak/build routing with visible checkpoint supervision.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -17,8 +17,8 @@
   ],
   "interface": {
     "displayName": "Codex Orchestration",
-    "shortDescription": "Tweak/build routing with checkpoint supervision",
-    "longDescription": "Activate Codex Orchestration for the current chat with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. GPT-5.6 Terra / Max receives the bounded same-chat context, preserves unfinished acceptance, and classifies each request as read-only, small tweak, big tweak, small build, or big build. A tweak changes an existing capability; a build adds a capability, including a release whose scope contains a new feature. Classification, not a numeric score, selects the route; a one-decimal complexity estimate remains telemetry only. For change work, the root starts the selected implementer and then immediately starts a full-context read-only supervisor. The implementer pauses at quiescent checkpoints, the supervisor inspects actual state without editing, and any correction goes back to the same implementer. Only the implementer edits, tests, commits, pushes, and deploys. Small tweaks use Luna / Max with Terra / Max supervision; big tweaks use Terra / Max with Terra / Max supervision; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision. The root is a zero-judgment relay and appends exact route metadata.",
+    "shortDescription": "Visible tweak/build routing in new or old tasks",
+    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. GPT-5.6 Terra / Max receives the bounded same-task context, preserves unfinished acceptance, and classifies each request as read-only, small tweak, big tweak, small build, or big build. Classification, not a numeric score, selects the route; complexity remains telemetry only. Version 0.8.2 retains the 0.8.0 and 0.8.1 custom-agent identities needed for old-task catalog compatibility and can use pinned built-in fallbacks when an older task has neither catalog, so it never silently substitutes a default model. For change work, root starts the selected implementer and immediately starts a full-context read-only supervisor. Root reports implementation start, supervisor readiness, 45-second waiting heartbeats, checkpoint review, correction, release, and final verification in the parent task. The implementer pauses at quiescent checkpoints, the supervisor inspects without editing, and every correction goes back to the same implementer. Small tweaks use Luna / Max with Terra / Max supervision; big tweaks use Terra / Max with Terra / Max supervision; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

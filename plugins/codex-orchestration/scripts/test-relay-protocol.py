@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.1 classification and checkpoint supervision."""
+"""Static contract tests for 0.8.2 classification, compatibility, and supervision."""
 
 from __future__ import annotations
 
@@ -18,6 +18,9 @@ EXPECTED_AGENTS = {
     "codex-orchestration-terra-supervisor.toml": ("codex_orchestration_terra_supervisor", "gpt-5.6-terra", "max"),
     "codex-orchestration-sol-high-supervisor.toml": ("codex_orchestration_sol_high_supervisor", "gpt-5.6-sol", "high"),
     "codex-orchestration-sol-xhigh-supervisor.toml": ("codex_orchestration_sol_xhigh_supervisor", "gpt-5.6-sol", "xhigh"),
+    "codex-orchestration-terra-executive.toml": ("codex_orchestration_terra_executive", "gpt-5.6-terra", "max"),
+    "codex-orchestration-sol-high-executive.toml": ("codex_orchestration_sol_high_executive", "gpt-5.6-sol", "high"),
+    "codex-orchestration-sol-xhigh-executive.toml": ("codex_orchestration_sol_xhigh_executive", "gpt-5.6-sol", "xhigh"),
 }
 
 
@@ -47,10 +50,13 @@ def main() -> int:
         actual = (parsed.get("name"), parsed.get("model"), parsed.get("model_reasoning_effort"))
         if actual != expected:
             raise AssertionError(f"wrong model pin for {filename}: {actual!r}")
+        if any(role in filename for role in ("grader", "read-only", "supervisor", "executive")):
+            if parsed.get("sandbox_mode") != "read-only":
+                raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.1":
-        raise AssertionError(f"manifest does not use traditional 0.8.1: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.2":
+        raise AssertionError(f"manifest does not use traditional 0.8.2: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -58,21 +64,22 @@ def main() -> int:
     require(
         grader,
         (
-            "authority; complexity is one-decimal telemetry only",
+            "Work class is the routing authority; numeric complexity is",
             "`READ_ONLY`",
             "`SMALL_TWEAK`",
             "`BIG_TWEAK`",
             "`SMALL_BUILD`",
             "`BIG_BUILD`",
-            "A new release that contains a new feature is a build",
-            "Tests, docs, generated metadata, and routine deployment are",
-            "If a boundary is ambiguous, choose the larger class",
-            "codex_orchestration_luna_implementer",
-            "codex_orchestration_terra_implementer",
-            "codex_orchestration_sol_high_implementer",
-            "codex_orchestration_terra_supervisor",
-            "codex_orchestration_sol_high_supervisor",
-            "codex_orchestration_sol_xhigh_supervisor",
+            "A release containing a feature is a build",
+            "Tests, documentation, generated metadata, routine release work",
+            "Ambiguity routes upward",
+            "IMPLEMENTER=`LUNA_MAX`",
+            "IMPLEMENTER=`TERRA_MAX`",
+            "IMPLEMENTER=`SOL_HIGH`",
+            "SUPERVISOR=`TERRA_MAX`",
+            "SUPERVISOR=`SOL_HIGH`",
+            "SUPERVISOR=`SOL_XHIGH`",
+            "Never emit `READY_TO_DISPATCH`",
         ),
         "grader contract",
     )
@@ -81,20 +88,20 @@ def main() -> int:
     require(
         router,
         (
-            "start the implementer first",
-            "Immediately after `spawn_agent` returns",
-            "same `fork_turns",
-            "supervisor is ready and the checkpoint exists",
-            "same implementer performs every correction",
-            "same implementer alone commits, pushes, deploys",
-            "Complexity must be one decimal",
-            "For `CANCEL`, require class READ_ONLY",
+            "Spawn the implementer\nfirst and immediately spawn the supervisor second",
+            "OLD-TASK COMPATIBILITY",
+            "built-in `worker` with",
+            "built-in `default` with",
+            "same implementer fixes",
+            "WAIT AND PROGRESS",
+            "waits of at most 45 seconds",
+            "READY_TO_DISPATCH",
             "Complexity telemetry:",
         ),
         "root relay contract",
     )
-    if router.index("start the implementer first") > router.index("Immediately after `spawn_agent` returns"):
-        raise AssertionError("router does not specify implementer-before-supervisor ordering")
+    if "Never attempt an unavailable identity" not in router:
+        raise AssertionError("router does not guard stale old-task catalogs")
 
     for filename in (
         "codex-orchestration-terra-supervisor.toml",
@@ -127,6 +134,7 @@ def main() -> int:
                 "SUPERVISOR_READY_TO_RELEASE",
                 "IMPLEMENTATION_RESULT:",
                 "yourself",
+                "at least once every 45 seconds",
             ),
             filename,
         )
@@ -143,7 +151,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: traditional version, five work classes, eight roles, and checkpoint relay contract")
+    print("PASS: 0.8.2, five work classes, eleven stable roles, compatibility, and progress contract")
     return 0
 
 

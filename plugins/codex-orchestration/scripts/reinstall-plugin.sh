@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration 0.8.1 and safely retire the configured legacy identity.
+# Install Codex Orchestration 0.8.2 and safely retire the configured legacy identity.
 
 set -eu
 
@@ -24,8 +24,8 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-printf '%s\n' "$manifest_version" | grep -Eq '^0\.8\.1$' ||
-  fail "this installer requires the traditional release version 0.8.1: $manifest_version"
+printf '%s\n' "$manifest_version" | grep -Eq '^0\.8\.2$' ||
+  fail "this installer requires the traditional release version 0.8.2: $manifest_version"
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
   cache_root=$CODEX_ORCHESTRATION_CACHE_ROOT
@@ -99,6 +99,9 @@ agents/codex-orchestration-sol-high-implementer.toml
 agents/codex-orchestration-terra-supervisor.toml
 agents/codex-orchestration-sol-high-supervisor.toml
 agents/codex-orchestration-sol-xhigh-supervisor.toml
+agents/codex-orchestration-terra-executive.toml
+agents/codex-orchestration-sol-high-executive.toml
+agents/codex-orchestration-sol-xhigh-executive.toml
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
@@ -351,9 +354,9 @@ current=$(installed_version "$current_plugin_id") || fail "new plugin was not li
 current_cache=$cache_root/$manifest_version
 validate_complete_package "$current_cache"
 
-# A complete, conflict-free eight-role install is a prerequisite for retiring either
+# A complete, conflict-free eleven-role install is a prerequisite for retiring either
 # legacy configured identity. The companion installer preflights every current and
-# legacy file, proves all eight current files, and only then removes exact shipped
+# legacy file, proves all eleven current files, and only then removes exact obsolete
 # legacy files. Customized legacy agents therefore stop this migration without being
 # overwritten and before plugin or marketplace removal.
 sh "$current_cache/scripts/install-agents.sh"

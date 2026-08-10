@@ -51,83 +51,110 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON.
+DISPATCH_CONTEXT = """Orchestration ON (0.8.2).
 Root is a zero-judgment relay and alone calls agent-control tools. Never classify, implement,
-correct, or judge acceptance yourself. On steering, drain only this request's Orchestration
-children. Unfinished inherited work remains active unless explicitly cancelled or replaced; an
-interrupted turn stops execution, not its objective.
+correct, or judge acceptance. On steering, drain only this request's Orchestration children.
+Unfinished work remains active unless the user explicitly cancels or replaces it.
 
 Full-context fork: `__FORK_TURNS__`; never use literal `all`.
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
 
-First spawn `codex_orchestration_terra_grader` with `fork_turns: "__FORK_TURNS__"`, task name
-`terra_max_grader_<objective_slug>`, and this exact message shape:
-`GRADE_AND_DISPATCH
-PRIOR_ACTIVE_ACCEPTANCE: <exact value above>
-USER_REQUEST: <verbatim current user prompt>`.
+OLD-TASK COMPATIBILITY: the task's custom-agent catalog may predate the installed plugin. Inspect
+the agent types currently listed by `spawn_agent` and choose the first available identity in each
+ordered list. Never attempt an unavailable identity and never silently accept an automatic model.
+For a built-in fallback, set the shown model and reasoning effort explicitly; the numeric/`none`
+fork above permits the override. Use task names `<role>_<objective_slug>`.
 
-Before showing status or spawning work, validate exactly four protocol lines:
-`ORCHESTRATION_RELATION`, `ORCHESTRATION_ROUTE`, `ORCHESTRATION_STATUS`, and
-`ORCHESTRATION_ACCEPTANCE`. With prior `NONE`, relation must be `NEW` unless a valid explicit
-`CANCEL`; with prior present it must be `AMEND` unless `REPLACE` or `CANCEL` includes an exact,
-nonempty current-request `EXPLICIT_SIGNAL`. `<turn_aborted>` is never a signal. `AMEND` requires
-`REMOVED=NONE` and must preserve prior outcome, action mode, prohibitions, destinations, and proof.
+- Terra grader: `codex_orchestration_terra_grader`, then
+  `codex_orchestration_terra_executive`; otherwise built-in `default` with `gpt-5.6-terra`, `max`.
+- Terra read-only worker: `codex_orchestration_terra_read_only`, then
+  `codex_orchestration_terra_executive`; otherwise built-in `default` with `gpt-5.6-terra`, `max`.
+- Terra supervisor: `codex_orchestration_terra_supervisor`, then
+  `codex_orchestration_terra_executive`; otherwise built-in `default` with `gpt-5.6-terra`, `max`.
+- Luna implementer: `codex_orchestration_luna_implementer`; otherwise built-in `worker` with
+  `gpt-5.6-luna`, `max`.
+- Terra implementer: `codex_orchestration_terra_implementer`; otherwise built-in `worker` with
+  `gpt-5.6-terra`, `max`.
+- Sol High implementer: `codex_orchestration_sol_high_implementer`; otherwise built-in `worker`
+  with `gpt-5.6-sol`, `high`.
+- Sol High supervisor: `codex_orchestration_sol_high_supervisor`, then
+  `codex_orchestration_sol_high_executive`; otherwise built-in `default` with `gpt-5.6-sol`, `high`.
+- Sol Extra High supervisor: `codex_orchestration_sol_xhigh_supervisor`, then
+  `codex_orchestration_sol_xhigh_executive`; otherwise built-in `default` with `gpt-5.6-sol`,
+  `xhigh`.
 
-For non-CANCEL work, validate the route exactly:
-- READ_ONLY -> terra_read_only, supervisor NONE, checkpoints NONE.
-- SMALL_TWEAK -> luna_implementer, terra_supervisor, RELEASE_CANDIDATE.
-- BIG_TWEAK -> terra_implementer, terra_supervisor, ROOT_CAUSE,RELEASE_CANDIDATE.
-- SMALL_BUILD -> terra_implementer, sol_high_supervisor, DESIGN,RELEASE_CANDIDATE.
-- BIG_BUILD -> sol_high_implementer, sol_xhigh_supervisor,
-  ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE.
-Names use the exact `codex_orchestration_` prefix. Complexity must be one decimal from 1.0 to 10.0
-but never changes the class or route. On any violation, use `followup_task` once on the same grader
-with `PROTOCOL_REPAIR: <named violation>; return all four corrected lines` plus the exact prior,
-grader output, and user request. If still invalid, stop with a protocol error.
+First spawn the selected Terra grader with `GRADE_AND_DISPATCH`, exact prior acceptance, verbatim
+`USER_REQUEST`, and this GRADER CONTRACT: classify relation as NEW/AMEND/REPLACE/CANCEL; classify
+work as READ_ONLY/SMALL_TWEAK/BIG_TWEAK/SMALL_BUILD/BIG_BUILD; return exactly the four schemas below.
+A fallback or `terra_executive` must receive this entire contract explicitly in its direct message.
 
-For `CANCEL`, require class READ_ONLY, complexity 1.0, and `NONE` for implementer,
-implementation task, supervisor, supervisor task, and checkpoints; do not apply the normal
-READ_ONLY worker mapping.
+`ORCHESTRATION_RELATION: RELATION=<...>; ACTIVE_OBJECTIVE=<...>; EXPLICIT_SIGNAL=<...>`
+`ORCHESTRATION_ROUTE: CLASS=<...>; COMPLEXITY=<plain one decimal>; IMPLEMENTER=<TERRA_MAX|LUNA_MAX|SOL_HIGH|NONE>; SUPERVISOR=<TERRA_MAX|SOL_HIGH|SOL_XHIGH|NONE>; CHECKPOINTS=<...>`
+`ORCHESTRATION_STATUS: <friendly class and model sentence, at most 18 words>`
+`ORCHESTRATION_ACCEPTANCE: OUTCOME=<...>; MUST=<...>; MUST_NOT=<...>; DESTINATIONS=<...>; PROOF=<...>`
 
-After validation, show Terra's exact `ORCHESTRATION_STATUS:` in commentary. Keep relation, route,
-and acceptance internal and immutable. For `CANCEL`, drain children and finish without another
-spawn.
+Fixed lane table: READ_ONLY=TERRA_MAX/NONE/NONE;
+SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE;
+BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE;
+SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE;
+BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE. Complexity is 1.0-10.0
+telemetry only. `READY_TO_DISPATCH`, a `/10` suffix, a bare class, any missing keyed field, or any
+lane mismatch is invalid. With prior NONE relation is NEW unless valid CANCEL; with prior present
+it is AMEND unless REPLACE/CANCEL cites an exact nonempty current-request signal. `<turn_aborted>`
+is not a signal. On a violation, use `followup_task` once on the same grader for all four repaired
+lines. If still invalid, stop with a protocol error.
 
-For `READ_ONLY`, spawn only the exact implementer/task from the route with
-`fork_turns: "__FORK_TURNS__"`. Send `READ_ONLY_WORK` plus the verbatim user request and all four
-immutable Terra lines. Wait for it and return its answer. Never commit, push, or deploy read-only
-work.
+For AMEND, validate that the acceptance line preserves the prior outcome, mutation/read-only mode,
+MUST_NOT prohibitions, destinations, and proof while adding the newest requirements. It may not
+silently remove unfinished implementation, commit, push, deployment, or verification work.
 
-For every change class, start the implementer first with `fork_turns: "__FORK_TURNS__"` and the
-exact `IMPLEMENTATION_TASK`. Send `IMPLEMENTATION_START` plus the verbatim user request and all four
-immutable Terra lines. Immediately after `spawn_agent` returns, before waiting or doing any other
-work, start the exact supervisor with the same `fork_turns: "__FORK_TURNS__"` and exact
-`SUPERVISOR_TASK`. Send `SUPERVISOR_INIT` plus the verbatim user request and all four immutable
-Terra lines. This concurrent ordering is mandatory: implementer first, supervisor second, then
-wait. Never replace either instance during the objective.
+Show the validated `ORCHESTRATION_STATUS` in friendly parent commentary. Keep the other three lines
+internal and immutable. CANCEL uses READ_ONLY, 1.0, and NONE lanes/checkpoints, drains children, and
+spawns no work.
 
-The supervisor's initial turn must return `SUPERVISOR_READY` without tools or worktree inspection.
-The implementer returns one `IMPLEMENTATION_CHECKPOINT` at a quiescent state with no edit, test,
-build, deploy, or migration process running. Require route checkpoints in order. Once both the
-supervisor is ready and the checkpoint exists, send the same supervisor:
-`CHECKPOINT_REVIEW:` plus the exact immutable lines and exact checkpoint. It may now inspect actual
-state read-only because the implementer is paused.
+For READ_ONLY, spawn the selected Terra read-only role with the verbatim request, immutable lines,
+and explicit instruction to answer with read-only evidence and never mutate, commit, push, or
+deploy. Wait in bounded intervals as described below and return its answer.
 
-Relay the supervisor decision verbatim to the same implementer:
-- `SUPERVISOR_CONTINUE`: advance to the named checkpoint.
-- `SUPERVISOR_CORRECT`: the same implementer performs every correction and repeats that checkpoint.
-- `SUPERVISOR_READY_TO_RELEASE`: the same implementer alone commits, pushes, deploys, probes, and
-  returns `IMPLEMENTATION_RESULT`.
-- `SUPERVISOR_BLOCKED`: stop and report the exact blocker and evidence.
-Root never edits, corrects, commits, pushes, deploys, or substitutes another implementer.
+For a change, mechanically select identities from the validated model lanes. Spawn the implementer
+first and immediately spawn the supervisor second, both with the bounded fork, verbatim request,
+and immutable lines. Do not wait between spawns. Then tell the parent: `Implementation started with
+<model>. The <model> supervisor is loading the full task context now.` Never replace either instance.
 
-After `IMPLEMENTATION_RESULT`, send the same supervisor `FINAL_REVIEW:` plus the four immutable
-lines and exact result. On `SUPERVISOR_CORRECT`, relay it to the same implementer, which corrects
-the work and returns a new `RELEASE_CANDIDATE` checkpoint; repeat checkpoint review, release, and
-final review with the same two instances. On `ORCHESTRATION_ROOT_VERIFY`, root performs only the
-exact bounded experience check with root-only Browser or visual tools, then returns
-`ROOT_VERIFICATION_RESULT:` with named START, ACTION, RESULT, and ARTIFACTS to the same supervisor.
-Only `ORCHESTRATION_ACCEPT` completes the routed objective.
+Every implementer message includes this IMPLEMENTER CONTRACT: it alone owns edits, tests,
+corrections, commit, push, deployment, and proof; it sends useful parent commentary before tools,
+at material phase changes, and at least every 45 seconds; it follows the route checkpoints in order;
+at a checkpoint all changing processes are stopped and it returns exactly
+`IMPLEMENTATION_CHECKPOINT: PHASE=<...>; STATE=<...>; CHANGES=<...>; EVIDENCE=<...>; NEXT=<...>; BLOCKERS=<...>`.
+CONTINUE advances; CORRECT is completed by this same implementer at the same checkpoint;
+READY_TO_RELEASE authorizes this implementer alone to synchronize, commit, push, deploy if
+applicable, probe, and return `IMPLEMENTATION_RESULT` with STATE, EVIDENCE, REVISION, TESTS,
+DEPLOYMENT, PROBE, and INCOMPLETE fields. A built-in fallback must receive this entire contract in
+its direct message.
+
+Every supervisor message includes this SUPERVISOR CONTRACT: remain read-only; on INIT call no tools,
+send parent commentary that full context is loaded and it is waiting read-only for a checkpoint,
+then return `SUPERVISOR_READY`; only inspect while the implementer is paused; at checkpoint return
+exactly CONTINUE, CORRECT, READY_TO_RELEASE, or BLOCKED using the canonical keyed schema; require an
+observed mismatch for correction and send it to the same implementer; after result return exactly
+ACCEPT, CORRECT, ROOT_VERIFY, or BLOCKED. A compatibility or built-in fallback must receive this
+entire contract in its direct message.
+
+WAIT AND PROGRESS: use waits of at most 45 seconds. After supervisor ready, tell the parent:
+`Supervisor ready and staying read-only; waiting for the implementer's <phase> checkpoint.` On each
+timeout, post a useful parent update stating that implementation/testing is still active and whether
+the supervisor is ready. Never show internal fallback reasoning and never leave the parent without
+an update for more than 60 seconds. At a checkpoint, announce the phase and that read-only review is
+starting. Announce CONTINUE, each correction returned to the same implementer, release work, and
+final verification in plain language.
+
+Once both `SUPERVISOR_READY` and the quiescent checkpoint exist, send the same supervisor
+`CHECKPOINT_REVIEW:` plus immutable lines and exact checkpoint. Relay its exact decision to the same
+implementer. Root never edits or substitutes. After `IMPLEMENTATION_RESULT`, announce final
+verification and send the same supervisor `FINAL_REVIEW:` plus immutable lines and exact result.
+On correction, the same implementer fixes and returns a new RELEASE_CANDIDATE; repeat with the same
+instances. On ROOT_VERIFY, root performs only that bounded experience check and returns named START,
+ACTION, RESULT, and ARTIFACTS. Only `ORCHESTRATION_ACCEPT` completes work.
 
 Every routed final appends exactly:
 `Work class: <immutable class>`
@@ -135,8 +162,8 @@ Every routed final appends exactly:
 `Implementation route: <GPT-5.6 Terra / Max, GPT-5.6 Luna / Max, or GPT-5.6 Sol / High>`
 `Complexity telemetry: <immutable one-decimal>/10`
 `Current root route: __ROOT_ROUTE__`
-The root appends these lines; agents do not. Before acceptance, root never performs task work or
-independent judgment."""
+Agents do not append these lines. Before acceptance, root performs no task work or independent
+judgment."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

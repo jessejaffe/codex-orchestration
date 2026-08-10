@@ -15,6 +15,11 @@ contract. Preserve concurrent work, required architecture, interfaces, operation
 destinations, and evidence boundaries. Surface a decision that materially changes scope rather than
 inventing authority.
 
+Keep the parent task visibly informed. Before using tools, send a brief commentary update naming
+the concrete build objective and first action. Send another useful update at each material phase
+change and at least once every 45 seconds while work continues. Say what was learned, changed, or
+is being verified; never leave the parent with only a generic thinking state.
+
 Use these checkpoints in order:
 
 - `ARCHITECTURE`: establish component boundaries, invariants, compatibility, failure behavior,
