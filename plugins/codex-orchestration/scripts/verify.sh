@@ -107,20 +107,24 @@ for role in terra-grader terra-read-only luna-implementer terra-implementer sol-
 done
 pass 'reinstaller package inventory'
 
-for value in \
-  'READ_ONLY' \
-  'SMALL_TWEAK' \
-  'BIG_TWEAK' \
-  'SMALL_BUILD' \
-  'BIG_BUILD' \
-  'implementer first' \
-  'same implementer' \
-  '0.8.1'; do
-  grep -Fq "$value" "$repo_readme" || fail "README omits $value"
-done
-if grep -Eq '0\.8\.0\+codex|cachebuster version|seven implementation lanes|numeric routing' "$repo_readme"; then
-  fail 'README still teaches the old version or routing scheme'
+if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
+  for value in \
+    'READ_ONLY' \
+    'SMALL_TWEAK' \
+    'BIG_TWEAK' \
+    'SMALL_BUILD' \
+    'BIG_BUILD' \
+    'implementer first' \
+    'same implementer' \
+    '0.8.1'; do
+    grep -Fq "$value" "$repo_readme" || fail "README omits $value"
+  done
+  if grep -Eq '0\.8\.0\+codex|cachebuster version|seven implementation lanes|numeric routing' "$repo_readme"; then
+    fail 'README still teaches the old version or routing scheme'
+  fi
+  pass '0.8.1 documentation'
+else
+  pass 'repository documentation is intentionally outside the installed plugin package'
 fi
-pass '0.8.1 documentation'
 
 pass 'Codex Orchestration 0.8.1 release verification complete'
