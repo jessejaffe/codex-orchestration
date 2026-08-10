@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.3 classification, fallback, and supervision."""
+"""Static contract tests for 0.8.4 native grading and checkpoint supervision."""
 
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ from pathlib import Path
 
 
 EXPECTED_AGENTS = {
-    "codex-orchestration-terra-grader.toml": ("codex_orchestration_terra_grader", "gpt-5.6-terra", "max"),
     "codex-orchestration-terra-read-only.toml": ("codex_orchestration_terra_read_only", "gpt-5.6-terra", "max"),
     "codex-orchestration-luna-implementer.toml": ("codex_orchestration_luna_implementer", "gpt-5.6-luna", "max"),
     "codex-orchestration-terra-implementer.toml": ("codex_orchestration_terra_implementer", "gpt-5.6-terra", "max"),
@@ -52,53 +51,45 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.3":
-        raise AssertionError(f"manifest does not use traditional 0.8.3: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.4":
+        raise AssertionError(f"manifest does not use traditional 0.8.4: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
-
-    grader = documents["codex-orchestration-terra-grader.toml"]
-    require(
-        grader,
-        (
-            "Work class is the routing authority; numeric complexity is",
-            "`READ_ONLY`",
-            "`SMALL_TWEAK`",
-            "`BIG_TWEAK`",
-            "`SMALL_BUILD`",
-            "`BIG_BUILD`",
-            "A release containing a feature is a build",
-            "Tests, documentation, generated metadata, routine release work",
-            "Ambiguity routes upward",
-            "IMPLEMENTER=`LUNA_MAX`",
-            "IMPLEMENTER=`TERRA_MAX`",
-            "IMPLEMENTER=`SOL_HIGH`",
-            "SUPERVISOR=`TERRA_MAX`",
-            "SUPERVISOR=`SOL_HIGH`",
-            "SUPERVISOR=`SOL_XHIGH`",
-            "Never emit `READY_TO_DISPATCH`",
-        ),
-        "grader contract",
-    )
 
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
     require(
         router,
         (
-            "Spawn the implementer\nfirst and immediately spawn the supervisor second",
-            "TASK-CATALOG COMPATIBILITY",
-            "built-in `worker` with",
-            "built-in `default` with",
-            "Never use a legacy custom-agent identity",
-            "same implementer fixes",
-            "WAIT AND PROGRESS",
-            "waits of at most 45 seconds",
+            "FIRST ACTION",
+            "Starting Terra / Max classification now.",
+            "built-in `default` with model",
+            "`gpt-5.6-terra`, reasoning `max`",
+            "`terra_max_grader_<objective_slug>`",
+            "Terra / Max is classifying this request now.",
+            "intervals of at most 15 seconds",
+            "READ_ONLY=no mutation",
+            "SMALL_TWEAK=one existing behavior/one component",
+            "BIG_TWEAK=existing",
+            "SMALL_BUILD=one new capability",
+            "BIG_BUILD=2+ capabilities",
+            "feature release is a build",
+            "ambiguity routes upward",
+            "READ_ONLY=TERRA_MAX/NONE/NONE",
+            "SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE",
+            "BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE",
+            "SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE",
+            "BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
+            "Spawn the implementer first and immediately spawn",
+            "same implementer",
+            "normal work waits are at most 45 seconds",
             "READY_TO_DISPATCH",
             "Complexity telemetry:",
         ),
         "root relay contract",
     )
-    if "attempt an unavailable identity" not in router:
+    if "codex_orchestration_terra_grader" in router:
+        raise AssertionError("router retains the broken custom Terra grader presentation")
+    if "Never attempt an unavailable or legacy type" not in router:
         raise AssertionError("router does not guard unavailable task-catalog identities")
     for legacy_identity in ("terra_executive", "sol_high_executive", "sol_xhigh_executive"):
         if legacy_identity in router:
@@ -152,7 +143,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.3, five work classes, eight roles, direct fallback, and progress contract")
+    print("PASS: 0.8.4, native Terra grader, seven companion profiles, and progress contract")
     return 0
 
 

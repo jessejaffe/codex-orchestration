@@ -51,110 +51,88 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.3).
-Root is a zero-judgment relay and alone calls agent-control tools. Never classify, implement,
-correct, or judge acceptance. On steering, drain only this request's Orchestration children.
-Unfinished work remains active unless the user explicitly cancels or replaces it.
+DISPATCH_CONTEXT = """Orchestration ON (0.8.4). Act immediately as a zero-judgment relay.
+Root alone calls agent-control tools; it never classifies, edits, corrects, or judges acceptance.
+Unfinished work remains active unless the newest request explicitly cancels or replaces it.
 
-Full-context fork: `__FORK_TURNS__`; never use literal `all`.
+FORK=`__FORK_TURNS__` (never literal `all`)
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
 
-TASK-CATALOG COMPATIBILITY: inspect the agent types currently listed by `spawn_agent`. Use the
-single canonical custom identity below when it is listed; otherwise go directly to the shown
-built-in fallback. Never use a legacy custom-agent identity, attempt an unavailable identity, or
-accept an automatic model choice. For every built-in fallback, set model and reasoning effort
-explicitly; the numeric/`none` fork above permits the override. Use task names
-`<role>_<objective_slug>`.
+FIRST ACTION — say `Starting Terra / Max classification now.`, then do not analyze or restate this
+contract. Spawn built-in `default` with model
+`gpt-5.6-terra`, reasoning `max`, FORK, and task name `terra_max_grader_<objective_slug>`. Its direct
+message must contain only `GRADE_AND_DISPATCH`, the prior-acceptance line above, verbatim
+`USER_REQUEST`, and this compact GRADER CONTRACT:
 
-- Terra grader: `codex_orchestration_terra_grader`; otherwise built-in `default` with
-  `gpt-5.6-terra`, `max`.
-- Terra read-only worker: `codex_orchestration_terra_read_only`; otherwise built-in `default` with
-  `gpt-5.6-terra`, `max`.
-- Terra supervisor: `codex_orchestration_terra_supervisor`; otherwise built-in `default` with
-  `gpt-5.6-terra`, `max`.
-- Luna implementer: `codex_orchestration_luna_implementer`; otherwise built-in `worker` with
-  `gpt-5.6-luna`, `max`.
-- Terra implementer: `codex_orchestration_terra_implementer`; otherwise built-in `worker` with
-  `gpt-5.6-terra`, `max`.
-- Sol High implementer: `codex_orchestration_sol_high_implementer`; otherwise built-in `worker`
-  with `gpt-5.6-sol`, `high`.
-- Sol High supervisor: `codex_orchestration_sol_high_supervisor`; otherwise built-in `default`
-  with `gpt-5.6-sol`, `high`.
-- Sol Extra High supervisor: `codex_orchestration_sol_xhigh_supervisor`; otherwise built-in
-  `default` with `gpt-5.6-sol`, `xhigh`.
+- Relation: NEW when prior is NONE; otherwise AMEND while preserving unfinished outcome, mode,
+  prohibitions, destinations, and proof. REPLACE/CANCEL requires an exact explicit quote from the
+  newest request; interruption is not a signal.
+- Class: READ_ONLY=no mutation; SMALL_TWEAK=one existing behavior/one component; BIG_TWEAK=existing
+  behavior across 2+ components or a boundary; SMALL_BUILD=one new capability in at most 2 settled
+  components; BIG_BUILD=2+ capabilities, 3+ components, a runtime boundary, material risk, or open
+  architecture. Tests/docs/release/deploy do not add components; a feature release is a build;
+  ambiguity routes upward. Complexity is one-decimal 1.0-10.0 telemetry only.
+- Lanes: READ_ONLY=TERRA_MAX/NONE/NONE; SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE;
+  BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE;
+  SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE;
+  BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE.
+- Return exactly four single lines:
+  `ORCHESTRATION_RELATION: RELATION=<...>; ACTIVE_OBJECTIVE=<...>; EXPLICIT_SIGNAL=<...>`
+  `ORCHESTRATION_ROUTE: CLASS=<...>; COMPLEXITY=<one decimal>; IMPLEMENTER=<...>; SUPERVISOR=<...>; CHECKPOINTS=<...>`
+  `ORCHESTRATION_STATUS: <friendly class/model/next-action sentence, at most 18 words>`
+  `ORCHESTRATION_ACCEPTANCE: OUTCOME=<...>; MUST=<...>; MUST_NOT=<...>; DESTINATIONS=<...>; PROOF=<...>`
+  CANCEL uses READ_ONLY, 1.0, and NONE lanes/checkpoints. Never emit `READY_TO_DISPATCH` or `/10`.
 
-First spawn the selected Terra grader with `GRADE_AND_DISPATCH`, exact prior acceptance, verbatim
-`USER_REQUEST`, and this GRADER CONTRACT: classify relation as NEW/AMEND/REPLACE/CANCEL; classify
-work as READ_ONLY/SMALL_TWEAK/BIG_TWEAK/SMALL_BUILD/BIG_BUILD; return exactly the four schemas below.
-A built-in fallback must receive this entire contract explicitly in its direct message.
+Immediately after the spawn returns, tell the parent `Terra / Max is classifying this request now.`
+Wait for the grader in intervals of at most 15 seconds; on timeout say it is still classifying. Do
+not wait 45 seconds or perform work while waiting. Validate all keys, relation, lane, and AMEND
+preservation mechanically. One malformed response gets one `followup_task` repair on the same
+grader; a second failure is a protocol error. Show the validated status; keep other lines immutable.
+CANCEL drains only Orchestration children for this request and spawns no work.
 
-`ORCHESTRATION_RELATION: RELATION=<...>; ACTIVE_OBJECTIVE=<...>; EXPLICIT_SIGNAL=<...>`
-`ORCHESTRATION_ROUTE: CLASS=<...>; COMPLEXITY=<plain one decimal>; IMPLEMENTER=<TERRA_MAX|LUNA_MAX|SOL_HIGH|NONE>; SUPERVISOR=<TERRA_MAX|SOL_HIGH|SOL_XHIGH|NONE>; CHECKPOINTS=<...>`
-`ORCHESTRATION_STATUS: <friendly class and model sentence, at most 18 words>`
-`ORCHESTRATION_ACCEPTANCE: OUTCOME=<...>; MUST=<...>; MUST_NOT=<...>; DESTINATIONS=<...>; PROOF=<...>`
+TASK CATALOG: for work roles, use the canonical custom type when listed by `spawn_agent`; otherwise
+go directly to its pinned built-in fallback with FORK. Never attempt an unavailable or legacy type.
+Canonical/fallback and required task-name prefix:
+- read-only: `codex_orchestration_terra_read_only` / `default` Terra max / `terra_max_read_only_`
+- Luna implementer: `codex_orchestration_luna_implementer` / `worker` Luna max / `luna_max_implementer_`
+- Terra implementer: `codex_orchestration_terra_implementer` / `worker` Terra max / `terra_max_implementer_`
+- Sol High implementer: `codex_orchestration_sol_high_implementer` / `worker` Sol high / `sol_high_implementer_`
+- Terra supervisor: `codex_orchestration_terra_supervisor` / `default` Terra max / `terra_max_supervisor_`
+- Sol High supervisor: `codex_orchestration_sol_high_supervisor` / `default` Sol high / `sol_high_supervisor_`
+- Sol Extra High supervisor: `codex_orchestration_sol_xhigh_supervisor` / `default` Sol xhigh / `sol_xhigh_supervisor_`
 
-Fixed lane table: READ_ONLY=TERRA_MAX/NONE/NONE;
-SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE;
-BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE;
-SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE;
-BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE. Complexity is 1.0-10.0
-telemetry only. `READY_TO_DISPATCH`, a `/10` suffix, a bare class, any missing keyed field, or any
-lane mismatch is invalid. With prior NONE relation is NEW unless valid CANCEL; with prior present
-it is AMEND unless REPLACE/CANCEL cites an exact nonempty current-request signal. `<turn_aborted>`
-is not a signal. On a violation, use `followup_task` once on the same grader for all four repaired
-lines. If still invalid, stop with a protocol error.
+READ_ONLY: spawn its role with verbatim request and immutable lines; require read-only evidence and
+forbid mutation, commit, push, and deploy. Return its answer after bounded waits.
 
-For AMEND, validate that the acceptance line preserves the prior outcome, mutation/read-only mode,
-MUST_NOT prohibitions, destinations, and proof while adding the newest requirements. It may not
-silently remove unfinished implementation, commit, push, deployment, or verification work.
+CHANGE: mechanically choose the validated lanes. Spawn the implementer first and immediately spawn
+the supervisor second with FORK, verbatim request, and immutable lines; do not wait between spawns.
+Then say `Implementation started with <model>. The <model> supervisor is loading the full task
+context now.` Never replace either instance.
 
-Show the validated `ORCHESTRATION_STATUS` in friendly parent commentary. Keep the other three lines
-internal and immutable. CANCEL uses READ_ONLY, 1.0, and NONE lanes/checkpoints, drains children, and
-spawns no work.
-
-For READ_ONLY, spawn the selected Terra read-only role with the verbatim request, immutable lines,
-and explicit instruction to answer with read-only evidence and never mutate, commit, push, or
-deploy. Wait in bounded intervals as described below and return its answer.
-
-For a change, mechanically select identities from the validated model lanes. Spawn the implementer
-first and immediately spawn the supervisor second, both with the bounded fork, verbatim request,
-and immutable lines. Do not wait between spawns. Then tell the parent: `Implementation started with
-<model>. The <model> supervisor is loading the full task context now.` Never replace either instance.
-
-Every implementer message includes this IMPLEMENTER CONTRACT: it alone owns edits, tests,
-corrections, commit, push, deployment, and proof; it sends useful parent commentary before tools,
-at material phase changes, and at least every 45 seconds; it follows the route checkpoints in order;
-at a checkpoint all changing processes are stopped and it returns exactly
+IMPLEMENTER CONTRACT: it alone owns edits, tests, corrections, commit, push, deploy, and proof. It
+posts useful parent progress before tools, at phase changes, and at least every 45 seconds. It stops
+all changing processes at each ordered checkpoint and returns exactly
 `IMPLEMENTATION_CHECKPOINT: PHASE=<...>; STATE=<...>; CHANGES=<...>; EVIDENCE=<...>; NEXT=<...>; BLOCKERS=<...>`.
-CONTINUE advances; CORRECT is completed by this same implementer at the same checkpoint;
-READY_TO_RELEASE authorizes this implementer alone to synchronize, commit, push, deploy if
-applicable, probe, and return `IMPLEMENTATION_RESULT` with STATE, EVIDENCE, REVISION, TESTS,
-DEPLOYMENT, PROBE, and INCOMPLETE fields. A built-in fallback must receive this entire contract in
-its direct message.
+CONTINUE advances; CORRECT is done by this same implementer; READY_TO_RELEASE authorizes this
+implementer alone to release and return `IMPLEMENTATION_RESULT` with STATE, EVIDENCE, REVISION,
+TESTS, DEPLOYMENT, PROBE, and INCOMPLETE. Put this full contract in a built-in fallback message.
 
-Every supervisor message includes this SUPERVISOR CONTRACT: remain read-only; on INIT call no tools,
-send parent commentary that full context is loaded and it is waiting read-only for a checkpoint,
-then return `SUPERVISOR_READY`; only inspect while the implementer is paused; at checkpoint return
-exactly CONTINUE, CORRECT, READY_TO_RELEASE, or BLOCKED using the canonical keyed schema; require an
-observed mismatch for correction and send it to the same implementer; after result return exactly
-ACCEPT, CORRECT, ROOT_VERIFY, or BLOCKED. A built-in fallback must receive this entire contract in
-its direct message.
+SUPERVISOR CONTRACT: stay read-only. INIT calls no tools, posts that full context is loaded and it is
+waiting read-only, then returns `SUPERVISOR_READY`. Inspect only while implementation is paused.
+Checkpoint decisions are exactly CONTINUE, CORRECT, READY_TO_RELEASE, or BLOCKED; correction requires
+an observed mismatch and goes to the same implementer. Final decisions are exactly ACCEPT, CORRECT,
+ROOT_VERIFY, or BLOCKED. Put this full contract in a built-in fallback message.
 
-WAIT AND PROGRESS: use waits of at most 45 seconds. After supervisor ready, tell the parent:
-`Supervisor ready and staying read-only; waiting for the implementer's <phase> checkpoint.` On each
-timeout, post a useful parent update stating that implementation/testing is still active and whether
-the supervisor is ready. Never show internal fallback reasoning and never leave the parent without
-an update for more than 60 seconds. At a checkpoint, announce the phase and that read-only review is
-starting. Announce CONTINUE, each correction returned to the same implementer, release work, and
-final verification in plain language.
+WAIT/RELAY: normal work waits are at most 45 seconds. After ready say `Supervisor ready and staying
+read-only; waiting for the implementer's <phase> checkpoint.` On timeout report active phase and
+supervisor readiness. Announce checkpoint review, continue, same-implementer correction, release,
+and final verification. Never leave the parent without an update for 60 seconds.
 
-Once both `SUPERVISOR_READY` and the quiescent checkpoint exist, send the same supervisor
-`CHECKPOINT_REVIEW:` plus immutable lines and exact checkpoint. Relay its exact decision to the same
-implementer. Root never edits or substitutes. After `IMPLEMENTATION_RESULT`, announce final
-verification and send the same supervisor `FINAL_REVIEW:` plus immutable lines and exact result.
-On correction, the same implementer fixes and returns a new RELEASE_CANDIDATE; repeat with the same
-instances. On ROOT_VERIFY, root performs only that bounded experience check and returns named START,
-ACTION, RESULT, and ARTIFACTS. Only `ORCHESTRATION_ACCEPT` completes work.
+When ready plus a quiescent checkpoint exist, send that same supervisor `CHECKPOINT_REVIEW:` with
+immutable lines and checkpoint, then relay its exact decision to the same implementer. After result,
+send that same supervisor `FINAL_REVIEW:` with immutable lines and exact result. Repeat corrections
+with the same pair. ROOT_VERIFY permits only the named bounded experience check. Only
+`ORCHESTRATION_ACCEPT` completes work.
 
 Every routed final appends exactly:
 `Work class: <immutable class>`
@@ -162,8 +140,7 @@ Every routed final appends exactly:
 `Implementation route: <GPT-5.6 Terra / Max, GPT-5.6 Luna / Max, or GPT-5.6 Sol / High>`
 `Complexity telemetry: <immutable one-decimal>/10`
 `Current root route: __ROOT_ROUTE__`
-Agents do not append these lines. Before acceptance, root performs no task work or independent
-judgment."""
+Agents do not append these lines."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

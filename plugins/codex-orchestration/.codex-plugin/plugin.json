@@ -1,7 +1,7 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.3",
-  "description": "Eight-role tweak/build routing with visible checkpoint supervision.",
+  "version": "0.8.4",
+  "description": "Fast native grading with tweak/build checkpoint supervision.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -17,8 +17,8 @@
   ],
   "interface": {
     "displayName": "Codex Orchestration",
-    "shortDescription": "Eight-role tweak/build routing with visible progress",
-    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. GPT-5.6 Terra / Max receives the bounded same-task context, preserves unfinished acceptance, and classifies each request as read-only, small tweak, big tweak, small build, or big build. Classification, not a numeric score, selects the route; complexity remains telemetry only. Version 0.8.3 uses exactly eight current custom-agent profiles. If an already-open task cannot see those profiles, root uses a built-in agent with an explicit model and reasoning pin plus the complete 0.8.3 role contract; no legacy custom-agent aliases remain. For change work, root starts the selected implementer and immediately starts a full-context read-only supervisor. Root reports implementation start, supervisor readiness, 45-second waiting heartbeats, checkpoint review, correction, release, and final verification in the parent task. The implementer pauses at quiescent checkpoints, the supervisor inspects without editing, and every correction goes back to the same implementer. Small tweaks use Luna / Max with Terra / Max supervision; big tweaks use Terra / Max with Terra / Max supervision; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision.",
+    "shortDescription": "Fast tweak/build routing with visible progress",
+    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.8.4 launches the grader immediately through Codex's native GPT-5.6 Terra / Max agent presentation, uses a clear terra_max_grader task label, reports classification progress as soon as spawning completes, and checks the grader every 15 seconds. The native grader plus seven specialized companion profiles form the eight operational roles. The grader receives bounded same-task context, preserves unfinished acceptance, and classifies each request as read-only, small tweak, big tweak, small build, or big build. Classification, not a numeric score, selects the route; complexity remains telemetry only. If an already-open task cannot see a specialized profile, root uses a built-in agent with an explicit model, reasoning pin, and complete role contract; no legacy custom-agent aliases remain. For change work, root starts the selected implementer and immediately starts a full-context read-only supervisor. Root reports implementation start, supervisor readiness, 45-second waiting heartbeats, checkpoint review, correction, release, and final verification in the parent task. The implementer pauses at quiescent checkpoints, the supervisor inspects without editing, and every correction goes back to the same implementer. Small tweaks use Luna / Max with Terra / Max supervision; big tweaks use Terra / Max with Terra / Max supervision; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

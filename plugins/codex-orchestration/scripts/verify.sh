@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verify the Codex Orchestration 0.8.3 release without network access.
+# Verify the Codex Orchestration 0.8.4 release without network access.
 
 set -eu
 
@@ -18,10 +18,10 @@ done
 
 jq -e . "$manifest" >/dev/null || fail 'plugin manifest is invalid JSON'
 [ "$(jq -r .name "$manifest")" = codex-orchestration ] || fail 'wrong plugin name'
-[ "$(jq -r .version "$manifest")" = 0.8.3 ] || fail 'manifest version must be exactly 0.8.3'
+[ "$(jq -r .version "$manifest")" = 0.8.4 ] || fail 'manifest version must be exactly 0.8.4'
 printf '%s\n' "$(jq -r .version "$manifest")" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' ||
   fail 'manifest must use traditional semantic versioning without a cachebuster'
-pass 'manifest uses traditional version 0.8.3'
+pass 'manifest uses traditional version 0.8.4'
 
 for shell_script in "$script_dir"/*.sh; do
   sh -n "$shell_script" || fail "invalid shell syntax: $shell_script"
@@ -42,7 +42,6 @@ import sys
 import tomllib
 
 expected = {
-    "codex-orchestration-terra-grader.toml": ("gpt-5.6-terra", "max"),
     "codex-orchestration-terra-read-only.toml": ("gpt-5.6-terra", "max"),
     "codex-orchestration-luna-implementer.toml": ("gpt-5.6-luna", "max"),
     "codex-orchestration-terra-implementer.toml": ("gpt-5.6-terra", "max"),
@@ -65,7 +64,7 @@ for name, pin in expected.items():
         if document.get("sandbox_mode") != "read-only":
             raise SystemExit(f"read-only role is not sandboxed: {name}")
 PY
-pass 'exact eight-role model inventory, including Terra / Max'
+pass 'exact seven-profile inventory; native grader is pinned in the router'
 
 tmp_base=${TMPDIR:-/tmp}
 case "$tmp_base" in /*) ;; *) tmp_base=/tmp ;; esac
@@ -83,8 +82,8 @@ pass 'dispatch, relay, and effectiveness fixtures'
 target=$temporary/agents
 sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null
 sh "$script_dir/install-agents.sh" --target-dir "$target" --check >/dev/null
-[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 8 ] ||
-  fail 'agent installer did not produce exactly eight roles'
+[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 7 ] ||
+  fail 'agent installer did not produce exactly seven companion profiles'
 printf '%s\n' '# user customization' >> "$target/codex-orchestration-luna-implementer.toml"
 custom_digest=$(shasum -a 256 "$target/codex-orchestration-luna-implementer.toml" | awk '{print $1}')
 if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; then
@@ -100,16 +99,16 @@ if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; th
 fi
 [ "$(shasum -a 256 "$target/codex-orchestration-terra-medium-implementer.toml" | awk '{print $1}')" = "$retired_digest" ] ||
   fail 'customized retired role changed during rejected migration'
-pass 'conflict-safe eight-role installer behavior'
+pass 'conflict-safe seven-profile installer behavior'
 
-grep -Fq "requires the traditional release version 0.8.3" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller does not enforce 0.8.3'
-for role in terra-grader terra-read-only luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
+grep -Fq "requires the traditional release version 0.8.4" "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller does not enforce 0.8.4'
+for role in terra-read-only luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
 done
-if grep -Eq 'agents/codex-orchestration-(terra|sol-(high|xhigh))-executive\.toml' "$script_dir/reinstall-plugin.sh"; then
-  fail 'reinstaller package inventory retains compatibility aliases'
+if grep -Eq 'agents/codex-orchestration-(terra-grader|terra-executive|sol-(high|xhigh)-executive)\.toml' "$script_dir/reinstall-plugin.sh"; then
+  fail 'reinstaller package inventory retains retired custom identities'
 fi
 pass 'reinstaller package inventory'
 
@@ -123,17 +122,18 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'implementer first' \
     'same implementer' \
     'ongoing task' \
+    '15 seconds' \
     '45 seconds' \
-    'eight roles' \
-    '0.8.3'; do
+    'eight operational roles' \
+    '0.8.4'; do
     grep -Fq "$value" "$repo_readme" || fail "README omits $value"
   done
   if grep -Eq '0\.8\.0\+codex|cachebuster version|seven implementation lanes|numeric routing' "$repo_readme"; then
     fail 'README still teaches the old version or routing scheme'
   fi
-  pass '0.8.3 documentation'
+  pass '0.8.4 documentation'
 else
   pass 'repository documentation is intentionally outside the installed plugin package'
 fi
 
-pass 'Codex Orchestration 0.8.3 release verification complete'
+pass 'Codex Orchestration 0.8.4 release verification complete'

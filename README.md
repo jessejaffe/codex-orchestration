@@ -1,17 +1,20 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by what kind of job it is, then keeps a read-only supervisor
-beside the implementer throughout change work. Version `0.8.3` uses exactly eight roles—eight
-current profiles—supports activation inside an ongoing task through direct built-in fallback, and
-reports visible progress through every phase. Its five work classes are `READ_ONLY`, `SMALL_TWEAK`,
-`BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
+beside the implementer throughout change work. Version `0.8.4` uses exactly eight operational roles:
+one native Terra / Max grader and seven specialized companion profiles. It supports activation
+inside an ongoing task, launches grading without a custom-profile icon, and reports visible progress
+through every phase. Its five work classes are `READ_ONLY`,
+`SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 
 Complexity is still estimated from 1.0 to 10.0 for telemetry, but it does not select a model.
 
-## How 0.8.3 works
+## How 0.8.4 works
 
-1. A stable, chat-scoped prompt hook gives the current request, the latest unfinished acceptance
-   contract, and up to 64 same-chat turns to a Terra / Max grader-dispatcher.
+1. A stable, chat-scoped prompt hook immediately starts Codex's native Terra / Max agent as the
+   grader with a compact contract, the latest unfinished acceptance, and bounded same-task context.
+   The parent reports classification before spawning, confirms it when the spawn returns, and checks
+   it every 15 seconds.
 2. The grader preserves unfinished work, classifies the active objective, and defines immutable
    acceptance. Root selects the current custom profile or a directly pinned built-in fallback from
    the fixed model lane.
@@ -28,8 +31,8 @@ Complexity is still estimated from 1.0 to 10.0 for telemetry, but it does not se
 
 The parent reports when implementation starts, when the supervisor is ready, at every checkpoint,
 when a correction returns to the same implementer, during release, and during final verification.
-While a child is still working it waits no longer than 45 seconds before posting another useful
-status, so the task no longer sits on an unexplained thinking message.
+The grader uses 15-second waits; implementation and supervision use waits no longer than 45 seconds.
+Each timeout produces a useful status, so the task does not sit on an unexplained thinking message.
 
 The implementer alone owns edits, tests, commits, pushes, deployments, migrations, and corrections.
 This gives the supervisor full task context early without allowing concurrent worktree reads while
@@ -113,12 +116,16 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.3, Orchestration can be activated on the next prompt inside an ongoing task;
+After installing 0.8.4, Orchestration can be activated on the next prompt inside an ongoing task;
 the task does not need to have used Orchestration before. For each lane, the router uses the one
 current custom profile when that task exposes it. Otherwise it goes directly to Codex's built-in
-`default` or `worker` identity with the model, reasoning effort, and complete 0.8.3 role contract
+`default` or `worker` identity with the model, reasoning effort, and complete 0.8.4 role contract
 set explicitly. It never tries an unavailable or legacy custom identity and never accepts an
 implicit default Terra selection.
+
+The grader intentionally always uses the native built-in identity pinned to Terra / Max. This gives
+the task chip Codex's supported model presentation and avoids depending on a custom-agent icon field.
+Its task name begins with `terra_max_grader_`, so the chip identifies both role and model.
 
 ## Final route receipt
 
@@ -149,7 +156,7 @@ codex plugin marketplace add jessejaffe/codex-orchestration --ref main
 codex plugin add codex-orchestration@codex-orchestration
 ```
 
-Install the eight companion roles:
+Install the seven companion profiles (the eighth operational role is the native grader):
 
 ```sh
 plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
@@ -157,7 +164,7 @@ sh "$plugin_dir/scripts/install-agents.sh"
 sh "$plugin_dir/scripts/install-agents.sh" --check
 ```
 
-The role installer preflights the complete update. It installs the eight current profiles, removes
+The role installer preflights the complete update. It installs the seven current profiles, removes
 only recognized byte-for-byte obsolete profiles, and refuses to overwrite or delete customized
 files. Retired names are cleanup state, not part of the runtime architecture.
 
@@ -175,11 +182,11 @@ controls above.
 
 The project now uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.2` to `0.8.3`) contain compatible fixes and refinements.
+- Patch releases (`0.8.3` to `0.8.4`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.3` is a normal patch release. There is no timestamp cachebuster suffix, and the
+Version `0.8.4` is a normal patch release. There is no timestamp cachebuster suffix, and the
 cachebuster updater is not part of the release workflow.
 
 From a repository checkout:
@@ -191,7 +198,7 @@ sh plugins/codex-orchestration/scripts/reinstall-plugin.sh --check
 ```
 
 The reinstaller installs the exact manifest version, refreshes recognized version-cache copies,
-updates the eight native roles, removes recognized obsolete roles, updates the stable user hook,
+updates the seven companion profiles, removes recognized obsolete roles, updates the stable user hook,
 and verifies the installed state.
 Because this is a local Codex plugin, that local reinstall is its deployment; it does not deploy to
 an unrelated web server or require database access.

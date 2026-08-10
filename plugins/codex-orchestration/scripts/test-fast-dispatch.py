@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.3 dispatch injection."""
+"""Hermetic tests for chat-scoped activation and 0.8.4 fast dispatch injection."""
 
 from __future__ import annotations
 
@@ -80,22 +80,30 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "codex_orchestration_terra_grader",
-        "TASK-CATALOG COMPATIBILITY",
-        "Fixed lane table: READ_ONLY=TERRA_MAX/NONE/NONE",
+        "FIRST ACTION",
+        "Starting Terra / Max classification now.",
+        "built-in `default` with model\n`gpt-5.6-terra`, reasoning `max`",
+        "`terra_max_grader_<objective_slug>`",
+        "Terra / Max is classifying this request now.",
+        "intervals of at most 15 seconds",
+        "TASK CATALOG",
+        "READ_ONLY=TERRA_MAX/NONE/NONE",
         "SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE",
         "BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE",
         "SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE",
         "BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
-        "Spawn the implementer",
-        "immediately spawn the supervisor second",
-        "same implementer fixes",
-        "waits of at most 45 seconds",
+        "Spawn the implementer first and immediately spawn\nthe supervisor second",
+        "same implementer",
+        "normal work waits are at most 45 seconds",
         "Complexity telemetry:",
     )
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
+    if "codex_orchestration_terra_grader" in routed_context:
+        raise AssertionError("dispatch still uses the broken custom Terra grader presentation")
+    if len(routed_context) > 7_000:
+        raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
     combined = invoke(
@@ -107,8 +115,8 @@ def main() -> int:
     combined_context = context(combined)
     if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
         raise AssertionError("combined activation does not acknowledge ON")
-    if "codex_orchestration_terra_grader" not in combined_context:
-        raise AssertionError("combined activation did not dispatch")
+    if "terra_max_grader_<objective_slug>" not in combined_context:
+        raise AssertionError("combined activation did not select the native Terra grader")
 
     transcript = temporary / "root.jsonl"
     acceptance = (
@@ -139,7 +147,7 @@ def main() -> int:
     inherited = invoke(hook, state, active_id, "Also support JSON", transcript)
     inherited_context = context(inherited)
     for value in (
-        "Full-context fork: `2`",
+        "FORK=`2`",
         "Current root route: GPT-5.6 Terra / Max",
         acceptance,
     ):
@@ -172,7 +180,7 @@ def main() -> int:
         [
             {
                 "type": "session_meta",
-                "payload": {"agent_role": "codex_orchestration_terra_grader"},
+                "payload": {"agent_role": "default"},
             }
         ],
     )
@@ -197,7 +205,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat-scoped controls, bounded context, and 0.8.3 direct-fallback dispatch")
+    print("PASS: chat controls, bounded context, native Terra grading, and 0.8.4 fast dispatch")
     return 0
 
 
