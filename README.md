@@ -1,15 +1,15 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by what kind of job it is, then keeps a read-only supervisor
-beside the implementer throughout change work. Version `0.8.5` uses exactly eight operational roles:
+beside the implementer throughout change work. Version `0.8.6` uses exactly eight operational roles:
 one headless Terra / Max grader and seven specialized companion profiles. It supports activation
-inside an ongoing task, grades without creating an activity chip, and reports visible progress
-through every phase. Its five work classes are `READ_ONLY`,
+inside an ongoing task, grades without creating an activity chip, and reports only meaningful
+milestones. Its five work classes are `READ_ONLY`,
 `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 
 Complexity is still estimated from 1.0 to 10.0 for telemetry, but it does not select a model.
 
-## How 0.8.5 works
+## How 0.8.6 works
 
 1. A stable, chat-scoped prompt hook stages the current request, latest unfinished acceptance, and
    bounded same-task context behind a private one-use token. Root reports that classification is
@@ -29,11 +29,12 @@ Complexity is still estimated from 1.0 to 10.0 for telemetry, but it does not se
 7. After release, the same supervisor performs a final read-only acceptance check. Root relays
    decisions and appends route metadata but never implements or judges the work.
 
-The parent reports when implementation starts, when the supervisor is ready, at every checkpoint,
-when a correction returns to the same implementer, during release, and during final verification.
-Root polls a running grader in intervals no longer than 15 seconds; implementation and supervision
-use waits no longer than 45 seconds. Each timeout produces a useful status, so the task does not sit
-on an unexplained thinking message.
+The parent reports genuine milestones only: one combined implementation/supervisor-ready message,
+a requested correction, release readiness, an external blocker, and completion. Routine grading
+polls, work waits, checkpoint transitions, protocol repairs, and final-review mechanics stay silent.
+Root polls a running grader in intervals no longer than 15 seconds, and implementation/supervision
+waits are no longer than 45 seconds. A host-required heartbeat after a long quiet interval names
+only the actual user outcome rather than internal orchestration mechanics.
 
 The implementer alone owns edits, tests, commits, pushes, deployments, migrations, and corrections.
 This gives the supervisor full task context early without allowing concurrent worktree reads while
@@ -117,10 +118,10 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.5, Orchestration can be activated on the next prompt inside an ongoing task;
+After installing 0.8.6, Orchestration can be activated on the next prompt inside an ongoing task;
 the task does not need to have used Orchestration before. For each lane, the router uses the one
 current custom profile when that task exposes it. Otherwise it goes directly to Codex's built-in
-`default` or `worker` identity with the model, reasoning effort, and complete 0.8.5 role contract
+`default` or `worker` identity with the model, reasoning effort, and complete 0.8.6 role rules
 set explicitly. It never tries an unavailable or legacy custom identity and never accepts an
 implicit default Terra selection.
 
@@ -137,11 +138,11 @@ Every routed result ends with root-authored metadata:
 Work class: SMALL_BUILD
 Supervisor route: GPT-5.6 Sol / High
 Implementation route: GPT-5.6 Terra / Max
-Complexity telemetry: 6.4/10
 Current root route: GPT-5.6 Sol / High
 ```
 
-The complexity value is diagnostic only. It cannot override the class route.
+Complexity remains internal diagnostic telemetry. It is not displayed in the final receipt and
+cannot override the class route.
 
 ## Install from GitHub
 
@@ -184,11 +185,11 @@ controls above.
 
 The project now uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.4` to `0.8.5`) contain compatible fixes and refinements.
+- Patch releases (`0.8.5` to `0.8.6`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.5` is a normal patch release. There is no timestamp cachebuster suffix, and the
+Version `0.8.6` is a normal patch release. There is no timestamp cachebuster suffix, and the
 cachebuster updater is not part of the release workflow.
 
 From a repository checkout:
@@ -215,9 +216,8 @@ sh plugins/codex-orchestration/scripts/verify.sh
 
 The suite validates the manifest, Python and shell syntax, exact model pins, chat controls, bounded
 context continuity, headless structured grading, the five-class lane contract, direct built-in
-fallback, visible progress,
-implementer-before-supervisor concurrency, same-implementer corrections, fixtures, effectiveness
-tracking, and conflict-safe role cleanup.
+fallback, milestone-only parent progress, implementer-before-supervisor concurrency,
+same-implementer corrections, fixtures, effectiveness tracking, and conflict-safe role cleanup.
 
 The offline classification fixture is
 `plugins/codex-orchestration/scripts/triage-cases.json`. It covers all five classes plus amendment,

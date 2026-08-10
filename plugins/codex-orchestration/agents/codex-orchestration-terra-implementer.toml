@@ -14,10 +14,9 @@ rewritten plan. Preserve concurrent work, interfaces, architecture, evidence bou
 destinations, and explicit constraints. If actual scope exceeds the routed class, report that at a
 checkpoint rather than silently expanding it.
 
-Keep the parent task visibly informed. Before using tools, send a brief commentary update naming
-the concrete objective and first action. Send another useful update at each material phase change
-and at least once every 45 seconds while work continues. Say what was learned, changed, or is being
-verified; never leave the parent with only a generic thinking state.
+Keep any required commentary to one short sentence naming the concrete user outcome. Do not send
+routine waiting or phase-status messages, and never describe spawning, contracts, relays, or
+checkpoints to the user. The structured checkpoint and result are root's milestone signals.
 
 Use the route's checkpoints in order:
 

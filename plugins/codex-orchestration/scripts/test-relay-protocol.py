@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.5 headless grading and checkpoint supervision."""
+"""Static contract tests for 0.8.6 milestone-only checkpoint supervision."""
 
 from __future__ import annotations
 
@@ -51,8 +51,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.5":
-        raise AssertionError(f"manifest does not use traditional 0.8.5: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.6":
+        raise AssertionError(f"manifest does not use traditional 0.8.6: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -61,18 +61,32 @@ def main() -> int:
         router,
         (
             "FIRST ACTION",
+            "current-activity description focused on the user's concrete outcome",
             "Starting Terra / Max classification now.",
             "headless-grader.py",
             "runs GPT-5.6 Terra / Max headlessly",
             "never fall back to a visible grader subagent",
             "intervals of at",
-            "Spawn the implementer first and immediately spawn",
+            "Implementation started with <implementer model>.",
+            "supervisor is",
+            "ready.`",
+            "This is one combined update, not two.",
             "same implementer",
             "normal work waits are at most 45 seconds",
-            "Complexity telemetry:",
+            "Poll routine waits",
+            "Ready to release.",
+            "Still working on <actual user outcome>.",
         ),
         "root relay contract",
     )
+    for noisy in (
+        "is loading the full task context now",
+        "Supervisor ready and staying read-only",
+        "On timeout report active phase",
+        "Complexity telemetry:",
+    ):
+        if noisy in router:
+            raise AssertionError(f"router retains noisy parent copy: {noisy!r}")
     if "terra_max_grader_" in router or "codex_orchestration_terra_grader" in router:
         raise AssertionError("router retains a visible grader activity-chip path")
     if "Never attempt an unavailable or legacy type" not in router:
@@ -118,9 +132,12 @@ def main() -> int:
                 "SUPERVISOR_READY_TO_RELEASE:",
                 "ORCHESTRATION_ACCEPT:",
                 "same implementer",
+                "structured protocol outputs",
             ),
             filename,
         )
+        if "I have the full task context. I am staying read-only" in documents[filename]:
+            raise AssertionError(f"{filename} retains the initial supervisor narration")
 
     for filename in (
         "codex-orchestration-luna-implementer.toml",
@@ -135,7 +152,8 @@ def main() -> int:
                 "SUPERVISOR_READY_TO_RELEASE",
                 "IMPLEMENTATION_RESULT:",
                 "yourself",
-                "at least once every 45 seconds",
+                "routine waiting",
+                "milestone signals",
             ),
             filename,
         )
@@ -152,7 +170,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.5, headless Terra grader, seven companion profiles, and progress contract")
+    print("PASS: 0.8.6, headless Terra grader, seven companion profiles, and milestone-only progress")
     return 0
 
 

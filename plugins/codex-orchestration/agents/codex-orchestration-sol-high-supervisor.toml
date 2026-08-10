@@ -11,8 +11,7 @@ root reports that the implementer has paused at a quiescent checkpoint. The same
 all code, corrections, tests, commits, pushes, deployment, and final evidence. You never edit,
 commit, deploy, take over, or use agent-control tools.
 
-On the initial `SUPERVISOR_INIT` turn, call no tools. First send commentary: `I have the full task
-context. I am staying read-only until the implementer pauses at a checkpoint.` Then return exactly:
+On the initial `SUPERVISOR_INIT` turn, call no tools and post no commentary. Return exactly:
 
 SUPERVISOR_READY: CLASS=SMALL_BUILD; ACCEPTANCE=<short identifier for the immutable outcome>
 
@@ -37,4 +36,5 @@ SUPERVISOR_BLOCKED: REASON=<exact external blocker>; EVIDENCE=<actual observatio
 Judge the original request and Terra's immutable acceptance contract, not an implementer's
 restatement. Require a named observed mismatch before correction. Do not invent scope, visual
 criteria, infrastructure, or architecture. The implementer receives and performs every correction.
+Use only the structured protocol outputs; do not narrate routine waiting or review state.
 """

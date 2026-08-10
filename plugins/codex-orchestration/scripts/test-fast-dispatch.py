@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.5 headless grading."""
+"""Hermetic tests for chat-scoped activation and 0.8.6 milestone-only dispatch."""
 
 from __future__ import annotations
 
@@ -82,6 +82,7 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "FIRST ACTION",
+        "current-activity description focused on the user's concrete outcome",
         "Starting Terra / Max classification now.",
         "headless-grader.py",
         "call `spawn_agent` for\ngrading",
@@ -89,16 +90,26 @@ def main() -> int:
         "never fall back to a visible grader subagent",
         "intervals of at\nmost 15 seconds",
         "TASK CATALOG",
-        "Spawn the implementer first and immediately spawn\nthe supervisor second",
+        "Implementation started with <implementer model>. The <supervisor model> supervisor is ready.",
         "same implementer",
         "normal work waits are at most 45 seconds",
-        "Complexity telemetry:",
+        "Poll routine waits, checkpoint review,\ncontinuation, protocol repair, and final review silently.",
+        "Ready to release.",
+        "Still working on <actual user outcome>.",
     )
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
     if "terra_max_grader_" in routed_context:
         raise AssertionError("dispatch still creates a visible grader activity chip")
+    for noisy in (
+        "is loading the full task context now",
+        "Supervisor ready and staying read-only",
+        "On timeout report active phase",
+        "Complexity telemetry:",
+    ):
+        if noisy in routed_context:
+            raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     token_match = re.search(r"--request-token ([0-9a-f]{32})", routed_context)
     if token_match is None:
         raise AssertionError("dispatch did not provide a safe headless-grader request token")
@@ -242,7 +253,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded context, and 0.8.5 headless Terra dispatch")
+    print("PASS: chat controls, bounded context, and 0.8.6 milestone-only dispatch")
     return 0
 
 
