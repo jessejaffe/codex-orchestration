@@ -20,7 +20,11 @@ from typing import Any
 
 EVENT = "userPromptSubmit"
 PLUGIN_ID = "codex-orchestration@codex-orchestration"
-RUNTIME_FILES = ("orchestration_state.py", "prompt-router-hook.py")
+RUNTIME_FILES = (
+    "headless-grader.py",
+    "orchestration_state.py",
+    "prompt-router-hook.py",
+)
 
 
 def fail(message: str) -> None:

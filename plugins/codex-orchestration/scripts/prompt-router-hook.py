@@ -6,11 +6,17 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import sys
 from pathlib import Path
 from typing import Any
 
-from orchestration_state import is_active, transcript_role, write_state
+from orchestration_state import (
+    is_active,
+    transcript_role,
+    write_grader_request,
+    write_state,
+)
 
 
 ON_COMMANDS = {
@@ -37,6 +43,8 @@ POLITE_CONTROL_PREFIX = re.compile(
 INLINE_CONTROL_BOUNDARY = re.compile(r"(?:\band|\bthen|[,;:–—-])\s*$")
 MAX_FORK_TURNS = 64
 MAX_PRIOR_ACCEPTANCE_CHARS = 4_096
+MAX_RECENT_CONTEXT_CHARS = 12_000
+MAX_RECENT_MESSAGE_CHARS = 2_000
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -51,44 +59,23 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.4). Act immediately as a zero-judgment relay.
+DISPATCH_CONTEXT = """Orchestration ON (0.8.5). Act immediately as a zero-judgment relay.
 Root alone calls agent-control tools; it never classifies, edits, corrects, or judges acceptance.
 Unfinished work remains active unless the newest request explicitly cancels or replaces it.
 
 FORK=`__FORK_TURNS__` (never literal `all`)
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
 
-FIRST ACTION — say `Starting Terra / Max classification now.`, then do not analyze or restate this
-contract. Spawn built-in `default` with model
-`gpt-5.6-terra`, reasoning `max`, FORK, and task name `terra_max_grader_<objective_slug>`. Its direct
-message must contain only `GRADE_AND_DISPATCH`, the prior-acceptance line above, verbatim
-`USER_REQUEST`, and this compact GRADER CONTRACT:
-
-- Relation: NEW when prior is NONE; otherwise AMEND while preserving unfinished outcome, mode,
-  prohibitions, destinations, and proof. REPLACE/CANCEL requires an exact explicit quote from the
-  newest request; interruption is not a signal.
-- Class: READ_ONLY=no mutation; SMALL_TWEAK=one existing behavior/one component; BIG_TWEAK=existing
-  behavior across 2+ components or a boundary; SMALL_BUILD=one new capability in at most 2 settled
-  components; BIG_BUILD=2+ capabilities, 3+ components, a runtime boundary, material risk, or open
-  architecture. Tests/docs/release/deploy do not add components; a feature release is a build;
-  ambiguity routes upward. Complexity is one-decimal 1.0-10.0 telemetry only.
-- Lanes: READ_ONLY=TERRA_MAX/NONE/NONE; SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE;
-  BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE;
-  SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE;
-  BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE.
-- Return exactly four single lines:
-  `ORCHESTRATION_RELATION: RELATION=<...>; ACTIVE_OBJECTIVE=<...>; EXPLICIT_SIGNAL=<...>`
-  `ORCHESTRATION_ROUTE: CLASS=<...>; COMPLEXITY=<one decimal>; IMPLEMENTER=<...>; SUPERVISOR=<...>; CHECKPOINTS=<...>`
-  `ORCHESTRATION_STATUS: <friendly class/model/next-action sentence, at most 18 words>`
-  `ORCHESTRATION_ACCEPTANCE: OUTCOME=<...>; MUST=<...>; MUST_NOT=<...>; DESTINATIONS=<...>; PROOF=<...>`
-  CANCEL uses READ_ONLY, 1.0, and NONE lanes/checkpoints. Never emit `READY_TO_DISPATCH` or `/10`.
-
-Immediately after the spawn returns, tell the parent `Terra / Max is classifying this request now.`
-Wait for the grader in intervals of at most 15 seconds; on timeout say it is still classifying. Do
-not wait 45 seconds or perform work while waiting. Validate all keys, relation, lane, and AMEND
-preservation mechanically. One malformed response gets one `followup_task` repair on the same
-grader; a second failure is a protocol error. Show the validated status; keep other lines immutable.
-CANCEL drains only Orchestration children for this request and spawns no work.
+FIRST ACTION — say `Starting Terra / Max classification now.`, then use the local shell to run
+exactly `__GRADER_COMMAND__`. Do not analyze, restate this contract, or call `spawn_agent` for
+grading. This one-shot command runs GPT-5.6 Terra / Max headlessly with the current request, bounded
+task context, and prior acceptance. It consumes its request token and prints exactly the four
+immutable `ORCHESTRATION_RELATION`, `ORCHESTRATION_ROUTE`, `ORCHESTRATION_STATUS`, and
+`ORCHESTRATION_ACCEPTANCE` lines. If the command is still running, wait or poll in intervals of at
+most 15 seconds and tell the parent Terra / Max is still classifying. A `HEADLESS_GRADER_ERROR` or
+nonzero exit is a protocol error; never fall back to a visible grader subagent. Show the returned
+status in friendly commentary and keep the other lines internal. CANCEL drains only Orchestration
+children for this request and spawns no work.
 
 TASK CATALOG: for work roles, use the canonical custom type when listed by `spawn_agent`; otherwise
 go directly to its pinned built-in fallback with FORK. Never attempt an unavailable or legacy type.
@@ -163,16 +150,76 @@ def agent_message_text(event: dict[str, Any]) -> str:
     return "\n".join(values)
 
 
-def transcript_context(transcript_value: Any) -> tuple[str, str, str]:
-    """Return bounded fork, root route, and latest unfinished acceptance in one pass."""
+def conversation_message(event: dict[str, Any]) -> tuple[str, str] | None:
+    """Return bounded real user/assistant conversation text, excluding injected wrappers."""
+    if event.get("type") != "response_item":
+        return None
+    payload = event.get("payload") or {}
+    if payload.get("type") != "message" or payload.get("role") not in (
+        "user",
+        "assistant",
+    ):
+        return None
+    values: list[str] = []
+    for item in payload.get("content") or []:
+        if not isinstance(item, dict):
+            continue
+        value = item.get("text")
+        if not isinstance(value, str):
+            continue
+        stripped = value.lstrip()
+        if stripped.startswith(
+            (
+                "<app-context>",
+                "<apps_instructions>",
+                "<environment_context>",
+                "<plugins_instructions>",
+                "<recommended_plugins>",
+                "<skills_instructions>",
+            )
+        ):
+            continue
+        values.append(value)
+    text = "\n".join(values).strip()
+    if not text:
+        return None
+    return payload["role"].upper(), text[:MAX_RECENT_MESSAGE_CHARS]
+
+
+def bounded_recent_context(messages: list[tuple[str, str]], current_prompt: str) -> str:
+    selected: list[str] = []
+    size = 0
+    skipped_current = False
+    normalized_prompt = " ".join(current_prompt.split())
+    for role, value in reversed(messages):
+        if (
+            role == "USER"
+            and not skipped_current
+            and " ".join(value.split()) == normalized_prompt
+        ):
+            skipped_current = True
+            continue
+        rendered = f"{role}: {value}"
+        if size + len(rendered) > MAX_RECENT_CONTEXT_CHARS:
+            break
+        selected.append(rendered)
+        size += len(rendered)
+    return "\n\n".join(reversed(selected))
+
+
+def transcript_context(
+    transcript_value: Any, current_prompt: str
+) -> tuple[str, str, str, str]:
+    """Return bounded fork, route, acceptance, and recent task context in one pass."""
     if not isinstance(transcript_value, str):
-        return "none", "unavailable", "NONE"
+        return "none", "unavailable", "NONE", ""
     transcript = Path(transcript_value)
     if not transcript.is_file() or transcript.is_symlink():
-        return "none", "unavailable", "NONE"
+        return "none", "unavailable", "NONE", ""
     contexts = starts = 0
     root_route = "unavailable"
     prior_acceptance: str | None = None
+    messages: list[tuple[str, str]] = []
     try:
         with transcript.open(encoding="utf-8", errors="replace") as handle:
             for line in handle:
@@ -194,6 +241,9 @@ def transcript_context(transcript_value: Any) -> tuple[str, str, str]:
                 if event.get("type") == "event_msg" and payload.get("type") == "task_started":
                     starts += 1
                 message = agent_message_text(event)
+                conversation = conversation_message(event)
+                if conversation is not None:
+                    messages.append(conversation)
                 cancelled = False
                 for message_line in message.splitlines():
                     if message_line.startswith(
@@ -215,10 +265,15 @@ def transcript_context(transcript_value: Any) -> tuple[str, str, str]:
                 if cancelled:
                     prior_acceptance = None
     except OSError:
-        return "none", "unavailable", "NONE"
+        return "none", "unavailable", "NONE", ""
     task_turns = max(contexts, starts)
     fork_turns = "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns))
-    return fork_turns, root_route, prior_acceptance or "NONE"
+    return (
+        fork_turns,
+        root_route,
+        prior_acceptance or "NONE",
+        bounded_recent_context(messages, current_prompt),
+    )
 
 
 def emit(value: dict[str, Any]) -> None:
@@ -368,13 +423,34 @@ def main() -> int:
         if activation
         else ""
     )
-    fork_turns, root_route, prior_acceptance = transcript_context(
-        hook_input.get("transcript_path")
+    fork_turns, root_route, prior_acceptance, recent_context = transcript_context(
+        hook_input.get("transcript_path"), prompt
+    )
+    request_token = write_grader_request(
+        session_id,
+        prompt=prompt,
+        prior_acceptance=prior_acceptance,
+        recent_context=recent_context,
+    )
+    if request_token is None:
+        emit(
+            additional_context(
+                prefix
+                + "Orchestration could not stage the Terra / Max grading request. "
+                "Report this error and do not spawn or perform the work."
+            )
+        )
+        return 0
+    grader = Path(__file__).resolve().with_name("headless-grader.py")
+    grader_command = (
+        f"python3 {shlex.quote(str(grader))} --request-token {request_token}"
     )
     context = DISPATCH_CONTEXT.replace("__FORK_TURNS__", fork_turns).replace(
         "__ROOT_ROUTE__", root_route
     )
-    context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
+    context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance).replace(
+        "__GRADER_COMMAND__", grader_command
+    )
     emit(additional_context(prefix + context))
     return 0
 

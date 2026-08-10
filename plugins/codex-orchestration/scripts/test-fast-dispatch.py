@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.4 fast dispatch injection."""
+"""Hermetic tests for chat-scoped activation and 0.8.5 headless grading."""
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -82,16 +83,12 @@ def main() -> int:
     required = (
         "FIRST ACTION",
         "Starting Terra / Max classification now.",
-        "built-in `default` with model\n`gpt-5.6-terra`, reasoning `max`",
-        "`terra_max_grader_<objective_slug>`",
-        "Terra / Max is classifying this request now.",
-        "intervals of at most 15 seconds",
+        "headless-grader.py",
+        "call `spawn_agent` for\ngrading",
+        "runs GPT-5.6 Terra / Max headlessly",
+        "never fall back to a visible grader subagent",
+        "intervals of at\nmost 15 seconds",
         "TASK CATALOG",
-        "READ_ONLY=TERRA_MAX/NONE/NONE",
-        "SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE",
-        "BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE",
-        "SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE",
-        "BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
         "Spawn the implementer first and immediately spawn\nthe supervisor second",
         "same implementer",
         "normal work waits are at most 45 seconds",
@@ -100,9 +97,16 @@ def main() -> int:
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
-    if "codex_orchestration_terra_grader" in routed_context:
-        raise AssertionError("dispatch still uses the broken custom Terra grader presentation")
-    if len(routed_context) > 7_000:
+    if "terra_max_grader_" in routed_context:
+        raise AssertionError("dispatch still creates a visible grader activity chip")
+    token_match = re.search(r"--request-token ([0-9a-f]{32})", routed_context)
+    if token_match is None:
+        raise AssertionError("dispatch did not provide a safe headless-grader request token")
+    request_path = state / "grader-requests" / f"{token_match.group(1)}.json"
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    if request.get("prompt") != "Fix the existing label":
+        raise AssertionError(f"staged grader request changed the prompt: {request!r}")
+    if len(routed_context) > 6_000:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
@@ -115,8 +119,8 @@ def main() -> int:
     combined_context = context(combined)
     if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
         raise AssertionError("combined activation does not acknowledge ON")
-    if "terra_max_grader_<objective_slug>" not in combined_context:
-        raise AssertionError("combined activation did not select the native Terra grader")
+    if "headless-grader.py" not in combined_context:
+        raise AssertionError("combined activation did not select headless Terra grading")
 
     transcript = temporary / "root.jsonl"
     acceptance = (
@@ -127,6 +131,27 @@ def main() -> int:
         transcript,
         [
             {"type": "session_meta", "payload": {}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": "Build CSV export"}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": "<environment_context>private wrapper</environment_context>",
+                        }
+                    ],
+                },
+            },
             {
                 "type": "turn_context",
                 "payload": {"model": "gpt-5.6-sol", "effort": "high"},
@@ -155,6 +180,18 @@ def main() -> int:
             raise AssertionError(f"bounded inherited context omits {value!r}")
     if "__FORK_TURNS__" in inherited_context or "__ROOT_ROUTE__" in inherited_context:
         raise AssertionError("dispatch placeholders leaked")
+    inherited_token = re.search(r"--request-token ([0-9a-f]{32})", inherited_context)
+    if inherited_token is None:
+        raise AssertionError("inherited dispatch omitted its request token")
+    inherited_request = json.loads(
+        (state / "grader-requests" / f"{inherited_token.group(1)}.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if "USER: Build CSV export" not in inherited_request.get("recent_context", ""):
+        raise AssertionError(f"recent task context was not staged: {inherited_request!r}")
+    if "private wrapper" in inherited_request.get("recent_context", ""):
+        raise AssertionError("injected environment context leaked into the grader request")
 
     accepted_transcript = temporary / "accepted.jsonl"
     write_events(
@@ -205,7 +242,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded context, native Terra grading, and 0.8.4 fast dispatch")
+    print("PASS: chat controls, bounded context, and 0.8.5 headless Terra dispatch")
     return 0
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.4 native grading and checkpoint supervision."""
+"""Static contract tests for 0.8.5 headless grading and checkpoint supervision."""
 
 from __future__ import annotations
 
@@ -51,8 +51,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.4":
-        raise AssertionError(f"manifest does not use traditional 0.8.4: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.5":
+        raise AssertionError(f"manifest does not use traditional 0.8.5: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -62,38 +62,47 @@ def main() -> int:
         (
             "FIRST ACTION",
             "Starting Terra / Max classification now.",
-            "built-in `default` with model",
-            "`gpt-5.6-terra`, reasoning `max`",
-            "`terra_max_grader_<objective_slug>`",
-            "Terra / Max is classifying this request now.",
-            "intervals of at most 15 seconds",
-            "READ_ONLY=no mutation",
-            "SMALL_TWEAK=one existing behavior/one component",
-            "BIG_TWEAK=existing",
-            "SMALL_BUILD=one new capability",
-            "BIG_BUILD=2+ capabilities",
-            "feature release is a build",
-            "ambiguity routes upward",
-            "READ_ONLY=TERRA_MAX/NONE/NONE",
-            "SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE",
-            "BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE",
-            "SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE",
-            "BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
+            "headless-grader.py",
+            "runs GPT-5.6 Terra / Max headlessly",
+            "never fall back to a visible grader subagent",
+            "intervals of at",
             "Spawn the implementer first and immediately spawn",
             "same implementer",
             "normal work waits are at most 45 seconds",
-            "READY_TO_DISPATCH",
             "Complexity telemetry:",
         ),
         "root relay contract",
     )
-    if "codex_orchestration_terra_grader" in router:
-        raise AssertionError("router retains the broken custom Terra grader presentation")
+    if "terra_max_grader_" in router or "codex_orchestration_terra_grader" in router:
+        raise AssertionError("router retains a visible grader activity-chip path")
     if "Never attempt an unavailable or legacy type" not in router:
         raise AssertionError("router does not guard unavailable task-catalog identities")
     for legacy_identity in ("terra_executive", "sol_high_executive", "sol_xhigh_executive"):
         if legacy_identity in router:
             raise AssertionError(f"router retains legacy identity {legacy_identity!r}")
+
+    grader = (plugin / "scripts" / "headless-grader.py").read_text(encoding="utf-8")
+    require(
+        grader,
+        (
+            'MODEL = "gpt-5.6-terra"',
+            'EFFORT = "max"',
+            '"READ_ONLY": ("TERRA_MAX", "NONE", "NONE")',
+            '"SMALL_TWEAK": ("LUNA_MAX", "TERRA_MAX", "RELEASE_CANDIDATE")',
+            '"BIG_TWEAK"',
+            '"SMALL_BUILD"',
+            '"BIG_BUILD"',
+            "A feature release is a build",
+            "Ambiguity routes upward",
+            '"--ephemeral"',
+            '"--ignore-user-config"',
+            '"--output-schema"',
+            "consume_grader_request",
+            "for _ in range(2)",
+            "HEADLESS_GRADER_ERROR",
+        ),
+        "headless grader contract",
+    )
 
     for filename in (
         "codex-orchestration-terra-supervisor.toml",
@@ -143,7 +152,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.4, native Terra grader, seven companion profiles, and progress contract")
+    print("PASS: 0.8.5, headless Terra grader, seven companion profiles, and progress contract")
     return 0
 
 
