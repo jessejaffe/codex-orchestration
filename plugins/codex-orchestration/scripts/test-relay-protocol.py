@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.2 classification, compatibility, and supervision."""
+"""Static contract tests for 0.8.3 classification, fallback, and supervision."""
 
 from __future__ import annotations
 
@@ -18,9 +18,6 @@ EXPECTED_AGENTS = {
     "codex-orchestration-terra-supervisor.toml": ("codex_orchestration_terra_supervisor", "gpt-5.6-terra", "max"),
     "codex-orchestration-sol-high-supervisor.toml": ("codex_orchestration_sol_high_supervisor", "gpt-5.6-sol", "high"),
     "codex-orchestration-sol-xhigh-supervisor.toml": ("codex_orchestration_sol_xhigh_supervisor", "gpt-5.6-sol", "xhigh"),
-    "codex-orchestration-terra-executive.toml": ("codex_orchestration_terra_executive", "gpt-5.6-terra", "max"),
-    "codex-orchestration-sol-high-executive.toml": ("codex_orchestration_sol_high_executive", "gpt-5.6-sol", "high"),
-    "codex-orchestration-sol-xhigh-executive.toml": ("codex_orchestration_sol_xhigh_executive", "gpt-5.6-sol", "xhigh"),
 }
 
 
@@ -55,8 +52,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.2":
-        raise AssertionError(f"manifest does not use traditional 0.8.2: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.3":
+        raise AssertionError(f"manifest does not use traditional 0.8.3: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -89,9 +86,10 @@ def main() -> int:
         router,
         (
             "Spawn the implementer\nfirst and immediately spawn the supervisor second",
-            "OLD-TASK COMPATIBILITY",
+            "TASK-CATALOG COMPATIBILITY",
             "built-in `worker` with",
             "built-in `default` with",
+            "Never use a legacy custom-agent identity",
             "same implementer fixes",
             "WAIT AND PROGRESS",
             "waits of at most 45 seconds",
@@ -100,8 +98,11 @@ def main() -> int:
         ),
         "root relay contract",
     )
-    if "Never attempt an unavailable identity" not in router:
-        raise AssertionError("router does not guard stale old-task catalogs")
+    if "attempt an unavailable identity" not in router:
+        raise AssertionError("router does not guard unavailable task-catalog identities")
+    for legacy_identity in ("terra_executive", "sol_high_executive", "sol_xhigh_executive"):
+        if legacy_identity in router:
+            raise AssertionError(f"router retains legacy identity {legacy_identity!r}")
 
     for filename in (
         "codex-orchestration-terra-supervisor.toml",
@@ -151,7 +152,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.2, five work classes, eleven stable roles, compatibility, and progress contract")
+    print("PASS: 0.8.3, five work classes, eight roles, direct fallback, and progress contract")
     return 0
 
 

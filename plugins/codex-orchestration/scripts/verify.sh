@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verify the Codex Orchestration 0.8.2 release without network access.
+# Verify the Codex Orchestration 0.8.3 release without network access.
 
 set -eu
 
@@ -18,10 +18,10 @@ done
 
 jq -e . "$manifest" >/dev/null || fail 'plugin manifest is invalid JSON'
 [ "$(jq -r .name "$manifest")" = codex-orchestration ] || fail 'wrong plugin name'
-[ "$(jq -r .version "$manifest")" = 0.8.2 ] || fail 'manifest version must be exactly 0.8.2'
+[ "$(jq -r .version "$manifest")" = 0.8.3 ] || fail 'manifest version must be exactly 0.8.3'
 printf '%s\n' "$(jq -r .version "$manifest")" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' ||
   fail 'manifest must use traditional semantic versioning without a cachebuster'
-pass 'manifest uses traditional version 0.8.2'
+pass 'manifest uses traditional version 0.8.3'
 
 for shell_script in "$script_dir"/*.sh; do
   sh -n "$shell_script" || fail "invalid shell syntax: $shell_script"
@@ -50,9 +50,6 @@ expected = {
     "codex-orchestration-terra-supervisor.toml": ("gpt-5.6-terra", "max"),
     "codex-orchestration-sol-high-supervisor.toml": ("gpt-5.6-sol", "high"),
     "codex-orchestration-sol-xhigh-supervisor.toml": ("gpt-5.6-sol", "xhigh"),
-    "codex-orchestration-terra-executive.toml": ("gpt-5.6-terra", "max"),
-    "codex-orchestration-sol-high-executive.toml": ("gpt-5.6-sol", "high"),
-    "codex-orchestration-sol-xhigh-executive.toml": ("gpt-5.6-sol", "xhigh"),
 }
 root = pathlib.Path(sys.argv[1])
 actual = {path.name for path in root.glob("*.toml")}
@@ -68,7 +65,7 @@ for name, pin in expected.items():
         if document.get("sandbox_mode") != "read-only":
             raise SystemExit(f"read-only role is not sandboxed: {name}")
 PY
-pass 'exact eleven-role model inventory, including stable old-task identities and Terra / Max'
+pass 'exact eight-role model inventory, including Terra / Max'
 
 tmp_base=${TMPDIR:-/tmp}
 case "$tmp_base" in /*) ;; *) tmp_base=/tmp ;; esac
@@ -86,8 +83,8 @@ pass 'dispatch, relay, and effectiveness fixtures'
 target=$temporary/agents
 sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null
 sh "$script_dir/install-agents.sh" --target-dir "$target" --check >/dev/null
-[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 11 ] ||
-  fail 'agent installer did not produce exactly eleven roles'
+[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 8 ] ||
+  fail 'agent installer did not produce exactly eight roles'
 printf '%s\n' '# user customization' >> "$target/codex-orchestration-luna-implementer.toml"
 custom_digest=$(shasum -a 256 "$target/codex-orchestration-luna-implementer.toml" | awk '{print $1}')
 if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; then
@@ -103,14 +100,17 @@ if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; th
 fi
 [ "$(shasum -a 256 "$target/codex-orchestration-terra-medium-implementer.toml" | awk '{print $1}')" = "$retired_digest" ] ||
   fail 'customized retired role changed during rejected migration'
-pass 'conflict-safe eleven-role installer behavior'
+pass 'conflict-safe eight-role installer behavior'
 
-grep -Fq "requires the traditional release version 0.8.2" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller does not enforce 0.8.2'
-for role in terra-grader terra-read-only luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor terra-executive sol-high-executive sol-xhigh-executive; do
+grep -Fq "requires the traditional release version 0.8.3" "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller does not enforce 0.8.3'
+for role in terra-grader terra-read-only luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
 done
+if grep -Eq 'agents/codex-orchestration-(terra|sol-(high|xhigh))-executive\.toml' "$script_dir/reinstall-plugin.sh"; then
+  fail 'reinstaller package inventory retains compatibility aliases'
+fi
 pass 'reinstaller package inventory'
 
 if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
@@ -122,17 +122,18 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'BIG_BUILD' \
     'implementer first' \
     'same implementer' \
-    'old task' \
+    'ongoing task' \
     '45 seconds' \
-    '0.8.2'; do
+    'eight roles' \
+    '0.8.3'; do
     grep -Fq "$value" "$repo_readme" || fail "README omits $value"
   done
   if grep -Eq '0\.8\.0\+codex|cachebuster version|seven implementation lanes|numeric routing' "$repo_readme"; then
     fail 'README still teaches the old version or routing scheme'
   fi
-  pass '0.8.2 documentation'
+  pass '0.8.3 documentation'
 else
   pass 'repository documentation is intentionally outside the installed plugin package'
 fi
 
-pass 'Codex Orchestration 0.8.2 release verification complete'
+pass 'Codex Orchestration 0.8.3 release verification complete'

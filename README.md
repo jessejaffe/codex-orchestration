@@ -1,18 +1,20 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by what kind of job it is, then keeps a read-only supervisor
-beside the implementer throughout change work. Version `0.8.2` keeps the five work classes from
-0.8.1, makes activation compatible with an old task, and adds visible progress through every phase:
-`READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
+beside the implementer throughout change work. Version `0.8.3` uses exactly eight roles—eight
+current profiles—supports activation inside an ongoing task through direct built-in fallback, and
+reports visible progress through every phase. Its five work classes are `READ_ONLY`, `SMALL_TWEAK`,
+`BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 
 Complexity is still estimated from 1.0 to 10.0 for telemetry, but it does not select a model.
 
-## How 0.8.2 works
+## How 0.8.3 works
 
 1. A stable, chat-scoped prompt hook gives the current request, the latest unfinished acceptance
    contract, and up to 64 same-chat turns to a Terra / Max grader-dispatcher.
 2. The grader preserves unfinished work, classifies the active objective, and defines immutable
-   acceptance. Root selects compatible agent identities mechanically from the fixed model lanes.
+   acceptance. Root selects the current custom profile or a directly pinned built-in fallback from
+   the fixed model lane.
 3. For change work, root starts the implementer first and immediately starts the full-context
    supervisor. Both receive the original request and the same immutable grader output.
 4. The supervisor's first turn only absorbs context. It does not inspect the worktree while the
@@ -87,8 +89,8 @@ building, deployment, and migration processes.
 
 The supervisor may then inspect the repository and runtime read-only. A correction must name an
 observed mismatch and give bounded, outcome-focused instructions. Root relays that exact decision
-to the same implementer. The executive is not working to correct the code and handing it back; the
-executive tells the implementer what must be corrected, and the implementer makes the correction.
+to the same implementer. The supervisor tells the implementer what must be corrected, and the
+implementer makes the correction; the supervisor never takes over.
 
 Only a release-candidate decision of `READY_TO_RELEASE` authorizes the implementer to commit, push,
 deploy, and probe. The final review can accept, send another correction to that same implementer, or
@@ -111,16 +113,12 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.2, Orchestration can be activated on the next prompt inside an old task; a new
-task is not required for each upgrade. The router first reuses stable 0.8.1 identities already in
-that task's catalog, then 0.8.0 executive identities, and finally Codex's built-in `default` or
-`worker` identity with an explicit model and reasoning pin plus the complete 0.8.2 role contract.
-It never waits for an unavailable renamed role or accepts an implicit default Terra selection.
-
-The installer retains eleven identities, including the three 0.8.0 executive names, so tasks opened
-from this release onward remain compatible with future contract-only upgrades. A newly installed
-user-level hook may still require one new task for Codex to discover the hook itself; once the hook
-exists, plugin upgrades apply to existing tasks on their next prompt.
+After installing 0.8.3, Orchestration can be activated on the next prompt inside an ongoing task;
+the task does not need to have used Orchestration before. For each lane, the router uses the one
+current custom profile when that task exposes it. Otherwise it goes directly to Codex's built-in
+`default` or `worker` identity with the model, reasoning effort, and complete 0.8.3 role contract
+set explicitly. It never tries an unavailable or legacy custom identity and never accepts an
+implicit default Terra selection.
 
 ## Final route receipt
 
@@ -151,7 +149,7 @@ codex plugin marketplace add jessejaffe/codex-orchestration --ref main
 codex plugin add codex-orchestration@codex-orchestration
 ```
 
-Install the eleven companion roles:
+Install the eight companion roles:
 
 ```sh
 plugin_dir="$(codex plugin list --json | jq -r '.installed[] | select(.pluginId == "codex-orchestration@codex-orchestration") | .source.path')"
@@ -159,9 +157,9 @@ sh "$plugin_dir/scripts/install-agents.sh"
 sh "$plugin_dir/scripts/install-agents.sh" --check
 ```
 
-The role installer preflights the complete migration. It upgrades only recognized shipped files,
-retains stable old-task identity names, retires only obsolete byte-for-byte roles, and refuses to
-overwrite or delete user-customized files.
+The role installer preflights the complete update. It installs the eight current profiles, removes
+only recognized byte-for-byte obsolete profiles, and refuses to overwrite or delete customized
+files. Retired names are cleanup state, not part of the runtime architecture.
 
 Install the stable user-level hook:
 
@@ -170,18 +168,18 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --plugin-dir "$plugin_dir"
 python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin_dir"
 ```
 
-Open one new task only after the first-ever hook install so Codex includes the user configuration
-layer. Normal 0.8.2 and later upgrades can be activated inside an existing task.
+Orchestration remains off until requested and can be activated inside an ongoing task with the
+controls above.
 
 ## Versioning and upgrades
 
 The project now uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.1` to `0.8.2`) contain compatible fixes and refinements.
+- Patch releases (`0.8.2` to `0.8.3`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.2` is a normal patch release. There is no timestamp cachebuster suffix, and the
+Version `0.8.3` is a normal patch release. There is no timestamp cachebuster suffix, and the
 cachebuster updater is not part of the release workflow.
 
 From a repository checkout:
@@ -192,8 +190,9 @@ sh plugins/codex-orchestration/scripts/reinstall-plugin.sh
 sh plugins/codex-orchestration/scripts/reinstall-plugin.sh --check
 ```
 
-The reinstaller installs the exact manifest version, refreshes recognized compatibility cache
-aliases, migrates the native roles, updates the stable user hook, and verifies the installed state.
+The reinstaller installs the exact manifest version, refreshes recognized version-cache copies,
+updates the eight native roles, removes recognized obsolete roles, updates the stable user hook,
+and verifies the installed state.
 Because this is a local Codex plugin, that local reinstall is its deployment; it does not deploy to
 an unrelated web server or require database access.
 
@@ -206,9 +205,9 @@ sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
 The suite validates the manifest, Python and shell syntax, exact model pins, chat controls, bounded
-context continuity, five-class lane contract, old-task fallback selection, visible progress,
+context continuity, five-class lane contract, direct built-in fallback, visible progress,
 implementer-before-supervisor concurrency, same-implementer corrections, fixtures, effectiveness
-tracking, and conflict-safe role migration.
+tracking, and conflict-safe role cleanup.
 
 The offline classification fixture is
 `plugins/codex-orchestration/scripts/triage-cases.json`. It covers all five classes plus amendment,

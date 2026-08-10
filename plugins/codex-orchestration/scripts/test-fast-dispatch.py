@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.2 dispatch injection."""
+"""Hermetic tests for chat-scoped activation and 0.8.3 dispatch injection."""
 
 from __future__ import annotations
 
@@ -81,7 +81,7 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "codex_orchestration_terra_grader",
-        "OLD-TASK COMPATIBILITY",
+        "TASK-CATALOG COMPATIBILITY",
         "Fixed lane table: READ_ONLY=TERRA_MAX/NONE/NONE",
         "SMALL_TWEAK=LUNA_MAX/TERRA_MAX/RELEASE_CANDIDATE",
         "BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE",
@@ -197,7 +197,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat-scoped controls, bounded context, and 0.8.2 compatible dispatch injection")
+    print("PASS: chat-scoped controls, bounded context, and 0.8.3 direct-fallback dispatch")
     return 0
 
 
