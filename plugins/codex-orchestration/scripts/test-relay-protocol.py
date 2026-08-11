@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.8 fused Terra routing and supervision."""
+"""Static contract tests for 0.8.9 fused nested orchestration."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.8":
-        raise AssertionError(f"manifest does not use traditional 0.8.8: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.9":
+        raise AssertionError(f"manifest does not use traditional 0.8.9: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -60,24 +60,19 @@ def main() -> int:
         router,
         (
             "FIRST ACTION",
-            "DESKTOP ACTIVITY",
-            "500-photo PDF",
+            "transparent parent relay",
             "Starting Terra / Max classification now.",
-            "common-path fused role",
-            "CLASSIFY_INIT",
-            "ROUTE_REPAIR",
-            "READ_ONLY_EXECUTE",
-            "start another Terra worker or supervisor.",
-            "SPAWN MAP",
-            "fused-router description must say `fused`",
-            "This is a <class label>. Implementation started with <implementer model>.",
-            "supervisor is",
-            "ready.`",
-            "same implementer",
+            "terra_orchestrator_<objective_slug>",
+            "ORCHESTRATE_INIT",
+            "PARENT_TASK=/root",
+            "codex_orchestration_terra_supervisor",
+            "Start no implementer or supervisor in root",
             "timeout_ms: 3600000",
-            "Never short-poll, send elapsed-time heartbeats",
-            "Supervisor approved <phase>",
-            "Ready to release.",
+            "ORCHESTRATION_STATE:",
+            "ORCHESTRATION_UPDATE: <text>",
+            "ORCHESTRATION_BLOCKED: <text>",
+            "no analysis or reasoning heading",
+            "return only the text after that",
         ),
         "root relay contract",
     )
@@ -95,8 +90,15 @@ def main() -> int:
     for obsolete in ("headless-grader.py", "--request-token", "grader-requests"):
         if obsolete in router:
             raise AssertionError(f"router retains obsolete headless path: {obsolete!r}")
-    if "Never reconsider or narrate this lookup." not in router:
-        raise AssertionError("router does not keep spawn-map lookup silent and stable")
+    for downstream in (
+        "codex_orchestration_luna_implementer",
+        "codex_orchestration_terra_implementer",
+        "codex_orchestration_sol_high_implementer",
+        "codex_orchestration_sol_high_supervisor",
+        "codex_orchestration_sol_xhigh_supervisor",
+    ):
+        if downstream in router:
+            raise AssertionError(f"root still owns downstream role {downstream!r}")
     for legacy_identity in ("terra_executive", "sol_high_executive", "sol_xhigh_executive"):
         if legacy_identity in router:
             raise AssertionError(f"router retains legacy identity {legacy_identity!r}")
@@ -105,23 +107,34 @@ def main() -> int:
     require(
         fused,
         (
-            "fused GPT-5.6 Terra / Max routing supervisor",
-            "CLASSIFY_INIT",
+            "fused GPT-5.6 Terra / Max orchestrator",
+            "ORCHESTRATE_INIT",
+            "PARENT_TASK",
             "READ_ONLY: TERRA_MAX / NONE / NONE",
             "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
             "BIG_TWEAK: TERRA_MAX / TERRA_MAX / ROOT_CAUSE,RELEASE_CANDIDATE",
             "SMALL_BUILD: TERRA_MAX / SOL_HIGH / DESIGN,RELEASE_CANDIDATE",
             "BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
             "A feature release is a build",
-            "ROUTE_REPAIR",
-            "READ_ONLY_EXECUTE",
-            "root will not send\n`SUPERVISOR_INIT`",
             "ORCHESTRATION_RELATION: RELATION=<NEW|AMEND|REPLACE|CANCEL>",
             "COMPLEXITY=<1.0-10.0>",
-            "CANCEL, use CLASS=READ_ONLY, COMPLEXITY=1.0",
+            "Do not end your turn after constructing them",
+            "continue the workflow in this same turn",
+            "For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE",
+            "ORCHESTRATION_STATE:",
+            "ORCHESTRATION_UPDATE:",
+            "ORCHESTRATION_BLOCKED",
+            "codex_orchestration_luna_implementer",
+            "codex_orchestration_sol_xhigh_supervisor",
+            "`send_message`",
+            "wait_agent",
+            "timeout_ms: 3600000",
+            "Downstream agents are your children, never root's",
         ),
         "fused Terra contract",
     )
+    if "Return exactly four single lines and nothing else" in fused:
+        raise AssertionError("fused Terra still stops after classification")
 
     require(
         fused,
@@ -131,7 +144,7 @@ def main() -> int:
             "SUPERVISOR_READY_TO_RELEASE:",
             "ORCHESTRATION_ACCEPT:",
             "same implementer",
-            "structured protocol outputs",
+            "not narrate role selection, contracts, workflow context",
         ),
         "codex-orchestration-terra-supervisor.toml",
     )
@@ -170,7 +183,7 @@ def main() -> int:
                 "IMPLEMENTATION_RESULT:",
                 "yourself",
                 "routine waiting",
-                "milestone signals",
+                "orchestrator's milestone\nsignals",
             ),
             filename,
         )
@@ -187,7 +200,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.8 fused Terra routing, event-driven waits, and milestone-only progress")
+    print("PASS: 0.8.9 fused nested orchestration, event-driven waits, and milestone-only progress")
     return 0
 
 

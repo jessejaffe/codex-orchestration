@@ -1,7 +1,7 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.8",
-  "description": "Fused Terra routing with event-driven milestone supervision.",
+  "version": "0.8.9",
+  "description": "Nested Terra orchestration with event-driven milestone supervision.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Event-driven orchestration with milestone-only progress",
-    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.8.8 keeps the standard service tier and fuses the GPT-5.6 Terra / Max grader with the read-only worker and tweak supervisor. One Terra instance classifies each request, then continues directly for read-only work or remains ready to supervise a tweak; only build routes hand off supervision to Sol. This removes the duplicate Terra startup and the fragile headless shell/token bridge while preserving unfinished acceptance and fixed routes for read-only, small tweak, big tweak, small build, and big build work. Six specialized companion profiles cover implementation and supervision. If an already-open task cannot see a specialized profile, root uses a built-in agent with an explicit model, reasoning pin, and complete role rules. The parent uses wake-on-update waits, announces the work class before implementation, and reports progress only when the supervisor reaches a real milestone such as continue, correction, release readiness, blocker, or completion. Desktop activity headings describe the user's outcome rather than orchestration mechanics. The implementer pauses at quiescent checkpoints, the supervisor inspects without editing, and every correction goes back to the same implementer. Small tweaks use Luna / Max with the fused Terra / Max supervisor; big tweaks use Terra / Max with the fused Terra / Max supervisor; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision.",
+    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.8.9 keeps the standard service tier and places classification, implementation dispatch, and supervision beneath one fused GPT-5.6 Terra / Max orchestrator. Root starts only that Terra task and mechanically relays its milestone messages, so it never composes downstream role contracts or exposes workflow narration. The same Terra instance handles read-only work and tweak supervision; build routes add a Sol supervisor inside Terra's subtree. Six specialized companion profiles preserve fixed routes for read-only, small tweak, big tweak, small build, and big build work, with pinned built-in fallbacks for already-open tasks. The orchestrator uses wake-on-update waits, announces the work class before implementation, and reports progress only when the supervisor reaches a real milestone such as continue, correction, release readiness, blocker, or completion. The implementer pauses at quiescent checkpoints, the supervisor inspects without editing, and every correction goes back to the same implementer. Small tweaks use Luna / Max with the fused Terra / Max supervisor; big tweaks use Terra / Max with the fused Terra / Max supervisor; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

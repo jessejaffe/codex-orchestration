@@ -1,38 +1,39 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps implementation separate from read-only
-review. Version `0.8.8` fuses routing, read-only work, and tweak supervision into one Terra / Max
-role. This preserves the standard service tier and avoids starting a second Terra / Max role on the
-common paths.
+review. Version `0.8.9` fuses routing, downstream dispatch, read-only work, and tweak supervision
+under one Terra / Max orchestrator. This preserves the standard service tier, avoids a second Terra
+/ Max role on common paths, and keeps root out of role-contract construction.
 
 The five work classes are `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 Complexity may still be estimated for telemetry, but it never selects a model.
 
-## How 0.8.8 works
+## How 0.8.9 works
 
-1. The stable chat-scoped hook gives root the current request, the latest unfinished acceptance
-   contract, and a fixed routing protocol.
-2. Root starts one fused Terra / Max routing supervisor. Its first turn performs classification only
-   and returns the four immutable relation, route, status, and acceptance lines.
-3. For `READ_ONLY`, that same Terra instance continues and answers the request. For tweak routes,
-   it remains the supervisor and root starts only the selected implementer. There is no second Terra
-   initialization call.
-4. Builds use Terra only for routing, then start the selected implementer and a Sol supervisor. The
-   extra handoff is reserved for work complex enough to benefit from the stronger review lane.
+1. The stable chat-scoped hook gives root only a compact parent-relay contract, the current request,
+   and the latest unfinished acceptance contract.
+2. Root starts one fused Terra / Max orchestrator and then waits. It does not classify, select
+   downstream roles, construct implementer contracts, or supervise work.
+3. Terra classifies once and owns the downstream agent subtree. For `READ_ONLY`, that same Terra
+   instance answers the request. For tweaks, it remains the supervisor and starts the selected
+   implementer itself. There is no second Terra initialization call.
+4. For builds, Terra starts the selected implementer and a Sol supervisor inside its own subtree.
+   The extra handoff is reserved for work complex enough to benefit from the stronger review lane.
 5. The implementer pauses at route-specific, quiescent checkpoints. The supervisor then inspects
    the actual diff, tests, and runtime state with read-only tools.
 6. The supervisor returns `CONTINUE`, `CORRECT`, or `READY_TO_RELEASE`. Every correction goes to the
    same implementer; the supervisor never edits or takes over.
-7. After release, the same supervisor performs final review. Root relays decisions and appends route
-   metadata, but never implements or judges the work.
+7. After release, the same supervisor performs final review. Terra sends milestone messages and the
+   final routed result to root, which relays them mechanically and never implements or judges work.
 
 The parent reports meaningful milestones only: classification start; the work class with the
 combined implementation and supervisor-ready state; each supervisor `CONTINUE`, `CORRECT`, or
-`READY_TO_RELEASE` decision; a blocker; and completion. Routine waiting, protocol repair, and final
-review stay silent. As in the final cache-busted 0.8.0 release, the parent waits until an agent
-update instead of polling every 45 seconds. The wait returns immediately when an update arrives;
-its timeout is only a safety ceiling, so elapsed time never creates a progress message. Desktop
-activity headings name the user's concrete outcome rather than role-selection or relay mechanics.
+`READY_TO_RELEASE` decision; a blocker; and completion. Routine waiting, protocol repair, contract
+construction, and final review stay silent. As in the final cache-busted 0.8.0 release, the parent
+waits until an agent update instead of polling every 45 seconds. The wait returns immediately when
+an update arrives; its timeout is only a safety ceiling, so elapsed time never creates a progress
+message. Downstream implementer and Sol-supervisor activity stays nested beneath Terra rather than
+being started in the parent task.
 
 The old headless shell process and one-use request-token bridge are retired in 0.8.7. That bridge was
 the cause of the 0.8.6 failure mode: a long-running classifier returned a live process handle that
@@ -59,10 +60,11 @@ When the boundary is genuinely ambiguous, the router chooses the larger class.
 
 ```mermaid
 flowchart TD
-    U["Active user request"] --> T["Fused Terra / Max router"]
+    U["Active user request"] --> P["Root parent relay"]
+    P --> T["Fused Terra / Max orchestrator"]
     T -->|"Read-only"| R["Same Terra instance answers"]
-    T -->|"Tweak"| I["Start selected implementer"]
-    T -->|"Build"| B["Start implementer and Sol supervisor"]
+    T -->|"Tweak"| I["Terra starts selected implementer"]
+    T -->|"Build"| B["Terra starts implementer and Sol supervisor"]
     I --> C["Implementer pauses at checkpoint"]
     T --> C
     B --> D["Implementer pauses at checkpoint"]
@@ -73,6 +75,7 @@ flowchart TD
     V -->|"Ready"| X["Same implementer releases"]
     S -->|"Ready"| X
     X --> F["Same supervisor performs final review"]
+    F --> P
 ```
 
 ## Context continuity
@@ -83,9 +86,9 @@ the active objective. An interrupted turn stops execution, not the objective. Re
 cancellation requires an explicit signal in the newest user request.
 
 The hook passes the latest bounded acceptance contract instead of copying a second large recent-chat
-transcript into a headless request file. Root validates the four protocol lines and fixed route table
-before dispatch. One repair by the same Terra instance is allowed for malformed output. The accepted
-contract stays immutable through implementation and supervision.
+transcript into a headless request file. Terra validates the four protocol lines and fixed route
+table before dispatch and repairs one malformed result itself. The accepted contract stays immutable
+through implementation and supervision.
 
 ## Checkpoint and correction protocol
 
@@ -94,9 +97,9 @@ evidence, next work, and blockers. Before yielding, the implementer stops active
 building, deployment, and migration processes.
 
 The supervisor may then inspect the repository and runtime read-only. A correction must name an
-observed mismatch and give bounded, outcome-focused instructions. Root relays that exact decision to
-the same implementer. Only `READY_TO_RELEASE` at the release-candidate checkpoint authorizes the
-implementer to commit, push, deploy, and probe.
+observed mismatch and give bounded, outcome-focused instructions. The fused orchestrator relays that
+exact decision to the same implementer. Only `READY_TO_RELEASE` at the release-candidate checkpoint
+authorizes the implementer to commit, push, deploy, and probe.
 
 ## Controls
 
@@ -115,10 +118,11 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.8, Orchestration can be activated on the next prompt inside an ongoing task.
-For each lane, the router uses the current custom profile when the task exposes it. Otherwise it
-goes directly to Codex's built-in `default` or `worker` identity with the model, reasoning effort,
-and complete 0.8.8 role rules set explicitly. It never tries an unavailable or legacy identity.
+After installing 0.8.9, Orchestration can be activated on the next prompt inside an ongoing task.
+Root uses the fused custom Terra profile when the task exposes it; otherwise it starts a pinned
+built-in Terra / Max agent and directs it to the installed fused profile. Inside that subtree, Terra
+uses each current custom lane when available and otherwise a pinned built-in `default` or `worker`
+identity with the complete 0.8.9 role rules. It never tries an unavailable or legacy identity.
 
 The fused classifier is pinned to GPT-5.6 Terra with Max reasoning and the normal service tier. It
 does not opt into Fast mode, so routing does not consume Fast-mode credits. Six companion profiles
@@ -126,7 +130,7 @@ cover the fused Terra role, three implementer lanes, and two Sol supervisor lane
 
 ## Final route receipt
 
-Every routed result ends with root-authored metadata:
+Every routed result ends with orchestrator-authored metadata that root relays unchanged:
 
 ```text
 Work class: SMALL_BUILD
@@ -176,11 +180,11 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin
 
 The project uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.7` to `0.8.8`) contain compatible fixes and refinements.
+- Patch releases (`0.8.8` to `0.8.9`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.8` is a normal patch release. The standard checkout workflow is:
+Version `0.8.9` is a normal patch release. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
@@ -202,7 +206,7 @@ sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
 The suite validates the manifest, syntax, exact model pins, chat controls, bounded acceptance
-continuity, fused structured routing, the five-class lane contract, direct built-in fallback,
+continuity, fused nested orchestration, the five-class lane contract, direct built-in fallback,
 milestone-only progress, same-implementer corrections, fixtures, effectiveness tracking, and
 conflict-safe cleanup.
 

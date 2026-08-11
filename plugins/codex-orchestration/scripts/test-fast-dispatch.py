@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.8 fused dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.8.9 nested orchestration."""
 
 from __future__ import annotations
 
@@ -81,25 +81,21 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "FIRST ACTION",
-        "DESKTOP ACTIVITY",
-        "500-photo PDF",
+        "transparent parent relay",
         "Starting Terra / Max classification now.",
-        "common-path fused role",
-        "CLASSIFY_INIT",
-        "ROUTE_REPAIR",
-        "READ_ONLY_EXECUTE",
-        "start another Terra worker or supervisor.",
-        "SPAWN MAP",
-        "silently apply once per role",
-        "fused-router description must say `fused`",
-        "Fallback messages include the full role rules",
-        "CLASS LABELS",
-        "This is a <class label>. Implementation started with <implementer model>.",
-        "same implementer",
+        "terra_orchestrator_<objective_slug>",
+        "ORCHESTRATE_INIT",
+        "PARENT_TASK=/root",
+        "codex_orchestration_terra_supervisor",
+        "read and obey the `developer_instructions`",
+        "agents/codex-orchestration-terra-supervisor.toml",
+        "Start no implementer or supervisor in root",
         "timeout_ms: 3600000",
-        "Never short-poll, send elapsed-time heartbeats",
-        "Supervisor approved <phase>.\nImplementation continues.",
-        "Ready to release.",
+        "ORCHESTRATION_STATE:",
+        "ORCHESTRATION_UPDATE: <text>",
+        "ORCHESTRATION_BLOCKED: <text>",
+        "no analysis or reasoning heading",
+        "return only the text after that",
     )
     for value in required:
         if value not in routed_context:
@@ -115,12 +111,15 @@ def main() -> int:
         "normal agent waits are at most 45 seconds",
         "timeout_ms: 45000",
         "Still working on <actual user outcome>.",
+        "CHECKPOINT_REVIEW:",
+        "SUPERVISOR_CONTINUE:",
+        "Implementation started with <implementer model>",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     if (state / "grader-requests").exists():
         raise AssertionError("dispatch still staged a grader request")
-    if len(routed_context) > 6_500:
+    if len(routed_context) > 3_000:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
@@ -133,8 +132,8 @@ def main() -> int:
     combined_context = context(combined)
     if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
         raise AssertionError("combined activation does not acknowledge ON")
-    if "common-path fused role" not in combined_context:
-        raise AssertionError("combined activation did not select fused Terra routing")
+    if "ORCHESTRATE_INIT" not in combined_context:
+        raise AssertionError("combined activation did not select nested Terra orchestration")
 
     transcript = temporary / "root.jsonl"
     acceptance = (
@@ -187,12 +186,15 @@ def main() -> int:
     inherited_context = context(inherited)
     for value in (
         "FORK=`2`",
-        "Current root route: GPT-5.6 Terra / Max",
+        "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         acceptance,
     ):
         if value not in inherited_context:
             raise AssertionError(f"bounded inherited context omits {value!r}")
-    if "__FORK_TURNS__" in inherited_context or "__ROOT_ROUTE__" in inherited_context:
+    if any(
+        placeholder in inherited_context
+        for placeholder in ("__FORK_TURNS__", "__ROOT_ROUTE__", "__FUSED_PROFILE_PATH__")
+    ):
         raise AssertionError("dispatch placeholders leaked")
     if (state / "grader-requests").exists():
         raise AssertionError("inherited dispatch staged obsolete recent context")
@@ -246,7 +248,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded acceptance, and 0.8.8 event-driven dispatch")
+    print("PASS: chat controls, bounded acceptance, and 0.8.9 nested event-driven dispatch")
     return 0
 
 
