@@ -242,6 +242,20 @@ def main() -> int:
             filename,
         )
 
+    installer = (plugin / "scripts" / "install-agents.sh").read_text(encoding="utf-8")
+    require(
+        installer,
+        (
+            "485804b5bd058d30c16feedf404595c6f3c347b5e6e5ef794d92b7e35edeb2a5",
+            "e28c539964354adca6423c19a0da1746a8db60b94b734f7f00fd88b5a03a41d1",
+            "11e5654f28517b4556d9fc13a374f6b97240d8da6f2d8673078730be847f998f",
+            "65e904176779be864c6f2cd3d41a5c9424bbc95cc25190a96fc6d02e130655cc",
+            "c0361a14a8436a89760398d3823a5796f62fb1cfd30f1460a3827a0d9e0d3db9",
+            "8628097f5fddd161710598d5f433f3cbf183d675376e36c5b3cfdebb2d6b18b6",
+        ),
+        "0.8.19 upgrade digests",
+    )
+
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
     expected_classes = {case["expected"] for case in fixtures["cases"]}
     if expected_classes != {
