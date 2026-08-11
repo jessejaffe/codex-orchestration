@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.10.1 root coordination."""
+"""Hermetic tests for chat-scoped activation and 0.10.2 root coordination."""
 
 from __future__ import annotations
 
@@ -82,6 +82,9 @@ def main() -> int:
     required = (
         "DIRECT READ-ONLY FAST PATH",
         "binary fast-path gate",
+        "DESKTOP REASONING DISPLAY",
+        "single plain word `Thinking`",
+        "before, between, and after tool calls",
         "answer in root immediately",
         "use no tools or agents",
         "Starting Terra / Max classification now.",
@@ -146,6 +149,8 @@ def main() -> int:
         "first spawn only the selected supervisor",
         "Wait for that turn to finish before spawning an implementer",
         "This is a <friendly class>. Implementation started",
+        "Starting orchestration with verbatim request",
+        "verbatim request",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")

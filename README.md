@@ -1,7 +1,7 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review as separate roles. Version `0.10.1` uses an outcome-based taxonomy that separates
+read-only review as separate roles. Version `0.10.2` uses an outcome-based taxonomy that separates
 non-code artifacts from code changes and makes the selected models visible throughout startup. The
 Terra / Max orchestrator remains taxonomy-only: it reads the current query plus bounded
 conversational continuity, returns the route to root, and stops.
@@ -10,7 +10,7 @@ Terra / Max remains independently available as an implementer and as a superviso
 The six work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, and `BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.10.1 works
+## How 0.10.2 works
 
 1. The stable chat-scoped hook gives root a binary gate, the current query, the latest bounded
    acceptance or completion capsule, and a short window of newer conversation. App-injected plugin,
@@ -43,6 +43,8 @@ After supervisor readiness, root names the class, gives the classifier's concret
 the dynamic implementation and supervision models. It otherwise reports only meaningful
 milestones: checkpoint decisions, release authorization, blockers, and completion.
 It waits until an agent update instead of polling and does not emit elapsed-time heartbeats.
+The persistent desktop reasoning summary remains the single generic word `Thinking`; internal
+routing, request, wait, relay, checkpoint, and acceptance details are never used as that label.
 
 ## Work classes and routes
 
@@ -140,7 +142,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.10.1, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.10.2, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -193,9 +195,10 @@ The project uses traditional semantic versions without timestamp suffixes:
 - Minor releases such as `0.9.x` to `0.10.0` add backward-compatible capabilities.
 - Major releases change compatibility expectations.
 
-Version `0.10.0` introduced the six-class artifact/tweak/build taxonomy. Version `0.10.1` preserves
-that taxonomy while restoring implementer-first startup, model-led child names, and a concrete
-classification reason in the dynamic route message. The standard checkout workflow is:
+Version `0.10.0` introduced the six-class artifact/tweak/build taxonomy. Version `0.10.1` restored
+implementer-first startup, model-led child names, and a concrete classification reason in the
+dynamic route message. Version `0.10.2` keeps those behaviors and makes the persistent root
+reasoning summary the generic `Thinking` label. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
@@ -219,7 +222,8 @@ The suite validates the manifest, syntax, exact model pins, chat controls, bound
 classifier-only role boundary, implementer-before-supervisor startup, context-only overlap,
 model-led child names, dynamic class reasons and route labels, the six-class route, root-only
 experience verification, same-implementer corrections, fixtures, effectiveness tracking, and
-conflict-safe cleanup.
+conflict-safe cleanup. It also locks the root reasoning display to `Thinking` and rejects the
+previous internal routing phrase.
 
 The offline classification fixture is
 `plugins/codex-orchestration/scripts/triage-cases.json`. It covers all six classes plus amendment,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.10.1 six-class taxonomy and role boundary."""
+"""Static contracts for the 0.10.2 six-class taxonomy and role boundary."""
 
 from __future__ import annotations
 
@@ -98,8 +98,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.10.1":
-        raise AssertionError(f"manifest does not use 0.10.1: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.10.2":
+        raise AssertionError(f"manifest does not use 0.10.2: {manifest.get('version')!r}")
 
     orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -145,7 +145,10 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.10.1)",
+            "Orchestration ON (0.10.2)",
+            "DESKTOP REASONING DISPLAY",
+            "single plain word `Thinking`",
+            "before, between, and after tool calls",
             "DIRECT READ-ONLY FAST PATH",
             "ORCHESTRATE_CLASSIFY",
             "fork_turns=none",
@@ -193,6 +196,8 @@ def main() -> int:
             "This is a <friendly class>. Implementation started",
             "big_tweak_implementer_<objective_slug>",
             "big_tweak_supervisor_<objective_slug>",
+            "Starting orchestration with verbatim request",
+            "verbatim request",
         ),
         "root routes",
     )
@@ -363,7 +368,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.10.1 six-class taxonomy and classifier/root boundary")
+    print("PASS: 0.10.2 six-class taxonomy and classifier/root boundary")
     return 0
 
 
