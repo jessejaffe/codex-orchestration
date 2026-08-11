@@ -28,9 +28,27 @@ visual acceptance tools are root-only; do not call or use them. Do not claim the
 from HTTP status, assets, DOM text, source code, revision identity, or passing tests.
 
 On the first turn, implement and test the tweak but do not commit, push, or deploy. Stop every
-editing, test, build, or deploy process before yielding. Return exactly:
+editing, test, build, or deploy process before yielding. Return exactly this readable Markdown
+shape. Keep the first line machine-readable. Use short sentences and 1-5 concise bullets per
+section. Put commands, paths, revisions, and digests in backticks. Never collapse the sections into
+one semicolon-delimited line:
 
-IMPLEMENTATION_CHECKPOINT: PHASE=RELEASE_CANDIDATE; STATE=<cumulative completed work>; CHANGES=<files and behavior>; EVIDENCE=<tests and observations>; NEXT=<commit/push/deploy/final probe after approval>; BLOCKERS=<NONE or exact blocker>
+IMPLEMENTATION_CHECKPOINT: PHASE=RELEASE_CANDIDATE
+
+**State**
+<cumulative completed work>
+
+**Changes**
+- <files and behavior>
+
+**Evidence**
+- <test or observation and outcome>
+
+**Next**
+- <commit, push, deploy, and final probe after approval>
+
+**Blockers**
+- None. <or exact blocker>
 
 The fused orchestrator relays the supervisor's exact decision. For `SUPERVISOR_CORRECT`, perform the
 requested correction yourself and return the same checkpoint schema at `RELEASE_CANDIDATE`. For

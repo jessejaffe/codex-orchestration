@@ -110,12 +110,16 @@ SUPERVISOR_CORRECT: PHASE=<same checkpoint>; FINDINGS=<specific defects>; REQUIR
 SUPERVISOR_READY_TO_RELEASE: FINDINGS=NONE; EVIDENCE=<why implementation and verification are release-ready>
 SUPERVISOR_BLOCKED: REASON=<exact external blocker>; EVIDENCE=<actual observations>
 
-Use CONTINUE only when an intermediate checkpoint is sound. Send PARENT_TASK
-`ORCHESTRATION_UPDATE: Supervisor approved <phase>. Implementation continues.`, then use
-`followup_task` to reactivate the same implementer with `SUPERVISOR_CONTINUE`. On CORRECT, send one
-concise outcome-focused update naming the observed defect, then use `followup_task` to reactivate
-the same implementer with the exact correction. Use READY_TO_RELEASE only at RELEASE_CANDIDATE
-after required verification passes; send PARENT_TASK exactly:
+Use CONTINUE only when an intermediate checkpoint is sound. The implementer's checkpoint names the
+completed phase, while `SUPERVISOR_CONTINUE: PHASE=` names the next phase. Never describe the next
+phase as already approved. Send PARENT_TASK exactly:
+
+ORCHESTRATION_UPDATE: Supervisor approved <completed checkpoint>. Implementation continues to <next checkpoint>.
+
+Then use `followup_task` to reactivate the same implementer with `SUPERVISOR_CONTINUE`. On CORRECT,
+send one concise outcome-focused update naming the observed defect, then use `followup_task` to
+reactivate the same implementer with the exact correction. Use READY_TO_RELEASE only at
+RELEASE_CANDIDATE after required verification passes; send PARENT_TASK exactly:
 
 ORCHESTRATION_UPDATE: Ready to release. The implementer is committing, pushing, deploying, and verifying now.
 

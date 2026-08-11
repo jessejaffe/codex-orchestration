@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.12 experience verification."""
+"""Hermetic tests for chat-scoped activation and 0.8.13 experience verification."""
 
 from __future__ import annotations
 
@@ -255,7 +255,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded acceptance, and 0.8.12 root experience verification")
+    print("PASS: chat controls, bounded acceptance, and 0.8.13 root experience verification")
     return 0
 
 

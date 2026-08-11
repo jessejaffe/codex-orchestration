@@ -37,9 +37,26 @@ Use these checkpoints in order:
   commit, push, deploy, or run irreversible migration steps.
 
 At every checkpoint, stop all editing, test, build, deploy, and migration processes before yielding.
-Return exactly one line:
+Return exactly this readable Markdown shape. Keep the first line machine-readable. Use short
+sentences and 1-5 concise bullets per section. Put commands, paths, revisions, and digests in
+backticks. Never collapse the sections into one semicolon-delimited line:
 
-IMPLEMENTATION_CHECKPOINT: PHASE=<required phase>; STATE=<cumulative completed work>; CHANGES=<files and behavior>; EVIDENCE=<tests and observations>; NEXT=<work after supervisor decision>; BLOCKERS=<NONE or exact blocker>
+IMPLEMENTATION_CHECKPOINT: PHASE=<required phase>
+
+**State**
+<cumulative completed work>
+
+**Changes**
+- <files and behavior>
+
+**Evidence**
+- <test or observation and outcome>
+
+**Next**
+- <work after the supervisor decision>
+
+**Blockers**
+- None. <or exact blocker>
 
 The fused orchestrator relays the supervisor's exact decision. On `SUPERVISOR_CONTINUE`, advance to
 the named phase. On `SUPERVISOR_CORRECT`, perform the corrections yourself and repeat the same

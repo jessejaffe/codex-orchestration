@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.12 fused orchestration and live checkpoint handoffs."""
+"""Static contract tests for 0.8.13 readable checkpoints and accurate milestones."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.12":
-        raise AssertionError(f"manifest does not use traditional 0.8.12: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.13":
+        raise AssertionError(f"manifest does not use traditional 0.8.13: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -153,8 +153,12 @@ def main() -> int:
             "it only queues text and does not start a\nturn",
             "Every handoff to an existing child must use collaboration `followup_task`",
             "use `followup_task` to reactivate the\nsame Sol supervisor",
-            "use\n`followup_task` to reactivate the same implementer",
+            "reactivate the same implementer with `SUPERVISOR_CONTINUE`",
+            "reactivate the same implementer with the exact correction",
             "reactivate the same Sol supervisor with `FINAL_REVIEW`",
+            "The implementer's checkpoint names the\ncompleted phase",
+            "Never describe the next\nphase as already approved",
+            "ORCHESTRATION_UPDATE: Supervisor approved <completed checkpoint>. Implementation continues to <next checkpoint>.",
             "Downstream agents are your children, never root's",
         ),
         "fused Terra contract",
@@ -173,6 +177,8 @@ def main() -> int:
         raise AssertionError("build startup no longer readies the supervisor before the implementer")
     if fused.count("`followup_task`") < 9:
         raise AssertionError("fused Terra does not reactivate every idle-child handoff")
+    if "Supervisor approved <phase>. Implementation continues." in fused:
+        raise AssertionError("fused Terra still labels the next phase as already approved")
     for deadlocking_copy in (
         "send the checkpoint and immutable lines",
         "then relay\n`SUPERVISOR_CONTINUE`",
@@ -193,6 +199,7 @@ def main() -> int:
         "0.8.11-terra-supervisor": "d44f6d70de581d3e8895b396cc7a2bba0a2e7fc35cb6ea8531e920cae457aab4",
         "0.8.11-sol-high-supervisor": "427075380b9a3a8a136a6fde53a95252c3031621d51181ec1161318330d027a0",
         "0.8.11-sol-xhigh-supervisor": "30ba4bbee0dcb1ecf22dfb6c6ce98377e72740e717011f7d319e9ccc1f7104bf",
+        "0.8.12-terra-supervisor": "bcf97708c68712984c6345476595e832c933763d2e5edde854cfcc295794e1a5",
     }
     for role, digest in previous_release_digests.items():
         if digest not in installer:
@@ -258,9 +265,20 @@ def main() -> int:
                 "visual criterion merely because UI files changed",
                 "Browser, screenshot, and\nvisual acceptance tools are root-only; do not call or use them",
                 "URL-or-path/viewport/START/ACTION/expected RESULT",
+                "readable Markdown",
+                "**State**",
+                "**Changes**",
+                "**Evidence**",
+                "**Next**",
+                "**Blockers**",
+                "semicolon-delimited line",
             ),
             filename,
         )
+        if "Return exactly one line:" in documents[filename]:
+            raise AssertionError(f"{filename} still emits an unreadable single-line checkpoint")
+        if "; STATE=<cumulative completed work>;" in documents[filename]:
+            raise AssertionError(f"{filename} still contains the semicolon checkpoint schema")
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
     expected_classes = {case["expected"] for case in fixtures["cases"]}
@@ -274,7 +292,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.12 nested orchestration, live checkpoint handoffs, and root experience review")
+    print("PASS: 0.8.13 readable checkpoints, accurate milestones, and live handoffs")
     return 0
 
 

@@ -38,9 +38,26 @@ with enough source evidence for review. At `RELEASE_CANDIDATE`, finish implement
 do not commit, push, or deploy.
 
 At each checkpoint, stop all editing, test, build, and deployment processes before yielding. Return
-exactly one line:
+exactly this readable Markdown shape. Keep the first line machine-readable. Use short sentences and
+1-5 concise bullets per section. Put commands, paths, revisions, and digests in backticks. Never
+collapse the sections into one semicolon-delimited line:
 
-IMPLEMENTATION_CHECKPOINT: PHASE=<required phase>; STATE=<cumulative completed work>; CHANGES=<files and behavior>; EVIDENCE=<tests and observations>; NEXT=<work after supervisor decision>; BLOCKERS=<NONE or exact blocker>
+IMPLEMENTATION_CHECKPOINT: PHASE=<required phase>
+
+**State**
+<cumulative completed work>
+
+**Changes**
+- <files and behavior>
+
+**Evidence**
+- <test or observation and outcome>
+
+**Next**
+- <work after the supervisor decision>
+
+**Blockers**
+- None. <or exact blocker>
 
 The fused orchestrator relays the supervisor's decision verbatim. On `SUPERVISOR_CONTINUE`, proceed
 to the named next phase. On `SUPERVISOR_CORRECT`, make the corrections yourself and return the same
