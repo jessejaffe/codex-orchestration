@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.15 bounded completion continuity."""
+"""Static contract tests for 0.8.16 readable supervisor decisions."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.15":
-        raise AssertionError(f"manifest does not use traditional 0.8.15: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.16":
+        raise AssertionError(f"manifest does not use traditional 0.8.16: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -170,6 +170,16 @@ def main() -> int:
             "The implementer's checkpoint names the\ncompleted phase",
             "Never describe the next\nphase as already approved",
             "ORCHESTRATION_UPDATE: Supervisor approved <completed checkpoint>. Implementation continues to <next checkpoint>.",
+            "readable Markdown shapes",
+            "Keep the first line\nmachine-readable",
+            "**Findings**",
+            "**Required corrections**",
+            "**Evidence**",
+            "**Reason**",
+            "**Outcome**",
+            "**Check**",
+            "**Required observations**",
+            "semicolon-delimited line",
             "Downstream agents\nare your children, never root's",
             "the cumulative `IMPLEMENTATION_RESULT`",
             "any `ROOT_VERIFICATION_RESULT`",
@@ -218,6 +228,15 @@ def main() -> int:
         raise AssertionError("fused Terra still labels the next phase as already approved")
     if "on that same line by a concise user-facing result" in fused:
         raise AssertionError("fused Terra still compresses acceptance to a one-line result")
+    for unreadable in (
+        "SUPERVISOR_CONTINUE: PHASE=<next checkpoint>; FINDINGS=",
+        "SUPERVISOR_CORRECT: PHASE=<same checkpoint>; FINDINGS=",
+        "SUPERVISOR_READY_TO_RELEASE: FINDINGS=",
+        "SUPERVISOR_BLOCKED: REASON=",
+        "ORCHESTRATION_ACCEPT: OUTCOME=",
+    ):
+        if unreadable in fused:
+            raise AssertionError(f"fused Terra retains unreadable supervisor schema: {unreadable!r}")
     completion_template = fused[fused.index("\nORCHESTRATION_ACCEPT: ## Completed\n") :]
     completion_sections = (
         "ORCHESTRATION_ACCEPT: ## Completed",
@@ -255,6 +274,7 @@ def main() -> int:
         "0.8.12-terra-supervisor": "bcf97708c68712984c6345476595e832c933763d2e5edde854cfcc295794e1a5",
         "0.8.13-terra-supervisor": "c296cd101b91debb8ac800d4d18339f9da8d9606a7048c70e72d37cf0b8885b4",
         "0.8.14-terra-supervisor": "fb1a6905fca9345fabfc3b1ff9d98cfb784514600d67b372bd4fb60c6afcd85f",
+        "0.8.15-terra-supervisor": "cb7d464796bc18b9f371ce9f6036ffbdfe32914946c9ac18c78c8aec1c4bec44",
     }
     for role, digest in previous_release_digests.items():
         if digest not in installer:
@@ -289,17 +309,38 @@ def main() -> int:
                 "before the implementer starts",
                 "sibling activity remains serial",
                 "fused Terra orchestrator",
-                "structured protocol outputs",
+                "structured, readable protocol",
                 "ROOT_EXPERIENCE",
                 "direct experience proof is mandatory",
                 "root-executable experience check with live URL or rendered artifact",
                 "ROOT_VERIFICATION_RESULT follow-up",
                 "ARTIFACTS, and BLOCKER",
+                "readable Markdown shape",
+                "Keep the first line machine-readable",
+                "**Acceptance**",
+                "**Findings**",
+                "**Required corrections**",
+                "**Evidence**",
+                "**Reason**",
+                "**Outcome**",
+                "**Check**",
+                "**Required observations**",
+                "semicolon-delimited line",
             ),
             filename,
         )
         if "I have the full task context. I am staying read-only" in documents[filename]:
             raise AssertionError(f"{filename} retains the initial supervisor narration")
+        for unreadable in (
+            "; ACCEPTANCE=<short identifier",
+            "SUPERVISOR_CONTINUE: PHASE=<next checkpoint>; FINDINGS=",
+            "SUPERVISOR_CORRECT: PHASE=<same checkpoint>; FINDINGS=",
+            "SUPERVISOR_READY_TO_RELEASE: FINDINGS=",
+            "SUPERVISOR_BLOCKED: REASON=",
+            "ORCHESTRATION_ACCEPT: OUTCOME=",
+        ):
+            if unreadable in documents[filename]:
+                raise AssertionError(f"{filename} retains unreadable supervisor schema: {unreadable!r}")
 
     for filename in (
         "codex-orchestration-luna-implementer.toml",
@@ -347,7 +388,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.15 bounded completion continuity and direct read-only follow-ups")
+    print("PASS: 0.8.16 readable supervisor decisions and bounded continuity")
     return 0
 
 

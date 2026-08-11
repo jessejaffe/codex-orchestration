@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.15 bounded continuity."""
+"""Hermetic tests for chat-scoped activation and 0.8.16 readable supervision."""
 
 from __future__ import annotations
 

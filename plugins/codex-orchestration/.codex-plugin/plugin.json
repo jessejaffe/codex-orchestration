@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.15",
+  "version": "0.8.16",
   "description": "Nested Terra orchestration with root-only experience verification.",
   "author": {
     "name": "Daniel McAteer",

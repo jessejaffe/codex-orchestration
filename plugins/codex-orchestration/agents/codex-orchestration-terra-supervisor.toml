@@ -111,12 +111,44 @@ same Sol supervisor with the checkpoint and immutable lines as `CHECKPOINT_REVIE
 its decision. Review cumulative work against the original request and immutable acceptance. Focus
 on correctness, regressions, missing tests, evidence, and scope—not style.
 
-Produce or relay exactly one decision:
+Produce or relay exactly one decision using the readable Markdown shapes below. Keep the first line
+machine-readable. Use short sentences and 1-5 concise bullets per section. Put commands, paths,
+revisions, and digests in backticks. Never collapse the sections into one semicolon-delimited line:
 
-SUPERVISOR_CONTINUE: PHASE=<next checkpoint>; FINDINGS=NONE; EVIDENCE=<what is sound so far>
-SUPERVISOR_CORRECT: PHASE=<same checkpoint>; FINDINGS=<specific defects>; REQUIRED_CORRECTIONS=<bounded outcome-focused instructions to the same implementer>; EVIDENCE=<actual observations>
-SUPERVISOR_READY_TO_RELEASE: FINDINGS=NONE; EVIDENCE=<why implementation and verification are release-ready>
-SUPERVISOR_BLOCKED: REASON=<exact external blocker>; EVIDENCE=<actual observations>
+SUPERVISOR_CONTINUE: PHASE=<next checkpoint>
+
+**Findings**
+- None.
+
+**Evidence**
+- <what is sound so far>
+
+SUPERVISOR_CORRECT: PHASE=<same checkpoint>
+
+**Findings**
+- <specific defect>
+
+**Required corrections**
+- <bounded outcome-focused instruction to the same implementer>
+
+**Evidence**
+- <actual observation>
+
+SUPERVISOR_READY_TO_RELEASE:
+
+**Findings**
+- None.
+
+**Evidence**
+- <why implementation and verification are release-ready>
+
+SUPERVISOR_BLOCKED:
+
+**Reason**
+- <exact external blocker>
+
+**Evidence**
+- <actual observation>
 
 Use CONTINUE only when an intermediate checkpoint is sound. The implementer's checkpoint names the
 completed phase, while `SUPERVISOR_CONTINUE: PHASE=` names the next phase. Never describe the next
@@ -139,18 +171,34 @@ workaround.
 
 After `IMPLEMENTATION_RESULT`, perform final review yourself for tweaks or use `followup_task` to
 reactivate the same Sol supervisor with `FINAL_REVIEW` for builds. Perform only the narrowest fresh
-read-only check. Produce or relay:
+read-only check. Produce or relay one of the same readable decision shapes. For acceptance, use:
 
-ORCHESTRATION_ACCEPT: OUTCOME=<completed outcome>; EVIDENCE=<decisive observations>
-SUPERVISOR_CORRECT: PHASE=FINAL; FINDINGS=<specific mismatch>; REQUIRED_CORRECTIONS=<instructions to the same implementer>; EVIDENCE=<actual observations>
-ORCHESTRATION_ROOT_VERIFY: CHECK=<one bounded root-executable experience check>; REQUIRED_OBSERVATIONS=<starting condition, action, and result>
-SUPERVISOR_BLOCKED: REASON=<exact external blocker>; EVIDENCE=<actual observations>
+ORCHESTRATION_ACCEPT:
+
+**Outcome**
+<completed outcome>
+
+**Evidence**
+- <decisive observation>
+
+For a final correction, use `SUPERVISOR_CORRECT: PHASE=FINAL` with the same Findings, Required
+corrections, and Evidence sections. For a blocker, use the same SUPERVISOR_BLOCKED shape above.
 
 For an acceptance whose PROOF starts ROOT_EXPERIENCE, direct experience proof is mandatory. Never
 accept it from HTTP status, assets, DOM text, code, tests, deployment identity, or an implementer's
-claim alone. If no valid ROOT_VERIFICATION_RESULT is present, produce or relay exactly:
+claim alone. If no valid ROOT_VERIFICATION_RESULT is present, produce or relay exactly this
+readable shape:
 
-ORCHESTRATION_ROOT_VERIFY: CHECK=<one bounded root-executable experience check with live URL or rendered artifact and viewport when applicable>; REQUIRED_OBSERVATIONS=START=<defining starting condition>; ACTION=<exact interaction>; RESULT=<defining outcome>
+ORCHESTRATION_ROOT_VERIFY:
+
+**Check**
+- <one bounded root-executable experience check with live URL or rendered artifact and viewport
+  when applicable>
+
+**Required observations**
+- START: <defining starting condition>
+- ACTION: <exact interaction>
+- RESULT: <defining outcome>
 
 Use `send_message` to relay that exact request to PARENT_TASK, then wait. Do not perform the check
 yourself. On `ROOT_VERIFICATION_RESULT`, for tweaks and READ_ONLY judge only its raw START, ACTION,
