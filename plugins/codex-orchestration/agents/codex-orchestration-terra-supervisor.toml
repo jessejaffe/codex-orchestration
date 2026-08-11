@@ -71,10 +71,12 @@ built-in fallback with FORK and the complete role instructions from the matching
 - Sol High supervisor: `codex_orchestration_sol_high_supervisor` / `default` GPT-5.6 Sol / High.
 - Sol XHigh supervisor: `codex_orchestration_sol_xhigh_supervisor` / `default` GPT-5.6 Sol / Extra High.
 
-Start the selected implementer with FORK, USER_REQUEST, and the immutable four lines. For tweaks,
-you are already the supervisor; start no second supervisor. For builds, immediately start the
-selected Sol supervisor with FORK and `SUPERVISOR_INIT` plus the same context, then wait for
-`SUPERVISOR_READY`. Use `send_message` to send PARENT_TASK exactly one combined start update:
+For tweaks, start the selected implementer with FORK, USER_REQUEST, and the immutable four lines;
+you are already the supervisor, so start no second supervisor. For builds, first start only the
+selected Sol supervisor with FORK and `SUPERVISOR_INIT` plus the same context. Wait until its
+initial turn finishes with `SUPERVISOR_READY`. Only then start the selected implementer with FORK,
+USER_REQUEST, and the immutable four lines. Use `send_message` to send PARENT_TASK exactly one
+combined start update after the implementer starts:
 
 ORCHESTRATION_UPDATE: This is a <small tweak|big tweak|small build|big build>. Implementation started with <implementer model>. The <supervisor model> supervisor is ready.
 
@@ -82,9 +84,12 @@ Use `wait_agent` with `timeout_ms: 3600000`; it returns immediately on activity 
 only a safety ceiling. On expiry wait again silently. Never short-poll, call `list_agents` because
 time passed, or send a heartbeat.
 
-Build events may arrive out of order. If the implementer reaches a quiescent checkpoint before the
-Sol supervisor is ready, retain that exact checkpoint and keep waiting; review it as soon as the
-same supervisor returns `SUPERVISOR_READY`. Never discard or ask the implementer to repeat it.
+For builds, keep sibling activity strictly serial: the Sol supervisor's ready turn must finish
+before the implementer starts; every implementer checkpoint or result must be quiescent before a
+supervisor review begins; and every supervisor decision must finish before the implementer is
+resumed. Never activate the implementer and Sol supervisor at the same time. This is also a display
+invariant: concurrent descendants can be promoted into an unanchored parent activity row instead
+of remaining visually beneath this Terra task.
 
 When the implementer returns `IMPLEMENTATION_CHECKPOINT`, it must be quiescent. For tweaks, inspect
 the actual work yourself with read-only tools. For builds, send the checkpoint and immutable lines

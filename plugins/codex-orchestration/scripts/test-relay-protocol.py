@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.10 fused orchestration and experience review."""
+"""Static contract tests for 0.8.11 fused orchestration and serialized build activity."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.10":
-        raise AssertionError(f"manifest does not use traditional 0.8.10: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.11":
+        raise AssertionError(f"manifest does not use traditional 0.8.11: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -144,6 +144,11 @@ def main() -> int:
             "`send_message`",
             "wait_agent",
             "timeout_ms: 3600000",
+            "first start only the\nselected Sol supervisor",
+            "initial turn finishes with `SUPERVISOR_READY`. Only then start the selected implementer",
+            "keep sibling activity strictly serial",
+            "Never activate the implementer and Sol supervisor at the same time",
+            "concurrent descendants can be promoted into an unanchored parent activity row",
             "Downstream agents are your children, never root's",
         ),
         "fused Terra contract",
@@ -152,6 +157,14 @@ def main() -> int:
         raise AssertionError("fused Terra still stops after classification")
     if "orchestrator-executable experience check" in fused:
         raise AssertionError("fused Terra can still consume a root-only experience check")
+    if "Build events may arrive out of order" in fused:
+        raise AssertionError("fused Terra still permits overlapping build-child startup")
+    supervisor_start = fused.index("first start only the\nselected Sol supervisor")
+    implementer_start = fused.index(
+        "initial turn finishes with `SUPERVISOR_READY`. Only then start the selected implementer"
+    )
+    if supervisor_start >= implementer_start:
+        raise AssertionError("build startup no longer readies the supervisor before the implementer")
 
     require(
         fused,
@@ -179,6 +192,9 @@ def main() -> int:
                 "SUPERVISOR_READY_TO_RELEASE:",
                 "ORCHESTRATION_ACCEPT:",
                 "same implementer",
+                "before the implementer starts",
+                "sibling activity remains serial",
+                "fused Terra orchestrator",
                 "structured protocol outputs",
                 "ROOT_EXPERIENCE",
                 "direct experience proof is mandatory",
@@ -226,7 +242,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.10 nested orchestration, root experience review, and milestone-only progress")
+    print("PASS: 0.8.11 nested orchestration, serialized build activity, and root experience review")
     return 0
 
 
