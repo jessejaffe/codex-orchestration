@@ -166,6 +166,19 @@ def main() -> int:
     if supervisor_start >= implementer_start:
         raise AssertionError("build startup no longer readies the supervisor before the implementer")
 
+    installer = (plugin / "scripts" / "install-agents.sh").read_text(encoding="utf-8")
+    previous_release_digests = {
+        "luna": "dc769716110ab9b99b0c7caa7de8c5992c39414096d5a79c7b0f6619ee2592e5",
+        "terra": "35723b41371a65bf52af621aafc0663022aa51ffb6236b816bc21cd65cdb080e",
+        "sol-high": "ad167cec124a4ad4389d92b7e49fe5ba2effbe070bf3a9ced51fc1550edfda83",
+        "terra-supervisor": "2e124c8a94ff4aaad427c85910e52b370f732321aaa4e3689af0c9dffffc346b",
+        "sol-high-supervisor": "5993929d08fb1003e8def633e41b8aa457cfcd6a748399f513a3c942b5877857",
+        "sol-xhigh-supervisor": "c4d37bc0579ed9a2c035bee510fa6fa7a236122fd5178e004bfb3c5df78059b3",
+    }
+    for role, digest in previous_release_digests.items():
+        if digest not in installer:
+            raise AssertionError(f"installer omits the final 0.8.10 digest for {role}")
+
     require(
         fused,
         (
