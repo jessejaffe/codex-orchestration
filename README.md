@@ -1,14 +1,14 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps implementation separate from read-only
-review. Version `0.8.13` fuses routing, downstream dispatch, read-only work, and tweak supervision
+review. Version `0.8.14` fuses routing, downstream dispatch, read-only work, and tweak supervision
 under one Terra / Max orchestrator. This preserves the standard service tier, avoids a second Terra
 / Max role on common paths, and keeps root out of role-contract construction.
 
 The five work classes are `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 Complexity may still be estimated for telemetry, but it never selects a model.
 
-## How 0.8.13 works
+## How 0.8.14 works
 
 1. The stable chat-scoped hook gives root only a compact parent-relay contract, the current request,
    and the latest unfinished acceptance contract.
@@ -27,8 +27,9 @@ Complexity may still be estimated for telemetry, but it never selects a model.
    changes, evidence, next work, and blockers.
 6. The supervisor returns `CONTINUE`, `CORRECT`, or `READY_TO_RELEASE`. Every correction goes to the
    same implementer; the supervisor never edits or takes over.
-7. After release, the same supervisor performs final review. Terra sends milestone messages and the
-   final routed result to root, which relays them mechanically and never implements or judges work.
+7. After release, the same supervisor performs final review. Terra synthesizes the accepted
+   implementation, release, and direct-experience evidence into a readable completion report. Root
+   relays every heading, link, and line unchanged and never implements or judges work.
 
 The parent reports meaningful milestones only: classification start; the work class with the
 combined implementation and supervisor-ready state; each supervisor `CONTINUE`, `CORRECT`, or
@@ -139,26 +140,65 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.13, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.8.14, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses the fused custom Terra profile when the task exposes it; otherwise it starts a pinned
 built-in Terra / Max agent and directs it to the installed fused profile. Inside that subtree, Terra
 uses each current custom lane when available and otherwise a pinned built-in `default` or `worker`
-identity with the complete 0.8.13 role rules. It never tries an unavailable or legacy identity.
+identity with the complete 0.8.14 role rules. It never tries an unavailable or legacy identity.
 
 The fused classifier is pinned to GPT-5.6 Terra with Max reasoning and the normal service tier. It
 does not opt into Fast mode, so routing does not consume Fast-mode credits. Six companion profiles
 cover the fused Terra role, three implementer lanes, and two Sol supervisor lanes.
 
-## Final route receipt
+## Final completion receipt
 
-Every routed result ends with orchestrator-authored metadata that root relays unchanged:
+Every accepted result ends with an orchestrator-authored Markdown report that root relays
+unchanged. A build report summarizes the delivered outcome, lists the major changes, records
+decisive test and deployment evidence, describes the actual root-only Browser/visual observations
+when required, and preserves exact live-site and GitHub links. It also includes the released
+revision, remaining limitations, and route metadata. Small tweaks and read-only tasks use the same
+shape with fewer bullets and omit only sections that genuinely do not apply.
 
-```text
-Work class: SMALL_BUILD
-Supervisor route: GPT-5.6 Sol / High
-Implementation route: GPT-5.6 Terra / Max
-Current root route: GPT-5.6 Sol / High
+```markdown
+## Completed
+
+The export workflow is released and available from the project dashboard.
+
+## What changed
+
+- Added the export flow and downloadable result bundle.
+- Added validation that prevents incomplete exports from being published.
+
+## Verification
+
+- The focused and full test suites passed.
+- At the requested viewport, root opened the clean dashboard, selected Export, and directly
+  observed the completed download state.
+
+## Links
+
+- [Live website](https://example.com/export)
+- [GitHub commit](https://github.com/example/project/commit/0123456789abcdef)
+
+## Release
+
+- Revision: `0123456789abcdef`
+- Deployment: production is serving the accepted revision.
+
+## Remaining
+
+- None.
+
+## Orchestration
+
+- Work class: SMALL_BUILD
+- Supervisor: GPT-5.6 Sol / High
+- Implementation: GPT-5.6 Terra / Max
+- Root: GPT-5.6 Sol / High
 ```
+
+The report may include only verified destinations and observations. It cannot say work is live,
+deployed, released, or on GitHub without the corresponding exact destination and evidence.
 
 Complexity remains internal diagnostic telemetry. It is not displayed and cannot override the
 class route.
@@ -201,11 +241,11 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin
 
 The project uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.12` to `0.8.13`) contain compatible fixes and refinements.
+- Patch releases (`0.8.13` to `0.8.14`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.13` is a normal patch release. The standard checkout workflow is:
+Version `0.8.14` is a normal patch release. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh

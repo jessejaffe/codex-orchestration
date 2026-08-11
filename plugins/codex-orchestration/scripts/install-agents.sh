@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the six Codex Orchestration 0.8.13 companion profiles and retire obsolete identities safely.
+# Install the six Codex Orchestration 0.8.14 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -65,7 +65,7 @@ previous_digest() {
     luna-implementer) printf '%s\n' 17977b485b042a6f0612d5e444d5232591fbe45ff679131a20eb61fad0edfef0 44bec276050bd6c342317b2c1d01c70fe310da7ff5f44c36754ef371491b300f de0169757da493d85b323b5d288036c0489a4700ebced8303ded58045d673d0a 983f3d6a4a9d674bc46d828b1f5c648a4b77940a4ff51d407302b3761ad010d9 ee39d10609e279369abb42801e9436417c609355b7f018da42b1bf50cf9d0263 7fc50da2bb0efae58a6be4f083170f7b046870c8217f0f94241363a8404537e3 dc769716110ab9b99b0c7caa7de8c5992c39414096d5a79c7b0f6619ee2592e5 ;;
     terra-implementer) printf '%s\n' c8a65ab5b313fdbe285aa47fba0b5ff13cd0040c8d1d06479e662b405503987b c36e4ccf25a51f911ad8fac00e235f2d23f623184dc71c08cdddebc8f7d71342 1fe32ab9230c3827f7abc489a5062d6cce2847f15341cbad1cac4e062ef5ece3 a24c4a1a67b4730f24d9d883cbbc6fb46b535847ddafa1599ff2127f5ca8b974 d0b22605fe4fb415efc8ea14e6243de85c792aff566295c3de32d00176c54e72 c878b68faf44eae87c12c349f58ff90f086068c6c9b40f771757e432db54bb75 35723b41371a65bf52af621aafc0663022aa51ffb6236b816bc21cd65cdb080e ;;
     sol-high-implementer) printf '%s\n' ad165e2c75a24c8f9a6a2a53ccc3010e7ff5a2932e6b72541592d3aea53bb475 98c135e10d0b66fa911eab99c1229b530e27d7ac0e5dc983dcef181806e67e6f ac4fb9c02a6d4d53d767fa2667dff3b7e6a41ce8b5032f1f179ee5607cd73c94 b9c8acb6206331972722cba1943c5a86aaaccdbaa85714188e8cfcce2f0a9ec0 938ae440dde9c136fbdc75f757cfcc3030b5c344b9b187e1898c1bfeff27376b 5d8156c3e42105180b6bee35d457aac6f7fd371f55aeba5c58f822d0ad5ab473 ad167cec124a4ad4389d92b7e49fe5ba2effbe070bf3a9ced51fc1550edfda83 ;;
-    terra-supervisor) printf '%s\n' d533709aa442d916dd1b05a7173710a2d24dcd5a4a7040a29b0ce4510d1465f7 0c3afffbeb7d4235c59e39b7ad331db3cefb07c49779441b25279200b18aae15 47ca1d10eba36a709f782f52d1c867d9b50094075ea620fae549d1a308f4fe9f 2ab30773626f82c998f2f4373ccf39080881565e0c12a07e211ea6bf08b974cb e9d35bf4dcc8f1e78d32953107821aea477998afb407ad8b8661d791afa8195d 2e124c8a94ff4aaad427c85910e52b370f732321aaa4e3689af0c9dffffc346b d44f6d70de581d3e8895b396cc7a2bba0a2e7fc35cb6ea8531e920cae457aab4 bcf97708c68712984c6345476595e832c933763d2e5edde854cfcc295794e1a5 ;;
+    terra-supervisor) printf '%s\n' d533709aa442d916dd1b05a7173710a2d24dcd5a4a7040a29b0ce4510d1465f7 0c3afffbeb7d4235c59e39b7ad331db3cefb07c49779441b25279200b18aae15 47ca1d10eba36a709f782f52d1c867d9b50094075ea620fae549d1a308f4fe9f 2ab30773626f82c998f2f4373ccf39080881565e0c12a07e211ea6bf08b974cb e9d35bf4dcc8f1e78d32953107821aea477998afb407ad8b8661d791afa8195d 2e124c8a94ff4aaad427c85910e52b370f732321aaa4e3689af0c9dffffc346b d44f6d70de581d3e8895b396cc7a2bba0a2e7fc35cb6ea8531e920cae457aab4 bcf97708c68712984c6345476595e832c933763d2e5edde854cfcc295794e1a5 c296cd101b91debb8ac800d4d18339f9da8d9606a7048c70e72d37cf0b8885b4 ;;
     sol-high-supervisor) printf '%s\n' ee8b10c4f69c84305bd43f521b1a40d777f91b124f4e163e7d44e7a02d8848b2 8f25a162a0c979163c262ff7cd24542dc64b7daef882fd288b1c29a53a1902bd ff700c6a648c7a42d589229288fd9b3611d473cddefaa2e540dd24565149acd2 4120bf9285995b66d6ca08c11cb01d87b389b58b535127b83a2fe339b471a568 5993929d08fb1003e8def633e41b8aa457cfcd6a748399f513a3c942b5877857 427075380b9a3a8a136a6fde53a95252c3031621d51181ec1161318330d027a0 ;;
     sol-xhigh-supervisor) printf '%s\n' 351f19272ae01016a9cd7891ec3700b5ec85e12e518ee1d219d85274879943a1 ece9ac3d0d82e346b0b2c449f92907ca1110e7b8af680ed3fa7e547d026385b9 9bc0ad2492f0fbf8636a8945c3ae366eb1a12e8b63f2eac65ad38d0c9538a192 156bdc43364274c698294159ba6ff3c2c7e98912f214c6560e389bf51463cd6d c4d37bc0579ed9a2c035bee510fa6fa7a236122fd5178e004bfb3c5df78059b3 30ba4bbee0dcb1ecf22dfb6c6ce98377e72740e717011f7d319e9ccc1f7104bf ;;
     *) printf '%s\n' '' ;;
@@ -129,7 +129,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: six 0.8.13 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: six 0.8.14 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -181,4 +181,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: six 0.8.13 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: six 0.8.14 companion profiles are current and obsolete identities were retired.'

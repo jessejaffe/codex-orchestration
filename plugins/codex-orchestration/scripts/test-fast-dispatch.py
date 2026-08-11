@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.13 experience verification."""
+"""Hermetic tests for chat-scoped activation and 0.8.14 completion relays."""
 
 from __future__ import annotations
 
@@ -102,7 +102,8 @@ def main() -> int:
         "broaden the check, or judge acceptance",
         "ORCHESTRATION_BLOCKED: <text>",
         "no analysis or reasoning heading",
-        "return only the text after that",
+        "return the entire remaining payload exactly",
+        "Preserve all Markdown, line breaks, links",
     )
     for value in required:
         if value not in routed_context:
@@ -255,7 +256,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded acceptance, and 0.8.13 root experience verification")
+    print("PASS: chat controls, bounded acceptance, and 0.8.14 completion relay")
     return 0
 
 

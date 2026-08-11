@@ -55,7 +55,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.13). Root is only a transparent parent relay. It never
+DISPATCH_CONTEXT = """Orchestration ON (0.8.14). Root is only a transparent parent relay. It never
 classifies, constructs role contracts, implements, supervises, or judges work.
 
 FORK=`__FORK_TURNS__` (never literal `all`)
@@ -92,8 +92,9 @@ Handle child messages mechanically, with no analysis or reasoning heading:
   ACTION=<action actually taken>; RESULT=<observed result>; ARTIFACTS=<URL or path, viewport, screenshot
   paths, and measurements or NONE>; BLOCKER=<NONE or exact access failure>`, then immediately wait.
 - `ORCHESTRATION_BLOCKED: <text>` means post only `<text>` and stop.
-- A final payload beginning `ORCHESTRATION_ACCEPT: ` is complete; return only the text after that
-  prefix, exactly, without adding, removing, or reformatting anything.
+- A final payload beginning `ORCHESTRATION_ACCEPT: ` is complete; remove only that protocol prefix
+  and return the entire remaining payload exactly. Preserve all Markdown, line breaks, links,
+  sections, and route metadata without summarizing, truncating, adding, or reformatting anything.
 - Any other final payload is a protocol error; report it exactly and do no work yourself.
 
 Never describe agent roles, contracts, workflow context, routing mechanics, waits, or relay logic.

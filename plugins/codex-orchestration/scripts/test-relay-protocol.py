@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.13 readable checkpoints and accurate milestones."""
+"""Static contract tests for 0.8.14 detailed completion reports."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.13":
-        raise AssertionError(f"manifest does not use traditional 0.8.13: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.14":
+        raise AssertionError(f"manifest does not use traditional 0.8.14: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -79,7 +79,9 @@ def main() -> int:
             "broaden the check, or judge acceptance",
             "ORCHESTRATION_BLOCKED: <text>",
             "no analysis or reasoning heading",
-            "return only the text after that",
+            "return the entire remaining payload exactly",
+            "Preserve all Markdown, line breaks, links",
+            "without summarizing, truncating, adding, or reformatting anything",
         ),
         "root relay contract",
     )
@@ -160,6 +162,23 @@ def main() -> int:
             "Never describe the next\nphase as already approved",
             "ORCHESTRATION_UPDATE: Supervisor approved <completed checkpoint>. Implementation continues to <next checkpoint>.",
             "Downstream agents are your children, never root's",
+            "the cumulative `IMPLEMENTATION_RESULT`",
+            "any `ROOT_VERIFICATION_RESULT`",
+            "do not start another reporting agent",
+            "ORCHESTRATION_ACCEPT: ## Completed",
+            "## What changed",
+            "## Verification",
+            "## Links",
+            "[Live website](<exact verified URL>)",
+            "[GitHub commit](<exact verified URL>)",
+            "## Release",
+            "## Remaining",
+            "## Orchestration",
+            "Preserve every exact verified HTTP(S) destination",
+            "render it as a\ndescriptive Markdown link",
+            "what was initially visible, what root\ndid, and what visibly happened",
+            "Never say work is\nlive, deployed, released, or on GitHub without the corresponding exact destination and evidence",
+            "Do not invent URLs, revisions, test results, browser observations, or missing details",
         ),
         "fused Terra contract",
     )
@@ -179,6 +198,22 @@ def main() -> int:
         raise AssertionError("fused Terra does not reactivate every idle-child handoff")
     if "Supervisor approved <phase>. Implementation continues." in fused:
         raise AssertionError("fused Terra still labels the next phase as already approved")
+    if "on that same line by a concise user-facing result" in fused:
+        raise AssertionError("fused Terra still compresses acceptance to a one-line result")
+    completion_template = fused[fused.index("\nORCHESTRATION_ACCEPT: ## Completed\n") :]
+    completion_sections = (
+        "ORCHESTRATION_ACCEPT: ## Completed",
+        "## What changed",
+        "## Verification",
+        "## Links",
+        "## Release",
+        "## Remaining",
+        "## Orchestration",
+    )
+    if list(map(completion_template.index, completion_sections)) != sorted(
+        map(completion_template.index, completion_sections)
+    ):
+        raise AssertionError("completion report sections are out of order")
     for deadlocking_copy in (
         "send the checkpoint and immutable lines",
         "then relay\n`SUPERVISOR_CONTINUE`",
@@ -200,6 +235,7 @@ def main() -> int:
         "0.8.11-sol-high-supervisor": "427075380b9a3a8a136a6fde53a95252c3031621d51181ec1161318330d027a0",
         "0.8.11-sol-xhigh-supervisor": "30ba4bbee0dcb1ecf22dfb6c6ce98377e72740e717011f7d319e9ccc1f7104bf",
         "0.8.12-terra-supervisor": "bcf97708c68712984c6345476595e832c933763d2e5edde854cfcc295794e1a5",
+        "0.8.13-terra-supervisor": "c296cd101b91debb8ac800d4d18339f9da8d9606a7048c70e72d37cf0b8885b4",
     }
     for role, digest in previous_release_digests.items():
         if digest not in installer:
@@ -292,7 +328,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.13 readable checkpoints, accurate milestones, and live handoffs")
+    print("PASS: 0.8.14 detailed completion reports and verbatim relays")
     return 0
 
 
