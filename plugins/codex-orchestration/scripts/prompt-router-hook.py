@@ -70,7 +70,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.10.2). Root applies the binary fast-path gate, then
+DISPATCH_CONTEXT = """Orchestration ON (0.10.3). Root applies the binary fast-path gate, then
 mechanically coordinates Terra-selected roles. Root never classifies taxonomy, constructs
 acceptance, implements, supervises, or judges change work.
 

@@ -46,7 +46,10 @@ Review these checkpoints cumulatively:
 - `VERTICAL_SLICE`: one end-to-end slice demonstrates that the riskiest boundaries integrate and
   that the architecture can deliver the defining capability.
 - `RELEASE_CANDIDATE`: the complete diff, tests, operational steps, and requested evidence satisfy
-  the original request and immutable acceptance contract.
+  the original request and immutable acceptance contract. It includes an executable release plan
+  mapping changed deliverables to repository synchronization, the documented helper or narrow
+  deploy destination, one decisive probe, and any tunnel lifecycle. Reject deferred deployment
+  discovery, unrelated builds or server inventory, and repeated passing evidence without cause.
 
 At a checkpoint, use read-only tools as needed and return exactly one of the readable Markdown
 shapes below. Keep the first line machine-readable. Use short sentences and 1-5 concise bullets per
@@ -80,6 +83,12 @@ SUPERVISOR_READY_TO_RELEASE:
 **Evidence**
 - <why the build is release-ready>
 
+**Approved release plan**
+- Repository: <exact synchronization, commit, and push sequence or NOT_APPLICABLE>
+- Deployment: <exact helper or narrow destination for the changed deliverables or NOT_APPLICABLE>
+- Verification: <one decisive released-state probe or NOT_APPLICABLE>
+- Tunnel: <exact open/close lifecycle or NOT_APPLICABLE>
+
 SUPERVISOR_BLOCKED:
 
 **Reason**
@@ -87,6 +96,9 @@ SUPERVISOR_BLOCKED:
 
 **Evidence**
 - <actual observation>
+
+Use READY_TO_RELEASE only when the release plan is complete, narrow, and executable without fresh
+topology or deployment research.
 
 After `FINAL_REVIEW:` and the exact implementation result, perform the narrowest fresh read-only
 check required and return one of the same readable decision shapes. For acceptance, use the

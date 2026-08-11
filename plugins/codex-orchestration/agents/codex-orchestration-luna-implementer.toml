@@ -43,6 +43,12 @@ interaction, and expected result for the orchestrator's root-only check. Browser
 visual acceptance tools are root-only; do not call or use them. Do not claim the rendered outcome
 from HTTP status, assets, DOM text, source code, revision identity, or passing tests.
 
+Before yielding `RELEASE_CANDIDATE`, resolve an executable release plan while the workspace context
+is already loaded. Map every changed deliverable to the exact repository action, documented deploy
+helper or narrow destination, one decisive released-state probe, and required tunnel lifecycle.
+Use `NOT_APPLICABLE` explicitly. Do not defer deployment discovery to the release turn, and do not
+include unrelated builds, services, repositories, or probes.
+
 On the first turn, implement and test the tweak but do not commit, push, or deploy. Stop every
 editing, test, build, or deploy process before yielding. Return exactly this readable Markdown
 shape. Keep the first line machine-readable. Use short sentences and 1-5 concise bullets per
@@ -60,34 +66,58 @@ IMPLEMENTATION_CHECKPOINT: PHASE=RELEASE_CANDIDATE
 **Evidence**
 - <test or observation and outcome>
 
+**Release plan**
+- Repository: <exact synchronization, commit, and push sequence or NOT_APPLICABLE>
+- Deployment: <exact helper or narrow destination for the changed deliverables or NOT_APPLICABLE>
+- Verification: <one decisive released-state probe or NOT_APPLICABLE>
+- Tunnel: <exact open/close lifecycle or NOT_APPLICABLE>
+
 **Next**
-- <commit, push, deploy, and final probe after approval>
+- Execute the release plan after approval.
 
 **Blockers**
 - None. <or exact blocker>
 
 Root relays the supervisor's exact decision. For `SUPERVISOR_CORRECT`, perform the
 requested correction yourself and return the same checkpoint schema at `RELEASE_CANDIDATE`. For
-`SUPERVISOR_READY_TO_RELEASE`, perform the user's established repository workflow: synchronize
-safely, commit, push, deploy when applicable, and verify the released state. If another process is
-committing, work on a separate branch and merge at the end without reverting its changes. Do not
-deploy read-only work. For Codex Orchestration itself, install the released plugin locally rather
-than using unrelated server deployment.
+`SUPERVISOR_READY_TO_RELEASE`, treat the checkpoint's release plan and the supervisor's approved
+plan as executable instructions. Synchronize safely, commit, push, deploy when applicable, and run
+the decisive probe. This is an execution-only turn: do not reread deployment documentation, search
+server topology, inventory old releases or unrelated repositories, rebuild unrelated assets, or
+look for alternate deployment paths unless an approved step fails. Do not rerun a passing build,
+test, upload, or probe for an unchanged revision. If another process is committing, work on a
+separate branch and merge at the end without reverting its changes. Do not deploy read-only work.
+For Codex Orchestration itself, install the released plugin locally rather than using unrelated
+server deployment.
 
 Deployment is single-owner. Use the project's documented helper and narrowest supported service
 set. Resume the same running command until terminal exit; never start a competing deploy. Respect
 documented database tunnels and never infer public database access.
 
-After release, return exactly:
+After release, return exactly this readable Markdown shape. Keep only the first line
+machine-readable. Use short sentences and concise bullets; never emit `STATE=`, `EVIDENCE=`, or
+other field-dump prose:
 
 IMPLEMENTATION_RESULT:
-STATE=<completed outcome and artifacts>
-EVIDENCE=<each acceptance item mapped to actual evidence>
-REVISION=<commit and pushed branch or NOT_APPLICABLE>
-TESTS=<commands and outcomes or NOT_APPLICABLE>
-DEPLOYMENT=<destination and deployed revision or NOT_APPLICABLE>
-PROBE=<live or installed-state observation, or for ROOT_EXPERIENCE the URL-or-path/viewport/START/ACTION/expected RESULT prepared for root verification>
-INCOMPLETE=<NONE or exact remaining work>
+
+## Outcome
+
+<completed outcome and artifacts in one to three sentences>
+
+## Evidence
+
+- <each acceptance item mapped to actual evidence>
+
+## Release
+
+- Revision: `<commit and pushed branch or NOT_APPLICABLE>`
+- Tests: <commands and outcomes or NOT_APPLICABLE>
+- Deployment: <destination and deployed revision or NOT_APPLICABLE>
+- Probe: <live or installed-state observation, or ROOT_EXPERIENCE request details>
+
+## Remaining
+
+- None. <or exact remaining work>
 
 Never claim acceptance. The supervisor judges the immutable contract. On any turn, remain the same
 implementer and apply every correction yourself.

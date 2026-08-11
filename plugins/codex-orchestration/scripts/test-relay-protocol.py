@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.10.2 six-class taxonomy and role boundary."""
+"""Static contracts for the 0.10.3 six-class taxonomy and role boundary."""
 
 from __future__ import annotations
 
@@ -98,8 +98,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.10.2":
-        raise AssertionError(f"manifest does not use 0.10.2: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.10.3":
+        raise AssertionError(f"manifest does not use 0.10.3: {manifest.get('version')!r}")
 
     orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -145,7 +145,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.10.2)",
+            "Orchestration ON (0.10.3)",
             "DESKTOP REASONING DISPLAY",
             "single plain word `Thinking`",
             "before, between, and after tool calls",
@@ -303,6 +303,24 @@ def main() -> int:
                 "`ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is not a\nblocker",
                 "Root includes the",
                 "with every later supervisor decision",
+                "Before yielding `RELEASE_CANDIDATE`, resolve an executable release plan",
+                "**Release plan**",
+                "This is an execution-only turn",
+                "## Outcome",
+                "## Evidence",
+                "## Release",
+                "## Remaining",
+                "never emit `STATE=`, `EVIDENCE=`",
+            ),
+            filename,
+        )
+        forbid(
+            documents[filename],
+            (
+                "STATE=<completed outcome and artifacts>",
+                "EVIDENCE=<each acceptance item mapped to actual evidence>",
+                "REVISION=<commit and pushed branch or NOT_APPLICABLE>",
+                "INCOMPLETE=<NONE or exact remaining work>",
             ),
             filename,
         )
@@ -316,10 +334,17 @@ def main() -> int:
             documents[filename],
             (
                 "implementer's initial turn is already active",
+                "**Approved release plan**",
+                "- Repository: <exact synchronization, commit, and push sequence or NOT_APPLICABLE>",
+                "- Deployment: <exact helper or narrow destination for the changed deliverables or NOT_APPLICABLE>",
+                "- Verification: <one decisive released-state probe or NOT_APPLICABLE>",
+                "- Tunnel: <exact open/close lifecycle or NOT_APPLICABLE>",
             ),
             filename,
         )
         compact_supervisor = " ".join(documents[filename].lower().split())
+        if "executable without fresh topology or deployment research" not in compact_supervisor:
+            raise AssertionError(f"{filename} permits release-time deployment discovery")
         if "call no tools" not in compact_supervisor:
             raise AssertionError(f"{filename} permits tools during context-loading overlap")
         if "inspect no workspace state" not in compact_supervisor:
@@ -329,6 +354,13 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.10.2 profiles accepted for the 0.10.3 readable release migration",
+            "142b58957a44c91e45bd4f110f30fce855a6e6cb23ec8069bba87e900ccc3e33",
+            "db744d545558fd8f93dfa93392c0ea1ace9d451e074fa700121d69a7d10f8fd8",
+            "d781b21e3292ce238770cd4b424f8430a319fdf0e4c7d4342617b54a55d3f5f1",
+            "a9341b5e3d2a463a5a094bd0268b6413371b71c65f13cf3b46ee9132ae6f4071",
+            "cdcaf2f3ddb1fb265398b9196a9124fcbe8f2c7b0c8617b15293faf5d6f41e48",
+            "97dbcc78d98cc74231a08c30d60c5ab057726fdf2a866dd620194df00503be5b",
             "Exact 0.10.0 profiles accepted for the 0.10.1 startup migration",
             "fc3b2c7ac8b13f48153d30010841f1e9f1bbe60bebb4c514474922b98f3ec8cd",
             "b3152056861c84c5484cb4379345a32487abac083dd04aec358a670236fc010b",
@@ -346,7 +378,7 @@ def main() -> int:
             "48520a33a70bfceb920fee852ee991f0305170bd255bbf5455146e6ac88281d8",
             "7dc6715eec52fda116d10bb3154353b2020e093976dc47dc4cdee55bee12b24d",
         ),
-        "0.10.0 and 0.9.0 migration digests",
+        "0.10.2, 0.10.0, and 0.9.0 migration digests",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
@@ -368,7 +400,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.10.2 six-class taxonomy and classifier/root boundary")
+    print("PASS: 0.10.3 readable, preplanned release protocol")
     return 0
 
 

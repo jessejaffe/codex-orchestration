@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the seven Codex Orchestration 0.10.2 companion profiles and retire obsolete identities safely.
+# Install the seven Codex Orchestration 0.10.3 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -62,6 +62,15 @@ sol-xhigh-executive
 sol-reviewer'
 
 previous_digest() {
+  # Exact 0.10.2 profiles accepted for the 0.10.3 readable release migration.
+  case "$1" in
+    luna-implementer) printf '%s\n' 142b58957a44c91e45bd4f110f30fce855a6e6cb23ec8069bba87e900ccc3e33 ;;
+    sol-high-implementer) printf '%s\n' db744d545558fd8f93dfa93392c0ea1ace9d451e074fa700121d69a7d10f8fd8 ;;
+    sol-high-supervisor) printf '%s\n' d781b21e3292ce238770cd4b424f8430a319fdf0e4c7d4342617b54a55d3f5f1 ;;
+    sol-xhigh-supervisor) printf '%s\n' a9341b5e3d2a463a5a094bd0268b6413371b71c65f13cf3b46ee9132ae6f4071 ;;
+    terra-implementer) printf '%s\n' cdcaf2f3ddb1fb265398b9196a9124fcbe8f2c7b0c8617b15293faf5d6f41e48 ;;
+    terra-supervisor) printf '%s\n' 97dbcc78d98cc74231a08c30d60c5ab057726fdf2a866dd620194df00503be5b ;;
+  esac
   # Exact 0.10.0 profiles accepted for the 0.10.1 startup migration.
   case "$1" in
     terra-orchestrator) printf '%s\n' fc3b2c7ac8b13f48153d30010841f1e9f1bbe60bebb4c514474922b98f3ec8cd ;;
@@ -150,7 +159,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: seven 0.10.2 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: seven 0.10.3 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -202,4 +211,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: seven 0.10.2 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: seven 0.10.3 companion profiles are current and obsolete identities were retired.'
