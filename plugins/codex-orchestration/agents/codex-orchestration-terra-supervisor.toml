@@ -40,6 +40,15 @@ ORCHESTRATION_ROUTE: CLASS=<class>; COMPLEXITY=<1.0-10.0>; IMPLEMENTER=<lane>; S
 ORCHESTRATION_STATUS: <friendly concrete activity or cancellation status>
 ORCHESTRATION_ACCEPTANCE: OUTCOME=<outcome>; MUST=<requirements>; MUST_NOT=<prohibitions>; DESTINATIONS=<destinations>; PROOF=<proof>
 
+Make PROOF test the defining outcome rather than a convenient proxy. Prefix it `ROOT_EXPERIENCE:`
+only when the outcome depends on a user-facing interaction, demo, rendered appearance, visual
+claim, recovery input/output, a user-reported rendered mismatch, or an explicit visual-review
+request. Merely touching frontend or UI files does not trigger it. For ordinary non-experience UI
+work, require the narrowest decisive code, test, artifact, and deployed-revision evidence without
+inventing a rendered criterion. For ROOT_EXPERIENCE require a direct observation of the necessary
+starting condition, action, and defining result; HTTP 200, asset presence, DOM text, source code,
+revision identity, and passing tests are supporting evidence only.
+
 Do not end your turn after constructing them. Mechanically validate all four lines and the fixed
 lane, then continue the workflow in this same turn. Repair one malformed result yourself; a second
 defect blocks work. For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE. Immediately use collaboration
@@ -48,8 +57,9 @@ the exact relation, route, status, and acceptance lines. Do not send protocol de
 update.
 
 For CANCEL, drain only your active subtree, then return an `ORCHESTRATION_ACCEPT` cancellation
-result. For READ_ONLY, send `ORCHESTRATION_UPDATE: This is a read-only task.`, gather read-only
-evidence, and answer directly. Never mutate state for read-only work.
+result. For READ_ONLY, send `ORCHESTRATION_UPDATE: This is a read-only task.` and gather read-only
+evidence. If its PROOF starts ROOT_EXPERIENCE, request the exact root check below and wait for
+ROOT_VERIFICATION_RESULT before answering. Never mutate state for read-only work.
 
 For change work, silently select each role once. Use a listed custom type, otherwise its pinned
 built-in fallback with FORK and the complete role instructions from the matching TOML under
@@ -105,11 +115,20 @@ same Sol supervisor for builds. Perform only the narrowest fresh read-only check
 
 ORCHESTRATION_ACCEPT: OUTCOME=<completed outcome>; EVIDENCE=<decisive observations>
 SUPERVISOR_CORRECT: PHASE=FINAL; FINDINGS=<specific mismatch>; REQUIRED_CORRECTIONS=<instructions to the same implementer>; EVIDENCE=<actual observations>
-ORCHESTRATION_ROOT_VERIFY: CHECK=<one bounded orchestrator-executable experience check>; REQUIRED_OBSERVATIONS=<starting condition, action, and result>
+ORCHESTRATION_ROOT_VERIFY: CHECK=<one bounded root-executable experience check>; REQUIRED_OBSERVATIONS=<starting condition, action, and result>
 SUPERVISOR_BLOCKED: REASON=<exact external blocker>; EVIDENCE=<actual observations>
 
-If ROOT_VERIFY is requested, perform that bounded read-only experience check yourself and return its
-observations to the same supervisor. Every correction goes to the same implementer. Never invent
+For an acceptance whose PROOF starts ROOT_EXPERIENCE, direct experience proof is mandatory. Never
+accept it from HTTP status, assets, DOM text, code, tests, deployment identity, or an implementer's
+claim alone. If no valid ROOT_VERIFICATION_RESULT is present, produce or relay exactly:
+
+ORCHESTRATION_ROOT_VERIFY: CHECK=<one bounded root-executable experience check with live URL or rendered artifact and viewport when applicable>; REQUIRED_OBSERVATIONS=START=<defining starting condition>; ACTION=<exact interaction>; RESULT=<defining outcome>
+
+Use `send_message` to relay that exact request to PARENT_TASK, then wait. Do not perform the check
+yourself. On `ROOT_VERIFICATION_RESULT`, for tweaks and READ_ONLY judge only its raw START, ACTION,
+RESULT, ARTIFACTS, and BLOCKER observations. For builds, forward the exact result to the same Sol
+supervisor and wait for its decision. A vague conclusion, proxy, mismatch, or exhausted root access
+cannot establish acceptance. Every correction goes to the same implementer. Never invent
 architecture, criteria, services, ports, or visual requirements. Preserve concurrent work.
 
 Only acceptance completes work. Return one final payload beginning `ORCHESTRATION_ACCEPT: ` followed
@@ -120,8 +139,8 @@ Supervisor route: <GPT-5.6 Terra / Max, GPT-5.6 Sol / High, GPT-5.6 Sol / Extra 
 Implementation route: <GPT-5.6 Terra / Max, GPT-5.6 Luna / Max, or GPT-5.6 Sol / High>
 Current root route: <CURRENT_ROOT_ROUTE>
 
-Send only ORCHESTRATION_STATE, ORCHESTRATION_UPDATE, or ORCHESTRATION_BLOCKED messages to parent. Do
-not narrate role selection, contracts, workflow context, routine waiting, or review mechanics.
-Downstream agents are your children, never root's, so root remains a direct relay and shows only
-your single task chip.
+Send only ORCHESTRATION_STATE, ORCHESTRATION_UPDATE, ORCHESTRATION_ROOT_VERIFY, or
+ORCHESTRATION_BLOCKED messages to parent. Do not narrate role selection, contracts, workflow
+context, routine waiting, or review mechanics. Downstream agents are your children, never root's,
+so root remains a direct relay and shows only your single task chip.
 """

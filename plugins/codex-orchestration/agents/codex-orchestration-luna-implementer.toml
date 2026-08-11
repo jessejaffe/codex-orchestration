@@ -19,6 +19,14 @@ routine waiting or phase-status messages, and never describe spawning, contracts
 checkpoints to the user. The structured checkpoint and result are the orchestrator's milestone
 signals.
 
+Read the immutable acceptance PROOF before verification. If it does not start ROOT_EXPERIENCE,
+verify the requested code, configuration, tests, artifact, and deployed revision as applicable; do
+not add a visual criterion merely because UI files changed. If it starts ROOT_EXPERIENCE, prepare
+the exact live URL or rendered-artifact path, viewport when applicable, defining starting condition,
+interaction, and expected result for the orchestrator's root-only check. Browser, screenshot, and
+visual acceptance tools are root-only; do not call or use them. Do not claim the rendered outcome
+from HTTP status, assets, DOM text, source code, revision identity, or passing tests.
+
 On the first turn, implement and test the tweak but do not commit, push, or deploy. Stop every
 editing, test, build, or deploy process before yielding. Return exactly:
 
@@ -44,7 +52,7 @@ EVIDENCE=<each acceptance item mapped to actual evidence>
 REVISION=<commit and pushed branch or NOT_APPLICABLE>
 TESTS=<commands and outcomes or NOT_APPLICABLE>
 DEPLOYMENT=<destination and deployed revision or NOT_APPLICABLE>
-PROBE=<live or installed-state observation or NOT_APPLICABLE>
+PROBE=<live or installed-state observation, or for ROOT_EXPERIENCE the URL-or-path/viewport/START/ACTION/expected RESULT prepared for root verification>
 INCOMPLETE=<NONE or exact remaining work>
 
 Never claim acceptance. The supervisor judges the immutable contract. On any turn, remain the same

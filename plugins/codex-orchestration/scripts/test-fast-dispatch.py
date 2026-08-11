@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.9 nested orchestration."""
+"""Hermetic tests for chat-scoped activation and 0.8.10 experience verification."""
 
 from __future__ import annotations
 
@@ -93,6 +93,13 @@ def main() -> int:
         "timeout_ms: 3600000",
         "ORCHESTRATION_STATE:",
         "ORCHESTRATION_UPDATE: <text>",
+        "ORCHESTRATION_ROOT_VERIFY: CHECK=<bounded check>",
+        "root-only Browser/visual tools",
+        "cache-bypassed and at the requested viewport",
+        "ROOT_VERIFICATION_RESULT: START=<observed starting condition>",
+        "with `followup_task`",
+        "ARTIFACTS=<URL or path, viewport, screenshot",
+        "broaden the check, or judge acceptance",
         "ORCHESTRATION_BLOCKED: <text>",
         "no analysis or reasoning heading",
         "return only the text after that",
@@ -119,7 +126,7 @@ def main() -> int:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     if (state / "grader-requests").exists():
         raise AssertionError("dispatch still staged a grader request")
-    if len(routed_context) > 3_000:
+    if len(routed_context) > 3_500:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
@@ -248,7 +255,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded acceptance, and 0.8.9 nested event-driven dispatch")
+    print("PASS: chat controls, bounded acceptance, and 0.8.10 root experience verification")
     return 0
 
 

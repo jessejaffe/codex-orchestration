@@ -55,7 +55,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.9). Root is only a transparent parent relay. It never
+DISPATCH_CONTEXT = """Orchestration ON (0.8.10). Root is only a transparent parent relay. It never
 classifies, constructs role contracts, implements, supervises, or judges work.
 
 FORK=`__FORK_TURNS__` (never literal `all`)
@@ -83,6 +83,14 @@ short-poll, call `list_agents` because time passed, or emit an elapsed-time hear
 Handle child messages mechanically, with no analysis or reasoning heading:
 - `ORCHESTRATION_STATE:` is internal; immediately wait again without commentary.
 - `ORCHESTRATION_UPDATE: <text>` means post only `<text>` as commentary, then immediately wait.
+- `ORCHESTRATION_ROOT_VERIFY: CHECK=<bounded check>; REQUIRED_OBSERVATIONS=START=<starting
+  condition>; ACTION=<interaction>; RESULT=<defining outcome>` is the only root verification path.
+  Use root-only Browser/visual tools to perform exactly that check against the requested live URL or
+  rendered artifact, cache-bypassed and at the requested viewport when applicable. Do not change
+  state, broaden the check, or judge acceptance. Send the same
+  fused Terra orchestrator with `followup_task` one `ROOT_VERIFICATION_RESULT: START=<observed starting condition>;
+  ACTION=<action actually taken>; RESULT=<observed result>; ARTIFACTS=<URL or path, viewport, screenshot
+  paths, and measurements or NONE>; BLOCKER=<NONE or exact access failure>`, then immediately wait.
 - `ORCHESTRATION_BLOCKED: <text>` means post only `<text>` and stop.
 - A final payload beginning `ORCHESTRATION_ACCEPT: ` is complete; return only the text after that
   prefix, exactly, without adding, removing, or reformatting anything.
@@ -90,7 +98,8 @@ Handle child messages mechanically, with no analysis or reasoning heading:
 
 Never describe agent roles, contracts, workflow context, routing mechanics, waits, or relay logic.
 Root's only visible messages are classification start, exact orchestrator milestone updates, an
-external blocker, and the exact final result."""
+external blocker, and the exact final result. Root never reviews code or judges acceptance; it only
+records direct experience observations when the orchestrator sends ORCHESTRATION_ROOT_VERIFY."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

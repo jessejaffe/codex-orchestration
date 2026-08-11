@@ -1,14 +1,14 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps implementation separate from read-only
-review. Version `0.8.9` fuses routing, downstream dispatch, read-only work, and tweak supervision
+review. Version `0.8.10` fuses routing, downstream dispatch, read-only work, and tweak supervision
 under one Terra / Max orchestrator. This preserves the standard service tier, avoids a second Terra
 / Max role on common paths, and keeps root out of role-contract construction.
 
 The five work classes are `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 Complexity may still be estimated for telemetry, but it never selects a model.
 
-## How 0.8.9 works
+## How 0.8.10 works
 
 1. The stable chat-scoped hook gives root only a compact parent-relay contract, the current request,
    and the latest unfinished acceptance contract.
@@ -101,6 +101,22 @@ observed mismatch and give bounded, outcome-focused instructions. The fused orch
 exact decision to the same implementer. Only `READY_TO_RELEASE` at the release-candidate checkpoint
 authorizes the implementer to commit, push, deploy, and probe.
 
+## UI and experience verification
+
+Frontend files do not automatically trigger visual review. For ordinary UI work whose acceptance
+does not depend on rendered behavior, the supervisor uses the narrowest decisive code, test,
+artifact, runtime, and deployed-revision evidence and does not invent a visual criterion.
+
+Terra prefixes acceptance proof with `ROOT_EXPERIENCE:` when the defining outcome depends on a
+user-facing interaction, demo, rendered appearance, visual claim, recovery input/output, a
+user-reported rendered mismatch, or an explicit visual-review request. That contract requires one
+bounded root-only Browser/visual check against the live URL or rendered artifact, cache-bypassed and
+at the relevant viewport when applicable. The
+check records the defining `START`, exact `ACTION`, observed `RESULT`, and `ARTIFACTS`, then returns
+those raw observations to the same supervisor. HTTP status, assets, DOM text, source code, revision
+identity, and passing tests are supporting evidence only and cannot substitute for the defining
+experience. Root performs the check but never judges acceptance.
+
 ## Controls
 
 Activate one task with any of:
@@ -118,11 +134,11 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.9, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.8.10, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses the fused custom Terra profile when the task exposes it; otherwise it starts a pinned
 built-in Terra / Max agent and directs it to the installed fused profile. Inside that subtree, Terra
 uses each current custom lane when available and otherwise a pinned built-in `default` or `worker`
-identity with the complete 0.8.9 role rules. It never tries an unavailable or legacy identity.
+identity with the complete 0.8.10 role rules. It never tries an unavailable or legacy identity.
 
 The fused classifier is pinned to GPT-5.6 Terra with Max reasoning and the normal service tier. It
 does not opt into Fast mode, so routing does not consume Fast-mode credits. Six companion profiles
@@ -180,11 +196,11 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin
 
 The project uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.8` to `0.8.9`) contain compatible fixes and refinements.
+- Patch releases (`0.8.9` to `0.8.10`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.9` is a normal patch release. The standard checkout workflow is:
+Version `0.8.10` is a normal patch release. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
@@ -207,8 +223,8 @@ sh plugins/codex-orchestration/scripts/verify.sh
 
 The suite validates the manifest, syntax, exact model pins, chat controls, bounded acceptance
 continuity, fused nested orchestration, the five-class lane contract, direct built-in fallback,
-milestone-only progress, same-implementer corrections, fixtures, effectiveness tracking, and
-conflict-safe cleanup.
+root-only experience verification, milestone-only progress, same-implementer corrections, fixtures,
+effectiveness tracking, and conflict-safe cleanup.
 
 The offline classification fixture is
 `plugins/codex-orchestration/scripts/triage-cases.json`. It covers all five classes plus amendment,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.9 fused nested orchestration."""
+"""Static contract tests for 0.8.10 fused orchestration and experience review."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.9":
-        raise AssertionError(f"manifest does not use traditional 0.8.9: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.10":
+        raise AssertionError(f"manifest does not use traditional 0.8.10: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -70,6 +70,13 @@ def main() -> int:
             "timeout_ms: 3600000",
             "ORCHESTRATION_STATE:",
             "ORCHESTRATION_UPDATE: <text>",
+            "ORCHESTRATION_ROOT_VERIFY: CHECK=<bounded check>",
+            "root-only Browser/visual tools",
+            "cache-bypassed and at the requested viewport",
+            "ROOT_VERIFICATION_RESULT: START=<observed starting condition>",
+            "with `followup_task`",
+            "ARTIFACTS=<URL or path, viewport, screenshot",
+            "broaden the check, or judge acceptance",
             "ORCHESTRATION_BLOCKED: <text>",
             "no analysis or reasoning heading",
             "return only the text after that",
@@ -118,6 +125,14 @@ def main() -> int:
             "A feature release is a build",
             "ORCHESTRATION_RELATION: RELATION=<NEW|AMEND|REPLACE|CANCEL>",
             "COMPLEXITY=<1.0-10.0>",
+            "Prefix it `ROOT_EXPERIENCE:`",
+            "Merely touching frontend or UI files does not trigger it",
+            "HTTP 200, asset presence, DOM text, source code",
+            "direct experience proof is mandatory",
+            "root-executable experience check with live URL or rendered artifact",
+            "Do not perform the check\nyourself",
+            "ROOT_VERIFICATION_RESULT",
+            "For builds, forward the exact result to the same Sol",
             "Do not end your turn after constructing them",
             "continue the workflow in this same turn",
             "For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE",
@@ -135,6 +150,8 @@ def main() -> int:
     )
     if "Return exactly four single lines and nothing else" in fused:
         raise AssertionError("fused Terra still stops after classification")
+    if "orchestrator-executable experience check" in fused:
+        raise AssertionError("fused Terra can still consume a root-only experience check")
 
     require(
         fused,
@@ -144,7 +161,7 @@ def main() -> int:
             "SUPERVISOR_READY_TO_RELEASE:",
             "ORCHESTRATION_ACCEPT:",
             "same implementer",
-            "not narrate role selection, contracts, workflow context",
+            "not narrate role selection, contracts",
         ),
         "codex-orchestration-terra-supervisor.toml",
     )
@@ -163,6 +180,11 @@ def main() -> int:
                 "ORCHESTRATION_ACCEPT:",
                 "same implementer",
                 "structured protocol outputs",
+                "ROOT_EXPERIENCE",
+                "direct experience proof is mandatory",
+                "root-executable experience check with live URL or rendered artifact",
+                "ROOT_VERIFICATION_RESULT follow-up",
+                "ARTIFACTS, and BLOCKER",
             ),
             filename,
         )
@@ -184,6 +206,10 @@ def main() -> int:
                 "yourself",
                 "routine waiting",
                 "orchestrator's milestone\nsignals",
+                "If it does not start ROOT_EXPERIENCE",
+                "visual criterion merely because UI files changed",
+                "Browser, screenshot, and\nvisual acceptance tools are root-only; do not call or use them",
+                "URL-or-path/viewport/START/ACTION/expected RESULT",
             ),
             filename,
         )
@@ -200,7 +226,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.9 fused nested orchestration, event-driven waits, and milestone-only progress")
+    print("PASS: 0.8.10 nested orchestration, root experience review, and milestone-only progress")
     return 0
 
 
