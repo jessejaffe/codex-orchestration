@@ -102,6 +102,8 @@ pass 'conflict-safe six-profile installer behavior'
 
 grep -Fq "requires the traditional release version 0.8.19" "$script_dir/reinstall-plugin.sh" ||
   fail 'reinstaller does not enforce 0.8.19'
+grep -Fq "grep -Eq '^0\\.8\\.19$'" "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller version matcher is not pinned to 0.8.19'
 for role in luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
