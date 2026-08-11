@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.11 fused orchestration and serialized build activity."""
+"""Static contract tests for 0.8.12 fused orchestration and live checkpoint handoffs."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.11":
-        raise AssertionError(f"manifest does not use traditional 0.8.11: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.12":
+        raise AssertionError(f"manifest does not use traditional 0.8.12: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -132,7 +132,7 @@ def main() -> int:
             "root-executable experience check with live URL or rendered artifact",
             "Do not perform the check\nyourself",
             "ROOT_VERIFICATION_RESULT",
-            "For builds, forward the exact result to the same Sol",
+            "For builds, use `followup_task` to reactivate the same\nSol supervisor with the exact result",
             "Do not end your turn after constructing them",
             "continue the workflow in this same turn",
             "For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE",
@@ -149,6 +149,12 @@ def main() -> int:
             "keep sibling activity strictly serial",
             "Never activate the implementer and Sol supervisor at the same time",
             "concurrent descendants can be promoted into an unanchored parent activity row",
+            "Use `send_message` only for PARENT_TASK",
+            "it only queues text and does not start a\nturn",
+            "Every handoff to an existing child must use collaboration `followup_task`",
+            "use `followup_task` to reactivate the\nsame Sol supervisor",
+            "use\n`followup_task` to reactivate the same implementer",
+            "reactivate the same Sol supervisor with `FINAL_REVIEW`",
             "Downstream agents are your children, never root's",
         ),
         "fused Terra contract",
@@ -165,6 +171,16 @@ def main() -> int:
     )
     if supervisor_start >= implementer_start:
         raise AssertionError("build startup no longer readies the supervisor before the implementer")
+    if fused.count("`followup_task`") < 9:
+        raise AssertionError("fused Terra does not reactivate every idle-child handoff")
+    for deadlocking_copy in (
+        "send the checkpoint and immutable lines",
+        "then relay\n`SUPERVISOR_CONTINUE`",
+        "or send `FINAL_REVIEW`",
+        "forward the exact result to the same Sol",
+    ):
+        if deadlocking_copy in fused:
+            raise AssertionError(f"fused Terra retains a message-only child handoff: {deadlocking_copy!r}")
 
     installer = (plugin / "scripts" / "install-agents.sh").read_text(encoding="utf-8")
     previous_release_digests = {
@@ -174,10 +190,13 @@ def main() -> int:
         "terra-supervisor": "2e124c8a94ff4aaad427c85910e52b370f732321aaa4e3689af0c9dffffc346b",
         "sol-high-supervisor": "5993929d08fb1003e8def633e41b8aa457cfcd6a748399f513a3c942b5877857",
         "sol-xhigh-supervisor": "c4d37bc0579ed9a2c035bee510fa6fa7a236122fd5178e004bfb3c5df78059b3",
+        "0.8.11-terra-supervisor": "d44f6d70de581d3e8895b396cc7a2bba0a2e7fc35cb6ea8531e920cae457aab4",
+        "0.8.11-sol-high-supervisor": "427075380b9a3a8a136a6fde53a95252c3031621d51181ec1161318330d027a0",
+        "0.8.11-sol-xhigh-supervisor": "30ba4bbee0dcb1ecf22dfb6c6ce98377e72740e717011f7d319e9ccc1f7104bf",
     }
     for role, digest in previous_release_digests.items():
         if digest not in installer:
-            raise AssertionError(f"installer omits the final 0.8.10 digest for {role}")
+            raise AssertionError(f"installer omits a released role digest for {role}")
 
     require(
         fused,
@@ -255,7 +274,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.11 nested orchestration, serialized build activity, and root experience review")
+    print("PASS: 0.8.12 nested orchestration, live checkpoint handoffs, and root experience review")
     return 0
 
 

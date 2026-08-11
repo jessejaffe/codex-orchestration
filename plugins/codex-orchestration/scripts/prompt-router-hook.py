@@ -55,7 +55,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.11). Root is only a transparent parent relay. It never
+DISPATCH_CONTEXT = """Orchestration ON (0.8.12). Root is only a transparent parent relay. It never
 classifies, constructs role contracts, implements, supervises, or judges work.
 
 FORK=`__FORK_TURNS__` (never literal `all`)

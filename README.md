@@ -1,14 +1,14 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps implementation separate from read-only
-review. Version `0.8.11` fuses routing, downstream dispatch, read-only work, and tweak supervision
+review. Version `0.8.12` fuses routing, downstream dispatch, read-only work, and tweak supervision
 under one Terra / Max orchestrator. This preserves the standard service tier, avoids a second Terra
 / Max role on common paths, and keeps root out of role-contract construction.
 
 The five work classes are `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 Complexity may still be estimated for telemetry, but it never selects a model.
 
-## How 0.8.11 works
+## How 0.8.12 works
 
 1. The stable chat-scoped hook gives root only a compact parent-relay contract, the current request,
    and the latest unfinished acceptance contract.
@@ -21,7 +21,8 @@ Complexity may still be estimated for telemetry, but it never selects a model.
    to finish before starting the selected implementer. Checkpoint and review turns remain serial,
    preventing concurrent descendant chips from being promoted into an unanchored parent row.
 5. The implementer pauses at route-specific, quiescent checkpoints. The supervisor then inspects
-   the actual diff, tests, and runtime state with read-only tools.
+   the actual diff, tests, and runtime state with read-only tools. Terra explicitly reactivates the
+   idle child for every checkpoint, decision, final review, and verification handoff.
 6. The supervisor returns `CONTINUE`, `CORRECT`, or `READY_TO_RELEASE`. Every correction goes to the
    same implementer; the supervisor never edits or takes over.
 7. After release, the same supervisor performs final review. Terra sends milestone messages and the
@@ -136,11 +137,11 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.11, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.8.12, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses the fused custom Terra profile when the task exposes it; otherwise it starts a pinned
 built-in Terra / Max agent and directs it to the installed fused profile. Inside that subtree, Terra
 uses each current custom lane when available and otherwise a pinned built-in `default` or `worker`
-identity with the complete 0.8.11 role rules. It never tries an unavailable or legacy identity.
+identity with the complete 0.8.12 role rules. It never tries an unavailable or legacy identity.
 
 The fused classifier is pinned to GPT-5.6 Terra with Max reasoning and the normal service tier. It
 does not opt into Fast mode, so routing does not consume Fast-mode credits. Six companion profiles
@@ -198,11 +199,11 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin
 
 The project uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.10` to `0.8.11`) contain compatible fixes and refinements.
+- Patch releases (`0.8.11` to `0.8.12`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.11` is a normal patch release. The standard checkout workflow is:
+Version `0.8.12` is a normal patch release. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
