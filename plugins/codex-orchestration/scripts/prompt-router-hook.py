@@ -41,6 +41,7 @@ POLITE_CONTROL_PREFIX = re.compile(
 INLINE_CONTROL_BOUNDARY = re.compile(r"(?:\band|\bthen|[,;:–—-])\s*$")
 MAX_FORK_TURNS = 64
 MAX_PRIOR_ACCEPTANCE_CHARS = 4_096
+MAX_PRIOR_COMPLETED_CHARS = 4_096
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -55,21 +56,23 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.14). Root is only a transparent parent relay. It never
+DISPATCH_CONTEXT = """Orchestration ON (0.8.15). Root is only a transparent parent relay. It never
 classifies, constructs role contracts, implements, supervises, or judges work.
 
 FORK=`__FORK_TURNS__` (never literal `all`)
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
+PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__
 CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 
 FIRST ACTION — say exactly `Starting Terra / Max classification now.`, then immediately start one
 fused Terra orchestrator named `terra_orchestrator_<objective_slug>` with FORK and this exact packet:
-`ORCHESTRATE_INIT
+ORCHESTRATE_INIT
 PARENT_TASK=/root
 FORK=<FORK above>
 PRIOR_ACTIVE_ACCEPTANCE=<exact value above>
+PRIOR_COMPLETED_RESULT=<exact value above>
 CURRENT_ROOT_ROUTE=<exact value above>
-USER_REQUEST=<verbatim current request and attachment paths>`
+USER_REQUEST=<verbatim current request and attachment paths>
 
 Use custom type `codex_orchestration_terra_supervisor` when it is listed with a description that
 says `fused`; otherwise use built-in `default` pinned to GPT-5.6 Terra / Max and tell it first to
@@ -82,6 +85,8 @@ short-poll, call `list_agents` because time passed, or emit an elapsed-time hear
 
 Handle child messages mechanically, with no analysis or reasoning heading:
 - `ORCHESTRATION_STATE:` is internal; immediately wait again without commentary.
+- `ORCHESTRATION_HANDOFF:` is an internal completion capsule; immediately wait again without
+  commentary.
 - `ORCHESTRATION_UPDATE: <text>` means post only `<text>` as commentary, then immediately wait.
 - `ORCHESTRATION_ROOT_VERIFY: CHECK=<bounded check>; REQUIRED_OBSERVATIONS=START=<starting
   condition>; ACTION=<interaction>; RESULT=<defining outcome>` is the only root verification path.
@@ -123,16 +128,23 @@ def agent_message_text(event: dict[str, Any]) -> str:
     return "\n".join(values)
 
 
-def transcript_context(transcript_value: Any) -> tuple[str, str, str]:
-    """Return bounded fork, root route, and unfinished acceptance in one pass."""
+def bounded_single_line(value: str, limit: int) -> str:
+    """Collapse trusted continuity text to one bounded packet line."""
+    return " ".join(value.split())[:limit]
+
+
+def transcript_context(transcript_value: Any) -> tuple[str, str, str, str]:
+    """Return bounded fork, route, active acceptance, and completed-result capsule."""
     if not isinstance(transcript_value, str):
-        return "none", "unavailable", "NONE"
+        return "none", "unavailable", "NONE", "NONE"
     transcript = Path(transcript_value)
     if not transcript.is_file() or transcript.is_symlink():
-        return "none", "unavailable", "NONE"
+        return "none", "unavailable", "NONE", "NONE"
     contexts = starts = 0
     root_route = "unavailable"
     prior_acceptance: str | None = None
+    prior_completed: str | None = None
+    completion_handoffs: dict[str, str] = {}
     try:
         with transcript.open(encoding="utf-8", errors="replace") as handle:
             for line in handle:
@@ -154,8 +166,14 @@ def transcript_context(transcript_value: Any) -> tuple[str, str, str]:
                 if event.get("type") == "event_msg" and payload.get("type") == "task_started":
                     starts += 1
                 message = agent_message_text(event)
+                metadata = (event.get("payload") or {}).get(
+                    "internal_chat_message_metadata_passthrough"
+                ) or {}
+                turn_id = metadata.get("turn_id")
+                completion_scope = turn_id if isinstance(turn_id, str) else "unscoped"
                 cancelled = False
-                for message_line in message.splitlines():
+                message_lines = message.splitlines()
+                for index, message_line in enumerate(message_lines):
                     if message_line.startswith(
                         "ORCHESTRATION_RELATION: RELATION=CANCEL;"
                     ):
@@ -170,15 +188,40 @@ def transcript_context(transcript_value: Any) -> tuple[str, str, str]:
                         prior_acceptance = message_line[
                             :MAX_PRIOR_ACCEPTANCE_CHARS
                         ]
+                        prior_completed = None
+                        completion_handoffs.pop(completion_scope, None)
+                    elif message_line.startswith("ORCHESTRATION_HANDOFF: "):
+                        completion_handoff = bounded_single_line(
+                            message_line.removeprefix("ORCHESTRATION_HANDOFF: "),
+                            MAX_PRIOR_COMPLETED_CHARS,
+                        )
+                        completion_handoffs[completion_scope] = completion_handoff
+                        prior_completed = completion_handoff
                     elif message_line.startswith("ORCHESTRATION_ACCEPT:"):
                         prior_acceptance = None
+                        accepted_result = "\n".join(message_lines[index:]).removeprefix(
+                            "ORCHESTRATION_ACCEPT:"
+                        )
+                        prior_completed = completion_handoffs.get(
+                            completion_scope
+                        ) or bounded_single_line(accepted_result, MAX_PRIOR_COMPLETED_CHARS)
                 if cancelled:
                     prior_acceptance = None
     except OSError:
-        return "none", "unavailable", "NONE"
+        return "none", "unavailable", "NONE", "NONE"
     task_turns = max(contexts, starts)
-    fork_turns = "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns))
-    return fork_turns, root_route, prior_acceptance or "NONE"
+    if prior_acceptance is None and prior_completed:
+        # A completed task is represented by its high-signal capsule. Do not make the
+        # next Terra reread a potentially hour-long parent rollout.
+        fork_turns = "none"
+    else:
+        fork_turns = "none" if task_turns <= 1 else str(min(MAX_FORK_TURNS, task_turns))
+    return (
+        fork_turns,
+        root_route,
+        prior_acceptance or "NONE",
+        prior_completed or "NONE",
+    )
 
 
 def emit(value: dict[str, Any]) -> None:
@@ -328,13 +371,14 @@ def main() -> int:
         if activation
         else ""
     )
-    fork_turns, root_route, prior_acceptance = transcript_context(
+    fork_turns, root_route, prior_acceptance, prior_completed = transcript_context(
         hook_input.get("transcript_path")
     )
     context = DISPATCH_CONTEXT.replace("__FORK_TURNS__", fork_turns).replace(
         "__ROOT_ROUTE__", root_route
     )
     context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
+    context = context.replace("__PRIOR_COMPLETED_RESULT__", prior_completed)
     codex_home = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
     fused_profile = codex_home / "agents" / "codex-orchestration-terra-supervisor.toml"
     context = context.replace("__FUSED_PROFILE_PATH__", str(fused_profile))

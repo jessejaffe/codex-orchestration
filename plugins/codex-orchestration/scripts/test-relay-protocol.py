@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.14 detailed completion reports."""
+"""Static contract tests for 0.8.15 bounded completion continuity."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.14":
-        raise AssertionError(f"manifest does not use traditional 0.8.14: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.15":
+        raise AssertionError(f"manifest does not use traditional 0.8.15: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -65,10 +65,12 @@ def main() -> int:
             "terra_orchestrator_<objective_slug>",
             "ORCHESTRATE_INIT",
             "PARENT_TASK=/root",
+            "PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__",
             "codex_orchestration_terra_supervisor",
             "Start no implementer or supervisor in root",
             "timeout_ms: 3600000",
             "ORCHESTRATION_STATE:",
+            "ORCHESTRATION_HANDOFF:",
             "ORCHESTRATION_UPDATE: <text>",
             "ORCHESTRATION_ROOT_VERIFY: CHECK=<bounded check>",
             "root-only Browser/visual tools",
@@ -82,6 +84,10 @@ def main() -> int:
             "return the entire remaining payload exactly",
             "Preserve all Markdown, line breaks, links",
             "without summarizing, truncating, adding, or reformatting anything",
+            "MAX_PRIOR_COMPLETED_CHARS = 4_096",
+            "def bounded_single_line",
+            "if prior_acceptance is None and prior_completed",
+            "Do not make the\n        # next Terra reread a potentially hour-long parent rollout",
         ),
         "root relay contract",
     )
@@ -119,6 +125,8 @@ def main() -> int:
             "fused GPT-5.6 Terra / Max orchestrator",
             "ORCHESTRATE_INIT",
             "PARENT_TASK",
+            "PRIOR_COMPLETED_RESULT",
+            "bounded, authoritative continuity capsule",
             "READ_ONLY: TERRA_MAX / NONE / NONE",
             "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
             "BIG_TWEAK: TERRA_MAX / TERRA_MAX / ROOT_CAUSE,RELEASE_CANDIDATE",
@@ -139,6 +147,7 @@ def main() -> int:
             "continue the workflow in this same turn",
             "For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE",
             "ORCHESTRATION_STATE:",
+            "ORCHESTRATION_HANDOFF:",
             "ORCHESTRATION_UPDATE:",
             "ORCHESTRATION_BLOCKED",
             "codex_orchestration_luna_implementer",
@@ -161,7 +170,7 @@ def main() -> int:
             "The implementer's checkpoint names the\ncompleted phase",
             "Never describe the next\nphase as already approved",
             "ORCHESTRATION_UPDATE: Supervisor approved <completed checkpoint>. Implementation continues to <next checkpoint>.",
-            "Downstream agents are your children, never root's",
+            "Downstream agents\nare your children, never root's",
             "the cumulative `IMPLEMENTATION_RESULT`",
             "any `ROOT_VERIFICATION_RESULT`",
             "do not start another reporting agent",
@@ -179,6 +188,15 @@ def main() -> int:
             "what was initially visible, what root\ndid, and what visibly happened",
             "Never say work is\nlive, deployed, released, or on GitHub without the corresponding exact destination and evidence",
             "Do not invent URLs, revisions, test results, browser observations, or missing details",
+            "summary, explanation, current state, or next steps",
+            "answer directly from that capsule\nin this same turn",
+            "Do not inspect the repository, deployment, browser, prior child tasks, or other\ntask history merely to rediscover facts already in the capsule",
+            "Explaining a prior\nverified UI or deployment is not itself ROOT_EXPERIENCE",
+            "ORCHESTRATION_HANDOFF: OUTCOME=<accepted outcome>",
+            "no longer than 4,096 characters",
+            "without rereading the completed parent turn",
+            "carry forward its still-relevant delivered state",
+            "This handoff is\ninternal and is not a user-visible progress update",
         ),
         "fused Terra contract",
     )
@@ -236,6 +254,7 @@ def main() -> int:
         "0.8.11-sol-xhigh-supervisor": "30ba4bbee0dcb1ecf22dfb6c6ce98377e72740e717011f7d319e9ccc1f7104bf",
         "0.8.12-terra-supervisor": "bcf97708c68712984c6345476595e832c933763d2e5edde854cfcc295794e1a5",
         "0.8.13-terra-supervisor": "c296cd101b91debb8ac800d4d18339f9da8d9606a7048c70e72d37cf0b8885b4",
+        "0.8.14-terra-supervisor": "fb1a6905fca9345fabfc3b1ff9d98cfb784514600d67b372bd4fb60c6afcd85f",
     }
     for role, digest in previous_release_digests.items():
         if digest not in installer:
@@ -249,7 +268,7 @@ def main() -> int:
             "SUPERVISOR_READY_TO_RELEASE:",
             "ORCHESTRATION_ACCEPT:",
             "same implementer",
-            "not narrate role selection, contracts",
+            "Do not narrate role\nselection, contracts",
         ),
         "codex-orchestration-terra-supervisor.toml",
     )
@@ -328,7 +347,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.14 detailed completion reports and verbatim relays")
+    print("PASS: 0.8.15 bounded completion continuity and direct read-only follow-ups")
     return 0
 
 

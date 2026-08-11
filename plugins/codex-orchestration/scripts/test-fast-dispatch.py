@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.14 completion relays."""
+"""Hermetic tests for chat-scoped activation and 0.8.15 bounded continuity."""
 
 from __future__ import annotations
 
@@ -86,12 +86,14 @@ def main() -> int:
         "terra_orchestrator_<objective_slug>",
         "ORCHESTRATE_INIT",
         "PARENT_TASK=/root",
+        "PRIOR_COMPLETED_RESULT: NONE",
         "codex_orchestration_terra_supervisor",
         "read and obey the `developer_instructions`",
         "agents/codex-orchestration-terra-supervisor.toml",
         "Start no implementer or supervisor in root",
         "timeout_ms: 3600000",
         "ORCHESTRATION_STATE:",
+        "ORCHESTRATION_HANDOFF:",
         "ORCHESTRATION_UPDATE: <text>",
         "ORCHESTRATION_ROOT_VERIFY: CHECK=<bounded check>",
         "root-only Browser/visual tools",
@@ -196,34 +198,170 @@ def main() -> int:
         "FORK=`2`",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         acceptance,
+        "PRIOR_COMPLETED_RESULT: NONE",
     ):
         if value not in inherited_context:
             raise AssertionError(f"bounded inherited context omits {value!r}")
     if any(
         placeholder in inherited_context
-        for placeholder in ("__FORK_TURNS__", "__ROOT_ROUTE__", "__FUSED_PROFILE_PATH__")
+        for placeholder in (
+            "__FORK_TURNS__",
+            "__ROOT_ROUTE__",
+            "__PRIOR_COMPLETED_RESULT__",
+            "__FUSED_PROFILE_PATH__",
+        )
     ):
         raise AssertionError("dispatch placeholders leaked")
     if (state / "grader-requests").exists():
         raise AssertionError("inherited dispatch staged obsolete recent context")
 
     accepted_transcript = temporary / "accepted.jsonl"
+    handoff = (
+        "OUTCOME=Shipped CSV export; DELIVERED=dashboard export and signed bundle; "
+        "PROOF=12 tests passed and production download observed; "
+        "LINKS=https://example.com/export; REVISION=0123456789abcdef; "
+        "NEXT=add JSON export; LIMITATIONS=NONE"
+    )
+    detailed_report = (
+        "## Completed\n\nCSV export is live.\n\n## Links\n\n"
+        "- [Live website](https://example.com/export)"
+    )
     write_events(
         accepted_transcript,
+        [
+            {"type": "session_meta", "payload": {}},
+            {"type": "turn_context", "payload": {"model": "gpt-5.6-sol", "effort": "high"}},
+            {"type": "turn_context", "payload": {"model": "gpt-5.6-sol", "effort": "high"}},
+            {"type": "turn_context", "payload": {"model": "gpt-5.6-sol", "effort": "high"}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "content": [
+                        {
+                            "text": (
+                                acceptance
+                                + "\nORCHESTRATION_HANDOFF: "
+                                + handoff
+                                + "\nORCHESTRATION_ACCEPT: "
+                                + detailed_report
+                            )
+                        }
+                    ],
+                },
+            },
+        ],
+    )
+    accepted = invoke(hook, state, active_id, "New question", accepted_transcript)
+    accepted_context = context(accepted)
+    if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in accepted_context:
+        raise AssertionError("accepted objective was not cleared")
+    if "FORK=`none`" not in accepted_context:
+        raise AssertionError("completed rollout was still inherited instead of using its capsule")
+    if f"PRIOR_COMPLETED_RESULT: {handoff}" not in accepted_context:
+        raise AssertionError("completion handoff was not passed to the next Terra")
+    if "CSV export is live" in accepted_context:
+        raise AssertionError("detailed report replaced the preferred bounded handoff")
+
+    legacy_transcript = temporary / "legacy-accepted.jsonl"
+    legacy_result = "Released the benchmark to GitHub and Hetzner; verification passed."
+    write_events(
+        legacy_transcript,
+        [
+            {"type": "session_meta", "payload": {}},
+            {"type": "turn_context", "payload": {"model": "gpt-5.6-sol", "effort": "high"}},
+            {"type": "turn_context", "payload": {"model": "gpt-5.6-sol", "effort": "high"}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "content": [
+                        {
+                            "text": (
+                                "Message Type: FINAL_ANSWER\nPayload:\n"
+                                f"ORCHESTRATION_ACCEPT: {legacy_result}"
+                            )
+                        }
+                    ],
+                },
+            },
+        ],
+    )
+    legacy = context(invoke(hook, state, active_id, "Summarize that", legacy_transcript))
+    if "FORK=`none`" not in legacy:
+        raise AssertionError("legacy completion still inherited its long parent rollout")
+    if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
+        raise AssertionError("legacy completion did not fall back to its accepted result")
+
+    scoped_transcript = temporary / "turn-scoped-handoffs.jsonl"
+    old_handoff = "OUTCOME=old completed build; NEXT=old follow-up"
+    newest_result = "Completed the newer read-only review."
+    write_events(
+        scoped_transcript,
         [
             {"type": "session_meta", "payload": {}},
             {
                 "type": "response_item",
                 "payload": {
                     "type": "agent_message",
-                    "content": [{"text": acceptance + "\nORCHESTRATION_ACCEPT: done"}],
+                    "content": [
+                        {
+                            "text": (
+                                f"ORCHESTRATION_HANDOFF: {old_handoff}\n"
+                                "ORCHESTRATION_ACCEPT: old report"
+                            )
+                        }
+                    ],
+                    "internal_chat_message_metadata_passthrough": {"turn_id": "old-turn"},
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "content": [{"text": f"ORCHESTRATION_ACCEPT: {newest_result}"}],
+                    "internal_chat_message_metadata_passthrough": {"turn_id": "new-turn"},
                 },
             },
         ],
     )
-    accepted = invoke(hook, state, active_id, "New question", accepted_transcript)
-    if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in context(accepted):
-        raise AssertionError("accepted objective was not cleared")
+    scoped = context(invoke(hook, state, active_id, "Another follow-up", scoped_transcript))
+    if f"PRIOR_COMPLETED_RESULT: {newest_result}" not in scoped:
+        raise AssertionError("a prior turn's handoff leaked into a newer completion")
+    if old_handoff in scoped:
+        raise AssertionError("completed-result selection ignored root turn boundaries")
+
+    oversized_transcript = temporary / "oversized-handoff.jsonl"
+    oversized_handoff = "OUTCOME=" + ("x" * 5_000)
+    write_events(
+        oversized_transcript,
+        [
+            {"type": "session_meta", "payload": {}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "content": [
+                        {
+                            "text": (
+                                f"ORCHESTRATION_HANDOFF: {oversized_handoff}\n"
+                                "ORCHESTRATION_ACCEPT: done"
+                            )
+                        }
+                    ],
+                },
+            },
+        ],
+    )
+    oversized = context(invoke(hook, state, active_id, "Follow up", oversized_transcript))
+    completed_line = next(
+        line for line in oversized.splitlines() if line.startswith("PRIOR_COMPLETED_RESULT: ")
+    )
+    completed_value = completed_line.removeprefix("PRIOR_COMPLETED_RESULT: ")
+    if completed_value != oversized_handoff[:4_096]:
+        raise AssertionError("completion handoff was not bounded to exactly 4,096 characters")
+    if len(oversized) > 8_000:
+        raise AssertionError(f"bounded completion dispatch exceeds latency budget: {len(oversized)}")
 
     subagent_transcript = temporary / "subagent.jsonl"
     write_events(
@@ -256,7 +394,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded acceptance, and 0.8.14 completion relay")
+    print("PASS: chat controls, bounded continuity, and completed-rollout elision")
     return 0
 
 
