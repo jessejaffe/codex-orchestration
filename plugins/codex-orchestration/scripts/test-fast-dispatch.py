@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.17 context-safe routing."""
+"""Hermetic tests for chat-scoped activation and 0.8.18 artifact-safe routing."""
 
 from __future__ import annotations
 
@@ -91,6 +91,10 @@ def main() -> int:
         "PRIOR_COMPLETED_RESULT: NONE",
         "RECENT_CONTEXT_FRESHNESS: NONE",
         "RECENT_CONTEXT: NONE",
+        "WORKSPACE_DEPENDENCIES_REQUIRED: NO",
+        "codex_app__load_workspace_dependencies",
+        "WORKSPACE_DEPENDENCIES=<exact loader result above",
+        "stop\nwithout spawning",
         "codex_orchestration_terra_supervisor",
         "read and obey the `developer_instructions`",
         "agents/codex-orchestration-terra-supervisor.toml",
@@ -133,8 +137,24 @@ def main() -> int:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     if (state / "grader-requests").exists():
         raise AssertionError("dispatch still staged a grader request")
-    if len(routed_context) > 4_500:
+    if len(routed_context) > 5_200:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
+
+    artifact_context = context(
+        invoke(
+            hook,
+            state,
+            active_id,
+            "Make me a spreadsheet with photo filenames and final labels",
+        )
+    )
+    if "WORKSPACE_DEPENDENCIES_REQUIRED: YES" not in artifact_context:
+        raise AssertionError("spreadsheet work did not require root workspace dependencies")
+    direct_question_context = context(
+        invoke(hook, state, active_id, "Why did the spreadsheet task fail?")
+    )
+    if "DIRECT READ-ONLY FAST PATH" not in direct_question_context:
+        raise AssertionError("artifact-related explanation lost the direct read-only gate")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
     combined = invoke(
@@ -215,6 +235,7 @@ def main() -> int:
             "__PRIOR_COMPLETED_RESULT__",
             "__RECENT_CONTEXT_FRESHNESS__",
             "__RECENT_CONTEXT__",
+            "__WORKSPACE_DEPENDENCIES_REQUIRED__",
             "__FUSED_PROFILE_PATH__",
         )
     ):
@@ -450,7 +471,7 @@ def main() -> int:
     completed_value = completed_line.removeprefix("PRIOR_COMPLETED_RESULT: ")
     if completed_value != oversized_handoff[:4_096]:
         raise AssertionError("completion handoff was not bounded to exactly 4,096 characters")
-    if len(oversized) > 9_000:
+    if len(oversized) > 9_500:
         raise AssertionError(f"bounded completion dispatch exceeds latency budget: {len(oversized)}")
 
     subagent_transcript = temporary / "subagent.jsonl"

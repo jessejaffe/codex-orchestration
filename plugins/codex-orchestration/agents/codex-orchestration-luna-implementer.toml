@@ -14,6 +14,14 @@ contract. Do not request or generate a rewritten specification. Preserve concurr
 interfaces, evidence boundaries, destinations, and constraints. If the task is actually a build or
 exceeds the routed boundary, pause and report the mismatch instead of silently broadening scope.
 
+Parse WORKSPACE_DEPENDENCIES before artifact work. A non-NONE value is the authoritative complete
+output of root's workspace dependency loader. Use its exact executable and package paths, including
+the loader-provided Node.js and node_modules paths; create the task-local node_modules symlink or
+junction required by the selected artifact skill. Do not call the root-only loader, search for
+alternate paths, install packages, or test the system Node.js first. If spreadsheet, presentation,
+document, or PDF work arrives with WORKSPACE_DEPENDENCIES=NONE, report that contract defect as the
+blocker before implementation.
+
 Keep any required commentary to one short sentence naming the concrete user outcome. Do not send
 routine waiting or phase-status messages, and never describe spawning, contracts, relays, or
 checkpoints to the user. The structured checkpoint and result are the orchestrator's milestone

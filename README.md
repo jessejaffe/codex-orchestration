@@ -1,38 +1,41 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps implementation separate from read-only
-review. Version `0.8.17` answers ordinary read-only follow-ups directly in root, while mutation,
-fresh verification, audits, and substantial research still route through one Terra / Max
-orchestrator. This preserves the standard service tier and removes classification and subagent
-overhead from questions the current conversation can already answer.
+review. Version `0.8.18` answers ordinary read-only follow-ups directly in root and safely supplies
+bundled workspace dependencies to children that create spreadsheets, presentations, documents, or
+PDFs. Mutation, fresh verification, audits, and substantial research still route through one Terra
+/ Max orchestrator on the standard service tier.
 
 The five work classes are `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 Complexity may still be estimated for telemetry, but it never selects a model.
 
-## How 0.8.17 works
+## How 0.8.18 works
 
 1. The stable chat-scoped hook gives root a binary gate, the current request, the latest bounded
    acceptance or completion capsule, and a bounded window of newer conversation.
 2. Root answers a simple explanation, summary, status, rationale, or brief brainstorming/planning
    request directly when it needs no mutation, tools, fresh verification, audit, or substantial
    research. It does not announce classification or start an agent on that fast path.
-3. All other work starts one fused Terra / Max orchestrator. Terra classifies once and owns the
+3. Before routed artifact work, root calls the bundled workspace dependency loader once. It passes
+   the exact Node.js, Python, package, and binary paths through Terra to the selected implementer;
+   children never need the root-only loader or system package discovery.
+4. All other work starts one fused Terra / Max orchestrator. Terra classifies once and owns the
    downstream subtree. For routed `READ_ONLY` work, that same Terra instance answers silently with
    one final result. For tweaks, it remains the supervisor and starts the selected implementer.
-4. For builds, Terra starts the Sol supervisor inside its own subtree. The supervisor first compares
+5. For builds, Terra starts the Sol supervisor inside its own subtree. The supervisor first compares
    the concrete acceptance, destination, and open commitments with the exact user request and recent
    conversation. An implementer starts only after that independent scope check passes. Checkpoint
    and review turns remain serial.
-5. The implementer pauses at route-specific, quiescent checkpoints. The supervisor then inspects
+6. The implementer pauses at route-specific, quiescent checkpoints. The supervisor then inspects
    the actual diff, tests, and runtime state with read-only tools. Terra explicitly reactivates the
    idle child for every checkpoint, decision, final review, and verification handoff. Implementer
    checkpoints use a compact routing header followed by readable Markdown sections for state,
    changes, evidence, next work, and blockers. Supervisor readiness and decisions use the same
    pattern: a compact routing header followed by readable acceptance, findings, corrections, and
    evidence sections.
-6. The supervisor returns `CONTINUE`, `CORRECT`, or `READY_TO_RELEASE`. Every correction goes to the
+7. The supervisor returns `CONTINUE`, `CORRECT`, or `READY_TO_RELEASE`. Every correction goes to the
    same implementer; the supervisor never edits or takes over.
-7. After release, the same supervisor performs final review. Terra synthesizes the accepted
+8. After release, the same supervisor performs final review. Terra synthesizes the accepted
    implementation, release, and direct-experience evidence into a readable completion report and a
    bounded internal continuity capsule. Root relays every user-facing heading, link, and line
    unchanged and never implements or judges work.
@@ -155,11 +158,11 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.17, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.8.18, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses the fused custom Terra profile when the task exposes it; otherwise it starts a pinned
 built-in Terra / Max agent and directs it to the installed fused profile. Inside that subtree, Terra
 uses each current custom lane when available and otherwise a pinned built-in `default` or `worker`
-identity with the complete 0.8.17 role rules. It never tries an unavailable or legacy identity.
+identity with the complete 0.8.18 role rules. It never tries an unavailable or legacy identity.
 
 The fused classifier is pinned to GPT-5.6 Terra with Max reasoning and the normal service tier. It
 does not opt into Fast mode, so routing does not consume Fast-mode credits. Six companion profiles
@@ -256,11 +259,11 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin
 
 The project uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.16` to `0.8.17`) contain compatible fixes and refinements.
+- Patch releases (`0.8.17` to `0.8.18`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.17` is a normal patch release. The standard checkout workflow is:
+Version `0.8.18` is a normal patch release. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh

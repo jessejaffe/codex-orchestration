@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.17 fast read-only and scope-safe routing."""
+"""Static contract tests for 0.8.18 root-loaded artifact dependencies."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.17":
-        raise AssertionError(f"manifest does not use traditional 0.8.17: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.18":
+        raise AssertionError(f"manifest does not use traditional 0.8.18: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -72,6 +72,10 @@ def main() -> int:
             "PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__",
             "RECENT_CONTEXT_FRESHNESS: __RECENT_CONTEXT_FRESHNESS__",
             "RECENT_CONTEXT: __RECENT_CONTEXT__",
+            "WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__",
+            "codex_app__load_workspace_dependencies",
+            "WORKSPACE_DEPENDENCIES=<exact loader result above",
+            "without spawning",
             "codex_orchestration_terra_supervisor",
             "Start no implementer or supervisor in root",
             "timeout_ms: 3600000",
@@ -97,6 +101,8 @@ def main() -> int:
             "def bounded_recent_context",
             "if prior_acceptance is None and prior_completed",
             "def conversation_message",
+            "def workspace_dependencies_required",
+            "WORKSPACE_ARTIFACT_PATTERN",
             'freshness = "STALE" if any(role == "user" for role, _ in selected_tail) else "FRESH"',
         ),
         "root relay contract",
@@ -138,6 +144,11 @@ def main() -> int:
             "PRIOR_COMPLETED_RESULT",
             "bounded continuity capsule",
             "RECENT_CONTEXT_FRESHNESS",
+            "WORKSPACE_DEPENDENCIES",
+            "authoritative complete output from root's workspace dependency loader",
+            "block before spawning if it is NONE",
+            "use its exact paths yourself for READ_ONLY artifact work",
+            "pass it verbatim to every downstream\nchild",
             "newer RECENT_CONTEXT is\nauthoritative over conflicting or incomplete capsule fields",
             "do the next step",
             "Never infer their meaning from repository plans",
@@ -298,6 +309,10 @@ def main() -> int:
         "0.8.16-terra-supervisor": "310f47cd149493a376a1625786a98f0f763b8f4558faccc1e28b9a2b4394cc39",
         "0.8.16-sol-high-supervisor": "3283d5d4c93674855694d10b96922911d9bafb186ee08fb85b0b7548daa72b5a",
         "0.8.16-sol-xhigh-supervisor": "9bf1374469493ef6ad866ba6e11082a86427210c23806d86a643c1325e0f6576",
+        "0.8.17-luna-implementer": "fd75a5160451b266bc8ae35b34e0865d23ccb96f5019e656ef8e898ccafd8d5d",
+        "0.8.17-terra-implementer": "8001b202cede42454fa4cbcd0bb29cb580716e738cb533396e033dc132f402f4",
+        "0.8.17-sol-high-implementer": "c1d47ebd4825dd497cfddc7dfe9b6d3f6685eb1323019f2c969851b8861eb674",
+        "0.8.17-terra-supervisor": "47a605dbf390f842a0bd373fb20511bfd630cf5f647f76dab71c9085627a8465",
     }
     for role, digest in previous_release_digests.items():
         if digest not in installer:
@@ -396,6 +411,10 @@ def main() -> int:
                 "**Next**",
                 "**Blockers**",
                 "semicolon-delimited line",
+                "Parse WORKSPACE_DEPENDENCIES before artifact work",
+                "authoritative complete\noutput of root's workspace dependency loader",
+                "loader-provided Node.js and node_modules paths",
+                "Do not call the root-only loader",
             ),
             filename,
         )
@@ -416,7 +435,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.17 fast read-only and scope-safe routing")
+    print("PASS: 0.8.18 root-loaded artifact dependencies")
     return 0
 
 

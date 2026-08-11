@@ -45,6 +45,11 @@ MAX_PRIOR_COMPLETED_CHARS = 4_096
 MAX_RECENT_CONTEXT_CHARS = 6_144
 MAX_RECENT_MESSAGE_CHARS = 1_536
 MAX_RECENT_MESSAGES = 8
+WORKSPACE_ARTIFACT_PATTERN = re.compile(
+    r"\b(?:spreadsheet|workbook|google\s+sheet|xlsx?|csv|tsv|"
+    r"presentation|slide\s+deck|powerpoint|pptx?|word\s+document|docx|pdf)\b",
+    re.IGNORECASE,
+)
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -59,7 +64,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.17). Root performs only the binary fast-path gate below;
+DISPATCH_CONTEXT = """Orchestration ON (0.8.18). Root performs only the binary fast-path gate below;
 it never constructs role contracts, implements, supervises, or judges change work.
 
 FORK=`__FORK_TURNS__` (never literal `all`)
@@ -67,6 +72,7 @@ PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
 PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__
 RECENT_CONTEXT_FRESHNESS: __RECENT_CONTEXT_FRESHNESS__
 RECENT_CONTEXT: __RECENT_CONTEXT__
+WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__
 CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 
 DIRECT READ-ONLY FAST PATH — answer in root immediately only when all are true: there is no active
@@ -79,8 +85,14 @@ routing metadata. Answer the user's actual question naturally. A question such a
 missed the agreed scope is eligible when the reason is already in the conversation. When uncertain,
 use Terra.
 
-Otherwise, say exactly `Starting Terra / Max classification now.`, then immediately start one fused
-Terra orchestrator named `terra_orchestrator_<objective_slug>` with FORK and this exact packet:
+Otherwise, say exactly `Starting Terra / Max classification now.`. If
+WORKSPACE_DEPENDENCIES_REQUIRED=YES, immediately call root's
+`codex_app__load_workspace_dependencies` tool exactly once and preserve its complete returned text
+as WORKSPACE_DEPENDENCIES. Do not use shell lookup, search for package paths, or ask a child to call
+the loader. If the loader is unavailable or errors, report that exact dependency blocker and stop
+without spawning. If WORKSPACE_DEPENDENCIES_REQUIRED=NO, set WORKSPACE_DEPENDENCIES=NONE. Then
+immediately start one fused Terra orchestrator named `terra_orchestrator_<objective_slug>` with FORK
+and this exact packet:
 ORCHESTRATE_INIT
 PARENT_TASK=/root
 FORK=<FORK above>
@@ -88,6 +100,7 @@ PRIOR_ACTIVE_ACCEPTANCE=<exact value above>
 PRIOR_COMPLETED_RESULT=<exact value above>
 RECENT_CONTEXT_FRESHNESS=<exact value above>
 RECENT_CONTEXT=<exact value above>
+WORKSPACE_DEPENDENCIES=<exact loader result above, including every executable and package path, or NONE>
 CURRENT_ROOT_ROUTE=<exact value above>
 USER_REQUEST=<verbatim current request and attachment paths>
 
@@ -183,6 +196,11 @@ def bounded_recent_context(messages: list[tuple[str, str]]) -> str:
     while fragments and len(" || ".join(fragments)) > MAX_RECENT_CONTEXT_CHARS:
         fragments.pop(0)
     return " || ".join(fragments) or "NONE"
+
+
+def workspace_dependencies_required(prompt: str) -> str:
+    """Flag artifact work whose bundled runtime must be loaded by root before dispatch."""
+    return "YES" if WORKSPACE_ARTIFACT_PATTERN.search(prompt) else "NO"
 
 
 def transcript_context(
@@ -469,6 +487,10 @@ def main() -> int:
     context = context.replace("__PRIOR_COMPLETED_RESULT__", prior_completed)
     context = context.replace("__RECENT_CONTEXT_FRESHNESS__", recent_freshness)
     context = context.replace("__RECENT_CONTEXT__", recent_context)
+    context = context.replace(
+        "__WORKSPACE_DEPENDENCIES_REQUIRED__",
+        workspace_dependencies_required(prompt),
+    )
     codex_home = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
     fused_profile = codex_home / "agents" / "codex-orchestration-terra-supervisor.toml"
     context = context.replace("__FUSED_PROFILE_PATH__", str(fused_profile))
