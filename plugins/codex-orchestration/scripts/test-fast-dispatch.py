@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.6 milestone-only dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.8.7 fused dispatch."""
 
 from __future__ import annotations
 
 import json
 import os
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -84,15 +83,17 @@ def main() -> int:
         "FIRST ACTION",
         "current-activity description focused on the user's concrete outcome",
         "Starting Terra / Max classification now.",
-        "headless-grader.py",
-        "call `spawn_agent` for\ngrading",
-        "runs GPT-5.6 Terra / Max headlessly",
-        "never fall back to a visible grader subagent",
-        "intervals of at\nmost 15 seconds",
+        "common-path fused role",
+        "CLASSIFY_INIT",
+        "ROUTE_REPAIR",
+        "READ_ONLY_EXECUTE",
+        "start another Terra worker or supervisor.",
         "TASK CATALOG",
+        "description must explicitly say `fused`",
+        "Fallback messages include the full role",
         "Implementation started with <implementer model>. The <supervisor model> supervisor is ready.",
         "same implementer",
-        "normal work waits are at most 45 seconds",
+        "normal agent waits are at most 45 seconds",
         "Poll routine waits, checkpoint review,\ncontinuation, protocol repair, and final review silently.",
         "Ready to release.",
         "Still working on <actual user outcome>.",
@@ -100,8 +101,9 @@ def main() -> int:
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
-    if "terra_max_grader_" in routed_context:
-        raise AssertionError("dispatch still creates a visible grader activity chip")
+    for obsolete in ("headless-grader.py", "--request-token", "grader-requests"):
+        if obsolete in routed_context:
+            raise AssertionError(f"dispatch retains obsolete headless path: {obsolete!r}")
     for noisy in (
         "is loading the full task context now",
         "Supervisor ready and staying read-only",
@@ -110,14 +112,9 @@ def main() -> int:
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
-    token_match = re.search(r"--request-token ([0-9a-f]{32})", routed_context)
-    if token_match is None:
-        raise AssertionError("dispatch did not provide a safe headless-grader request token")
-    request_path = state / "grader-requests" / f"{token_match.group(1)}.json"
-    request = json.loads(request_path.read_text(encoding="utf-8"))
-    if request.get("prompt") != "Fix the existing label":
-        raise AssertionError(f"staged grader request changed the prompt: {request!r}")
-    if len(routed_context) > 6_000:
+    if (state / "grader-requests").exists():
+        raise AssertionError("dispatch still staged a grader request")
+    if len(routed_context) > 6_500:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
@@ -130,8 +127,8 @@ def main() -> int:
     combined_context = context(combined)
     if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
         raise AssertionError("combined activation does not acknowledge ON")
-    if "headless-grader.py" not in combined_context:
-        raise AssertionError("combined activation did not select headless Terra grading")
+    if "common-path fused role" not in combined_context:
+        raise AssertionError("combined activation did not select fused Terra routing")
 
     transcript = temporary / "root.jsonl"
     acceptance = (
@@ -191,18 +188,8 @@ def main() -> int:
             raise AssertionError(f"bounded inherited context omits {value!r}")
     if "__FORK_TURNS__" in inherited_context or "__ROOT_ROUTE__" in inherited_context:
         raise AssertionError("dispatch placeholders leaked")
-    inherited_token = re.search(r"--request-token ([0-9a-f]{32})", inherited_context)
-    if inherited_token is None:
-        raise AssertionError("inherited dispatch omitted its request token")
-    inherited_request = json.loads(
-        (state / "grader-requests" / f"{inherited_token.group(1)}.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    if "USER: Build CSV export" not in inherited_request.get("recent_context", ""):
-        raise AssertionError(f"recent task context was not staged: {inherited_request!r}")
-    if "private wrapper" in inherited_request.get("recent_context", ""):
-        raise AssertionError("injected environment context leaked into the grader request")
+    if (state / "grader-requests").exists():
+        raise AssertionError("inherited dispatch staged obsolete recent context")
 
     accepted_transcript = temporary / "accepted.jsonl"
     write_events(
@@ -253,7 +240,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded context, and 0.8.6 milestone-only dispatch")
+    print("PASS: chat controls, bounded acceptance, and 0.8.7 fused dispatch")
     return 0
 
 

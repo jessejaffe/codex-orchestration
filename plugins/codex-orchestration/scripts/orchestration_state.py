@@ -6,7 +6,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import secrets
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -15,7 +14,6 @@ from typing import Any
 ID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 )
-REQUEST_TOKEN_RE = re.compile(r"^[0-9a-f]{32}$")
 
 
 def state_root() -> Path | None:
@@ -45,97 +43,6 @@ def state_path(session_id: str) -> Path | None:
     if root is None or not ID_RE.fullmatch(session_id):
         return None
     return root / f"{session_id}.json"
-
-
-def request_root() -> Path | None:
-    root = state_root()
-    if root is None:
-        return None
-    requests = root / "grader-requests"
-    if requests.is_symlink() or (requests.exists() and not requests.is_dir()):
-        return None
-    try:
-        requests.mkdir(mode=0o700, exist_ok=True)
-        os.chmod(requests, 0o700)
-    except OSError:
-        return None
-    return requests
-
-
-def request_path(token: str) -> Path | None:
-    root = request_root()
-    if root is None or not REQUEST_TOKEN_RE.fullmatch(token):
-        return None
-    return root / f"{token}.json"
-
-
-def write_grader_request(
-    session_id: str,
-    *,
-    prompt: str,
-    prior_acceptance: str,
-    recent_context: str,
-) -> str | None:
-    if not ID_RE.fullmatch(session_id):
-        return None
-    root = request_root()
-    if root is None:
-        return None
-    token = secrets.token_hex(16)
-    destination = root / f"{token}.json"
-    try:
-        descriptor, temporary_name = tempfile.mkstemp(
-            prefix=f".{token}.", dir=root
-        )
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            json.dump(
-                {
-                    "session_id": session_id,
-                    "prompt": prompt,
-                    "prior_acceptance": prior_acceptance,
-                    "recent_context": recent_context,
-                },
-                handle,
-                separators=(",", ":"),
-                sort_keys=True,
-            )
-            handle.write("\n")
-        os.chmod(temporary_name, 0o600)
-        os.replace(temporary_name, destination)
-        return token
-    except OSError:
-        return None
-    finally:
-        if "temporary_name" in locals():
-            try:
-                os.unlink(temporary_name)
-            except FileNotFoundError:
-                pass
-
-
-def consume_grader_request(token: str) -> dict[str, Any] | None:
-    path = request_path(token)
-    if path is None or not path.is_file() or path.is_symlink():
-        return None
-    try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        value = None
-    finally:
-        try:
-            os.unlink(path)
-        except OSError:
-            pass
-    if value is None:
-        return None
-    required = ("session_id", "prompt", "prior_acceptance", "recent_context")
-    if not isinstance(value, dict) or any(
-        not isinstance(value.get(field), str) for field in required
-    ):
-        return None
-    if not ID_RE.fullmatch(value["session_id"]):
-        return None
-    return value
 
 
 def read_state(session_id: str) -> dict[str, Any]:

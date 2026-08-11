@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.6 milestone-only checkpoint supervision."""
+"""Static contract tests for 0.8.7 fused Terra routing and supervision."""
 
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ from pathlib import Path
 
 
 EXPECTED_AGENTS = {
-    "codex-orchestration-terra-read-only.toml": ("codex_orchestration_terra_read_only", "gpt-5.6-terra", "max"),
     "codex-orchestration-luna-implementer.toml": ("codex_orchestration_luna_implementer", "gpt-5.6-luna", "max"),
     "codex-orchestration-terra-implementer.toml": ("codex_orchestration_terra_implementer", "gpt-5.6-terra", "max"),
     "codex-orchestration-sol-high-implementer.toml": ("codex_orchestration_sol_high_implementer", "gpt-5.6-sol", "high"),
@@ -46,13 +45,13 @@ def main() -> int:
         actual = (parsed.get("name"), parsed.get("model"), parsed.get("model_reasoning_effort"))
         if actual != expected:
             raise AssertionError(f"wrong model pin for {filename}: {actual!r}")
-        if any(role in filename for role in ("grader", "read-only", "supervisor", "executive")):
+        if "supervisor" in filename:
             if parsed.get("sandbox_mode") != "read-only":
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.6":
-        raise AssertionError(f"manifest does not use traditional 0.8.6: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.7":
+        raise AssertionError(f"manifest does not use traditional 0.8.7: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -63,16 +62,17 @@ def main() -> int:
             "FIRST ACTION",
             "current-activity description focused on the user's concrete outcome",
             "Starting Terra / Max classification now.",
-            "headless-grader.py",
-            "runs GPT-5.6 Terra / Max headlessly",
-            "never fall back to a visible grader subagent",
-            "intervals of at",
+            "common-path fused role",
+            "CLASSIFY_INIT",
+            "ROUTE_REPAIR",
+            "READ_ONLY_EXECUTE",
+            "start another Terra worker or supervisor.",
+            "description must explicitly say `fused`",
             "Implementation started with <implementer model>.",
             "supervisor is",
             "ready.`",
-            "This is one combined update, not two.",
             "same implementer",
-            "normal work waits are at most 45 seconds",
+            "normal agent waits are at most 45 seconds",
             "Poll routine waits",
             "Ready to release.",
             "Still working on <actual user outcome>.",
@@ -87,39 +87,51 @@ def main() -> int:
     ):
         if noisy in router:
             raise AssertionError(f"router retains noisy parent copy: {noisy!r}")
-    if "terra_max_grader_" in router or "codex_orchestration_terra_grader" in router:
-        raise AssertionError("router retains a visible grader activity-chip path")
-    if "Never attempt an unavailable or legacy type" not in router:
+    for obsolete in ("headless-grader.py", "--request-token", "grader-requests"):
+        if obsolete in router:
+            raise AssertionError(f"router retains obsolete headless path: {obsolete!r}")
+    if "Never try an unavailable/" not in router:
         raise AssertionError("router does not guard unavailable task-catalog identities")
     for legacy_identity in ("terra_executive", "sol_high_executive", "sol_xhigh_executive"):
         if legacy_identity in router:
             raise AssertionError(f"router retains legacy identity {legacy_identity!r}")
 
-    grader = (plugin / "scripts" / "headless-grader.py").read_text(encoding="utf-8")
+    fused = documents["codex-orchestration-terra-supervisor.toml"]
     require(
-        grader,
+        fused,
         (
-            'MODEL = "gpt-5.6-terra"',
-            'EFFORT = "max"',
-            '"READ_ONLY": ("TERRA_MAX", "NONE", "NONE")',
-            '"SMALL_TWEAK": ("LUNA_MAX", "TERRA_MAX", "RELEASE_CANDIDATE")',
-            '"BIG_TWEAK"',
-            '"SMALL_BUILD"',
-            '"BIG_BUILD"',
+            "fused GPT-5.6 Terra / Max routing supervisor",
+            "CLASSIFY_INIT",
+            "READ_ONLY: TERRA_MAX / NONE / NONE",
+            "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
+            "BIG_TWEAK: TERRA_MAX / TERRA_MAX / ROOT_CAUSE,RELEASE_CANDIDATE",
+            "SMALL_BUILD: TERRA_MAX / SOL_HIGH / DESIGN,RELEASE_CANDIDATE",
+            "BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
             "A feature release is a build",
-            "Ambiguity routes upward",
-            '"--ephemeral"',
-            '"--ignore-user-config"',
-            '"--output-schema"',
-            "consume_grader_request",
-            "for _ in range(2)",
-            "HEADLESS_GRADER_ERROR",
+            "ROUTE_REPAIR",
+            "READ_ONLY_EXECUTE",
+            "root will not send\n`SUPERVISOR_INIT`",
+            "ORCHESTRATION_RELATION: RELATION=<NEW|AMEND|REPLACE|CANCEL>",
+            "COMPLEXITY=<1.0-10.0>",
+            "CANCEL, use CLASS=READ_ONLY, COMPLEXITY=1.0",
         ),
-        "headless grader contract",
+        "fused Terra contract",
+    )
+
+    require(
+        fused,
+        (
+            "read-only",
+            "SUPERVISOR_CORRECT:",
+            "SUPERVISOR_READY_TO_RELEASE:",
+            "ORCHESTRATION_ACCEPT:",
+            "same implementer",
+            "structured protocol outputs",
+        ),
+        "codex-orchestration-terra-supervisor.toml",
     )
 
     for filename in (
-        "codex-orchestration-terra-supervisor.toml",
         "codex-orchestration-sol-high-supervisor.toml",
         "codex-orchestration-sol-xhigh-supervisor.toml",
     ):
@@ -170,7 +182,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.6, headless Terra grader, seven companion profiles, and milestone-only progress")
+    print("PASS: 0.8.7 fused Terra routing, six companion profiles, and milestone-only progress")
     return 0
 
 

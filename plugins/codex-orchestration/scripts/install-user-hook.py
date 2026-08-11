@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import os
 import select
@@ -21,10 +22,14 @@ from typing import Any
 EVENT = "userPromptSubmit"
 PLUGIN_ID = "codex-orchestration@codex-orchestration"
 RUNTIME_FILES = (
-    "headless-grader.py",
     "orchestration_state.py",
     "prompt-router-hook.py",
 )
+RETIRED_RUNTIME_DIGESTS = {
+    "headless-grader.py": {
+        "776152a8ba02f56a21c9df680755df2d641f45a1bfc0431f1c1b12167411399f"
+    }
+}
 
 
 def fail(message: str) -> None:
@@ -49,6 +54,33 @@ def atomic_copy(source: Path, destination: Path) -> None:
             os.unlink(temporary_name)
         except FileNotFoundError:
             pass
+
+
+def preflight_retired_runtime_files(runtime_dir: Path, check_only: bool) -> None:
+    for filename, known_digests in RETIRED_RUNTIME_DIGESTS.items():
+        destination = runtime_dir / filename
+        if not destination.exists() and not destination.is_symlink():
+            continue
+        if destination.is_symlink() or not destination.is_file():
+            fail(f"retired runtime destination is unsafe: {destination}")
+        digest = hashlib.sha256(destination.read_bytes()).hexdigest()
+        if digest not in known_digests:
+            fail(f"refusing customized retired runtime file: {destination}")
+        if check_only:
+            fail(f"retired runtime file remains: {destination}")
+
+
+def retire_runtime_files(runtime_dir: Path) -> None:
+    for filename, known_digests in RETIRED_RUNTIME_DIGESTS.items():
+        destination = runtime_dir / filename
+        if not destination.exists() and not destination.is_symlink():
+            continue
+        if destination.is_symlink() or not destination.is_file():
+            fail(f"retired runtime destination changed during install: {destination}")
+        digest = hashlib.sha256(destination.read_bytes()).hexdigest()
+        if digest not in known_digests:
+            fail(f"retired runtime file changed during install: {destination}")
+        destination.unlink()
 
 
 def is_owned_group(group: object) -> bool:
@@ -300,6 +332,7 @@ def main() -> int:
     if not args.check:
         os.chmod(runtime_dir, 0o700)
 
+    preflight_retired_runtime_files(runtime_dir, args.check)
     for filename in RUNTIME_FILES:
         source = plugin_dir / "scripts" / filename
         destination = runtime_dir / filename
@@ -312,6 +345,8 @@ def main() -> int:
                 fail(f"installed runtime file is not current: {destination}")
         else:
             atomic_copy(source, destination)
+    if not args.check:
+        retire_runtime_files(runtime_dir)
 
     router = runtime_dir / "prompt-router-hook.py"
     command = f"python3 {shlex.quote(str(router))}"

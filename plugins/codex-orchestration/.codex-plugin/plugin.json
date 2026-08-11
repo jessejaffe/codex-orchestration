@@ -1,7 +1,7 @@
 {
   "name": "codex-orchestration",
-  "version": "0.8.6",
-  "description": "Headless Terra grading with tweak/build checkpoint supervision.",
+  "version": "0.8.7",
+  "description": "Fused Terra routing with tweak/build checkpoint supervision.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -17,8 +17,8 @@
   ],
   "interface": {
     "displayName": "Codex Orchestration",
-    "shortDescription": "No-chip routing with milestone-only progress",
-    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.8.6 runs the GPT-5.6 Terra / Max grader as a structured, ephemeral local Codex pass instead of a visible subagent. This removes the desktop app's broken avatar from the classification phase while preserving a real Terra / Max grader, bounded same-task context, and unfinished acceptance. The headless grader plus seven specialized companion profiles form the eight operational roles. The grader classifies each request as read-only, small tweak, big tweak, small build, or big build; classification selects the route while complexity remains internal telemetry. If an already-open task cannot see a specialized work profile, root uses a built-in agent with an explicit model, reasoning pin, and complete role rules; no legacy custom-agent aliases remain. For change work, root starts the selected implementer and full-context read-only supervisor concurrently, then gives one combined ready message. Routine classification polls, work waits, checkpoint transitions, protocol repairs, and final-review mechanics stay silent. User-visible progress is limited to genuine milestones such as implementation ready, correction, release ready, blocker, and completion, with a minimal host-required heartbeat only after a long quiet interval. The visible final receipt omits the numeric complexity score. The implementer pauses at quiescent checkpoints, the supervisor inspects without editing, and every correction goes back to the same implementer. Small tweaks use Luna / Max with Terra / Max supervision; big tweaks use Terra / Max with Terra / Max supervision; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision.",
+    "shortDescription": "Fused Terra routing with milestone-only progress",
+    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.8.7 keeps the standard service tier and fuses the GPT-5.6 Terra / Max grader with the read-only worker and tweak supervisor. One Terra instance classifies each request, then continues directly for read-only work or remains ready to supervise a tweak; only build routes hand off supervision to Sol. This removes the duplicate Terra startup and the fragile headless shell/token bridge while preserving unfinished acceptance and fixed routes for read-only, small tweak, big tweak, small build, and big build work. Six specialized companion profiles cover implementation and supervision. If an already-open task cannot see a specialized profile, root uses a built-in agent with an explicit model, reasoning pin, and complete role rules. User-visible progress is limited to genuine milestones such as implementation ready, correction, release ready, blocker, and completion. The implementer pauses at quiescent checkpoints, the supervisor inspects without editing, and every correction goes back to the same implementer. Small tweaks use Luna / Max with the fused Terra / Max supervisor; big tweaks use Terra / Max with the fused Terra / Max supervisor; small builds use Terra / Max with Sol / High supervision; big builds use Sol / High with Sol / Extra High supervision.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

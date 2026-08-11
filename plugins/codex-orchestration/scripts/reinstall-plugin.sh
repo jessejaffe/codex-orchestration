@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration 0.8.6 and safely retire obsolete identities.
+# Install Codex Orchestration 0.8.7 and safely retire obsolete identities.
 
 set -eu
 
@@ -24,8 +24,8 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-printf '%s\n' "$manifest_version" | grep -Eq '^0\.8\.6$' ||
-  fail "this installer requires the traditional release version 0.8.6: $manifest_version"
+printf '%s\n' "$manifest_version" | grep -Eq '^0\.8\.7$' ||
+  fail "this installer requires the traditional release version 0.8.7: $manifest_version"
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
   cache_root=$CODEX_ORCHESTRATION_CACHE_ROOT
@@ -92,14 +92,12 @@ required_package_files() {
   cat <<'EOF'
 .codex-plugin/plugin.json
 agents/codex-orchestration-luna-implementer.toml
-agents/codex-orchestration-terra-read-only.toml
 agents/codex-orchestration-terra-implementer.toml
 agents/codex-orchestration-sol-high-implementer.toml
 agents/codex-orchestration-terra-supervisor.toml
 agents/codex-orchestration-sol-high-supervisor.toml
 agents/codex-orchestration-sol-xhigh-supervisor.toml
 scripts/effectiveness-tracker.py
-scripts/headless-grader.py
 scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
 scripts/install-user-hook.py
@@ -109,7 +107,6 @@ scripts/reinstall-plugin.sh
 scripts/state_migration.py
 scripts/test-effectiveness-tracker.py
 scripts/test-fast-dispatch.py
-scripts/test-headless-grader.py
 scripts/test-relay-protocol.py
 scripts/triage-cases.json
 scripts/usage-receipt.py
@@ -352,9 +349,9 @@ current=$(installed_version "$current_plugin_id") || fail "new plugin was not li
 current_cache=$cache_root/$manifest_version
 validate_complete_package "$current_cache"
 
-# A complete, conflict-free seven-profile install is a prerequisite for retiring either
+# A complete, conflict-free six-profile install is a prerequisite for retiring either
 # legacy configured identity. The companion installer preflights every current and
-# legacy file, proves all seven current files, and only then removes exact obsolete
+# legacy file, proves all six current files, and only then removes exact obsolete
 # legacy files. Customized legacy agents therefore stop this migration without being
 # overwritten and before plugin or marketplace removal.
 sh "$current_cache/scripts/install-agents.sh"

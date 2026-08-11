@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the seven Codex Orchestration 0.8.6 companion profiles and retire obsolete identities safely.
+# Install the six Codex Orchestration 0.8.7 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -40,15 +40,15 @@ fi
 case "$target_dir" in /*) ;; *) fail "target directory must be absolute: $target_dir" ;; esac
 [ ! -L "$target_dir" ] || fail "target directory is a symlink: $target_dir"
 
-current_roles='terra-read-only
-luna-implementer
+current_roles='luna-implementer
 terra-implementer
 sol-high-implementer
 terra-supervisor
 sol-high-supervisor
 sol-xhigh-supervisor'
 
-retired_roles='terra-grader
+retired_roles='terra-read-only
+terra-grader
 terra-executive
 terra-medium-implementer
 sol-low-implementer
@@ -62,11 +62,10 @@ sol-reviewer'
 
 previous_digest() {
   case "$1" in
-    terra-read-only) printf '%s\n' 8ef1a321b88f798326f76b458aa411e771b84056f041196aec65bf1af8d3f7ee 9bda4860b024839aa91a744ebb3c82116a7fa1009209bed67057c2c3c3461d19 ;;
     luna-implementer) printf '%s\n' 17977b485b042a6f0612d5e444d5232591fbe45ff679131a20eb61fad0edfef0 44bec276050bd6c342317b2c1d01c70fe310da7ff5f44c36754ef371491b300f de0169757da493d85b323b5d288036c0489a4700ebced8303ded58045d673d0a 983f3d6a4a9d674bc46d828b1f5c648a4b77940a4ff51d407302b3761ad010d9 ;;
     terra-implementer) printf '%s\n' c8a65ab5b313fdbe285aa47fba0b5ff13cd0040c8d1d06479e662b405503987b c36e4ccf25a51f911ad8fac00e235f2d23f623184dc71c08cdddebc8f7d71342 1fe32ab9230c3827f7abc489a5062d6cce2847f15341cbad1cac4e062ef5ece3 a24c4a1a67b4730f24d9d883cbbc6fb46b535847ddafa1599ff2127f5ca8b974 ;;
     sol-high-implementer) printf '%s\n' ad165e2c75a24c8f9a6a2a53ccc3010e7ff5a2932e6b72541592d3aea53bb475 98c135e10d0b66fa911eab99c1229b530e27d7ac0e5dc983dcef181806e67e6f ac4fb9c02a6d4d53d767fa2667dff3b7e6a41ce8b5032f1f179ee5607cd73c94 b9c8acb6206331972722cba1943c5a86aaaccdbaa85714188e8cfcce2f0a9ec0 ;;
-    terra-supervisor) printf '%s\n' 0c3afffbeb7d4235c59e39b7ad331db3cefb07c49779441b25279200b18aae15 47ca1d10eba36a709f782f52d1c867d9b50094075ea620fae549d1a308f4fe9f ;;
+    terra-supervisor) printf '%s\n' d533709aa442d916dd1b05a7173710a2d24dcd5a4a7040a29b0ce4510d1465f7 0c3afffbeb7d4235c59e39b7ad331db3cefb07c49779441b25279200b18aae15 47ca1d10eba36a709f782f52d1c867d9b50094075ea620fae549d1a308f4fe9f ;;
     sol-high-supervisor) printf '%s\n' ee8b10c4f69c84305bd43f521b1a40d777f91b124f4e163e7d44e7a02d8848b2 8f25a162a0c979163c262ff7cd24542dc64b7daef882fd288b1c29a53a1902bd ;;
     sol-xhigh-supervisor) printf '%s\n' 351f19272ae01016a9cd7891ec3700b5ec85e12e518ee1d219d85274879943a1 ece9ac3d0d82e346b0b2c449f92907ca1110e7b8af680ed3fa7e547d026385b9 ;;
     *) printf '%s\n' '' ;;
@@ -75,6 +74,7 @@ previous_digest() {
 
 retired_digest() {
   case "$1" in
+    terra-read-only) printf '%s\n' 8ef1a321b88f798326f76b458aa411e771b84056f041196aec65bf1af8d3f7ee 9bda4860b024839aa91a744ebb3c82116a7fa1009209bed67057c2c3c3461d19 ;;
     terra-grader) printf '%s\n' 3dd2e18abbc9dae807f679da68505eda33470eb537f1373740542e0f0b1bfb73 7f7d361950ed434f309e9915f0cf1a606aa00728d4bc0d3c99cc8ae4f7669f3f ;;
     terra-executive) printf '%s\n' 806467d3c5a4cdd7d90636cd48d77f0c328de72b82aa81d56dac74bc8eb395bd b4628e57386b44ad8610024d345affa8187aafdfb042acd816459a9911c42100 820da651f6cdf3f39b7d4063ba78734cd9a23970d1464dd5cf7e8f8b8d585122 f76b6372e86e72ab78cd3e3a9b471a86bf89a9d0368fe77e16ddd9a02a39236d cd946559fa48432694fb420ecc05ea2a5516e75b1ecb2e05969fffab145feeed 554fb66aaeaff8c79ee820792c932039e67a2de81faf9d650468f478494120cb ;;
     terra-medium-implementer) printf '%s\n' ca24ac9c31b6809bd83d3692b952b661e6fd4910c4ae8321bacee237d3dc69ee 2e9d3f1f73cfd0348d9f3bf54abd880dc173377899e7bd50046102cfc3eb562e ;;
@@ -129,7 +129,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: seven 0.8.6 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: six 0.8.7 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -181,4 +181,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: seven 0.8.6 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: six 0.8.7 companion profiles are current and obsolete identities were retired.'
