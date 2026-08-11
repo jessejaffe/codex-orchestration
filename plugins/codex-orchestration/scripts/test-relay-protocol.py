@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.10.4 fast handoff and activity protocol."""
+"""Static contracts for the 0.10.5 context-bundle and activity protocol."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ EXPECTED_AGENTS = {
     "codex-orchestration-terra-orchestrator.toml": (
         "codex_orchestration_terra_orchestrator",
         "gpt-5.6-terra",
-        "max",
+        "xhigh",
     ),
     "codex-orchestration-luna-implementer.toml": (
         "codex_orchestration_luna_implementer",
@@ -98,15 +98,15 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.10.4":
-        raise AssertionError(f"manifest does not use 0.10.4: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.10.5":
+        raise AssertionError(f"manifest does not use 0.10.5: {manifest.get('version')!r}")
 
     orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
     require(
         orchestrator,
         (
             "orchestrator role",
-            "always GPT-5.6 Terra / Max",
+            "always GPT-5.6 Terra / Extra High",
             "inherited current query plus its bounded conversation continuity",
             "latency-critical bounded lookup",
             "USER_REQUEST=INHERITED_CURRENT_QUERY",
@@ -127,7 +127,7 @@ def main() -> int:
             "end REASON with punctuation",
             "Root owns every subsequent spawn, handoff, wait, checkpoint, and relay",
         ),
-        "Terra / Max orchestrator",
+        "Terra / Extra High orchestrator",
     )
     forbid(
         orchestrator,
@@ -143,25 +143,33 @@ def main() -> int:
         "taxonomy-only orchestrator",
     )
 
+    if "inherited root user request and attachments that precede this protocol packet" not in " ".join(orchestrator.split()):
+        raise AssertionError("orchestrator omits one-turn current-query inheritance")
     for filename, document in documents.items():
-        if "inherited root user request and attachments that precede this protocol packet" not in " ".join(document.split()):
-            raise AssertionError(f"{filename} omits one-turn current-query inheritance")
+        if "orchestrator" in filename:
+            continue
+        compact = " ".join(document.split())
+        if "TASK_CONTEXT_BUNDLE" not in compact or "TASK_CONTEXT_REVISION" not in compact:
+            raise AssertionError(f"{filename} omits exact task-context loading")
 
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
     require(
         router,
         (
-            "Orchestration ON (0.10.4)",
+            "Orchestration ON (0.10.5)",
             "DESKTOP ACTIVITY DISPLAY",
             "one plain 2-7 word current milestone",
-            "Waiting for Terra / Max\nclassification",
+            "Waiting for Terra / Extra High classification",
             "Starting Luna / Max implementation",
-            "If no concrete milestone is known, use exactly\n`Thinking`",
+            "show exactly `Thinking` and nothing else",
             "DIRECT READ-ONLY FAST PATH",
             "FAST RELAY",
             "ORCHESTRATE_CLASSIFY",
             "fork_turns=1",
+            "fork_turns=none",
             "USER_REQUEST=INHERITED_CURRENT_QUERY",
+            "TASK_CONTEXT_BUNDLE:",
+            "TASK_CONTEXT_REVISION:",
             "codex_orchestration_terra_orchestrator",
             *ROUTES,
             "codex_orchestration_luna_implementer",
@@ -170,7 +178,7 @@ def main() -> int:
             "codex_orchestration_terra_supervisor",
             "codex_orchestration_sol_high_supervisor",
             "codex_orchestration_sol_xhigh_supervisor",
-            "terra_max_orchestrator_<objective_slug>",
+            "terra_extra_high_orchestrator_<objective_slug>",
             "terra_max_implementer_<objective_slug>",
             "terra_max_supervisor_<objective_slug>",
             "luna_max_implementer_<objective_slug>",
@@ -179,6 +187,9 @@ def main() -> int:
             "sol_extra_high_supervisor_<objective_slug>",
             "CHANGE WORK — first spawn the selected implementer",
             "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+            "ACTIVE STEERING",
+            "AMENDMENT_REVIEW",
+            "PAUSE_FOR_REVISED_ACCEPTANCE",
             "Immediately spawn the selected supervisor second",
             "Emit both `spawn_agent` tool calls in one assistant response",
             "Do not wait for or process the implementer spawn output",
@@ -189,8 +200,8 @@ def main() -> int:
             "TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High",
             "Never hard-code the\nbig-tweak sentence or its models",
             "Root owns every child",
-            "every handoff to an idle child uses\n`followup_task`",
-            "Never activate implementer and\nsupervisor simultaneously",
+            "every handoff to an idle child uses `followup_task`",
+            "Never activate implementer and supervisor simultaneously",
             "CHECKPOINT_REVIEW",
             "FINAL_REVIEW",
             "ORCHESTRATION_ROOT_VERIFY",
@@ -327,6 +338,10 @@ def main() -> int:
                 "IMPLEMENTATION_RESULT:",
                 "Parse WORKSPACE_DEPENDENCIES before artifact work",
                 "`ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is not a\nblocker",
+                "TASK_CONTEXT_BUNDLE",
+                "TASK_CONTEXT_REVISION",
+                "Load it fully before mutation",
+                "On `TASK_CONTEXT_UPDATE`",
                 "Root includes the",
                 "with every later supervisor decision",
                 "Before yielding `RELEASE_CANDIDATE`, resolve an executable release plan",
@@ -360,6 +375,10 @@ def main() -> int:
             documents[filename],
             (
                 "implementer's initial turn is already active",
+                "TASK_CONTEXT_BUNDLE",
+                "TASK_CONTEXT_REVISION",
+                "AMENDMENT_REVIEW",
+                "SUPERVISOR_AMENDED:",
                 "**Approved release plan**",
                 "- Repository: <exact synchronization, commit, and push sequence or NOT_APPLICABLE>",
                 "- Deployment: <exact helper or narrow destination for the changed deliverables or NOT_APPLICABLE>",
@@ -371,15 +390,25 @@ def main() -> int:
         compact_supervisor = " ".join(documents[filename].lower().split())
         if "executable without fresh topology or deployment research" not in compact_supervisor:
             raise AssertionError(f"{filename} permits release-time deployment discovery")
-        if "call no tools" not in compact_supervisor:
-            raise AssertionError(f"{filename} permits tools during context-loading overlap")
         if "inspect no workspace state" not in compact_supervisor:
             raise AssertionError(f"{filename} permits workspace inspection during startup overlap")
+        if "read only the exact file named by task_context_bundle" not in compact_supervisor:
+            raise AssertionError(f"{filename} can load more than the exact context bundle at startup")
+        if "unabridged ordered root-visible" not in compact_supervisor:
+            raise AssertionError(f"{filename} does not require the exact ordered task context")
 
     installer = (plugin / "scripts" / "install-agents.sh").read_text(encoding="utf-8")
     require(
         installer,
         (
+            "Exact 0.10.4 profiles accepted for the 0.10.5 context-bundle migration",
+            "daad8fa64a161d02615b2df99e7ffef1a56e7a6114e3831b116d42a2e1c18fa2",
+            "06e935c579bc2797cbb86a2f146cdc1eddfdd1a389ebded53e4e57cea9a64079",
+            "8a7e78e5480f19449753194d5171b7ee06d44ea9bd4ea5768beed45947ba5ab3",
+            "3be0b8c8ee64cb00fc642ed5fac1c0bb44ac3ba726b5fb3329d11691546a6f17",
+            "a9db7125294104eede7c587f22db62901e2af857ff3a5ccfbff10f13d26bba97",
+            "22e2167ebceaacabbeec00b5fa4ad822187921182f0d14a7528408e58fc16e6e",
+            "1b49c843b4794cfba17d708b6d01fdfd498ef5011e72fd288d469df81ec221cf",
             "Exact 0.10.3 profiles accepted for the 0.10.4 startup-latency migration",
             "b7f25d2474fbe35e42b14f6683fca4a2398da5bc9a5a9c7ca70b7c7fa8f543cb",
             "fd962b99e92a116957c867299d9bc1713cd8faed721c8bc79b35685c5f58470a",
@@ -412,7 +441,7 @@ def main() -> int:
             "48520a33a70bfceb920fee852ee991f0305170bd255bbf5455146e6ac88281d8",
             "7dc6715eec52fda116d10bb3154353b2020e093976dc47dc4cdee55bee12b24d",
         ),
-        "0.10.3, 0.10.2, 0.10.0, and 0.9.0 migration digests",
+        "0.10.4, 0.10.3, 0.10.2, 0.10.0, and 0.9.0 migration digests",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
@@ -434,7 +463,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.10.4 low-latency activity and relay protocol")
+    print("PASS: 0.10.5 exact-context activity and relay protocol")
     return 0
 
 

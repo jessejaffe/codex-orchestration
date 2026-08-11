@@ -13,6 +13,7 @@ from typing import Any
 from orchestration_state import (
     is_active,
     transcript_role,
+    write_context_bundle,
     write_state,
 )
 
@@ -39,10 +40,10 @@ POLITE_CONTROL_PREFIX = re.compile(
     r"i\s+(?:want|need)\s+you\s+to\s+|go\s+ahead\s+and\s+|let['’]s\s+)?$"
 )
 INLINE_CONTROL_BOUNDARY = re.compile(r"(?:\band|\bthen|[,;:–—-])\s*$")
-MAX_PRIOR_ACCEPTANCE_CHARS = 4_096
-MAX_PRIOR_COMPLETED_CHARS = 4_096
-MAX_RECENT_CONTEXT_CHARS = 6_144
-MAX_RECENT_MESSAGE_CHARS = 1_536
+MAX_PRIOR_ACCEPTANCE_CHARS = 2_048
+MAX_PRIOR_COMPLETED_CHARS = 2_048
+MAX_RECENT_CONTEXT_CHARS = 3_072
+MAX_RECENT_MESSAGE_CHARS = 1_024
 MAX_RECENT_MESSAGES = 8
 INJECTED_USER_PREFIXES = (
     "<recommended_plugins>",
@@ -69,21 +70,25 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.10.4). Root applies the binary fast-path gate, then
+DISPATCH_CONTEXT = """Orchestration ON (0.10.5). Root applies the binary fast-path gate, then
 mechanically coordinates Terra-selected roles. Root never classifies taxonomy, constructs
 acceptance, implements, supervises, or judges change work.
 
 DESKTOP ACTIVITY DISPLAY — The gray orchestration root reasoning summary is a user-facing activity
 label, not internal dialogue. Keep it to one plain 2-7 word current milestone, with no Markdown.
-Use the newest actual development, such as `Classifying the request`, `Waiting for Terra / Max
-classification`, `Starting Luna / Max implementation`, `Waiting for Luna / Max checkpoint`,
+Refresh it to the newest verified development, such as `Classifying the request`,
+`Waiting for Terra / Extra High classification`, `Starting Luna / Max implementation`, `Waiting for Luna / Max checkpoint`,
 `Reviewing the release candidate`, `Releasing with Terra / Max`, or `Checking the live experience`.
-The model name must match the dynamic route. If no concrete milestone is known, use exactly
-`Thinking`. Never expose planning, orchestration mechanics, taxonomy, contracts, packets, relays,
+The model name must match the dynamic route. If the newest verified milestone cannot be stated,
+show exactly `Thinking` and nothing else. Never expose planning, orchestration mechanics, taxonomy,
+contracts, packets, relays,
 or the request text. Never begin a label with `Planning`, and never use any variation of
 `verbatim request`.
 
-FORK=`1` (inherit only the current root turn; never literal `all` or `none`)
+CLASSIFIER_FORK=`1` (inherit only the current root turn)
+ROLE_FORK=`none` (task roles load the exact private context bundle instead of inherited chat)
+TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
+TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
 PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__
 RECENT_CONTEXT_FRESHNESS: __RECENT_CONTEXT_FRESHNESS__
@@ -101,8 +106,8 @@ FAST RELAY — Schema validation is mechanical. After a valid classifier or chil
 next required tool call in the same assistant response with no reasoning item between them. Reason
 only for a protocol error, route mismatch, blocker, or user decision.
 
-Otherwise, say exactly `Starting Terra / Max classification now.` and, in the same assistant
-response, immediately start one orchestrator named `terra_max_orchestrator_<objective_slug>` with
+Otherwise, say exactly `Starting Terra / Extra High classification now.` and, in the same assistant
+response, immediately start one orchestrator named `terra_extra_high_orchestrator_<objective_slug>` with
 `fork_turns=1` and this exact classification packet:
 ORCHESTRATE_CLASSIFY
 PRIOR_ACTIVE_ACCEPTANCE=<exact value above>
@@ -112,7 +117,7 @@ RECENT_CONTEXT=<exact value above>
 USER_REQUEST=INHERITED_CURRENT_QUERY
 
 Use custom type `codex_orchestration_terra_orchestrator` when listed. Otherwise use built-in
-`default` pinned to GPT-5.6 Terra / Max and tell it first to read and obey the
+`default` pinned to GPT-5.6 Terra / Extra High and tell it first to read and obey the
 `developer_instructions` in `__ORCHESTRATOR_PROFILE_PATH__`. Make the lookup silently and once. Do
 not pass WORKSPACE_DEPENDENCIES, task-specific skill instructions, repository contents, or a work
 plan to the orchestrator. Its one-turn fork supplies the exact current query and attachment paths;
@@ -133,15 +138,34 @@ validate mechanically against only these lanes:
 - BIG_TWEAK: TERRA_MAX / SOL_HIGH / ROOT_CAUSE,RELEASE_CANDIDATE
 - BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
 
-For RELATION=CANCEL, return a concise result and stop. Otherwise, only after classification, resolve
-WORKSPACE_DEPENDENCIES. If required, call root's `codex_app__load_workspace_dependencies` once and
+ACTIVE STEERING — For RELATION=AMEND, REPLACE, or CANCEL, call `list_agents` once immediately after
+classification to find root's unfinished model-named children. Never wait for a running child before
+steering it. CANCEL interrupts every unfinished owned child, returns a concise result, and stops.
+REPLACE interrupts every unfinished owned child, then follows the normal fresh-role launch below
+with the new bundle revision. For AMEND, compare the selected model lanes with the unfinished
+model-named children. A lane change interrupts them and follows the normal fresh-role launch; an
+unchanged lane reuses the same children:
+
+- Send each running child one `TASK_CONTEXT_UPDATE` containing only CLASSIFICATION,
+  TASK_CONTEXT_BUNDLE, TASK_CONTEXT_REVISION, any newly required WORKSPACE_DEPENDENCIES for the
+  implementer, and `PAUSE_FOR_REVISED_ACCEPTANCE` for the implementer.
+- Leave an idle implementer paused. If the supervisor is idle, reactivate it with
+  `AMENDMENT_REVIEW` and those same exact fields; if it is running, the update is enough.
+- Require the supervisor's latest `SUPERVISOR_READY` or `SUPERVISOR_AMENDED` acceptance, then deliver
+  that exact revised acceptance to the same implementer and resume from its existing quiescent
+  state. Never discard a completed checkpoint or allow mutation under superseded acceptance.
+
+If AMEND finds no compatible unfinished child, follow the normal launch below. For RELATION=CANCEL
+with no child, return a concise result and stop. Only after classification, and before either an
+AMEND update or a fresh launch, resolve WORKSPACE_DEPENDENCIES. If required, call root's
+`codex_app__load_workspace_dependencies` once and
 preserve its complete result; never search paths or delegate loading. On failure, report the exact
 blocker. If not required, use NONE. Never send dependencies to the orchestrator.
 
 ROOT ROLE MAP — use the custom type when available; otherwise use the stated built-in with pinned
 model/effort and the matching `developer_instructions` from `__AGENTS_DIR__`:
 
-- TERRA_MAX orchestrator: `codex_orchestration_terra_orchestrator`; never reuse.
+- TERRA_XHIGH orchestrator: `codex_orchestration_terra_orchestrator`; never reuse.
 - TERRA_MAX implementer: `codex_orchestration_terra_implementer`; fallback `worker`, Terra / Max.
 - LUNA_MAX implementer: `codex_orchestration_luna_implementer`; fallback `worker`, Luna / Max.
 - SOL_HIGH implementer: `codex_orchestration_sol_high_implementer`; fallback `worker`, Sol / High.
@@ -149,44 +173,46 @@ model/effort and the matching `developer_instructions` from `__AGENTS_DIR__`:
 - SOL_HIGH supervisor: `codex_orchestration_sol_high_supervisor`; fallback `default`, Sol / High.
 - SOL_XHIGH supervisor: `codex_orchestration_sol_xhigh_supervisor`; fallback `default`, Sol / Extra High.
 
-Use `fork_turns=1` for the classifier and every initial implementer and supervisor. The inherited
-current turn supplies the exact query once without copying it into tool arguments.
+Use `fork_turns=1` only for the classifier. Use `fork_turns=none` for every initial implementer and
+supervisor. Their small launch packets point to one exact context bundle, so root never regenerates
+the request or its attachments in tool arguments.
 Child pills identify models, never work classes. Use exactly
 `terra_max_implementer_<objective_slug>`, `terra_max_supervisor_<objective_slug>`,
 `luna_max_implementer_<objective_slug>`,
 `sol_high_implementer_<objective_slug>`, `sol_high_supervisor_<objective_slug>`, or
 `sol_extra_high_supervisor_<objective_slug>`. Root owns every child. Initial role turns overlap only
-for tool-free supervisor context loading; checkpoints are serial.
+for supervisor context-bundle loading; workspace inspection and checkpoints are serial.
 
 READ_ONLY — spawn only the Terra implementer with:
 READ_ONLY_WORK
-FORK=<FORK>
+FORK=<ROLE_FORK>
 CLASSIFICATION=<exact three lines>
 PRIOR_COMPLETED_RESULT=<exact value>
-RECENT_CONTEXT=<exact value>
+TASK_CONTEXT_BUNDLE=<exact value above>
+TASK_CONTEXT_REVISION=<exact value above>
 WORKSPACE_DEPENDENCIES=<exact value>
 CURRENT_ROOT_ROUTE=<exact value>
-USER_REQUEST=INHERITED_CURRENT_QUERY
+USER_CONTEXT=EXACT_PRIVATE_BUNDLE
 Wait once. It may use task tools but not mutate. Accept an optional leading ORCHESTRATION_HANDOFF
 then ORCHESTRATION_ACCEPT; remove both protocol pieces and return the remaining payload exactly.
 
 CHANGE WORK — first spawn the selected implementer with:
 IMPLEMENTATION_START
-FORK=<FORK>
+FORK=<ROLE_FORK>
 CLASSIFICATION=<exact three lines>
 ACCEPTANCE=PENDING_SUPERVISOR_INIT
-USER_REQUEST=INHERITED_CURRENT_QUERY
-RECENT_CONTEXT=<exact value>
+TASK_CONTEXT_BUNDLE=<exact value above>
+TASK_CONTEXT_REVISION=<exact value above>
 WORKSPACE_DEPENDENCIES=<exact value>
 CURRENT_ROOT_ROUTE=<exact value>
 
 Immediately spawn the selected supervisor second with:
 SUPERVISOR_INIT
-FORK=<FORK>
+FORK=<ROLE_FORK>
 CLASSIFICATION=<exact three lines>
-RECENT_CONTEXT=<exact value>
+TASK_CONTEXT_BUNDLE=<exact value above>
+TASK_CONTEXT_REVISION=<exact value above>
 CURRENT_ROOT_ROUTE=<exact value>
-USER_REQUEST=INHERITED_CURRENT_QUERY
 Emit both `spawn_agent` tool calls in one assistant response, implementer first and supervisor
 second. Do not wait for or process the implementer spawn output before emitting the supervisor
 call. Accept either result first and preserve an early implementer checkpoint. Never replace a
@@ -200,9 +226,10 @@ The <supervisor model> supervisor is ready.` Use dynamic lane labels exactly: LU
 TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High. Never hard-code the
 big-tweak sentence or its models. Wait if the implementer checkpoint has not arrived.
 
-COORDINATION LOOP — Root owns every child. After startup, every handoff to an idle child uses
-`followup_task`, never `send_message`; wait for its structured final. Never activate implementer and
-supervisor simultaneously after the first checkpoint.
+COORDINATION LOOP — Root owns every child. Except for an ACTIVE STEERING update delivered to a
+running child, every handoff to an idle child uses `followup_task`, never `send_message`; wait for
+its structured final. Never activate implementer and supervisor simultaneously after the first
+checkpoint, except for a context-only amendment review while the implementer is pausing.
 
 - On `IMPLEMENTATION_CHECKPOINT`, reactivate the supervisor with `CHECKPOINT_REVIEW` plus only the
   exact checkpoint and ACCEPTANCE; then wait.
@@ -315,19 +342,40 @@ def workspace_dependencies_required(prompt: str) -> str:
 
 def transcript_context(
     transcript_value: Any, current_prompt: str
-) -> tuple[str, str, str, str, str]:
-    """Return bounded routing state plus newer root-conversation context."""
+) -> tuple[str, str, str, str, str, list[dict[str, Any]], dict[str, str | None]]:
+    """Return bounded routing state and exact root-visible active-task messages."""
+    exact_current_prompt = strip_injected_user_prefix(current_prompt).strip()
     if not isinstance(transcript_value, str):
-        return "unavailable", "NONE", "NONE", "NONE", "NONE"
+        return (
+            "unavailable",
+            "NONE",
+            "NONE",
+            "NONE",
+            "NONE",
+            [{"role": "user", "content": exact_current_prompt, "current": True}],
+            {"prior_active_acceptance": None, "prior_completed_result": None},
+        )
     transcript = Path(transcript_value)
     if not transcript.is_file() or transcript.is_symlink():
-        return "unavailable", "NONE", "NONE", "NONE", "NONE"
+        return (
+            "unavailable",
+            "NONE",
+            "NONE",
+            "NONE",
+            "NONE",
+            [{"role": "user", "content": exact_current_prompt, "current": True}],
+            {"prior_active_acceptance": None, "prior_completed_result": None},
+        )
     root_route = "unavailable"
     prior_acceptance: str | None = None
     prior_completed: str | None = None
+    exact_prior_acceptance: str | None = None
+    exact_prior_completed: str | None = None
     completion_handoffs: dict[str, str] = {}
+    exact_completion_handoffs: dict[str, str] = {}
     conversation_tail: list[tuple[str, str]] = []
     post_completion_tail: list[tuple[str, str]] = []
+    task_messages: list[dict[str, Any]] = []
     has_completion = False
     try:
         with transcript.open(encoding="utf-8", errors="replace") as handle:
@@ -350,6 +398,9 @@ def transcript_context(
                 if conversation is not None:
                     conversation_tail.append(conversation)
                     conversation_tail = conversation_tail[-MAX_RECENT_MESSAGES:]
+                    task_messages.append(
+                        {"role": conversation[0], "content": conversation[1]}
+                    )
                     if has_completion:
                         post_completion_tail.append(conversation)
                         post_completion_tail = post_completion_tail[-MAX_RECENT_MESSAGES:]
@@ -373,32 +424,52 @@ def transcript_context(
                         and "; DESTINATIONS=" in message_line
                         and "; PROOF=" in message_line
                     ):
-                        prior_acceptance = message_line[
-                            :MAX_PRIOR_ACCEPTANCE_CHARS
-                        ]
+                        exact_prior_acceptance = message_line
+                        prior_acceptance = message_line[:MAX_PRIOR_ACCEPTANCE_CHARS]
                         prior_completed = None
+                        exact_prior_completed = None
                         completion_handoffs.pop(completion_scope, None)
+                        exact_completion_handoffs.pop(completion_scope, None)
                     elif message_line.startswith("ORCHESTRATION_HANDOFF: "):
                         completion_handoff = bounded_single_line(
                             message_line.removeprefix("ORCHESTRATION_HANDOFF: "),
                             MAX_PRIOR_COMPLETED_CHARS,
                         )
                         completion_handoffs[completion_scope] = completion_handoff
+                        exact_completion_handoffs[
+                            completion_scope
+                        ] = message_line.removeprefix("ORCHESTRATION_HANDOFF: ")
                         prior_completed = completion_handoff
+                        exact_prior_completed = exact_completion_handoffs[completion_scope]
                     elif message_line.startswith("ORCHESTRATION_ACCEPT:"):
                         prior_acceptance = None
+                        exact_prior_acceptance = None
                         accepted_result = "\n".join(message_lines[index:]).removeprefix(
                             "ORCHESTRATION_ACCEPT:"
                         )
+                        exact_prior_completed = exact_completion_handoffs.get(
+                            completion_scope
+                        ) or accepted_result.strip()
                         prior_completed = completion_handoffs.get(
                             completion_scope
                         ) or bounded_single_line(accepted_result, MAX_PRIOR_COMPLETED_CHARS)
                         has_completion = True
                         post_completion_tail = []
+                        task_messages = []
                 if cancelled:
                     prior_acceptance = None
+                    exact_prior_acceptance = None
+                    task_messages = []
     except OSError:
-        return "unavailable", "NONE", "NONE", "NONE", "NONE"
+        return (
+            "unavailable",
+            "NONE",
+            "NONE",
+            "NONE",
+            "NONE",
+            [{"role": "user", "content": exact_current_prompt, "current": True}],
+            {"prior_active_acceptance": None, "prior_completed_result": None},
+        )
     selected_tail = post_completion_tail if prior_completed else conversation_tail
     normalized_prompt = bounded_single_line(current_prompt, MAX_RECENT_CONTEXT_CHARS)
     if (
@@ -412,12 +483,27 @@ def transcript_context(
     if prior_completed:
         freshness = "STALE" if any(role == "user" for role, _ in selected_tail) else "FRESH"
     recent_context = bounded_recent_context(selected_tail)
+    if not (
+        task_messages
+        and task_messages[-1]["role"] == "user"
+        and task_messages[-1]["content"].strip() == exact_current_prompt
+    ):
+        task_messages.append(
+            {"role": "user", "content": exact_current_prompt, "current": True}
+        )
+    else:
+        task_messages[-1]["current"] = True
     return (
         root_route,
         prior_acceptance or "NONE",
         prior_completed or "NONE",
         freshness,
         recent_context,
+        task_messages,
+        {
+            "prior_active_acceptance": exact_prior_acceptance,
+            "prior_completed_result": exact_prior_completed,
+        },
     )
 
 
@@ -574,14 +660,36 @@ def main() -> int:
         prior_completed,
         recent_freshness,
         recent_context,
+        task_messages,
+        exact_continuity,
     ) = transcript_context(
         hook_input.get("transcript_path"), prompt
     )
+    bundle = write_context_bundle(
+        session_id,
+        {
+            "scope": "Exact root-visible conversation since the last accepted or cancelled objective.",
+            "messages": task_messages,
+            "prior_active_acceptance": exact_continuity["prior_active_acceptance"],
+            "prior_completed_result": exact_continuity["prior_completed_result"],
+        },
+    )
+    if bundle is None:
+        emit(
+            additional_context(
+                "Reply exactly `Orchestration: ERROR; could not save the private task "
+                "context`. Do not spawn."
+            )
+        )
+        return 0
+    bundle_path, bundle_revision = bundle
     context = DISPATCH_CONTEXT.replace("__ROOT_ROUTE__", root_route)
     context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
     context = context.replace("__PRIOR_COMPLETED_RESULT__", prior_completed)
     context = context.replace("__RECENT_CONTEXT_FRESHNESS__", recent_freshness)
     context = context.replace("__RECENT_CONTEXT__", recent_context)
+    context = context.replace("__TASK_CONTEXT_BUNDLE__", str(bundle_path))
+    context = context.replace("__TASK_CONTEXT_REVISION__", bundle_revision)
     context = context.replace(
         "__WORKSPACE_DEPENDENCIES_REQUIRED__",
         workspace_dependencies_required(prompt),

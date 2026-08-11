@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -43,6 +44,79 @@ def state_path(session_id: str) -> Path | None:
     if root is None or not ID_RE.fullmatch(session_id):
         return None
     return root / f"{session_id}.json"
+
+
+def context_bundle_path(session_id: str, revision: str) -> Path | None:
+    """Return one immutable private task-context revision path."""
+    root = state_root()
+    if (
+        root is None
+        or not ID_RE.fullmatch(session_id)
+        or not re.fullmatch(r"[0-9a-f]{64}", revision)
+    ):
+        return None
+    bundles = root / "context-bundles"
+    if bundles.exists() and (bundles.is_symlink() or not bundles.is_dir()):
+        return None
+    try:
+        bundles.mkdir(mode=0o700, exist_ok=True)
+        os.chmod(bundles, 0o700)
+    except OSError:
+        return None
+    return bundles / f"{session_id}.{revision}.json"
+
+
+def write_context_bundle(
+    session_id: str, document: dict[str, Any]
+) -> tuple[Path, str] | None:
+    """Atomically publish exact root-visible task context with a content revision."""
+    body = dict(document)
+    body["schema_version"] = 1
+    body["session_id"] = session_id
+    canonical = json.dumps(
+        body,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    revision = hashlib.sha256(canonical).hexdigest()
+    body["revision"] = revision
+    path = context_bundle_path(session_id, revision)
+    if path is None:
+        return None
+    rendered = (
+        json.dumps(body, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    )
+    if path.exists():
+        if path.is_symlink() or not path.is_file():
+            return None
+        try:
+            if path.stat().st_mode & 0o077:
+                return None
+            return (
+                (path, revision)
+                if path.read_text(encoding="utf-8") == rendered
+                else None
+            )
+        except OSError:
+            return None
+    try:
+        descriptor, temporary_name = tempfile.mkstemp(
+            prefix=f".{path.name}.", dir=path.parent
+        )
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(rendered)
+        os.chmod(temporary_name, 0o600)
+        os.replace(temporary_name, path)
+        return path, revision
+    except OSError:
+        return None
+    finally:
+        if "temporary_name" in locals():
+            try:
+                os.unlink(temporary_name)
+            except FileNotFoundError:
+                pass
 
 
 def read_state(session_id: str) -> dict[str, Any]:

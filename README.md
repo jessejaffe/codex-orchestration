@@ -1,24 +1,26 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review as separate roles. Version `0.10.4` uses an outcome-based taxonomy that separates
+read-only review as separate roles. Version `0.10.5` uses an outcome-based taxonomy that separates
 non-code artifacts from code changes and makes the selected models visible throughout startup. The
-Terra / Max orchestrator remains taxonomy-only: it reads the current query plus bounded
+Terra / Extra High orchestrator remains taxonomy-only: it reads the current query plus bounded
 conversational continuity, returns the route to root, and stops.
 Terra / Max remains independently available as an implementer and as a supervisor.
 
 The six work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, and `BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.10.4 works
+## How 0.10.5 works
 
 1. The stable chat-scoped hook gives root a binary gate, the current query, the latest bounded
-   acceptance or completion capsule, and a short window of newer conversation. App-injected plugin,
-   project-instruction, and environment wrappers are removed from stored user messages.
+   acceptance or completion capsule, and a short routing window. It also atomically writes a private,
+   versioned task-context bundle containing the exact ordered root-visible conversation since the
+   last accepted or cancelled objective. App-injected plugin, project-instruction, and environment
+   wrappers are removed from stored user messages.
 2. Root answers a simple explanation, summary, status, rationale, or brief brainstorming request
    directly in root when it needs no mutation, tools, fresh verification, audit, or substantial
    research.
-3. All other work starts the GPT-5.6 Terra / Max orchestrator on the standard service tier. The
+3. All other work starts the GPT-5.6 Terra / Extra High orchestrator on the standard service tier. The
    orchestrator inherits only the current root turn and receives bounded prior continuity. The
    request is not copied into its launch packet. It does not receive workspace
    dependencies, task-specific skill instructions, repository contents, or a work plan. It calls no
@@ -28,10 +30,10 @@ The six work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `S
    workspace dependency loader when spreadsheet, presentation, document, or PDF work needs it. The
    exact executable and package paths go directly to the task roles, never back to the orchestrator.
 5. For artifact and code work, root emits the selected implementer first and selected read-only
-   supervisor second in one response. Both inherit only the current root turn, so a large request is
-   not regenerated in either launch packet. The implementer begins the first routed checkpoint while
-   the supervisor's tool-free initial turn loads the same detailed request and defines immutable
-   acceptance. The orchestrator is already finished.
+   supervisor second in one response. Neither role inherits or receives a regenerated copy of the
+   chat. Each small packet points to the same exact context bundle. The implementer loads it first,
+   then begins safe discovery and the first routed checkpoint while the supervisor independently
+   loads it and defines acceptance. The orchestrator is already finished.
 6. Only those context-loading turns overlap. The implementer pauses at a quiescent checkpoint
    before the supervisor uses tools or inspects workspace state. Root then serially reactivates the
    supervisor for review and the same implementer with `CONTINUE`, `CORRECT`, or
@@ -40,7 +42,10 @@ The six work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `S
    must include an executable release plan covering repository synchronization, the exact deploy
    helper or narrow destination, one decisive probe, and any tunnel lifecycle. The supervisor
    rejects deferred deployment discovery and unrelated rebuilds before approving release.
-7. The same supervisor performs final review and writes the readable completion report. Root omits
+7. An interruption writes a new bundle revision. An amendment updates the existing running roles;
+   replacement or cancellation interrupts them. The implementer pauses mutation until the same
+   supervisor has revised acceptance, so an add-on cannot silently lose the original request.
+8. The same supervisor performs final review and writes the readable completion report. Root omits
    the private continuity capsule and returns the report unchanged. Root never classifies,
    implements, supervises, or judges acceptance.
 
@@ -50,7 +55,7 @@ the dynamic implementation and supervision models. It otherwise reports only mea
 milestones: checkpoint decisions, release authorization, blockers, and completion.
 It waits until an agent update instead of polling and does not emit elapsed-time heartbeats.
 The gray desktop activity summary shows the latest safe milestone in a short phrase, such as
-`Waiting for Terra / Max classification`, `Starting Luna / Max implementation`, or `Reviewing the
+`Waiting for Terra / Extra High classification`, `Starting Luna / Max implementation`, or `Reviewing the
 release candidate`. Its fallback is `Thinking`. Internal planning, taxonomy, request, relay,
 checkpoint, and acceptance details are never used as that label.
 Detailed implementer checkpoints and release results, supervisor decisions, and final reports all
@@ -79,7 +84,7 @@ routine release steps do not change the defining class. Ambiguity routes upward.
 flowchart TD
     U["Current query"] --> G["Root binary gate"]
     G -->|"Simple read-only"| A["Root answers directly"]
-    G -->|"Routed"| O["Terra / Max orchestrator classifies"]
+    G -->|"Routed"| O["Terra / Extra High orchestrator classifies"]
     O -->|"Three taxonomy lines; stop"| R["Root coordinates selected roles"]
     R -->|"Read-only"| RI["Terra / Max implementer answers"]
     R -->|"Artifact or code work"| I["Start selected implementer first"]
@@ -92,9 +97,9 @@ flowchart TD
     F --> R
 ```
 
-The three Terra / Max identities are roles, not model restrictions:
+The Terra identities are roles, not model restrictions:
 
-- `codex_orchestration_terra_orchestrator` classifies taxonomy only.
+- `codex_orchestration_terra_orchestrator` classifies taxonomy only at Extra High reasoning.
 - `codex_orchestration_terra_implementer` performs read-only work, design artifacts, and big tweaks.
 - `codex_orchestration_terra_supervisor` reviews artifacts and tweaks read-only.
 
@@ -104,13 +109,18 @@ The orchestrator classifies a new query as `NEW`, `AMEND`, `REPLACE`, or `CANCEL
 remains active unless the newest request explicitly replaces or cancels it. An interrupted turn
 stops execution, not the objective.
 
-Each initial child inherits only the current root turn. The hook separately passes a bounded
-completion capsule and recent conversation rather than replaying a large completed rollout or
-copying the current request into every handoff. A newer direct conversation marks an older capsule
-stale. Commands such as “do the next step” must resolve to an exact recent decision; repository
-plans cannot invent a missing
-referent. This supports multiple orchestration requests in one ongoing task without reloading an
-hour-long transcript.
+The classifier inherits only the current root turn and receives compact routing continuity. Task
+roles instead receive the path and revision of a private JSON bundle, then independently read the
+exact current request, attachment paths, amendments, resolved conversation, acceptance, and
+completion continuity. This keeps launch packets small without forcing root to summarize away user
+constraints or recopy a large request. A newer direct conversation marks an older capsule stale.
+Commands such as “do the next step” must resolve to an exact recent decision; repository plans
+cannot invent a missing referent. This supports multiple orchestration requests in one ongoing task
+without reloading an hour-long completed rollout into the classifier.
+
+When a user adds scope during unfinished work, the hook publishes a new bundle revision. Root sends
+that revision to the same running implementer and supervisor. The implementer pauses mutation while
+the supervisor revises acceptance. Explicit replacement or cancellation interrupts the old roles.
 
 The supervisor—not the orchestrator—defines concrete outcomes, destinations, proof, and open
 commitments during its context-only initial turn. The implementer may start the first checkpoint
@@ -156,7 +166,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.10.4, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.10.5, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -217,7 +227,10 @@ readable and moves deployment discovery into a supervised release plan, leaving 
 as bounded execution. Version `0.10.4` replaces the brittle fixed reasoning label with short live
 milestones and a `Thinking` fallback, inherits the current query once instead of regenerating it in
 every packet, emits both initial role launches together in implementer-first order, and minimizes
-later relays. The standard checkout workflow is:
+later relays. Version `0.10.5` moves the classifier to Terra / Extra High and gives task roles one
+private, versioned, exact context bundle. Initial role launches use small reference packets, and an
+interruption updates the same roles and acceptance rather than clipping or recopying the original
+request. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
@@ -237,13 +250,14 @@ Run the offline release suite with:
 sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
-The suite validates the manifest, syntax, exact model pins, chat controls, bounded continuity, the
+The suite validates the manifest, syntax, exact model pins, chat controls, exact private context
+bundles plus bounded classifier continuity, the
 classifier-only role boundary, implementer-before-supervisor startup, context-only overlap,
 model-led child names, dynamic class reasons and route labels, the six-class route, root-only
 experience verification, same-implementer corrections, fixtures, effectiveness tracking, and
 conflict-safe cleanup. It also requires safe current-milestone activity labels with a `Thinking`
-fallback, rejects internal planning labels, and verifies one-turn current-query inheritance plus
-the combined implementer-first launch. Release-protocol checks require an executable release plan,
+fallback, rejects internal planning labels, and verifies one-turn classifier inheritance, no-history
+task-role launches, amendment steering, plus the combined implementer-first launch. Release-protocol checks require an executable release plan,
 reject raw field dumps, and preserve readable Markdown across all implementation lanes.
 
 The offline classification fixture is

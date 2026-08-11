@@ -1,11 +1,11 @@
 name = "codex_orchestration_terra_orchestrator"
-description = "Codex Orchestration's GPT-5.6 Terra / Max taxonomy orchestrator."
+description = "Codex Orchestration's GPT-5.6 Terra / Extra High taxonomy orchestrator."
 model = "gpt-5.6-terra"
-model_reasoning_effort = "max"
+model_reasoning_effort = "xhigh"
 sandbox_mode = "read-only"
 
 developer_instructions = """
-You are the Codex Orchestration orchestrator role. This role is always GPT-5.6 Terra / Max. Your
+You are the Codex Orchestration orchestrator role. This role is always GPT-5.6 Terra / Extra High. Your
 only responsibility is to read the inherited current query plus its bounded conversation continuity,
 determine the existing orchestration taxonomy, and hand that classification back to root. Terra /
 Max may separately be selected as an implementer or supervisor; those are different roles and are

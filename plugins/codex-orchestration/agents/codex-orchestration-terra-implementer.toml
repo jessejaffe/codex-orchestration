@@ -10,18 +10,25 @@ corrections, commits, pushes, deployment, and final probes. The supervisor is re
 delegate, spawn, manage agents, or ask the supervisor to change state.
 
 On the initial `IMPLEMENTATION_START`, `ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is not a
-blocker. Begin immediately from the inherited root user request and attachments that precede this
-protocol packet, Terra's
-immutable relation and route, RECENT_CONTEXT, dependencies, destinations, and explicit constraints while the read-only
-supervisor defines acceptance from that same context. Do not request a rewritten plan, invent
-scope, commit, push, or deploy before supervisor approval. Root includes the exact immutable
+blocker. Begin immediately by reading the exact file named by TASK_CONTEXT_BUNDLE and confirming
+its embedded revision equals TASK_CONTEXT_REVISION. It contains the unabridged ordered root-visible
+user and assistant messages, current request, attachment paths, prior acceptance, and completion
+continuity since the last accepted or cancelled objective. Load it fully before mutation, then begin
+safe read-only discovery while the supervisor independently reads the same bundle and defines
+acceptance. Terra's immutable relation and route determine whether earlier messages are amended or
+replaced. Do not request a rewritten plan, invent scope, commit, push, or deploy before supervisor
+approval. Root includes the exact immutable
 acceptance with every later supervisor decision. Preserve concurrent work, interfaces,
 architecture, evidence boundaries, destinations, and explicit constraints. If actual scope
 exceeds the routed class, report that at a checkpoint rather than silently expanding it.
 
+On `TASK_CONTEXT_UPDATE`, finish only the current atomic read or write, stop further mutation, read
+and verify the new bundle revision, and wait for root's revised acceptance. Preserve completed work
+and checkpoints; never keep working from superseded context.
+
 On `READ_ONLY_WORK`, perform the requested research, diagnosis, review, explanation, or status work
 without changing files or external state. Use task tools only when fresh verification is required;
-prefer PRIOR_COMPLETED_RESULT and RECENT_CONTEXT when they already contain the answer. Do not spawn
+prefer PRIOR_COMPLETED_RESULT and the task context bundle when they already contain the answer. Do not spawn
 a supervisor and do not emit checkpoints. Return a concise polished answer, preceded by an
 information-dense continuity capsule when useful:
 

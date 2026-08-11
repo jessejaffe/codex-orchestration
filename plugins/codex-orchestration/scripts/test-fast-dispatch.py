@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.10.4 low-latency coordination."""
+"""Hermetic tests for chat-scoped activation and 0.10.5 context dispatch."""
 
 from __future__ import annotations
 
@@ -51,6 +51,13 @@ def context(result: dict[str, object]) -> str:
     return value if isinstance(value, str) else ""
 
 
+def context_field(value: str, name: str) -> str:
+    prefix = f"{name}: "
+    return next(
+        line.removeprefix(prefix) for line in value.splitlines() if line.startswith(prefix)
+    )
+
+
 def write_events(path: Path, events: list[dict[str, object]]) -> None:
     path.write_text(
         "".join(json.dumps(event, separators=(",", ":")) + "\n" for event in events),
@@ -84,15 +91,19 @@ def main() -> int:
         "binary fast-path gate",
         "DESKTOP ACTIVITY DISPLAY",
         "one plain 2-7 word current milestone",
-        "Waiting for Terra / Max\nclassification",
+        "Waiting for Terra / Extra High classification",
         "Starting Luna / Max implementation",
-        "If no concrete milestone is known, use exactly\n`Thinking`",
+        "show exactly `Thinking` and nothing else",
         "answer in root immediately",
         "Use no tools or agents",
-        "Starting Terra / Max classification now.",
-        "terra_max_orchestrator_<objective_slug>",
+        "Starting Terra / Extra High classification now.",
+        "terra_extra_high_orchestrator_<objective_slug>",
         "ORCHESTRATE_CLASSIFY",
         "fork_turns=1",
+        "fork_turns=none",
+        "TASK_CONTEXT_BUNDLE:",
+        "TASK_CONTEXT_REVISION:",
+        "USER_CONTEXT=EXACT_PRIVATE_BUNDLE",
         "USER_REQUEST=INHERITED_CURRENT_QUERY",
         "FAST RELAY",
         "same assistant\nresponse",
@@ -101,7 +112,7 @@ def main() -> int:
         "RECENT_CONTEXT: NONE",
         "WORKSPACE_DEPENDENCIES_REQUIRED: NO",
         "codex_app__load_workspace_dependencies",
-        "only after classification, resolve\nWORKSPACE_DEPENDENCIES",
+        "Only after classification, and before either an\nAMEND update or a fresh launch, resolve WORKSPACE_DEPENDENCIES",
         "codex_orchestration_terra_supervisor",
         "codex_orchestration_terra_orchestrator",
         "codex_orchestration_terra_implementer",
@@ -121,6 +132,9 @@ def main() -> int:
         "Emit both `spawn_agent` tool calls in one assistant response",
         "Do not wait for or process the implementer spawn output",
         "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+        "ACTIVE STEERING",
+        "AMENDMENT_REVIEW",
+        "PAUSE_FOR_REVISED_ACCEPTANCE",
         "ORCHESTRATION_STATUS: REASON=",
         "Require a nonempty exact `ORCHESTRATION_STATUS: REASON=` value",
         "This is a <friendly class> because <exact reason>.",
@@ -132,7 +146,7 @@ def main() -> int:
         "root-only Browser/visual tools",
         "cache-bypassed live/artifact check at the requested viewport",
         "ROOT_VERIFICATION_RESULT: START=<observed start>",
-        "every handoff to an idle child uses\n`followup_task`",
+        "every handoff to an idle child uses `followup_task`",
         "ARTIFACTS=<URL or path, viewport, screenshots",
         "broaden the check, or judge acceptance",
         "remove only the acceptance protocol prefix",
@@ -141,8 +155,23 @@ def main() -> int:
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
-    if routed_context.count("USER_REQUEST=INHERITED_CURRENT_QUERY") != 4:
-        raise AssertionError("initial role packets do not consistently inherit the current query")
+    if routed_context.count("USER_REQUEST=INHERITED_CURRENT_QUERY") != 1:
+        raise AssertionError("only the classifier should inherit the current query")
+    if routed_context.count("TASK_CONTEXT_BUNDLE=<exact value above>") != 3:
+        raise AssertionError("task-role packets do not consistently reference the context bundle")
+    bundle_path = Path(context_field(routed_context, "TASK_CONTEXT_BUNDLE"))
+    bundle_revision = context_field(routed_context, "TASK_CONTEXT_REVISION")
+    bundle_document = json.loads(bundle_path.read_text(encoding="utf-8"))
+    if bundle_document.get("revision") != bundle_revision:
+        raise AssertionError("published task-context revision does not match its packet")
+    if bundle_revision not in bundle_path.name:
+        raise AssertionError("task-context bundle path is not an immutable revision")
+    if bundle_document.get("messages") != [
+        {"content": "Fix the existing label", "current": True, "role": "user"}
+    ]:
+        raise AssertionError(f"current request bundle is not exact: {bundle_document!r}")
+    if bundle_path.stat().st_mode & 0o077:
+        raise AssertionError("task-context bundle is not private")
     for obsolete in ("headless-grader.py", "--request-token", "grader-requests"):
         if obsolete in routed_context:
             raise AssertionError(f"dispatch retains obsolete headless path: {obsolete!r}")
@@ -250,7 +279,7 @@ def main() -> int:
     inherited = invoke(hook, state, active_id, "Also support JSON", transcript)
     inherited_context = context(inherited)
     for value in (
-        "FORK=`1`",
+        "CLASSIFIER_FORK=`1`",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         acceptance,
         "PRIOR_COMPLETED_RESULT: NONE",
@@ -265,14 +294,74 @@ def main() -> int:
             "__PRIOR_COMPLETED_RESULT__",
             "__RECENT_CONTEXT_FRESHNESS__",
             "__RECENT_CONTEXT__",
+            "__TASK_CONTEXT_BUNDLE__",
+            "__TASK_CONTEXT_REVISION__",
             "__WORKSPACE_DEPENDENCIES_REQUIRED__",
             "__ORCHESTRATOR_PROFILE_PATH__",
             "__AGENTS_DIR__",
         )
     ):
         raise AssertionError("dispatch placeholders leaked")
+    inherited_bundle = json.loads(
+        Path(context_field(inherited_context, "TASK_CONTEXT_BUNDLE")).read_text(
+            encoding="utf-8"
+        )
+    )
+    if [item["content"] for item in inherited_bundle["messages"]] != [
+        "Build CSV export",
+        "Also support JSON",
+    ]:
+        raise AssertionError("active task bundle lost exact original or amendment context")
+    if inherited_bundle.get("prior_active_acceptance") != acceptance:
+        raise AssertionError("active task bundle lost prior acceptance")
     if (state / "grader-requests").exists():
         raise AssertionError("inherited dispatch staged obsolete recent context")
+
+    early_interruption = temporary / "early-interruption.jsonl"
+    exact_original = (
+        "Build the recovery workflow from /Users/example/Downloads/input.zip. "
+        + ("original detail " * 260)
+        + "MUST_KEEP_THIS_MIDDLE_CONSTRAINT "
+        + ("more detail " * 260)
+    )
+    exact_add_on = "Also preserve both JPEG and PNG outputs."
+    write_events(
+        early_interruption,
+        [
+            {"type": "session_meta", "payload": {}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": exact_original}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": "Starting the task."}],
+                },
+            },
+        ],
+    )
+    interruption_context = context(
+        invoke(hook, state, active_id, exact_add_on, early_interruption)
+    )
+    interruption_bundle = json.loads(
+        Path(context_field(interruption_context, "TASK_CONTEXT_BUNDLE")).read_text(
+            encoding="utf-8"
+        )
+    )
+    exact_contents = [item["content"] for item in interruption_bundle["messages"]]
+    if exact_contents != [exact_original.strip(), "Starting the task.", exact_add_on]:
+        raise AssertionError("early interruption did not preserve the unabridged original request")
+    if "MUST_KEEP_THIS_MIDDLE_CONSTRAINT" not in exact_contents[0]:
+        raise AssertionError("middle constraints were clipped from the private task bundle")
+    if interruption_bundle["messages"][-1].get("current") is not True:
+        raise AssertionError("task bundle does not mark the current amendment")
 
     accepted_transcript = temporary / "accepted.jsonl"
     handoff = (
@@ -315,7 +404,7 @@ def main() -> int:
     accepted_context = context(accepted)
     if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in accepted_context:
         raise AssertionError("accepted objective was not cleared")
-    if "FORK=`1`" not in accepted_context:
+    if "CLASSIFIER_FORK=`1`" not in accepted_context:
         raise AssertionError("current query did not use one-turn inheritance with its capsule")
     if f"PRIOR_COMPLETED_RESULT: {handoff}" not in accepted_context:
         raise AssertionError("completion handoff was not passed to the next Terra")
@@ -349,7 +438,7 @@ def main() -> int:
         ],
     )
     legacy = context(invoke(hook, state, active_id, "Summarize that", legacy_transcript))
-    if "FORK=`1`" not in legacy:
+    if "CLASSIFIER_FORK=`1`" not in legacy:
         raise AssertionError("legacy follow-up did not use one-turn inheritance")
     if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
         raise AssertionError("legacy completion did not fall back to its accepted result")
@@ -425,7 +514,7 @@ def main() -> int:
         invoke(hook, state, active_id, current_request, stale_context_transcript)
     )
     for value in (
-        "FORK=`1`",
+        "CLASSIFIER_FORK=`1`",
         "RECENT_CONTEXT_FRESHNESS: STALE",
         agreed_scope,
         f"PRIOR_COMPLETED_RESULT: {stale_capsule}",
@@ -568,9 +657,14 @@ def main() -> int:
         line for line in oversized.splitlines() if line.startswith("PRIOR_COMPLETED_RESULT: ")
     )
     completed_value = completed_line.removeprefix("PRIOR_COMPLETED_RESULT: ")
-    if completed_value != oversized_handoff[:4_096]:
-        raise AssertionError("completion handoff was not bounded to exactly 4,096 characters")
-    if len(oversized) > 14_500:
+    if completed_value != oversized_handoff[:2_048]:
+        raise AssertionError("classifier completion handoff was not bounded to 2,048 characters")
+    oversized_bundle = json.loads(
+        Path(context_field(oversized, "TASK_CONTEXT_BUNDLE")).read_text(encoding="utf-8")
+    )
+    if oversized_bundle.get("prior_completed_result") != oversized_handoff:
+        raise AssertionError("task roles did not retain the exact unabridged completion handoff")
+    if len(oversized) > 14_750:
         raise AssertionError(f"bounded completion dispatch exceeds latency budget: {len(oversized)}")
 
     subagent_transcript = temporary / "subagent.jsonl"
