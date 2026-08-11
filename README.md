@@ -1,14 +1,14 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps implementation separate from read-only
-review. Version `0.8.7` fuses routing, read-only work, and tweak supervision into one Terra / Max
+review. Version `0.8.8` fuses routing, read-only work, and tweak supervision into one Terra / Max
 role. This preserves the standard service tier and avoids starting a second Terra / Max role on the
 common paths.
 
 The five work classes are `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 Complexity may still be estimated for telemetry, but it never selects a model.
 
-## How 0.8.7 works
+## How 0.8.8 works
 
 1. The stable chat-scoped hook gives root the current request, the latest unfinished acceptance
    contract, and a fixed routing protocol.
@@ -26,11 +26,13 @@ Complexity may still be estimated for telemetry, but it never selects a model.
 7. After release, the same supervisor performs final review. Root relays decisions and appends route
    metadata, but never implements or judges the work.
 
-The parent reports meaningful milestones only: classification start, the combined implementation
-and supervisor-ready state, a requested correction, release readiness, a blocker, and completion.
-Routine agent waits, checkpoint transitions, protocol repairs, and final-review mechanics stay
-silent. Agent waits are bounded to 45 seconds. A host-required heartbeat after a long quiet interval
-names only the actual user outcome.
+The parent reports meaningful milestones only: classification start; the work class with the
+combined implementation and supervisor-ready state; each supervisor `CONTINUE`, `CORRECT`, or
+`READY_TO_RELEASE` decision; a blocker; and completion. Routine waiting, protocol repair, and final
+review stay silent. As in the final cache-busted 0.8.0 release, the parent waits until an agent
+update instead of polling every 45 seconds. The wait returns immediately when an update arrives;
+its timeout is only a safety ceiling, so elapsed time never creates a progress message. Desktop
+activity headings name the user's concrete outcome rather than role-selection or relay mechanics.
 
 The old headless shell process and one-use request-token bridge are retired in 0.8.7. That bridge was
 the cause of the 0.8.6 failure mode: a long-running classifier returned a live process handle that
@@ -113,10 +115,10 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.7, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.8.8, Orchestration can be activated on the next prompt inside an ongoing task.
 For each lane, the router uses the current custom profile when the task exposes it. Otherwise it
 goes directly to Codex's built-in `default` or `worker` identity with the model, reasoning effort,
-and complete 0.8.7 role rules set explicitly. It never tries an unavailable or legacy identity.
+and complete 0.8.8 role rules set explicitly. It never tries an unavailable or legacy identity.
 
 The fused classifier is pinned to GPT-5.6 Terra with Max reasoning and the normal service tier. It
 does not opt into Fast mode, so routing does not consume Fast-mode credits. Six companion profiles
@@ -174,11 +176,11 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin
 
 The project uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.6` to `0.8.7`) contain compatible fixes and refinements.
+- Patch releases (`0.8.7` to `0.8.8`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.7` is a normal patch release. The standard checkout workflow is:
+Version `0.8.8` is a normal patch release. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh

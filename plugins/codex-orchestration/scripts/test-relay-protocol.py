@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.7 fused Terra routing and supervision."""
+"""Static contract tests for 0.8.8 fused Terra routing and supervision."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.7":
-        raise AssertionError(f"manifest does not use traditional 0.8.7: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.8":
+        raise AssertionError(f"manifest does not use traditional 0.8.8: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -60,22 +60,24 @@ def main() -> int:
         router,
         (
             "FIRST ACTION",
-            "current-activity description focused on the user's concrete outcome",
+            "DESKTOP ACTIVITY",
+            "500-photo PDF",
             "Starting Terra / Max classification now.",
             "common-path fused role",
             "CLASSIFY_INIT",
             "ROUTE_REPAIR",
             "READ_ONLY_EXECUTE",
             "start another Terra worker or supervisor.",
-            "description must explicitly say `fused`",
-            "Implementation started with <implementer model>.",
+            "SPAWN MAP",
+            "fused-router description must say `fused`",
+            "This is a <class label>. Implementation started with <implementer model>.",
             "supervisor is",
             "ready.`",
             "same implementer",
-            "normal agent waits are at most 45 seconds",
-            "Poll routine waits",
+            "timeout_ms: 3600000",
+            "Never short-poll, send elapsed-time heartbeats",
+            "Supervisor approved <phase>",
             "Ready to release.",
-            "Still working on <actual user outcome>.",
         ),
         "root relay contract",
     )
@@ -84,14 +86,17 @@ def main() -> int:
         "Supervisor ready and staying read-only",
         "On timeout report active phase",
         "Complexity telemetry:",
+        "normal agent waits are at most 45 seconds",
+        "timeout_ms: 45000",
+        "Still working on <actual user outcome>.",
     ):
         if noisy in router:
             raise AssertionError(f"router retains noisy parent copy: {noisy!r}")
     for obsolete in ("headless-grader.py", "--request-token", "grader-requests"):
         if obsolete in router:
             raise AssertionError(f"router retains obsolete headless path: {obsolete!r}")
-    if "Never try an unavailable/" not in router:
-        raise AssertionError("router does not guard unavailable task-catalog identities")
+    if "Never reconsider or narrate this lookup." not in router:
+        raise AssertionError("router does not keep spawn-map lookup silent and stable")
     for legacy_identity in ("terra_executive", "sol_high_executive", "sol_xhigh_executive"):
         if legacy_identity in router:
             raise AssertionError(f"router retains legacy identity {legacy_identity!r}")
@@ -182,7 +187,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.7 fused Terra routing, six companion profiles, and milestone-only progress")
+    print("PASS: 0.8.8 fused Terra routing, event-driven waits, and milestone-only progress")
     return 0
 
 

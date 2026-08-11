@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.7 fused dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.8.8 fused dispatch."""
 
 from __future__ import annotations
 
@@ -81,22 +81,25 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "FIRST ACTION",
-        "current-activity description focused on the user's concrete outcome",
+        "DESKTOP ACTIVITY",
+        "500-photo PDF",
         "Starting Terra / Max classification now.",
         "common-path fused role",
         "CLASSIFY_INIT",
         "ROUTE_REPAIR",
         "READ_ONLY_EXECUTE",
         "start another Terra worker or supervisor.",
-        "TASK CATALOG",
-        "description must explicitly say `fused`",
-        "Fallback messages include the full role",
-        "Implementation started with <implementer model>. The <supervisor model> supervisor is ready.",
+        "SPAWN MAP",
+        "silently apply once per role",
+        "fused-router description must say `fused`",
+        "Fallback messages include the full role rules",
+        "CLASS LABELS",
+        "This is a <class label>. Implementation started with <implementer model>.",
         "same implementer",
-        "normal agent waits are at most 45 seconds",
-        "Poll routine waits, checkpoint review,\ncontinuation, protocol repair, and final review silently.",
+        "timeout_ms: 3600000",
+        "Never short-poll, send elapsed-time heartbeats",
+        "Supervisor approved <phase>.\nImplementation continues.",
         "Ready to release.",
-        "Still working on <actual user outcome>.",
     )
     for value in required:
         if value not in routed_context:
@@ -109,6 +112,9 @@ def main() -> int:
         "Supervisor ready and staying read-only",
         "On timeout report active phase",
         "Complexity telemetry:",
+        "normal agent waits are at most 45 seconds",
+        "timeout_ms: 45000",
+        "Still working on <actual user outcome>.",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
@@ -240,7 +246,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded acceptance, and 0.8.7 fused dispatch")
+    print("PASS: chat controls, bounded acceptance, and 0.8.8 event-driven dispatch")
     return 0
 
 

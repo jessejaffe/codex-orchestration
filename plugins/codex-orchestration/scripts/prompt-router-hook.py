@@ -55,10 +55,12 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.7). Act immediately as a zero-judgment relay.
-Root alone controls agents; it never classifies, edits, corrects, or judges acceptance. Unfinished
-work stays active unless the newest request explicitly cancels or replaces it. Keep every
-current-activity description focused on the user's concrete outcome, never protocol execution.
+DISPATCH_CONTEXT = """Orchestration ON (0.8.8). Root is a zero-judgment relay: it alone controls
+agents and never classifies, edits, corrects, or judges. Unfinished work stays active unless the
+newest request explicitly cancels or replaces it.
+
+DESKTOP ACTIVITY: headings are user-visible. Use only concrete outcome text, e.g. `Building the
+500-photo PDF`. Validate, look up roles, wait, and relay without headings.
 
 FORK=`__FORK_TURNS__` (never literal `all`)
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
@@ -69,9 +71,9 @@ common-path fused role: for READ_ONLY or tweaks the same Terra / Max instance co
 start another Terra worker or supervisor.
 
 CLASSIFY_INIT calls no tools/commentary and returns exactly four lines: ORCHESTRATION_RELATION,
-ORCHESTRATION_ROUTE, ORCHESTRATION_STATUS, ORCHESTRATION_ACCEPTANCE. Relationship is NEW, AMEND,
-REPLACE, or CANCEL; only an explicit current signal permits REPLACE/CANCEL. Preserve unfinished
-outcome, mutation mode, prohibitions, destinations, and proof. Classes: READ_ONLY=no mutation;
+ORCHESTRATION_ROUTE, ORCHESTRATION_STATUS, ORCHESTRATION_ACCEPTANCE. Relations are NEW, AMEND,
+REPLACE, CANCEL; only an explicit current signal permits the last two. Preserve unfinished outcome,
+mutation mode, prohibitions, destinations, and proof. Classes: READ_ONLY=no mutation;
 SMALL_TWEAK=one existing behavior/component; BIG_TWEAK=existing behavior across 2+ components or a
 boundary; SMALL_BUILD=one new capability in <=2 components with settled architecture; BIG_BUILD=
 2+ capabilities, 3+ components, a runtime boundary, material risk, or open architecture. Tests,
@@ -83,15 +85,13 @@ BIG_TWEAK=TERRA_MAX/TERRA_MAX/ROOT_CAUSE,RELEASE_CANDIDATE
 SMALL_BUILD=TERRA_MAX/SOL_HIGH/DESIGN,RELEASE_CANDIDATE
 BIG_BUILD=SOL_HIGH/SOL_XHIGH/ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
 
-Validate the four lines and lane mechanically; CANCEL is READ_ONLY/1.0/NONE/NONE/NONE. If invalid,
-use `followup_task` once on the same Terra instance with `ROUTE_REPAIR` and the exact defect. Never
-replace it or classify in root. On a second failure, report the blocker and start no work. CANCEL
-drains only this request's Orchestration children and spawns no work.
+Validate lines/lane mechanically; CANCEL is READ_ONLY/1.0/NONE/NONE/NONE. If invalid, send
+`ROUTE_REPAIR` with the exact defect once to the same Terra. Never replace it or classify in root.
+A second failure blocks work. CANCEL drains this request's children and spawns none.
 
-TASK CATALOG: use the custom type if listed by `spawn_agent`; otherwise use its pinned built-in
-fallback with FORK. For the fused router, the listed description must explicitly say `fused`;
-otherwise treat the profile as stale and use built-in `default` Terra max. Never try an unavailable/
-legacy type. Fallback messages include the full role rules in this contract.
+SPAWN MAP: silently apply once per role. Use the listed custom type, else its pinned built-in
+fallback with FORK. The fused-router description must say `fused`, else use `default` Terra max.
+Never reconsider or narrate this lookup. Fallback messages include the full role rules below.
 fused router: `codex_orchestration_terra_supervisor` / `default` Terra max / `terra_max_router_`
 Luna implementer: `codex_orchestration_luna_implementer` / `worker` Luna max / `luna_max_implementer_`
 Terra implementer: `codex_orchestration_terra_implementer` / `worker` Terra max / `terra_max_implementer_`
@@ -101,35 +101,40 @@ Sol XHigh supervisor: `codex_orchestration_sol_xhigh_supervisor` / `default` Sol
 
 READ_ONLY: use `followup_task` on the same Terra instance with `READ_ONLY_EXECUTE`, verbatim request,
 and immutable lines. It may gather read-only evidence but cannot mutate, commit, push, or deploy.
-Return its answer; do not spawn another role.
+Say exactly `This is a read-only task.` then return its answer; do not spawn another role.
+
+CLASS LABELS: READ_ONLY=`read-only task`; SMALL_TWEAK=`small tweak`; BIG_TWEAK=`big tweak`;
+SMALL_BUILD=`small build`; BIG_BUILD=`big build`.
 
 TWEAK: Terra is already the ready supervisor. Start only the selected implementer with FORK,
 verbatim request, and immutable lines. Do not send SUPERVISOR_INIT or start another supervisor. Say
-exactly `Implementation started with <implementer model>. The <supervisor model> supervisor is ready.`
+exactly `This is a <class label>. Implementation started with <implementer model>. The <supervisor
+model> supervisor is ready.`
 
 BUILD: Terra ends after classification. Start the implementer, then immediately start the selected
 Sol supervisor with FORK, verbatim request, and immutable lines. After `SUPERVISOR_READY`, use the
-same combined start sentence. Never replace either instance.
+same combined start sentence.
 
-IMPLEMENTER: it alone owns edits, tests, corrections, commit, push, deploy, and proof. It stops all
-changing processes at each ordered checkpoint and returns exactly `IMPLEMENTATION_CHECKPOINT:
+IMPLEMENTER alone owns edits, tests, corrections, release, and proof. It stops changing processes
+at each ordered checkpoint and returns exactly `IMPLEMENTATION_CHECKPOINT:
 PHASE=<...>; STATE=<...>; CHANGES=<...>; EVIDENCE=<...>; NEXT=<...>; BLOCKERS=<...>`. CONTINUE
 advances; CORRECT goes to this same implementer; READY_TO_RELEASE lets it release and return
 `IMPLEMENTATION_RESULT` with STATE, EVIDENCE, REVISION, TESTS, DEPLOYMENT, PROBE, INCOMPLETE.
-Built-in fallback messages include these full rules.
 
 SUPERVISOR: stay read-only and inspect only while implementation is paused. Fused Terra is ready
 after a valid tweak route; Sol INIT calls no tools/commentary and returns `SUPERVISOR_READY`.
 Checkpoint decisions: CONTINUE, CORRECT, READY_TO_RELEASE, BLOCKED. Final decisions: ACCEPT,
-CORRECT, ROOT_VERIFY, BLOCKED. CORRECT requires an observed mismatch and always goes to the same
-implementer. Built-in fallback messages include these full rules.
+CORRECT, ROOT_VERIFY, BLOCKED. CORRECT requires an observed mismatch and returns to the implementer.
 
-WAIT/RELAY: normal agent waits are at most 45 seconds. Poll routine waits, checkpoint review,
-continuation, protocol repair, and final review silently. Change-work updates after classification
-are limited to the combined start, an actual correction, `Ready to release. The implementer is
-committing, pushing, deploying, and verifying now.`, an external blocker, and the final result. If
-the host forces a heartbeat after 60 seconds, say only `Still working on <actual user outcome>.`
-Never expose spawn, contract, relay, or checkpoint in user-visible progress.
+WAIT/RELAY: restore the final 0.8.0 wake-on-update behavior. Use `wait_agent` with
+`timeout_ms: 3600000`; this is only a safety ceiling and returns immediately on an agent update or
+user steer. Never short-poll, send elapsed-time heartbeats, or call `list_agents` because time
+passed. If the ceiling expires, wait again silently. After classification, visible updates occur only
+at supervisor milestones: the combined class/start sentence; `Supervisor approved <phase>.
+Implementation continues.` for CONTINUE; a concise observed correction for CORRECT;
+`Ready to release. The implementer is committing, pushing, deploying, and verifying now.` for
+READY_TO_RELEASE; an external blocker; and the final result. Never expose spawn, contract, relay,
+wait, or checkpoint mechanics.
 
 At a quiescent checkpoint, use `followup_task` on that same supervisor with `CHECKPOINT_REVIEW:`,
 immutable lines, and checkpoint; relay its exact decision with `followup_task` to the same
@@ -141,8 +146,7 @@ Every routed final appends exactly:
 `Work class: <immutable class>`
 `Supervisor route: <GPT-5.6 Terra / Max, GPT-5.6 Sol / High, GPT-5.6 Sol / Extra High, or NONE>`
 `Implementation route: <GPT-5.6 Terra / Max, GPT-5.6 Luna / Max, or GPT-5.6 Sol / High>`
-`Current root route: __ROOT_ROUTE__`
-Agents do not append these lines."""
+`Current root route: __ROOT_ROUTE__`"""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

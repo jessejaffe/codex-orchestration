@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verify the Codex Orchestration 0.8.7 release without network access.
+# Verify the Codex Orchestration 0.8.8 release without network access.
 
 set -eu
 
@@ -18,10 +18,10 @@ done
 
 jq -e . "$manifest" >/dev/null || fail 'plugin manifest is invalid JSON'
 [ "$(jq -r .name "$manifest")" = codex-orchestration ] || fail 'wrong plugin name'
-[ "$(jq -r .version "$manifest")" = 0.8.7 ] || fail 'manifest version must be exactly 0.8.7'
+[ "$(jq -r .version "$manifest")" = 0.8.8 ] || fail 'manifest version must be exactly 0.8.8'
 printf '%s\n' "$(jq -r .version "$manifest")" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' ||
   fail 'manifest must use traditional semantic versioning without a cachebuster'
-pass 'manifest uses traditional version 0.8.7'
+pass 'manifest uses traditional version 0.8.8'
 
 for shell_script in "$script_dir"/*.sh; do
   sh -n "$shell_script" || fail "invalid shell syntax: $shell_script"
@@ -100,8 +100,8 @@ fi
   fail 'customized retired role changed during rejected migration'
 pass 'conflict-safe six-profile installer behavior'
 
-grep -Fq "requires the traditional release version 0.8.7" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller does not enforce 0.8.7'
+grep -Fq "requires the traditional release version 0.8.8" "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller does not enforce 0.8.8'
 for role in luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
@@ -121,18 +121,18 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'fuses routing' \
     'same implementer' \
     'ongoing task' \
-    '45 seconds' \
+    'waits until an agent' \
     'six companion profiles' \
     'standard service tier' \
-    '0.8.7'; do
+    '0.8.8'; do
     grep -Fq "$value" "$repo_readme" || fail "README omits $value"
   done
   if grep -Eq '0\.8\.0\+codex|cachebuster version|seven implementation lanes|numeric routing' "$repo_readme"; then
     fail 'README still teaches the old version or routing scheme'
   fi
-  pass '0.8.7 documentation'
+  pass '0.8.8 documentation'
 else
   pass 'repository documentation is intentionally outside the installed plugin package'
 fi
 
-pass 'Codex Orchestration 0.8.7 release verification complete'
+pass 'Codex Orchestration 0.8.8 release verification complete'
