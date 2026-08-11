@@ -42,6 +42,9 @@ INLINE_CONTROL_BOUNDARY = re.compile(r"(?:\band|\bthen|[,;:–—-])\s*$")
 MAX_FORK_TURNS = 64
 MAX_PRIOR_ACCEPTANCE_CHARS = 4_096
 MAX_PRIOR_COMPLETED_CHARS = 4_096
+MAX_RECENT_CONTEXT_CHARS = 6_144
+MAX_RECENT_MESSAGE_CHARS = 1_536
+MAX_RECENT_MESSAGES = 8
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -56,21 +59,35 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.16). Root is only a transparent parent relay. It never
-classifies, constructs role contracts, implements, supervises, or judges work.
+DISPATCH_CONTEXT = """Orchestration ON (0.8.17). Root performs only the binary fast-path gate below;
+it never constructs role contracts, implements, supervises, or judges change work.
 
 FORK=`__FORK_TURNS__` (never literal `all`)
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
 PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__
+RECENT_CONTEXT_FRESHNESS: __RECENT_CONTEXT_FRESHNESS__
+RECENT_CONTEXT: __RECENT_CONTEXT__
 CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 
-FIRST ACTION — say exactly `Starting Terra / Max classification now.`, then immediately start one
-fused Terra orchestrator named `terra_orchestrator_<objective_slug>` with FORK and this exact packet:
+DIRECT READ-ONLY FAST PATH — answer in root immediately only when all are true: there is no active
+acceptance; the request asks only for an explanation, summary, status, rationale, brief
+brainstorming or planning, or another non-mutating answer; it requests no fresh verification,
+repository inspection, browsing, audit, or substantial new research; and root can answer from the
+current conversation, stable general knowledge, PRIOR_COMPLETED_RESULT, or RECENT_CONTEXT. On this
+path use no tools or agents, do not say `Starting Terra / Max classification now.`, and do not expose
+routing metadata. Answer the user's actual question naturally. A question such as why prior work
+missed the agreed scope is eligible when the reason is already in the conversation. When uncertain,
+use Terra.
+
+Otherwise, say exactly `Starting Terra / Max classification now.`, then immediately start one fused
+Terra orchestrator named `terra_orchestrator_<objective_slug>` with FORK and this exact packet:
 ORCHESTRATE_INIT
 PARENT_TASK=/root
 FORK=<FORK above>
 PRIOR_ACTIVE_ACCEPTANCE=<exact value above>
 PRIOR_COMPLETED_RESULT=<exact value above>
+RECENT_CONTEXT_FRESHNESS=<exact value above>
+RECENT_CONTEXT=<exact value above>
 CURRENT_ROOT_ROUTE=<exact value above>
 USER_REQUEST=<verbatim current request and attachment paths>
 
@@ -103,9 +120,10 @@ Handle child messages mechanically, with no analysis or reasoning heading:
 - Any other final payload is a protocol error; report it exactly and do no work yourself.
 
 Never describe agent roles, contracts, workflow context, routing mechanics, waits, or relay logic.
-Root's only visible messages are classification start, exact orchestrator milestone updates, an
-external blocker, and the exact final result. Root never reviews code or judges acceptance; it only
-records direct experience observations when the orchestrator sends ORCHESTRATION_ROOT_VERIFY."""
+Outside the direct read-only fast path, root's only visible messages are classification start, exact
+orchestrator milestone updates, an external blocker, and the exact final result. Root never reviews
+code or judges acceptance; it only records direct experience observations when the orchestrator
+sends ORCHESTRATION_ROOT_VERIFY."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:
@@ -128,23 +146,62 @@ def agent_message_text(event: dict[str, Any]) -> str:
     return "\n".join(values)
 
 
+def conversation_message(event: dict[str, Any]) -> tuple[str, str] | None:
+    """Return a root user/assistant conversation message, excluding injected wrappers."""
+    if event.get("type") != "response_item":
+        return None
+    payload = event.get("payload") or {}
+    if payload.get("type") != "message" or payload.get("role") not in {"user", "assistant"}:
+        return None
+    content = payload.get("content")
+    if not isinstance(content, list):
+        return None
+    values: list[str] = []
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        value = item.get("text")
+        if isinstance(value, str):
+            values.append(value)
+    message = "\n".join(values).strip()
+    if not message or message.startswith("<environment_context>"):
+        return None
+    return str(payload["role"]), message
+
+
 def bounded_single_line(value: str, limit: int) -> str:
     """Collapse trusted continuity text to one bounded packet line."""
     return " ".join(value.split())[:limit]
 
 
-def transcript_context(transcript_value: Any) -> tuple[str, str, str, str]:
-    """Return bounded fork, route, active acceptance, and completed-result capsule."""
+def bounded_recent_context(messages: list[tuple[str, str]]) -> str:
+    """Keep the newest bounded conversation messages within the packet budget."""
+    fragments = [
+        f"{role.upper()}: {bounded_single_line(message, MAX_RECENT_MESSAGE_CHARS)}"
+        for role, message in messages[-MAX_RECENT_MESSAGES:]
+    ]
+    while fragments and len(" || ".join(fragments)) > MAX_RECENT_CONTEXT_CHARS:
+        fragments.pop(0)
+    return " || ".join(fragments) or "NONE"
+
+
+def transcript_context(
+    transcript_value: Any, current_prompt: str
+) -> tuple[str, str, str, str, str, str]:
+    """Return bounded routing state plus newer root-conversation context."""
     if not isinstance(transcript_value, str):
-        return "none", "unavailable", "NONE", "NONE"
+        return "none", "unavailable", "NONE", "NONE", "NONE", "NONE"
     transcript = Path(transcript_value)
     if not transcript.is_file() or transcript.is_symlink():
-        return "none", "unavailable", "NONE", "NONE"
+        return "none", "unavailable", "NONE", "NONE", "NONE", "NONE"
     contexts = starts = 0
     root_route = "unavailable"
     prior_acceptance: str | None = None
     prior_completed: str | None = None
     completion_handoffs: dict[str, str] = {}
+    conversation_tail: list[tuple[str, str]] = []
+    post_completion_tail: list[tuple[str, str]] = []
+    has_completion = False
     try:
         with transcript.open(encoding="utf-8", errors="replace") as handle:
             for line in handle:
@@ -165,6 +222,13 @@ def transcript_context(transcript_value: Any) -> tuple[str, str, str, str]:
                 payload = event.get("payload") or {}
                 if event.get("type") == "event_msg" and payload.get("type") == "task_started":
                     starts += 1
+                conversation = conversation_message(event)
+                if conversation is not None:
+                    conversation_tail.append(conversation)
+                    conversation_tail = conversation_tail[-MAX_RECENT_MESSAGES:]
+                    if has_completion:
+                        post_completion_tail.append(conversation)
+                        post_completion_tail = post_completion_tail[-MAX_RECENT_MESSAGES:]
                 message = agent_message_text(event)
                 metadata = (event.get("payload") or {}).get(
                     "internal_chat_message_metadata_passthrough"
@@ -205,10 +269,25 @@ def transcript_context(transcript_value: Any) -> tuple[str, str, str, str]:
                         prior_completed = completion_handoffs.get(
                             completion_scope
                         ) or bounded_single_line(accepted_result, MAX_PRIOR_COMPLETED_CHARS)
+                        has_completion = True
+                        post_completion_tail = []
                 if cancelled:
                     prior_acceptance = None
     except OSError:
-        return "none", "unavailable", "NONE", "NONE"
+        return "none", "unavailable", "NONE", "NONE", "NONE", "NONE"
+    selected_tail = post_completion_tail if prior_completed else conversation_tail
+    normalized_prompt = bounded_single_line(current_prompt, MAX_RECENT_CONTEXT_CHARS)
+    if (
+        selected_tail
+        and selected_tail[-1][0] == "user"
+        and bounded_single_line(selected_tail[-1][1], MAX_RECENT_CONTEXT_CHARS)
+        == normalized_prompt
+    ):
+        selected_tail = selected_tail[:-1]
+    freshness = "NONE"
+    if prior_completed:
+        freshness = "STALE" if any(role == "user" for role, _ in selected_tail) else "FRESH"
+    recent_context = bounded_recent_context(selected_tail)
     task_turns = max(contexts, starts)
     if prior_acceptance is None and prior_completed:
         # A completed task is represented by its high-signal capsule. Do not make the
@@ -221,6 +300,8 @@ def transcript_context(transcript_value: Any) -> tuple[str, str, str, str]:
         root_route,
         prior_acceptance or "NONE",
         prior_completed or "NONE",
+        freshness,
+        recent_context,
     )
 
 
@@ -371,14 +452,23 @@ def main() -> int:
         if activation
         else ""
     )
-    fork_turns, root_route, prior_acceptance, prior_completed = transcript_context(
-        hook_input.get("transcript_path")
+    (
+        fork_turns,
+        root_route,
+        prior_acceptance,
+        prior_completed,
+        recent_freshness,
+        recent_context,
+    ) = transcript_context(
+        hook_input.get("transcript_path"), prompt
     )
     context = DISPATCH_CONTEXT.replace("__FORK_TURNS__", fork_turns).replace(
         "__ROOT_ROUTE__", root_route
     )
     context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
     context = context.replace("__PRIOR_COMPLETED_RESULT__", prior_completed)
+    context = context.replace("__RECENT_CONTEXT_FRESHNESS__", recent_freshness)
+    context = context.replace("__RECENT_CONTEXT__", recent_context)
     codex_home = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
     fused_profile = codex_home / "agents" / "codex-orchestration-terra-supervisor.toml"
     context = context.replace("__FUSED_PROFILE_PATH__", str(fused_profile))

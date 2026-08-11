@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.16 readable supervisor decisions."""
+"""Static contract tests for 0.8.17 fast read-only and scope-safe routing."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.16":
-        raise AssertionError(f"manifest does not use traditional 0.8.16: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.17":
+        raise AssertionError(f"manifest does not use traditional 0.8.17: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -59,13 +59,19 @@ def main() -> int:
     require(
         router,
         (
-            "FIRST ACTION",
-            "transparent parent relay",
+            "DIRECT READ-ONLY FAST PATH",
+            "binary fast-path gate",
+            "answer in root immediately",
+            "use no tools or agents",
+            "brief\nbrainstorming or planning",
+            "stable general knowledge",
             "Starting Terra / Max classification now.",
             "terra_orchestrator_<objective_slug>",
             "ORCHESTRATE_INIT",
             "PARENT_TASK=/root",
             "PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__",
+            "RECENT_CONTEXT_FRESHNESS: __RECENT_CONTEXT_FRESHNESS__",
+            "RECENT_CONTEXT: __RECENT_CONTEXT__",
             "codex_orchestration_terra_supervisor",
             "Start no implementer or supervisor in root",
             "timeout_ms: 3600000",
@@ -85,9 +91,13 @@ def main() -> int:
             "Preserve all Markdown, line breaks, links",
             "without summarizing, truncating, adding, or reformatting anything",
             "MAX_PRIOR_COMPLETED_CHARS = 4_096",
+            "MAX_RECENT_CONTEXT_CHARS = 6_144",
+            "MAX_RECENT_MESSAGE_CHARS = 1_536",
             "def bounded_single_line",
+            "def bounded_recent_context",
             "if prior_acceptance is None and prior_completed",
-            "Do not make the\n        # next Terra reread a potentially hour-long parent rollout",
+            "def conversation_message",
+            'freshness = "STALE" if any(role == "user" for role, _ in selected_tail) else "FRESH"',
         ),
         "root relay contract",
     )
@@ -126,7 +136,11 @@ def main() -> int:
             "ORCHESTRATE_INIT",
             "PARENT_TASK",
             "PRIOR_COMPLETED_RESULT",
-            "bounded, authoritative continuity capsule",
+            "bounded continuity capsule",
+            "RECENT_CONTEXT_FRESHNESS",
+            "newer RECENT_CONTEXT is\nauthoritative over conflicting or incomplete capsule fields",
+            "do the next step",
+            "Never infer their meaning from repository plans",
             "READ_ONLY: TERRA_MAX / NONE / NONE",
             "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
             "BIG_TWEAK: TERRA_MAX / TERRA_MAX / ROOT_CAUSE,RELEASE_CANDIDATE",
@@ -134,6 +148,9 @@ def main() -> int:
             "BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
             "A feature release is a build",
             "ORCHESTRATION_RELATION: RELATION=<NEW|AMEND|REPLACE|CANCEL>",
+            "OPEN_COMMITMENTS=<unresolved promised work or NONE>",
+            "next project-defined milestone",
+            "DESTINATIONS must name the intended destination",
             "COMPLEXITY=<1.0-10.0>",
             "Prefix it `ROOT_EXPERIENCE:`",
             "Merely touching frontend or UI files does not trigger it",
@@ -156,7 +173,9 @@ def main() -> int:
             "wait_agent",
             "timeout_ms: 3600000",
             "first start only the\nselected Sol supervisor",
-            "initial turn finishes with `SUPERVISOR_READY`. Only then start the selected implementer",
+            "Start the selected implementer only\nafter `SUPERVISOR_READY`",
+            "SUPERVISOR_SCOPE_REJECT",
+            "After a second rejection,\nblock; never start the implementer",
             "keep sibling activity strictly serial",
             "Never activate the implementer and Sol supervisor at the same time",
             "concurrent descendants can be promoted into an unanchored parent activity row",
@@ -183,7 +202,7 @@ def main() -> int:
             "Downstream agents\nare your children, never root's",
             "the cumulative `IMPLEMENTATION_RESULT`",
             "any `ROOT_VERIFICATION_RESULT`",
-            "do not start another reporting agent",
+            "reporting agent or ask the implementer to restate it",
             "ORCHESTRATION_ACCEPT: ## Completed",
             "## What changed",
             "## Verification",
@@ -198,15 +217,18 @@ def main() -> int:
             "what was initially visible, what root\ndid, and what visibly happened",
             "Never say work is\nlive, deployed, released, or on GitHub without the corresponding exact destination and evidence",
             "Do not invent URLs, revisions, test results, browser observations, or missing details",
-            "summary, explanation, current state, or next steps",
-            "answer directly from that capsule\nin this same turn",
-            "Do not inspect the repository, deployment, browser, prior child tasks, or other\ntask history merely to rediscover facts already in the capsule",
-            "Explaining a prior\nverified UI or deployment is not itself ROOT_EXPERIENCE",
+            "summary, explanation, current-state, or next-step",
+            "answer directly in this same turn even if root\nrouted conservatively",
+            "Do not inspect the repository, deployment, browser, prior child tasks, or\nother task history merely to rediscover those facts",
+            "Explaining a prior verified UI\nor deployment is not itself ROOT_EXPERIENCE",
             "ORCHESTRATION_HANDOFF: OUTCOME=<accepted outcome>",
             "no longer than 4,096 characters",
             "without rereading the completed parent turn",
             "carry forward its still-relevant delivered state",
             "This handoff is\ninternal and is not a user-visible progress update",
+            "Do not send\nORCHESTRATION_STATE or a read-only ORCHESTRATION_UPDATE",
+            "root wakes only once",
+            "never say `Remaining: None` merely because the implementation completed its own\ninferred milestone",
         ),
         "fused Terra contract",
     )
@@ -217,9 +239,7 @@ def main() -> int:
     if "Build events may arrive out of order" in fused:
         raise AssertionError("fused Terra still permits overlapping build-child startup")
     supervisor_start = fused.index("first start only the\nselected Sol supervisor")
-    implementer_start = fused.index(
-        "initial turn finishes with `SUPERVISOR_READY`. Only then start the selected implementer"
-    )
+    implementer_start = fused.index("Start the selected implementer only\nafter `SUPERVISOR_READY`")
     if supervisor_start >= implementer_start:
         raise AssertionError("build startup no longer readies the supervisor before the implementer")
     if fused.count("`followup_task`") < 9:
@@ -275,6 +295,9 @@ def main() -> int:
         "0.8.13-terra-supervisor": "c296cd101b91debb8ac800d4d18339f9da8d9606a7048c70e72d37cf0b8885b4",
         "0.8.14-terra-supervisor": "fb1a6905fca9345fabfc3b1ff9d98cfb784514600d67b372bd4fb60c6afcd85f",
         "0.8.15-terra-supervisor": "cb7d464796bc18b9f371ce9f6036ffbdfe32914946c9ac18c78c8aec1c4bec44",
+        "0.8.16-terra-supervisor": "310f47cd149493a376a1625786a98f0f763b8f4558faccc1e28b9a2b4394cc39",
+        "0.8.16-sol-high-supervisor": "3283d5d4c93674855694d10b96922911d9bafb186ee08fb85b0b7548daa72b5a",
+        "0.8.16-sol-xhigh-supervisor": "9bf1374469493ef6ad866ba6e11082a86427210c23806d86a643c1325e0f6576",
     }
     for role, digest in previous_release_digests.items():
         if digest not in installer:
@@ -309,7 +332,7 @@ def main() -> int:
                 "before the implementer starts",
                 "sibling activity remains serial",
                 "fused Terra orchestrator",
-                "structured, readable protocol",
+                "structured, readable",
                 "ROOT_EXPERIENCE",
                 "direct experience proof is mandatory",
                 "root-executable experience check with live URL or rendered artifact",
@@ -326,6 +349,11 @@ def main() -> int:
                 "**Check**",
                 "**Required observations**",
                 "semicolon-delimited line",
+                "SUPERVISOR_SCOPE_REJECT:",
+                "**Mismatch**",
+                "**Required acceptance**",
+                "Repository plans and architecture documents cannot supply\nmissing user scope",
+                "OPEN_COMMITMENT",
             ),
             filename,
         )
@@ -388,7 +416,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.16 readable supervisor decisions and bounded continuity")
+    print("PASS: 0.8.17 fast read-only and scope-safe routing")
     return 0
 
 

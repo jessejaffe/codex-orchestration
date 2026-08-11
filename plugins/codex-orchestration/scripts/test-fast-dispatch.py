@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.16 readable supervision."""
+"""Hermetic tests for chat-scoped activation and 0.8.17 context-safe routing."""
 
 from __future__ import annotations
 
@@ -80,13 +80,17 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "FIRST ACTION",
-        "transparent parent relay",
+        "DIRECT READ-ONLY FAST PATH",
+        "binary fast-path gate",
+        "answer in root immediately",
+        "use no tools or agents",
         "Starting Terra / Max classification now.",
         "terra_orchestrator_<objective_slug>",
         "ORCHESTRATE_INIT",
         "PARENT_TASK=/root",
         "PRIOR_COMPLETED_RESULT: NONE",
+        "RECENT_CONTEXT_FRESHNESS: NONE",
+        "RECENT_CONTEXT: NONE",
         "codex_orchestration_terra_supervisor",
         "read and obey the `developer_instructions`",
         "agents/codex-orchestration-terra-supervisor.toml",
@@ -129,7 +133,7 @@ def main() -> int:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     if (state / "grader-requests").exists():
         raise AssertionError("dispatch still staged a grader request")
-    if len(routed_context) > 3_500:
+    if len(routed_context) > 4_500:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
@@ -148,7 +152,8 @@ def main() -> int:
     transcript = temporary / "root.jsonl"
     acceptance = (
         "ORCHESTRATION_ACCEPTANCE: OUTCOME=Ship export; MUST=implement and test; "
-        "MUST_NOT=discard work; DESTINATIONS=repository; PROOF=focused tests"
+        "MUST_NOT=discard work; DESTINATIONS=repository; OPEN_COMMITMENTS=NONE; "
+        "PROOF=focused tests"
     )
     write_events(
         transcript,
@@ -208,6 +213,8 @@ def main() -> int:
             "__FORK_TURNS__",
             "__ROOT_ROUTE__",
             "__PRIOR_COMPLETED_RESULT__",
+            "__RECENT_CONTEXT_FRESHNESS__",
+            "__RECENT_CONTEXT__",
             "__FUSED_PROFILE_PATH__",
         )
     ):
@@ -220,7 +227,7 @@ def main() -> int:
         "OUTCOME=Shipped CSV export; DELIVERED=dashboard export and signed bundle; "
         "PROOF=12 tests passed and production download observed; "
         "LINKS=https://example.com/export; REVISION=0123456789abcdef; "
-        "NEXT=add JSON export; LIMITATIONS=NONE"
+        "OPEN_COMMITMENTS=add JSON export; NEXT=add JSON export; LIMITATIONS=NONE"
     )
     detailed_report = (
         "## Completed\n\nCSV export is live.\n\n## Links\n\n"
@@ -260,6 +267,8 @@ def main() -> int:
         raise AssertionError("completed rollout was still inherited instead of using its capsule")
     if f"PRIOR_COMPLETED_RESULT: {handoff}" not in accepted_context:
         raise AssertionError("completion handoff was not passed to the next Terra")
+    if "RECENT_CONTEXT_FRESHNESS: FRESH" not in accepted_context:
+        raise AssertionError("an immediate follow-up incorrectly made its completion capsule stale")
     if "CSV export is live" in accepted_context:
         raise AssertionError("detailed report replaced the preferred bounded handoff")
 
@@ -292,6 +301,87 @@ def main() -> int:
         raise AssertionError("legacy completion still inherited its long parent rollout")
     if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
         raise AssertionError("legacy completion did not fall back to its accepted result")
+
+    stale_context_transcript = temporary / "stale-completion-context.jsonl"
+    stale_capsule = (
+        "OUTCOME=Released benchmark foundation; DELIVERED=private-repository validators; "
+        "OPEN_COMMITMENTS=NONE; NEXT=next project milestone"
+    )
+    agreed_scope = (
+        "The immediate step is to create a separate public licensed GitHub repository "
+        "and publish the benchmark foundation there."
+    )
+    current_request = "Turn orchestration on and do the next immediate step"
+    write_events(
+        stale_context_transcript,
+        [
+            {"type": "session_meta", "payload": {}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "content": [
+                        {
+                            "text": (
+                                f"ORCHESTRATION_HANDOFF: {stale_capsule}\n"
+                                "ORCHESTRATION_ACCEPT: prior completion"
+                            )
+                        }
+                    ],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "text": "Prior completion " + ("old detail " * 900),
+                        }
+                    ],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": "What comes next?"}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": agreed_scope}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": current_request}],
+                },
+            },
+        ],
+    )
+    stale_context = context(
+        invoke(hook, state, active_id, current_request, stale_context_transcript)
+    )
+    for value in (
+        "FORK=`none`",
+        "RECENT_CONTEXT_FRESHNESS: STALE",
+        agreed_scope,
+        f"PRIOR_COMPLETED_RESULT: {stale_capsule}",
+    ):
+        if value not in stale_context:
+            raise AssertionError(f"stale-capsule regression omits {value!r}")
+    if f"USER: {current_request}" in stale_context:
+        raise AssertionError("current request was duplicated into RECENT_CONTEXT")
 
     scoped_transcript = temporary / "turn-scoped-handoffs.jsonl"
     old_handoff = "OUTCOME=old completed build; NEXT=old follow-up"
@@ -360,7 +450,7 @@ def main() -> int:
     completed_value = completed_line.removeprefix("PRIOR_COMPLETED_RESULT: ")
     if completed_value != oversized_handoff[:4_096]:
         raise AssertionError("completion handoff was not bounded to exactly 4,096 characters")
-    if len(oversized) > 8_000:
+    if len(oversized) > 9_000:
         raise AssertionError(f"bounded completion dispatch exceeds latency budget: {len(oversized)}")
 
     subagent_transcript = temporary / "subagent.jsonl"
