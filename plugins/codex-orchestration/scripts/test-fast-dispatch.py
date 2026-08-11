@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.18 artifact-safe routing."""
+"""Hermetic tests for chat-scoped activation and 0.8.19 context-safe routing."""
 
 from __future__ import annotations
 
@@ -403,6 +403,74 @@ def main() -> int:
             raise AssertionError(f"stale-capsule regression omits {value!r}")
     if f"USER: {current_request}" in stale_context:
         raise AssertionError("current request was duplicated into RECENT_CONTEXT")
+
+    wrapped_context_transcript = temporary / "wrapped-recent-context.jsonl"
+    prior_question = "Which context should the next task receive?"
+    prior_answer = "Use the bounded completion capsule and recent conversation."
+    wrapped_current_request = "Continue with that context."
+    injected_prefix = (
+        "<recommended_plugins>\n- Example\n</recommended_plugins>\n"
+        "# AGENTS.md instructions for /workspace\n\n"
+        "<INSTRUCTIONS>\nKeep the workspace safe.\n</INSTRUCTIONS>\n"
+        "<environment_context>\n  <cwd>/workspace</cwd>\n</environment_context>\n"
+    )
+    write_events(
+        wrapped_context_transcript,
+        [
+            {"type": "session_meta", "payload": {}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": injected_prefix + prior_question}
+                    ],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": prior_answer}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": injected_prefix + wrapped_current_request,
+                        }
+                    ],
+                },
+            },
+        ],
+    )
+    wrapped_context = context(
+        invoke(
+            hook,
+            state,
+            active_id,
+            wrapped_current_request,
+            wrapped_context_transcript,
+        )
+    )
+    for value in (prior_question, prior_answer):
+        if value not in wrapped_context:
+            raise AssertionError(f"clean recent context dropped {value!r}")
+    for leaked in (
+        "<recommended_plugins>",
+        "# AGENTS.md instructions for /workspace",
+        "<environment_context>",
+        f"USER: {wrapped_current_request}",
+    ):
+        if leaked in wrapped_context:
+            raise AssertionError(f"injected recent-context wrapper leaked: {leaked!r}")
 
     scoped_transcript = temporary / "turn-scoped-handoffs.jsonl"
     old_handoff = "OUTCOME=old completed build; NEXT=old follow-up"

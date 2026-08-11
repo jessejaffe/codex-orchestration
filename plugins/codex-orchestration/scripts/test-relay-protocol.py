@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.18 root-loaded artifact dependencies."""
+"""Static contract tests for 0.8.19 root-loaded artifact dependencies."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.18":
-        raise AssertionError(f"manifest does not use traditional 0.8.18: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.8.19":
+        raise AssertionError(f"manifest does not use traditional 0.8.19: {manifest.get('version')!r}")
     if "+" in manifest["version"]:
         raise AssertionError("manifest still contains a cachebuster suffix")
 
@@ -435,7 +435,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.18 root-loaded artifact dependencies")
+    print("PASS: 0.8.19 root-loaded artifact dependencies")
     return 0
 
 

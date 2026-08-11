@@ -1,18 +1,20 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps implementation separate from read-only
-review. Version `0.8.18` answers ordinary read-only follow-ups directly in root and safely supplies
+review. Version `0.8.19` answers ordinary read-only follow-ups directly in root, safely supplies
 bundled workspace dependencies to children that create spreadsheets, presentations, documents, or
-PDFs. Mutation, fresh verification, audits, and substantial research still route through one Terra
-/ Max orchestrator on the standard service tier.
+PDFs, and removes app-injected plugin, project-instruction, and environment wrappers from bounded
+recent-conversation context. Mutation, fresh verification, audits, and substantial research still
+route through one Terra / Max orchestrator on the standard service tier.
 
 The five work classes are `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`.
 Complexity may still be estimated for telemetry, but it never selects a model.
 
-## How 0.8.18 works
+## How 0.8.19 works
 
 1. The stable chat-scoped hook gives root a binary gate, the current request, the latest bounded
-   acceptance or completion capsule, and a bounded window of newer conversation.
+   acceptance or completion capsule, and a bounded window of newer conversation. It strips the
+   app's injected runtime envelope before preserving real user messages.
 2. Root answers a simple explanation, summary, status, rationale, or brief brainstorming/planning
    request directly when it needs no mutation, tools, fresh verification, audit, or substantial
    research. It does not announce classification or start an agent on that fast path.
@@ -107,6 +109,9 @@ completion capsule stale, and Terra must prioritize the newer agreement. Command
 next step” must resolve to an exact action in that context; repository plans cannot fill in a
 missing referent. Terra validates concrete outcomes, destinations, proof, and open commitments
 before dispatch. The accepted contract stays immutable through implementation and supervision.
+App-injected recommended-plugin catalogs, `AGENTS.md` instructions, and environment metadata are
+not conversation history; the hook removes that leading runtime envelope while retaining the
+actual user request that follows it.
 
 When work completes, Terra records a private one-line capsule containing the outcome, delivered
 capabilities, decisive proof, exact links, revision, open commitments, next work, and limitations.
@@ -158,11 +163,11 @@ recursively orchestrates an Orchestration child.
 
 ### Existing-task activation
 
-After installing 0.8.18, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.8.19, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses the fused custom Terra profile when the task exposes it; otherwise it starts a pinned
 built-in Terra / Max agent and directs it to the installed fused profile. Inside that subtree, Terra
 uses each current custom lane when available and otherwise a pinned built-in `default` or `worker`
-identity with the complete 0.8.18 role rules. It never tries an unavailable or legacy identity.
+identity with the complete 0.8.19 role rules. It never tries an unavailable or legacy identity.
 
 The fused classifier is pinned to GPT-5.6 Terra with Max reasoning and the normal service tier. It
 does not opt into Fast mode, so routing does not consume Fast-mode credits. Six companion profiles
@@ -259,11 +264,11 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin
 
 The project uses traditional semantic versions without timestamp suffixes:
 
-- Patch releases (`0.8.17` to `0.8.18`) contain compatible fixes and refinements.
+- Patch releases (`0.8.18` to `0.8.19`) contain compatible fixes and refinements.
 - Minor releases (`0.8.x` to `0.9.0`) add backward-compatible features.
 - Major releases change compatibility expectations.
 
-Version `0.8.18` is a normal patch release. The standard checkout workflow is:
+Version `0.8.19` is a normal patch release. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh

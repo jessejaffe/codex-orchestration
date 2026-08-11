@@ -45,6 +45,12 @@ MAX_PRIOR_COMPLETED_CHARS = 4_096
 MAX_RECENT_CONTEXT_CHARS = 6_144
 MAX_RECENT_MESSAGE_CHARS = 1_536
 MAX_RECENT_MESSAGES = 8
+INJECTED_USER_PREFIXES = (
+    "<recommended_plugins>",
+    "# AGENTS.md instructions for ",
+    "<environment_context>",
+)
+ENVIRONMENT_CONTEXT_END = "</environment_context>"
 WORKSPACE_ARTIFACT_PATTERN = re.compile(
     r"\b(?:spreadsheet|workbook|google\s+sheet|xlsx?|csv|tsv|"
     r"presentation|slide\s+deck|powerpoint|pptx?|word\s+document|docx|pdf)\b",
@@ -64,7 +70,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.8.18). Root performs only the binary fast-path gate below;
+DISPATCH_CONTEXT = """Orchestration ON (0.8.19). Root performs only the binary fast-path gate below;
 it never constructs role contracts, implements, supervises, or judges change work.
 
 FORK=`__FORK_TURNS__` (never literal `all`)
@@ -177,9 +183,22 @@ def conversation_message(event: dict[str, Any]) -> tuple[str, str] | None:
         if isinstance(value, str):
             values.append(value)
     message = "\n".join(values).strip()
-    if not message or message.startswith("<environment_context>"):
+    if payload.get("role") == "user":
+        message = strip_injected_user_prefix(message)
+    if not message:
         return None
     return str(payload["role"]), message
+
+
+def strip_injected_user_prefix(message: str) -> str:
+    """Remove the app's leading runtime envelope while preserving the user's prompt."""
+    stripped = message.lstrip()
+    if not stripped.startswith(INJECTED_USER_PREFIXES):
+        return message.strip()
+    boundary = stripped.rfind(ENVIRONMENT_CONTEXT_END)
+    if boundary < 0:
+        return message.strip()
+    return stripped[boundary + len(ENVIRONMENT_CONTEXT_END) :].strip()
 
 
 def bounded_single_line(value: str, limit: int) -> str:
