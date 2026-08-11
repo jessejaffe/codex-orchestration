@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the seven Codex Orchestration 0.9.0 companion profiles and retire obsolete identities safely.
+# Install the seven Codex Orchestration 0.10.0 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -62,7 +62,17 @@ sol-xhigh-executive
 sol-reviewer'
 
 previous_digest() {
+  # Exact 0.9.0 profiles accepted for the 0.10.0 taxonomy migration.
   case "$1" in
+    luna-implementer) printf '%s\n' 5e55237eabb9315b5ece06ae5239bf5740c69adc9ffcc508f7b0ac3ecaf060d1 ;;
+    terra-implementer) printf '%s\n' a5277a7f3870f57eca209d21c63a2ac1b95e6918ab4c7c31bd45534d452f64ec ;;
+    sol-high-implementer) printf '%s\n' ed407f41f1d0c2b54417cac2d18647fd1f5156ae321eb3c28415ccbb833cebb4 ;;
+    terra-supervisor) printf '%s\n' 4e16a42744c5a2b3503f1ab1eb0638047a77bbf17470567306721fec95ec7b71 ;;
+    sol-high-supervisor) printf '%s\n' 7dc6715eec52fda116d10bb3154353b2020e093976dc47dc4cdee55bee12b24d ;;
+    sol-xhigh-supervisor) printf '%s\n' 48520a33a70bfceb920fee852ee991f0305170bd255bbf5455146e6ac88281d8 ;;
+  esac
+  case "$1" in
+    terra-orchestrator) printf '%s\n' 143f2b6d5c917352df0b5c6a57608ac70f702f0bbc0ff779eedd5cf1243babd4 ;;
     luna-implementer) printf '%s\n' 17977b485b042a6f0612d5e444d5232591fbe45ff679131a20eb61fad0edfef0 44bec276050bd6c342317b2c1d01c70fe310da7ff5f44c36754ef371491b300f de0169757da493d85b323b5d288036c0489a4700ebced8303ded58045d673d0a 983f3d6a4a9d674bc46d828b1f5c648a4b77940a4ff51d407302b3761ad010d9 ee39d10609e279369abb42801e9436417c609355b7f018da42b1bf50cf9d0263 7fc50da2bb0efae58a6be4f083170f7b046870c8217f0f94241363a8404537e3 dc769716110ab9b99b0c7caa7de8c5992c39414096d5a79c7b0f6619ee2592e5 fd75a5160451b266bc8ae35b34e0865d23ccb96f5019e656ef8e898ccafd8d5d 485804b5bd058d30c16feedf404595c6f3c347b5e6e5ef794d92b7e35edeb2a5 ;;
     terra-implementer) printf '%s\n' c8a65ab5b313fdbe285aa47fba0b5ff13cd0040c8d1d06479e662b405503987b c36e4ccf25a51f911ad8fac00e235f2d23f623184dc71c08cdddebc8f7d71342 1fe32ab9230c3827f7abc489a5062d6cce2847f15341cbad1cac4e062ef5ece3 a24c4a1a67b4730f24d9d883cbbc6fb46b535847ddafa1599ff2127f5ca8b974 d0b22605fe4fb415efc8ea14e6243de85c792aff566295c3de32d00176c54e72 c878b68faf44eae87c12c349f58ff90f086068c6c9b40f771757e432db54bb75 35723b41371a65bf52af621aafc0663022aa51ffb6236b816bc21cd65cdb080e 8001b202cede42454fa4cbcd0bb29cb580716e738cb533396e033dc132f402f4 e28c539964354adca6423c19a0da1746a8db60b94b734f7f00fd88b5a03a41d1 ;;
     sol-high-implementer) printf '%s\n' ad165e2c75a24c8f9a6a2a53ccc3010e7ff5a2932e6b72541592d3aea53bb475 98c135e10d0b66fa911eab99c1229b530e27d7ac0e5dc983dcef181806e67e6f ac4fb9c02a6d4d53d767fa2667dff3b7e6a41ce8b5032f1f179ee5607cd73c94 b9c8acb6206331972722cba1943c5a86aaaccdbaa85714188e8cfcce2f0a9ec0 938ae440dde9c136fbdc75f757cfcc3030b5c344b9b187e1898c1bfeff27376b 5d8156c3e42105180b6bee35d457aac6f7fd371f55aeba5c58f822d0ad5ab473 ad167cec124a4ad4389d92b7e49fe5ba2effbe070bf3a9ced51fc1550edfda83 c1d47ebd4825dd497cfddc7dfe9b6d3f6685eb1323019f2c969851b8861eb674 11e5654f28517b4556d9fc13a374f6b97240d8da6f2d8673078730be847f998f ;;
@@ -130,7 +140,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: seven 0.9.0 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: seven 0.10.0 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -182,4 +192,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: seven 0.9.0 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: seven 0.10.0 companion profiles are current and obsolete identities were retired.'

@@ -1,10 +1,40 @@
 {
-  "policy": "Work class, not numeric complexity, selects the route. Ambiguous boundaries route upward.",
+  "policy": "Work class, not numeric complexity, selects the route. Artifacts are non-code deliverables; any net-new code capability is BUILD. Ambiguous artifact or tweak boundaries route upward.",
   "cases": [
     {
       "id": "explain_known_code",
       "expected": "READ_ONLY",
       "request": "Explain what this already-identified helper does. Do not change anything."
+    },
+    {
+      "id": "fresh_repository_audit",
+      "expected": "READ_ONLY",
+      "request": "Inspect the repository and report whether the existing export tests cover empty input. Do not change anything."
+    },
+    {
+      "id": "labels_spreadsheet",
+      "expected": "STANDARD_ARTIFACT",
+      "request": "Create a spreadsheet from the final labels already in the database, including each photo filename."
+    },
+    {
+      "id": "formula_workbook",
+      "expected": "STANDARD_ARTIFACT",
+      "request": "Create an editable forecast workbook using these exact formulas and ordinary professional formatting."
+    },
+    {
+      "id": "straightforward_document",
+      "expected": "STANDARD_ARTIFACT",
+      "request": "Put these approved policies into a clean Word document with headings and a table of contents."
+    },
+    {
+      "id": "visually_art_directed_deck",
+      "expected": "DESIGN_ARTIFACT",
+      "request": "Create a keynote-style launch deck with a cinematic visual system, branded layouts, and polished storytelling."
+    },
+    {
+      "id": "campaign_visual_asset",
+      "expected": "DESIGN_ARTIFACT",
+      "request": "Turn this campaign brief into a presentation PDF whose typography, composition, and visual look are defining requirements."
     },
     {
       "id": "single_copy_edit",
@@ -14,7 +44,7 @@
     {
       "id": "traditional_version_bump",
       "expected": "SMALL_TWEAK",
-      "request": "Change the existing plugin version from 0.8.0 to 0.8.1 with no new feature."
+      "request": "Change the existing plugin version from 0.9.0 to 0.9.1 with no new feature."
     },
     {
       "id": "cross_component_bug",
@@ -22,44 +52,29 @@
       "request": "Fix the existing retry behavior across the API and worker queue without adding a feature."
     },
     {
-      "id": "existing_contract_change",
+      "id": "multiple_existing_behaviors",
       "expected": "BIG_TWEAK",
-      "request": "Correct the existing event contract shared by the web app and worker."
+      "request": "Correct the existing retry, timeout, and cancellation behaviors in the worker without adding a capability."
     },
     {
       "id": "one_component_feature",
-      "expected": "SMALL_BUILD",
-      "request": "Add one new CSV export feature to the existing reporting package."
+      "expected": "BUILD",
+      "request": "Add one new CSV export capability to the existing reporting package."
     },
     {
       "id": "two_component_feature",
-      "expected": "SMALL_BUILD",
+      "expected": "BUILD",
       "request": "Add one new saved-filter capability spanning the existing API and dashboard."
     },
     {
       "id": "release_with_feature",
-      "expected": "SMALL_BUILD",
+      "expected": "BUILD",
       "request": "Release version 2.4 with one new dark-mode preference in the frontend."
     },
     {
       "id": "multi_feature_product_build",
-      "expected": "BIG_BUILD",
+      "expected": "BUILD",
       "request": "Build a new customer portal with login, billing history, and downloadable invoices."
-    },
-    {
-      "id": "cross_runtime_build",
-      "expected": "BIG_BUILD",
-      "request": "Add a new workflow spanning the TypeScript web app and a new C++ processing executable."
-    },
-    {
-      "id": "irreversible_migration",
-      "expected": "BIG_BUILD",
-      "request": "Add the new account model and deploy its irreversible production schema migration."
-    },
-    {
-      "id": "ambiguous_build_scope",
-      "expected": "BIG_BUILD",
-      "request": "Build the new collaboration system; the architecture and component boundaries are not decided."
     }
   ],
   "steering_cases": [
@@ -69,7 +84,7 @@
       "events": ["turn_aborted"],
       "request": "Should the new framework also support JPEGs and PNGs?",
       "expected_relation": "AMEND",
-      "expected_class": "BIG_BUILD",
+      "expected_class": "BUILD",
       "preserve": ["implement", "commit", "deploy", "detector", "recovery"],
       "add": ["JPEG", "PNG"]
     },
@@ -79,7 +94,7 @@
       "events": ["turn_aborted"],
       "request": "Explain what missing page bytes means, then continue the framework.",
       "expected_relation": "AMEND",
-      "expected_class": "SMALL_BUILD",
+      "expected_class": "BUILD",
       "preserve": ["implement", "verify"],
       "add": ["explain missing page bytes"]
     },

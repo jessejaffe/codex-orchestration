@@ -1,15 +1,15 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review as separate roles. Version `0.9.0` makes the Terra / Max orchestrator a taxonomy
-orchestrator only. It reads the current query plus bounded conversational continuity, returns the
-route to root, and stops. Terra / Max remains independently available as an implementer and as a
-supervisor.
+read-only review as separate roles. Version `0.10.0` adds an outcome-based taxonomy that separates
+non-code artifacts from code changes. The Terra / Max orchestrator remains taxonomy-only: it reads
+the current query plus bounded conversational continuity, returns the route to root, and stops.
+Terra / Max remains independently available as an implementer and as a supervisor.
 
-The five work classes remain `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUILD`, and
-`BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
+The six work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
+`BIG_TWEAK`, and `BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.9.0 works
+## How 0.10.0 works
 
 1. The stable chat-scoped hook gives root a binary gate, the current query, the latest bounded
    acceptance or completion capsule, and a short window of newer conversation. App-injected plugin,
@@ -24,7 +24,7 @@ The five work classes remain `READ_ONLY`, `SMALL_TWEAK`, `BIG_TWEAK`, `SMALL_BUI
 4. Root validates that fixed route mechanically. Only after classification, root calls the bundled
    workspace dependency loader when spreadsheet, presentation, document, or PDF work needs it. The
    exact executable and package paths go directly to the task roles, never back to the orchestrator.
-5. For change work, root starts the selected read-only supervisor first. The supervisor reads the
+5. For artifact and code work, root starts the selected read-only supervisor first. The supervisor reads the
    detailed request, creates the immutable acceptance contract, and must be ready before root starts
    the implementer. The orchestrator is already finished.
 6. Root owns all spawning, waits, checkpoint handoffs, and relays. The implementer and supervisor
@@ -44,14 +44,17 @@ waits until an agent update instead of polling and does not emit elapsed-time he
 | Work class | Definition | Implementer | Read-only supervisor | Checkpoints |
 |---|---|---|---|---|
 | `READ_ONLY` | Fresh verification, audit, substantial research, or a read-only request root cannot answer directly | Terra / Max | None | None |
+| `STANDARD_ARTIFACT` | Create or edit a non-code deliverable where content, data, formulas, structure, and ordinary professional formatting matter more than a distinctive visual treatment | Luna / Max | Terra / Max | Release candidate |
+| `DESIGN_ARTIFACT` | Create or edit a non-code deliverable where visual composition, brand expression, storytelling, or exact look and feel is a defining outcome | Terra / Max | Terra / Max | Release candidate |
 | `SMALL_TWEAK` | Change one existing behavior in one production component | Luna / Max | Terra / Max | Release candidate |
-| `BIG_TWEAK` | Change existing behavior across two or more components or an interface/runtime boundary | Terra / Max | Terra / Max | Root cause, release candidate |
-| `SMALL_BUILD` | Add one capability in at most two components with settled architecture | Terra / Max | Sol / High | Design, release candidate |
-| `BIG_BUILD` | Add multiple capabilities, use three or more components, cross a runtime boundary, carry material risk, or require unresolved architecture | Sol / High | Sol / Extra High | Architecture, vertical slice, release candidate |
+| `BIG_TWEAK` | Change multiple existing behaviors, or change existing behavior across components, an interface/runtime boundary, or material operational risk | Terra / Max | Sol / High | Root cause, release candidate |
+| `BUILD` | Add any net-new code capability, regardless of component count | Sol / High | Sol / Extra High | Architecture, vertical slice, release candidate |
 
-Tests, documentation, generated metadata, and routine release steps do not add components. A tweak
-repairs or refines an existing capability; a build introduces a new capability. Ambiguity routes
-upward.
+Writing an artifact is a mutation, but it is not a code tweak or build. Specific formulas do not
+make a spreadsheet a design artifact. A design artifact is distinguished by appearance being a
+defining outcome. UI work inside an app or website is code: changing existing UI behavior is a
+tweak, while adding a new UI capability is a build. Tests, documentation, generated metadata, and
+routine release steps do not change the defining class. Ambiguity routes upward.
 
 ```mermaid
 flowchart TD
@@ -60,7 +63,7 @@ flowchart TD
     G -->|"Routed"| O["Terra / Max orchestrator classifies"]
     O -->|"Three taxonomy lines; stop"| R["Root coordinates selected roles"]
     R -->|"Read-only"| RI["Terra / Max implementer answers"]
-    R -->|"Change work"| S["Selected supervisor defines acceptance"]
+    R -->|"Artifact or code work"| S["Selected supervisor defines acceptance"]
     S --> I["Selected implementer works and pauses"]
     I --> C["Root hands checkpoint to supervisor"]
     C -->|"Continue or correct"| I
@@ -72,8 +75,8 @@ flowchart TD
 The three Terra / Max identities are roles, not model restrictions:
 
 - `codex_orchestration_terra_orchestrator` classifies taxonomy only.
-- `codex_orchestration_terra_implementer` performs routed Terra implementation or read-only work.
-- `codex_orchestration_terra_supervisor` reviews tweaks read-only.
+- `codex_orchestration_terra_implementer` performs read-only work, design artifacts, and big tweaks.
+- `codex_orchestration_terra_supervisor` reviews artifacts and tweaks read-only.
 
 ## Context continuity
 
@@ -129,7 +132,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.9.0, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.10.0, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -179,11 +182,11 @@ python3 "$plugin_dir/scripts/install-user-hook.py" --check --plugin-dir "$plugin
 The project uses traditional semantic versions without timestamp suffixes:
 
 - Patch releases contain compatible fixes and refinements.
-- Minor releases such as `0.8.x` to `0.9.0` add backward-compatible capabilities.
+- Minor releases such as `0.9.x` to `0.10.0` add backward-compatible capabilities.
 - Major releases change compatibility expectations.
 
-Version `0.9.0` introduces the classifier-only orchestrator role and root-owned coordination. The
-standard checkout workflow is:
+Version `0.10.0` introduces the six-class artifact/tweak/build taxonomy while preserving the
+taxonomy-only orchestrator and root-owned coordination. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
@@ -204,12 +207,12 @@ sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
 The suite validates the manifest, syntax, exact model pins, chat controls, bounded continuity, the
-classifier-only role boundary, root-owned serial coordination, the five-class route, root-only
+classifier-only role boundary, root-owned serial coordination, the six-class route, root-only
 experience verification, same-implementer corrections, fixtures, effectiveness tracking, and
 conflict-safe cleanup.
 
 The offline classification fixture is
-`plugins/codex-orchestration/scripts/triage-cases.json`. It covers all five classes plus amendment,
+`plugins/codex-orchestration/scripts/triage-cases.json`. It covers all six classes plus amendment,
 replacement, cancellation, and interrupted-work continuity.
 
 ## Repository

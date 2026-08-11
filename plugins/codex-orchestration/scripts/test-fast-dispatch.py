@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.9.0 root coordination."""
+"""Hermetic tests for chat-scoped activation and 0.10.0 root coordination."""
 
 from __future__ import annotations
 

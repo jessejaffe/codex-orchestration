@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.9.0 classifier/root role boundary."""
+"""Static contracts for the 0.10.0 six-class taxonomy and role boundary."""
 
 from __future__ import annotations
 
@@ -47,6 +47,15 @@ EXPECTED_AGENTS = {
     ),
 }
 
+ROUTES = (
+    "READ_ONLY: TERRA_MAX / NONE / NONE",
+    "STANDARD_ARTIFACT: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
+    "DESIGN_ARTIFACT: TERRA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
+    "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
+    "BIG_TWEAK: TERRA_MAX / SOL_HIGH / ROOT_CAUSE,RELEASE_CANDIDATE",
+    "BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
+)
+
 
 def require(text: str, values: tuple[str, ...], label: str) -> None:
     for value in values:
@@ -89,8 +98,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.9.0":
-        raise AssertionError(f"manifest does not use 0.9.0: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.10.0":
+        raise AssertionError(f"manifest does not use 0.10.0: {manifest.get('version')!r}")
 
     orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -99,17 +108,17 @@ def main() -> int:
             "orchestrator role",
             "always GPT-5.6 Terra / Max",
             "current query plus its bounded conversation continuity",
-            "determine the existing orchestration taxonomy",
-            "Terra /\nMax may separately be selected as an implementer or supervisor",
-            "ORCHESTRATE_CLASSIFY",
             "Do not call tools",
             "Do not\nwrite an acceptance contract or a plan",
-            "READ_ONLY: TERRA_MAX / NONE / NONE",
-            "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
-            "BIG_TWEAK: TERRA_MAX / TERRA_MAX / ROOT_CAUSE,RELEASE_CANDIDATE",
-            "SMALL_BUILD: TERRA_MAX / SOL_HIGH / DESIGN,RELEASE_CANDIDATE",
-            "BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
-            "exactly these three single lines and\nnothing else",
+            "STANDARD_ARTIFACT: create or edit a non-code deliverable",
+            "Specific spreadsheet formulas remain standard artifact work",
+            "DESIGN_ARTIFACT: create or edit a non-code deliverable whose visual composition",
+            "SMALL_TWEAK: one bounded change to existing code behavior in one component",
+            "BIG_TWEAK: multiple existing code behavior changes",
+            "BUILD: any net-new code capability, regardless of component count",
+            "Writing an artifact is a mutation but is not a code tweak or build",
+            "A UI change inside an app or\nwebsite is code",
+            *ROUTES,
             "Root owns every subsequent spawn, handoff, wait, checkpoint, and relay",
         ),
         "Terra / Max orchestrator",
@@ -118,112 +127,131 @@ def main() -> int:
         orchestrator,
         (
             "WORKSPACE_DEPENDENCIES=",
-            "codex_app__load_workspace_dependencies",
             "spawn_agent",
             "followup_task",
-            "wait_agent",
             "SUPERVISOR_INIT",
-            "IMPLEMENTATION_CHECKPOINT",
             "ORCHESTRATION_ACCEPTANCE:",
-            "ORCHESTRATION_HANDOFF:",
-            "ORCHESTRATION_ACCEPT:",
+            "SMALL_BUILD",
+            "BIG_BUILD",
         ),
-        "classifier-only orchestrator",
+        "taxonomy-only orchestrator",
     )
 
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
     require(
         router,
         (
-            "Orchestration ON (0.9.0)",
+            "Orchestration ON (0.10.0)",
             "DIRECT READ-ONLY FAST PATH",
             "ORCHESTRATE_CLASSIFY",
             "fork_turns=none",
             "codex_orchestration_terra_orchestrator",
-            "Do\nnot pass FORK, WORKSPACE_DEPENDENCIES, task-specific skill instructions",
-            "exactly these three\nlines: ORCHESTRATION_RELATION, ORCHESTRATION_ROUTE, and ORCHESTRATION_STATUS",
-            "only\nafter classification, resolve WORKSPACE_DEPENDENCIES",
-            "ROOT ROLE MAP",
-            "codex_orchestration_terra_implementer",
+            *ROUTES,
             "codex_orchestration_luna_implementer",
+            "codex_orchestration_terra_implementer",
             "codex_orchestration_sol_high_implementer",
             "codex_orchestration_terra_supervisor",
             "codex_orchestration_sol_high_supervisor",
             "codex_orchestration_sol_xhigh_supervisor",
             "Root owns every child",
-            "first spawn only the selected supervisor",
             "Every handoff to an idle existing child uses\n`followup_task`",
             "Never activate implementer and supervisor simultaneously",
             "CHECKPOINT_REVIEW",
             "FINAL_REVIEW",
             "ORCHESTRATION_ROOT_VERIFY",
-            "omit it from the user response",
-            "__ORCHESTRATOR_PROFILE_PATH__",
-            "__AGENTS_DIR__",
         ),
         "root coordinator contract",
     )
-    classifier_packet = router[
-        router.index("classification packet:") : router.index("After spawning")
-    ]
     forbid(
-        classifier_packet,
-        ("FORK=<", "WORKSPACE_DEPENDENCIES=<", "CURRENT_ROOT_ROUTE=<"),
-        "classifier packet",
-    )
-    if router.index("only\nafter classification, resolve WORKSPACE_DEPENDENCIES") > router.index(
-        "call root's `codex_app__load_workspace_dependencies` exactly once"
-    ):
-        raise AssertionError("workspace dependencies are no longer loaded after classification")
-
-    terra_supervisor = documents["codex-orchestration-terra-supervisor.toml"]
-    require(
-        terra_supervisor,
+        router,
         (
-            "read-only supervisor for `SMALL_TWEAK` or `BIG_TWEAK`",
-            "Root owns all\nagent spawning, waits, checkpoint handoffs, and user relays",
-            "ORCHESTRATION_ACCEPTANCE:",
-            "CHECKPOINT_REVIEW",
-            "FINAL_REVIEW",
-            "ORCHESTRATION_HANDOFF:",
-            "ORCHESTRATION_ACCEPT: ## Completed",
+            "SMALL_BUILD: TERRA_MAX",
+            "BIG_BUILD: SOL_HIGH",
         ),
-        "Terra / Max supervisor",
+        "root routes",
     )
-    forbid(terra_supervisor, ("fused", "spawn_agent", "followup_task"), "Terra supervisor")
 
-    for filename in (
-        "codex-orchestration-sol-high-supervisor.toml",
-        "codex-orchestration-sol-xhigh-supervisor.toml",
-    ):
-        require(
-            documents[filename],
-            (
-                "Root owns all",
-                "SUPERVISOR_READY:",
-                "ORCHESTRATION_ACCEPTANCE:",
-                "SUPERVISOR_CORRECT:",
-                "SUPERVISOR_READY_TO_RELEASE:",
-                "ORCHESTRATION_ROOT_VERIFY:",
-                "ORCHESTRATION_HANDOFF:",
-                "ORCHESTRATION_ACCEPT: ## Completed",
-            ),
-            filename,
-        )
-        forbid(documents[filename], ("fused Terra orchestrator",), filename)
+    luna = documents["codex-orchestration-luna-implementer.toml"]
+    require(
+        luna,
+        (
+            "`STANDARD_ARTIFACT` or `SMALL_TWEAK`",
+            "content, data, formulas, structure",
+            "one bounded\nchange to existing code behavior in one component",
+            "artifact appearance is a\ndefining outcome",
+        ),
+        "Luna implementer",
+    )
 
     terra_implementer = documents["codex-orchestration-terra-implementer.toml"]
     require(
         terra_implementer,
         (
-            "`READ_ONLY`, `BIG_TWEAK`, or `SMALL_BUILD`",
+            "`READ_ONLY`, `DESIGN_ARTIFACT`, or `BIG_TWEAK`",
             "On `READ_ONLY_WORK`",
-            "without changing files or external state",
-            "ORCHESTRATION_ACCEPT:",
-            "Never mutate, commit, push, or deploy on this\nroute",
+            "`DESIGN_ARTIFACT`: `RELEASE_CANDIDATE` only",
+            "does not add a software-design checkpoint",
+            "`BIG_TWEAK`: `ROOT_CAUSE`, then `RELEASE_CANDIDATE`",
         ),
         "Terra implementer",
     )
+
+    sol_implementer = documents["codex-orchestration-sol-high-implementer.toml"]
+    require(
+        sol_implementer,
+        (
+            "implementer for `BUILD`",
+            "any net-new code capability, regardless of\ncomponent count",
+            "`ARCHITECTURE`",
+            "`VERTICAL_SLICE`",
+            "`RELEASE_CANDIDATE`",
+        ),
+        "Sol / High implementer",
+    )
+
+    terra_supervisor = documents["codex-orchestration-terra-supervisor.toml"]
+    require(
+        terra_supervisor,
+        (
+            "`STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`",
+            "or\n`SMALL_TWEAK`",
+            "SUPERVISOR_READY: CLASS=<STANDARD_ARTIFACT|DESIGN_ARTIFACT|SMALL_TWEAK>",
+            "artifact class or `SMALL_TWEAK`, review RELEASE_CANDIDATE only",
+            "does not add a software-design checkpoint",
+            "For DESIGN_ARTIFACT, PROOF always starts with `ROOT_EXPERIENCE:`",
+            "ORCHESTRATION_ACCEPT: ## Completed",
+        ),
+        "Terra supervisor",
+    )
+
+    big_tweak_supervisor = documents["codex-orchestration-sol-high-supervisor.toml"]
+    require(
+        big_tweak_supervisor,
+        (
+            "supervisor for `BIG_TWEAK`",
+            "multiple existing\ncode behavior changes",
+            "SUPERVISOR_READY: CLASS=BIG_TWEAK",
+            "CHECKPOINT_REVIEW: PHASE=ROOT_CAUSE",
+            "- Work class: BIG_TWEAK",
+            "- Supervisor: GPT-5.6 Sol / High",
+            "- Implementation: GPT-5.6 Terra / Max",
+            "ORCHESTRATION_ACCEPT: ## Completed",
+        ),
+        "Sol / High big-tweak supervisor",
+    )
+
+    sol_supervisor = documents["codex-orchestration-sol-xhigh-supervisor.toml"]
+    require(
+        sol_supervisor,
+        (
+            "supervisor for `BUILD`: any net-new code",
+            "SUPERVISOR_READY: CLASS=BUILD",
+            "- Work class: BUILD",
+            "ORCHESTRATION_ACCEPT: ## Completed",
+        ),
+        "Sol / Extra High supervisor",
+    )
+
     for filename in (
         "codex-orchestration-luna-implementer.toml",
         "codex-orchestration-terra-implementer.toml",
@@ -235,8 +263,6 @@ def main() -> int:
                 "IMPLEMENTATION_CHECKPOINT:",
                 "SUPERVISOR_READY_TO_RELEASE",
                 "IMPLEMENTATION_RESULT:",
-                "root's milestone\nsignals",
-                "Root relays the supervisor's",
                 "Parse WORKSPACE_DEPENDENCIES before artifact work",
             ),
             filename,
@@ -246,28 +272,38 @@ def main() -> int:
     require(
         installer,
         (
-            "485804b5bd058d30c16feedf404595c6f3c347b5e6e5ef794d92b7e35edeb2a5",
-            "e28c539964354adca6423c19a0da1746a8db60b94b734f7f00fd88b5a03a41d1",
-            "11e5654f28517b4556d9fc13a374f6b97240d8da6f2d8673078730be847f998f",
-            "65e904176779be864c6f2cd3d41a5c9424bbc95cc25190a96fc6d02e130655cc",
-            "c0361a14a8436a89760398d3823a5796f62fb1cfd30f1460a3827a0d9e0d3db9",
-            "8628097f5fddd161710598d5f433f3cbf183d675376e36c5b3cfdebb2d6b18b6",
+            "Exact 0.9.0 profiles accepted for the 0.10.0 taxonomy migration",
+            "143f2b6d5c917352df0b5c6a57608ac70f702f0bbc0ff779eedd5cf1243babd4",
+            "5e55237eabb9315b5ece06ae5239bf5740c69adc9ffcc508f7b0ac3ecaf060d1",
+            "a5277a7f3870f57eca209d21c63a2ac1b95e6918ab4c7c31bd45534d452f64ec",
+            "ed407f41f1d0c2b54417cac2d18647fd1f5156ae321eb3c28415ccbb833cebb4",
+            "4e16a42744c5a2b3503f1ab1eb0638047a77bbf17470567306721fec95ec7b71",
+            "48520a33a70bfceb920fee852ee991f0305170bd255bbf5455146e6ac88281d8",
+            "7dc6715eec52fda116d10bb3154353b2020e093976dc47dc4cdee55bee12b24d",
         ),
-        "0.8.19 upgrade digests",
+        "0.9.0 migration digests",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
     expected_classes = {case["expected"] for case in fixtures["cases"]}
-    if expected_classes != {
+    all_classes = {
         "READ_ONLY",
+        "STANDARD_ARTIFACT",
+        "DESIGN_ARTIFACT",
         "SMALL_TWEAK",
         "BIG_TWEAK",
-        "SMALL_BUILD",
-        "BIG_BUILD",
-    }:
+        "BUILD",
+    }
+    if expected_classes != all_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {expected_classes!r}")
+    ids = [case["id"] for case in fixtures["cases"]]
+    if len(ids) != len(set(ids)):
+        raise AssertionError("triage fixture ids are not unique")
+    steering_relations = {case["expected_relation"] for case in fixtures["steering_cases"]}
+    if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
+        raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.9.0 classifier/root role boundary")
+    print("PASS: 0.10.0 six-class taxonomy and classifier/root boundary")
     return 0
 
 

@@ -70,7 +70,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.9.0). Root performs the binary fast-path gate and then
+DISPATCH_CONTEXT = """Orchestration ON (0.10.0). Root performs the binary fast-path gate and then
 mechanically coordinates the roles selected by the Terra / Max orchestrator. Root never classifies
 taxonomy, constructs acceptance, implements, supervises, or judges change work.
 
@@ -119,10 +119,11 @@ the three classification lines verbatim as CLASSIFICATION. Validate the route me
 these fixed lanes only:
 
 - READ_ONLY: TERRA_MAX / NONE / NONE
+- STANDARD_ARTIFACT: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
+- DESIGN_ARTIFACT: TERRA_MAX / TERRA_MAX / RELEASE_CANDIDATE
 - SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
-- BIG_TWEAK: TERRA_MAX / TERRA_MAX / ROOT_CAUSE,RELEASE_CANDIDATE
-- SMALL_BUILD: TERRA_MAX / SOL_HIGH / DESIGN,RELEASE_CANDIDATE
-- BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
+- BIG_TWEAK: TERRA_MAX / SOL_HIGH / ROOT_CAUSE,RELEASE_CANDIDATE
+- BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
 
 For RELATION=CANCEL, return a concise cancellation result and spawn nothing else. Otherwise, only
 after classification, resolve WORKSPACE_DEPENDENCIES. When WORKSPACE_DEPENDENCIES_REQUIRED=YES,

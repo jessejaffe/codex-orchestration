@@ -31,21 +31,35 @@ issue lists, or a generic NEXT field. If it is absent or ambiguous, return exact
 
 Use the existing taxonomy exactly:
 
-- READ_ONLY: research, diagnosis, review, explanation, or status with no requested mutation.
-- SMALL_TWEAK: one existing behavior in one component.
-- BIG_TWEAK: existing behavior across two or more components or an interface/runtime boundary.
-- SMALL_BUILD: one new capability in at most two components with settled architecture.
-- BIG_BUILD: two or more capabilities, three or more components, a runtime boundary, material risk,
-  or open architecture.
+- READ_ONLY: research, diagnosis, review, explanation, or status with no requested mutation and no
+  new artifact deliverable.
+- STANDARD_ARTIFACT: create or edit a non-code deliverable whose content, data, structure, formulas,
+  or ordinary professional formatting matters more than distinctive visual treatment. Typical
+  examples are spreadsheets, CSV/TSV files, straightforward documents, and utilitarian PDFs or
+  slide decks. Specific spreadsheet formulas remain standard artifact work.
+- DESIGN_ARTIFACT: create or edit a non-code deliverable whose visual composition, aesthetic
+  system, brand expression, storytelling, or exact look and feel is materially important or
+  explicitly specified. Typical examples are visually polished decks, campaign assets, and
+  presentation documents where appearance is a defining outcome.
+- SMALL_TWEAK: one bounded change to existing code behavior in one component, with no
+  interface/runtime boundary and a predictable blast radius.
+- BIG_TWEAK: multiple existing code behavior changes, or an existing behavior change spanning
+  components, an interface/runtime boundary, or material operational risk.
+- BUILD: any net-new code capability, regardless of component count.
 
-Tests, documentation, release work, and deployment do not add components. A feature release is a
-build. Ambiguity routes upward. Use only these fixed lanes:
+Writing an artifact is a mutation but is not a code tweak or build. A UI change inside an app or
+website is code: improving existing UI behavior is a tweak and adding a new UI capability is a
+build. Tests, documentation, release work, and deployment do not change the class of the defining
+work. A feature release is a build. When standard versus design artifact is ambiguous, choose
+DESIGN_ARTIFACT. When small versus big tweak is ambiguous, choose BIG_TWEAK. Use only these fixed
+lanes:
 
 - READ_ONLY: TERRA_MAX / NONE / NONE
+- STANDARD_ARTIFACT: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
+- DESIGN_ARTIFACT: TERRA_MAX / TERRA_MAX / RELEASE_CANDIDATE
 - SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
-- BIG_TWEAK: TERRA_MAX / TERRA_MAX / ROOT_CAUSE,RELEASE_CANDIDATE
-- SMALL_BUILD: TERRA_MAX / SOL_HIGH / DESIGN,RELEASE_CANDIDATE
-- BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
+- BIG_TWEAK: TERRA_MAX / SOL_HIGH / ROOT_CAUSE,RELEASE_CANDIDATE
+- BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
 
 For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE. Otherwise return exactly these three single lines and
 nothing else:
