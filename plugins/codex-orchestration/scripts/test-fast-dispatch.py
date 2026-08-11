@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.10.3 root coordination."""
+"""Hermetic tests for chat-scoped activation and 0.10.4 low-latency coordination."""
 
 from __future__ import annotations
 
@@ -82,21 +82,26 @@ def main() -> int:
     required = (
         "DIRECT READ-ONLY FAST PATH",
         "binary fast-path gate",
-        "DESKTOP REASONING DISPLAY",
-        "single plain word `Thinking`",
-        "before, between, and after tool calls",
+        "DESKTOP ACTIVITY DISPLAY",
+        "one plain 2-7 word current milestone",
+        "Waiting for Terra / Max\nclassification",
+        "Starting Luna / Max implementation",
+        "If no concrete milestone is known, use exactly\n`Thinking`",
         "answer in root immediately",
-        "use no tools or agents",
+        "Use no tools or agents",
         "Starting Terra / Max classification now.",
         "terra_max_orchestrator_<objective_slug>",
         "ORCHESTRATE_CLASSIFY",
-        "fork_turns=none",
+        "fork_turns=1",
+        "USER_REQUEST=INHERITED_CURRENT_QUERY",
+        "FAST RELAY",
+        "same assistant\nresponse",
         "PRIOR_COMPLETED_RESULT: NONE",
         "RECENT_CONTEXT_FRESHNESS: NONE",
         "RECENT_CONTEXT: NONE",
         "WORKSPACE_DEPENDENCIES_REQUIRED: NO",
         "codex_app__load_workspace_dependencies",
-        "only\nafter classification, resolve WORKSPACE_DEPENDENCIES",
+        "only after classification, resolve\nWORKSPACE_DEPENDENCIES",
         "codex_orchestration_terra_supervisor",
         "codex_orchestration_terra_orchestrator",
         "codex_orchestration_terra_implementer",
@@ -113,28 +118,31 @@ def main() -> int:
         "sol_extra_high_supervisor_<objective_slug>",
         "CHANGE WORK — first spawn the selected implementer",
         "Immediately spawn the selected supervisor second",
-        "Do not wait between these two spawns",
+        "Emit both `spawn_agent` tool calls in one assistant response",
+        "Do not wait for or process the implementer spawn output",
         "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
         "ORCHESTRATION_STATUS: REASON=",
-        "Require a nonempty exact\n`ORCHESTRATION_STATUS: REASON=` value",
+        "Require a nonempty exact `ORCHESTRATION_STATUS: REASON=` value",
         "This is a <friendly class> because <exact reason>.",
         "Use dynamic lane labels exactly: LUNA_MAX=Luna / Max",
         "TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High",
         "timeout_ms: 3600000",
-        "leading ORCHESTRATION_HANDOFF line",
+        "leading ORCHESTRATION_HANDOFF then",
         "ORCHESTRATION_ROOT_VERIFY",
         "root-only Browser/visual tools",
-        "cache-bypassed\nand at the requested viewport",
+        "cache-bypassed live/artifact check at the requested viewport",
         "ROOT_VERIFICATION_RESULT: START=<observed start>",
-        "uses `followup_task`",
+        "every handoff to an idle child uses\n`followup_task`",
         "ARTIFACTS=<URL or path, viewport, screenshots",
         "broaden the check, or judge acceptance",
-        "Remove only the acceptance protocol prefix",
-        "preserving\nline breaks, links, sections",
+        "remove only the acceptance protocol prefix",
+        "preserving line breaks, links, sections",
     )
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
+    if routed_context.count("USER_REQUEST=INHERITED_CURRENT_QUERY") != 4:
+        raise AssertionError("initial role packets do not consistently inherit the current query")
     for obsolete in ("headless-grader.py", "--request-token", "grader-requests"):
         if obsolete in routed_context:
             raise AssertionError(f"dispatch retains obsolete headless path: {obsolete!r}")
@@ -150,7 +158,10 @@ def main() -> int:
         "Wait for that turn to finish before spawning an implementer",
         "This is a <friendly class>. Implementation started",
         "Starting orchestration with verbatim request",
-        "verbatim request",
+        "Planning orchestration and classification steps",
+        "USER_REQUEST=<exact current request and attachment paths>",
+        "USER_REQUEST=<exact request and attachment paths>",
+        "The classifier always uses none",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
@@ -239,7 +250,7 @@ def main() -> int:
     inherited = invoke(hook, state, active_id, "Also support JSON", transcript)
     inherited_context = context(inherited)
     for value in (
-        "FORK=`2`",
+        "FORK=`1`",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         acceptance,
         "PRIOR_COMPLETED_RESULT: NONE",
@@ -304,8 +315,8 @@ def main() -> int:
     accepted_context = context(accepted)
     if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in accepted_context:
         raise AssertionError("accepted objective was not cleared")
-    if "FORK=`none`" not in accepted_context:
-        raise AssertionError("completed rollout was still inherited instead of using its capsule")
+    if "FORK=`1`" not in accepted_context:
+        raise AssertionError("current query did not use one-turn inheritance with its capsule")
     if f"PRIOR_COMPLETED_RESULT: {handoff}" not in accepted_context:
         raise AssertionError("completion handoff was not passed to the next Terra")
     if "RECENT_CONTEXT_FRESHNESS: FRESH" not in accepted_context:
@@ -338,8 +349,8 @@ def main() -> int:
         ],
     )
     legacy = context(invoke(hook, state, active_id, "Summarize that", legacy_transcript))
-    if "FORK=`none`" not in legacy:
-        raise AssertionError("legacy completion still inherited its long parent rollout")
+    if "FORK=`1`" not in legacy:
+        raise AssertionError("legacy follow-up did not use one-turn inheritance")
     if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
         raise AssertionError("legacy completion did not fall back to its accepted result")
 
@@ -414,7 +425,7 @@ def main() -> int:
         invoke(hook, state, active_id, current_request, stale_context_transcript)
     )
     for value in (
-        "FORK=`none`",
+        "FORK=`1`",
         "RECENT_CONTEXT_FRESHNESS: STALE",
         agreed_scope,
         f"PRIOR_COMPLETED_RESULT: {stale_capsule}",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.10.3 six-class taxonomy and role boundary."""
+"""Static contracts for the 0.10.4 fast handoff and activity protocol."""
 
 from __future__ import annotations
 
@@ -98,8 +98,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.10.3":
-        raise AssertionError(f"manifest does not use 0.10.3: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.10.4":
+        raise AssertionError(f"manifest does not use 0.10.4: {manifest.get('version')!r}")
 
     orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -107,7 +107,9 @@ def main() -> int:
         (
             "orchestrator role",
             "always GPT-5.6 Terra / Max",
-            "current query plus its bounded conversation continuity",
+            "inherited current query plus its bounded conversation continuity",
+            "latency-critical bounded lookup",
+            "USER_REQUEST=INHERITED_CURRENT_QUERY",
             "Do not call tools",
             "Do not\nwrite an acceptance contract or a plan",
             "STANDARD_ARTIFACT: create or edit a non-code deliverable",
@@ -141,17 +143,25 @@ def main() -> int:
         "taxonomy-only orchestrator",
     )
 
+    for filename, document in documents.items():
+        if "inherited root user request and attachments that precede this protocol packet" not in " ".join(document.split()):
+            raise AssertionError(f"{filename} omits one-turn current-query inheritance")
+
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
     require(
         router,
         (
-            "Orchestration ON (0.10.3)",
-            "DESKTOP REASONING DISPLAY",
-            "single plain word `Thinking`",
-            "before, between, and after tool calls",
+            "Orchestration ON (0.10.4)",
+            "DESKTOP ACTIVITY DISPLAY",
+            "one plain 2-7 word current milestone",
+            "Waiting for Terra / Max\nclassification",
+            "Starting Luna / Max implementation",
+            "If no concrete milestone is known, use exactly\n`Thinking`",
             "DIRECT READ-ONLY FAST PATH",
+            "FAST RELAY",
             "ORCHESTRATE_CLASSIFY",
-            "fork_turns=none",
+            "fork_turns=1",
+            "USER_REQUEST=INHERITED_CURRENT_QUERY",
             "codex_orchestration_terra_orchestrator",
             *ROUTES,
             "codex_orchestration_luna_implementer",
@@ -170,16 +180,17 @@ def main() -> int:
             "CHANGE WORK — first spawn the selected implementer",
             "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
             "Immediately spawn the selected supervisor second",
-            "Do not wait between these two spawns",
+            "Emit both `spawn_agent` tool calls in one assistant response",
+            "Do not wait for or process the implementer spawn output",
             "ORCHESTRATION_STATUS: REASON=",
-            "Require a nonempty exact\n`ORCHESTRATION_STATUS: REASON=` value",
+            "Require a nonempty exact `ORCHESTRATION_STATUS: REASON=` value",
             "This is a <friendly class> because <exact reason>.",
             "Use dynamic lane labels exactly: LUNA_MAX=Luna / Max",
             "TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High",
             "Never hard-code the\nbig-tweak sentence or its models",
             "Root owns every child",
-            "every handoff to an idle existing child uses `followup_task`",
-            "Never activate\nimplementer and supervisor simultaneously",
+            "every handoff to an idle child uses\n`followup_task`",
+            "Never activate implementer and\nsupervisor simultaneously",
             "CHECKPOINT_REVIEW",
             "FINAL_REVIEW",
             "ORCHESTRATION_ROOT_VERIFY",
@@ -197,7 +208,10 @@ def main() -> int:
             "big_tweak_implementer_<objective_slug>",
             "big_tweak_supervisor_<objective_slug>",
             "Starting orchestration with verbatim request",
-            "verbatim request",
+            "Planning orchestration and classification steps",
+            "USER_REQUEST=<exact current request and attachment paths>",
+            "USER_REQUEST=<exact request and attachment paths>",
+            "The classifier always uses none",
         ),
         "root routes",
     )
@@ -206,6 +220,18 @@ def main() -> int:
     supervisor_spawn = router.index("Immediately spawn the selected supervisor second")
     if implementer_spawn >= supervisor_spawn:
         raise AssertionError("change startup does not spawn the implementer before the supervisor")
+    supervisor_packet = router[
+        router.index("Immediately spawn the selected supervisor second with:") :
+        router.index("Emit both `spawn_agent` tool calls in one assistant response")
+    ]
+    if "WORKSPACE_DEPENDENCIES=" in supervisor_packet:
+        raise AssertionError("context-only supervisor startup still copies workspace dependencies")
+    coordination = router[
+        router.index("COORDINATION LOOP") : router.index("`ORCHESTRATION_ROOT_VERIFY`")
+    ]
+    for repeated_context in ("USER_REQUEST", "RECENT_CONTEXT", "CLASSIFICATION"):
+        if repeated_context in coordination:
+            raise AssertionError(f"follow-up relays still repeat {repeated_context}")
 
     luna = documents["codex-orchestration-luna-implementer.toml"]
     require(
@@ -354,6 +380,14 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.10.3 profiles accepted for the 0.10.4 startup-latency migration",
+            "b7f25d2474fbe35e42b14f6683fca4a2398da5bc9a5a9c7ca70b7c7fa8f543cb",
+            "fd962b99e92a116957c867299d9bc1713cd8faed721c8bc79b35685c5f58470a",
+            "fe023cd9d4f1ece2ed386679afb5a3ad50f2f2048d8cfe40605397b5780dc4b7",
+            "75340397335c5a18b1112233d75d2a51d3033bf3a8ef578841b4d2da1aafedc8",
+            "66af783589d285cd99e5a427cbcdc0c87de279f0005ab03e55b3fa3d3c93eee3",
+            "3678c195db31f3bf54fcac7d8d0d31afe19d9edb108ed1e33aedcef4b1717ae8",
+            "02ea1e6f7242f20ef761962b9c6a8c25f4d7cc5ce88ff8c6ee9674d2f89f9995",
             "Exact 0.10.2 profiles accepted for the 0.10.3 readable release migration",
             "142b58957a44c91e45bd4f110f30fce855a6e6cb23ec8069bba87e900ccc3e33",
             "db744d545558fd8f93dfa93392c0ea1ace9d451e074fa700121d69a7d10f8fd8",
@@ -378,7 +412,7 @@ def main() -> int:
             "48520a33a70bfceb920fee852ee991f0305170bd255bbf5455146e6ac88281d8",
             "7dc6715eec52fda116d10bb3154353b2020e093976dc47dc4cdee55bee12b24d",
         ),
-        "0.10.2, 0.10.0, and 0.9.0 migration digests",
+        "0.10.3, 0.10.2, 0.10.0, and 0.9.0 migration digests",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
@@ -400,7 +434,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.10.3 readable, preplanned release protocol")
+    print("PASS: 0.10.4 low-latency activity and relay protocol")
     return 0
 
 

@@ -11,8 +11,9 @@ Sol / Extra High supervisor is strictly read-only. Never delegate or use agent-c
 never ask the supervisor to implement.
 
 On the initial `IMPLEMENTATION_START`, `ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is not a
-blocker. Begin immediately from the exact `USER_REQUEST`, Terra's immutable relation and route,
-RECENT_CONTEXT, dependencies, destinations, and explicit constraints while the read-only
+blocker. Begin immediately from the inherited root user request and attachments that precede this
+protocol packet, Terra's
+immutable relation and route, RECENT_CONTEXT, dependencies, destinations, and explicit constraints while the read-only
 supervisor defines acceptance from that same context. Do not invent authority or commit, push,
 deploy, or run irreversible migration steps before supervisor approval. Root includes the exact
 immutable acceptance with every later supervisor decision. Preserve concurrent work, required
