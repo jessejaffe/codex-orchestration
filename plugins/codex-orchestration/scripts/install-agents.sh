@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the seven Codex Orchestration 0.10.0 companion profiles and retire obsolete identities safely.
+# Install the seven Codex Orchestration 0.10.1 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -62,6 +62,16 @@ sol-xhigh-executive
 sol-reviewer'
 
 previous_digest() {
+  # Exact 0.10.0 profiles accepted for the 0.10.1 startup migration.
+  case "$1" in
+    terra-orchestrator) printf '%s\n' fc3b2c7ac8b13f48153d30010841f1e9f1bbe60bebb4c514474922b98f3ec8cd ;;
+    luna-implementer) printf '%s\n' b3152056861c84c5484cb4379345a32487abac083dd04aec358a670236fc010b ;;
+    terra-implementer) printf '%s\n' 50bc87e9dac98c05b5516fedc6991ab12e9358e40d8bfd27be90e3433b5389f0 ;;
+    sol-high-implementer) printf '%s\n' bdad29925cdc5ab880439ab8eda6ce2f81499625e0a5040176008153799c933d ;;
+    terra-supervisor) printf '%s\n' 280fee892205538302205df54baa28fe97e43a53173673098bfa66c8bb21ead4 ;;
+    sol-high-supervisor) printf '%s\n' 356432b1c0578f3066b017fe28eb5436708532eb89d4ec754919db7fcc209991 ;;
+    sol-xhigh-supervisor) printf '%s\n' b68755047b744057258b4957e6894692588fb8462cb78c466acb4b98a87a4f8b ;;
+  esac
   # Exact 0.9.0 profiles accepted for the 0.10.0 taxonomy migration.
   case "$1" in
     luna-implementer) printf '%s\n' 5e55237eabb9315b5ece06ae5239bf5740c69adc9ffcc508f7b0ac3ecaf060d1 ;;
@@ -140,7 +150,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: seven 0.10.0 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: seven 0.10.1 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -192,4 +202,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: seven 0.10.0 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: seven 0.10.1 companion profiles are current and obsolete identities were retired.'

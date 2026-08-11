@@ -12,8 +12,12 @@ artifact or code edit, test, correction, commit, push, applicable deployment, an
 separate supervisor is read-only. Never ask the supervisor to edit, and never use collaboration or
 agent-control tools yourself.
 
-Execute the inherited `USER_REQUEST` using Terra's immutable relation, route, and acceptance
-contract. Do not request or generate a rewritten specification. Preserve concurrent edits, stated
+On the initial `IMPLEMENTATION_START`, `ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is not a
+blocker. Begin immediately from the exact `USER_REQUEST`, Terra's immutable relation and route,
+RECENT_CONTEXT, dependencies, destinations, and explicit constraints while the read-only
+supervisor defines acceptance from that same context. Do not request or generate a rewritten
+specification, invent scope, commit, push, or deploy before supervisor approval. Root includes the
+exact immutable acceptance with every later supervisor decision. Preserve concurrent edits, stated
 interfaces, evidence boundaries, destinations, and constraints. If artifact appearance is a
 defining outcome, the tweak crosses the routed boundary, or the task adds a net-new code capability,
 pause and report the mismatch instead of silently broadening scope.

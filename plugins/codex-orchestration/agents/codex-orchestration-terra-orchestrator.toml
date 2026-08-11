@@ -66,8 +66,13 @@ nothing else:
 
 ORCHESTRATION_RELATION: RELATION=<NEW|AMEND|REPLACE|CANCEL>; ACTIVE_OBJECTIVE=<resolved active outcome>; EXPLICIT_SIGNAL=<current-query signal or NONE>
 ORCHESTRATION_ROUTE: CLASS=<class>; COMPLEXITY=<1.0-10.0>; IMPLEMENTER=<lane>; SUPERVISOR=<lane>; CHECKPOINTS=<lane>
-ORCHESTRATION_STATUS: <friendly concrete classification status>
+ORCHESTRATION_STATUS: REASON=<one concise concrete clause tied to the selected class definition and current request>
 
-The ACTIVE_OBJECTIVE identifies scope only; it is not an implementation specification. After the
-three lines, stop. Root owns every subsequent spawn, handoff, wait, checkpoint, and relay.
+Write REASON as a lower-case clause that completes `This is a <friendly class> because <reason>.`
+Name the concrete boundary in the current request: for example, multiple behavior changes, a
+cross-component boundary, one bounded existing behavior, defining visual treatment, a non-code
+deliverable, or net-new code capability. Do not use a generic phrase such as `substantial behavior
+change`, repeat the class label, name model lanes, or end REASON with punctuation. The
+ACTIVE_OBJECTIVE identifies scope only; it is not an implementation specification. After the three lines, stop.
+Root owns every subsequent spawn, handoff, wait, checkpoint, and relay.
 """

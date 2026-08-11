@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.10.0 six-class taxonomy and role boundary."""
+"""Static contracts for the 0.10.1 six-class taxonomy and role boundary."""
 
 from __future__ import annotations
 
@@ -98,8 +98,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.10.0":
-        raise AssertionError(f"manifest does not use 0.10.0: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.10.1":
+        raise AssertionError(f"manifest does not use 0.10.1: {manifest.get('version')!r}")
 
     orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -119,6 +119,10 @@ def main() -> int:
             "Writing an artifact is a mutation but is not a code tweak or build",
             "A UI change inside an app or\nwebsite is code",
             *ROUTES,
+            "ORCHESTRATION_STATUS: REASON=",
+            "This is a <friendly class> because <reason>.",
+            "Do not use a generic phrase such as `substantial behavior\nchange`",
+            "end REASON with punctuation",
             "Root owns every subsequent spawn, handoff, wait, checkpoint, and relay",
         ),
         "Terra / Max orchestrator",
@@ -141,7 +145,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.10.0)",
+            "Orchestration ON (0.10.1)",
             "DIRECT READ-ONLY FAST PATH",
             "ORCHESTRATE_CLASSIFY",
             "fork_turns=none",
@@ -153,9 +157,26 @@ def main() -> int:
             "codex_orchestration_terra_supervisor",
             "codex_orchestration_sol_high_supervisor",
             "codex_orchestration_sol_xhigh_supervisor",
+            "terra_max_orchestrator_<objective_slug>",
+            "terra_max_implementer_<objective_slug>",
+            "terra_max_supervisor_<objective_slug>",
+            "luna_max_implementer_<objective_slug>",
+            "sol_high_implementer_<objective_slug>",
+            "sol_high_supervisor_<objective_slug>",
+            "sol_extra_high_supervisor_<objective_slug>",
+            "CHANGE WORK — first spawn the selected implementer",
+            "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+            "Immediately spawn the selected supervisor second",
+            "Do not wait between these two spawns",
+            "ORCHESTRATION_STATUS: REASON=",
+            "Require a nonempty exact\n`ORCHESTRATION_STATUS: REASON=` value",
+            "This is a <friendly class> because <exact reason>.",
+            "Use dynamic lane labels exactly: LUNA_MAX=Luna / Max",
+            "TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High",
+            "Never hard-code the\nbig-tweak sentence or its models",
             "Root owns every child",
-            "Every handoff to an idle existing child uses\n`followup_task`",
-            "Never activate implementer and supervisor simultaneously",
+            "every handoff to an idle existing child uses `followup_task`",
+            "Never activate\nimplementer and supervisor simultaneously",
             "CHECKPOINT_REVIEW",
             "FINAL_REVIEW",
             "ORCHESTRATION_ROOT_VERIFY",
@@ -167,9 +188,19 @@ def main() -> int:
         (
             "SMALL_BUILD: TERRA_MAX",
             "BIG_BUILD: SOL_HIGH",
+            "first spawn only the selected supervisor",
+            "Wait for that turn to finish before spawning an implementer",
+            "This is a <friendly class>. Implementation started",
+            "big_tweak_implementer_<objective_slug>",
+            "big_tweak_supervisor_<objective_slug>",
         ),
         "root routes",
     )
+
+    implementer_spawn = router.index("CHANGE WORK — first spawn the selected implementer")
+    supervisor_spawn = router.index("Immediately spawn the selected supervisor second")
+    if implementer_spawn >= supervisor_spawn:
+        raise AssertionError("change startup does not spawn the implementer before the supervisor")
 
     luna = documents["codex-orchestration-luna-implementer.toml"]
     require(
@@ -264,14 +295,43 @@ def main() -> int:
                 "SUPERVISOR_READY_TO_RELEASE",
                 "IMPLEMENTATION_RESULT:",
                 "Parse WORKSPACE_DEPENDENCIES before artifact work",
+                "`ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is not a\nblocker",
+                "Root includes the",
+                "with every later supervisor decision",
             ),
             filename,
         )
+
+    for filename in (
+        "codex-orchestration-terra-supervisor.toml",
+        "codex-orchestration-sol-high-supervisor.toml",
+        "codex-orchestration-sol-xhigh-supervisor.toml",
+    ):
+        require(
+            documents[filename],
+            (
+                "implementer's initial turn is already active",
+            ),
+            filename,
+        )
+        compact_supervisor = " ".join(documents[filename].lower().split())
+        if "call no tools" not in compact_supervisor:
+            raise AssertionError(f"{filename} permits tools during context-loading overlap")
+        if "inspect no workspace state" not in compact_supervisor:
+            raise AssertionError(f"{filename} permits workspace inspection during startup overlap")
 
     installer = (plugin / "scripts" / "install-agents.sh").read_text(encoding="utf-8")
     require(
         installer,
         (
+            "Exact 0.10.0 profiles accepted for the 0.10.1 startup migration",
+            "fc3b2c7ac8b13f48153d30010841f1e9f1bbe60bebb4c514474922b98f3ec8cd",
+            "b3152056861c84c5484cb4379345a32487abac083dd04aec358a670236fc010b",
+            "50bc87e9dac98c05b5516fedc6991ab12e9358e40d8bfd27be90e3433b5389f0",
+            "bdad29925cdc5ab880439ab8eda6ce2f81499625e0a5040176008153799c933d",
+            "280fee892205538302205df54baa28fe97e43a53173673098bfa66c8bb21ead4",
+            "356432b1c0578f3066b017fe28eb5436708532eb89d4ec754919db7fcc209991",
+            "b68755047b744057258b4957e6894692588fb8462cb78c466acb4b98a87a4f8b",
             "Exact 0.9.0 profiles accepted for the 0.10.0 taxonomy migration",
             "143f2b6d5c917352df0b5c6a57608ac70f702f0bbc0ff779eedd5cf1243babd4",
             "5e55237eabb9315b5ece06ae5239bf5740c69adc9ffcc508f7b0ac3ecaf060d1",
@@ -281,7 +341,7 @@ def main() -> int:
             "48520a33a70bfceb920fee852ee991f0305170bd255bbf5455146e6ac88281d8",
             "7dc6715eec52fda116d10bb3154353b2020e093976dc47dc4cdee55bee12b24d",
         ),
-        "0.9.0 migration digests",
+        "0.10.0 and 0.9.0 migration digests",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
@@ -303,7 +363,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.10.0 six-class taxonomy and classifier/root boundary")
+    print("PASS: 0.10.1 six-class taxonomy and classifier/root boundary")
     return 0
 
 

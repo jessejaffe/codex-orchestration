@@ -70,7 +70,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.10.0). Root performs the binary fast-path gate and then
+DISPATCH_CONTEXT = """Orchestration ON (0.10.1). Root performs the binary fast-path gate and then
 mechanically coordinates the roles selected by the Terra / Max orchestrator. Root never classifies
 taxonomy, constructs acceptance, implements, supervises, or judges change work.
 
@@ -93,7 +93,7 @@ missed the agreed scope is eligible when the reason is already in the conversati
 use Terra.
 
 Otherwise, say exactly `Starting Terra / Max classification now.` and immediately start one
-orchestrator named `terra_orchestrator_<objective_slug>` with `fork_turns=none` and this exact
+orchestrator named `terra_max_orchestrator_<objective_slug>` with `fork_turns=none` and this exact
 classification packet:
 ORCHESTRATE_CLASSIFY
 PRIOR_ACTIVE_ACCEPTANCE=<exact value above>
@@ -115,8 +115,9 @@ short-poll, call `list_agents` because time passed, or emit an elapsed-time hear
 The orchestrator must finish with either one ORCHESTRATION_BLOCKED line or exactly these three
 lines: ORCHESTRATION_RELATION, ORCHESTRATION_ROUTE, and ORCHESTRATION_STATUS. It must not call tools
 or do task work. If its final payload has any other form, report a protocol error and stop. Preserve
-the three classification lines verbatim as CLASSIFICATION. Validate the route mechanically against
-these fixed lanes only:
+the three classification lines verbatim as CLASSIFICATION. Require a nonempty exact
+`ORCHESTRATION_STATUS: REASON=` value or report a protocol error. Validate the route mechanically
+against these fixed lanes only:
 
 - READ_ONLY: TERRA_MAX / NONE / NONE
 - STANDARD_ARTIFACT: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
@@ -145,8 +146,12 @@ with its pinned model/effort and prepend the matching profile's developer_instru
 - SOL_XHIGH supervisor: `codex_orchestration_sol_xhigh_supervisor`; fallback `default`, GPT-5.6 Sol / Extra High.
 
 Use the task's FORK value for every implementer and supervisor. The classifier always uses none.
-Name each child `<lane>_<role>_<objective_slug>`. Root owns every child and keeps one role active at
-a time.
+Child pills identify models, never work classes. Use exactly
+`terra_max_implementer_<objective_slug>`, `terra_max_supervisor_<objective_slug>`,
+`luna_max_implementer_<objective_slug>`,
+`sol_high_implementer_<objective_slug>`, `sol_high_supervisor_<objective_slug>`, or
+`sol_extra_high_supervisor_<objective_slug>`. Root owns every child. Initial role turns overlap only
+for tool-free supervisor context loading; checkpoints are serial.
 
 READ_ONLY — spawn only the Terra implementer with:
 READ_ONLY_WORK
@@ -161,7 +166,17 @@ Wait once. It may use task tools but must not mutate. Its final payload must con
 leading ORCHESTRATION_HANDOFF line and then ORCHESTRATION_ACCEPT. Remove the internal capsule and
 protocol prefix and return the entire remaining payload exactly.
 
-CHANGE WORK — first spawn only the selected supervisor with:
+CHANGE WORK — first spawn the selected implementer with:
+IMPLEMENTATION_START
+FORK=<FORK>
+CLASSIFICATION=<exact three lines>
+ACCEPTANCE=PENDING_SUPERVISOR_INIT
+USER_REQUEST=<verbatim request and attachment paths>
+RECENT_CONTEXT=<exact value>
+WORKSPACE_DEPENDENCIES=<exact value>
+CURRENT_ROOT_ROUTE=<exact value>
+
+Immediately spawn the selected supervisor second with:
 SUPERVISOR_INIT
 FORK=<FORK>
 CLASSIFICATION=<exact three lines>
@@ -169,28 +184,34 @@ RECENT_CONTEXT=<exact value>
 WORKSPACE_DEPENDENCIES=<exact value>
 CURRENT_ROOT_ROUTE=<exact value>
 USER_REQUEST=<verbatim request and attachment paths>
-Wait for that turn to finish before spawning an implementer. A valid response starts
-SUPERVISOR_READY and contains exactly one ORCHESTRATION_ACCEPTANCE line. Preserve that line
-verbatim as ACCEPTANCE. A SUPERVISOR_SCOPE_REJECT or SUPERVISOR_BLOCKED is relayed as one concise
-scope question/blocker and stops; root never repairs scope.
+Do not wait between these two spawns. Accept either initial result first and preserve an early
+implementer checkpoint while waiting; never replace a child. A valid supervisor result starts
+SUPERVISOR_READY and contains exactly one ORCHESTRATION_ACCEPTANCE line; preserve it verbatim as
+ACCEPTANCE. On SUPERVISOR_SCOPE_REJECT or SUPERVISOR_BLOCKED, interrupt the implementer, relay one
+concise scope question/blocker, and stop.
 
-After readiness, spawn only the selected implementer with FORK and the same CLASSIFICATION,
-ACCEPTANCE, USER_REQUEST, RECENT_CONTEXT, WORKSPACE_DEPENDENCIES, and CURRENT_ROOT_ROUTE. Post one
-concise user update: `This is a <friendly class>. Implementation started with <implementer model>.
-The <supervisor model> supervisor is ready.` Then wait.
+After readiness, lowercase CLASS and replace its underscore with a space. Read the clause after
+`ORCHESTRATION_STATUS: REASON=` and post:
+`This is a <friendly class> because <exact reason>. Implementation started with <implementer model>.
+The <supervisor model> supervisor is ready.` Use dynamic lane labels exactly: LUNA_MAX=Luna / Max,
+TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High. Never hard-code the
+big-tweak sentence or its models. Wait if the implementer checkpoint has not arrived.
 
-COORDINATION LOOP — all children are root's. Every handoff to an idle existing child uses
-`followup_task`, never `send_message`. After each handoff, wait for that turn's structured final
-result before doing anything else. Never activate implementer and supervisor simultaneously.
+COORDINATION LOOP — all children are root's. Once the initial context-only overlap is complete,
+every handoff to an idle existing child uses `followup_task`, never `send_message`. After each
+handoff, wait for that turn's structured final result before doing anything else. Never activate
+implementer and supervisor simultaneously after the implementer reaches its first checkpoint.
 
 - On `IMPLEMENTATION_CHECKPOINT`, reactivate the supervisor with `CHECKPOINT_REVIEW` plus the exact
   checkpoint, CLASSIFICATION, ACCEPTANCE, USER_REQUEST, and RECENT_CONTEXT; then wait.
 - On `SUPERVISOR_CONTINUE`, post `Supervisor approved <completed checkpoint>. Implementation
-  continues to <next checkpoint>.`, reactivate the implementer with the exact decision, and wait.
+  continues to <next checkpoint>.`, reactivate the implementer with the exact decision and exact
+  ACCEPTANCE, and wait.
 - On `SUPERVISOR_CORRECT`, post one concise update naming the finding, reactivate the same
-  implementer with the exact decision, and wait.
+  implementer with the exact decision and exact ACCEPTANCE, and wait.
 - On `SUPERVISOR_READY_TO_RELEASE`, post `Ready to release. The implementer is committing, pushing,
-  deploying, and verifying now.`, reactivate the implementer with the exact decision, and wait.
+  deploying, and verifying now.`, reactivate the implementer with the exact decision and exact
+  ACCEPTANCE, and wait.
 - On `IMPLEMENTATION_RESULT`, reactivate the supervisor with `FINAL_REVIEW` plus the exact result,
   CLASSIFICATION, ACCEPTANCE, USER_REQUEST, RECENT_CONTEXT, and CURRENT_ROOT_ROUTE; then wait.
 - On `SUPERVISOR_BLOCKED` or an implementer blocker, relay one concise blocker and stop.

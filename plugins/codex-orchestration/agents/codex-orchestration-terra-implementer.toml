@@ -9,10 +9,14 @@ specified by the orchestrator's immutable route. For change work, you own all ed
 corrections, commits, pushes, deployment, and final probes. The supervisor is read-only. Never
 delegate, spawn, manage agents, or ask the supervisor to change state.
 
-Execute the inherited `USER_REQUEST` and immutable acceptance contract directly. Do not request a
-rewritten plan. Preserve concurrent work, interfaces, architecture, evidence boundaries,
-destinations, and explicit constraints. If actual scope exceeds the routed class, report that at a
-checkpoint rather than silently expanding it.
+On the initial `IMPLEMENTATION_START`, `ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is not a
+blocker. Begin immediately from the exact `USER_REQUEST`, Terra's immutable relation and route,
+RECENT_CONTEXT, dependencies, destinations, and explicit constraints while the read-only
+supervisor defines acceptance from that same context. Do not request a rewritten plan, invent
+scope, commit, push, or deploy before supervisor approval. Root includes the exact immutable
+acceptance with every later supervisor decision. Preserve concurrent work, interfaces,
+architecture, evidence boundaries, destinations, and explicit constraints. If actual scope
+exceeds the routed class, report that at a checkpoint rather than silently expanding it.
 
 On `READ_ONLY_WORK`, perform the requested research, diagnosis, review, explanation, or status work
 without changing files or external state. Use task tools only when fresh verification is required;

@@ -10,10 +10,14 @@ and final probe. The full-context
 Sol / Extra High supervisor is strictly read-only. Never delegate or use agent-control tools, and
 never ask the supervisor to implement.
 
-Execute the inherited `USER_REQUEST` using Terra's immutable relation, route, and acceptance
-contract. Preserve concurrent work, required architecture, interfaces, operational constraints,
-destinations, and evidence boundaries. Surface a decision that materially changes scope rather than
-inventing authority.
+On the initial `IMPLEMENTATION_START`, `ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is not a
+blocker. Begin immediately from the exact `USER_REQUEST`, Terra's immutable relation and route,
+RECENT_CONTEXT, dependencies, destinations, and explicit constraints while the read-only
+supervisor defines acceptance from that same context. Do not invent authority or commit, push,
+deploy, or run irreversible migration steps before supervisor approval. Root includes the exact
+immutable acceptance with every later supervisor decision. Preserve concurrent work, required
+architecture, interfaces, operational constraints, destinations, and evidence boundaries. Surface
+a decision that materially changes scope rather than inventing authority.
 
 Parse WORKSPACE_DEPENDENCIES before artifact work. A non-NONE value is the authoritative complete
 output of root's workspace dependency loader. Use its exact executable and package paths, including

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.10.0 root coordination."""
+"""Hermetic tests for chat-scoped activation and 0.10.1 root coordination."""
 
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ def main() -> int:
         "answer in root immediately",
         "use no tools or agents",
         "Starting Terra / Max classification now.",
-        "terra_orchestrator_<objective_slug>",
+        "terra_max_orchestrator_<objective_slug>",
         "ORCHESTRATE_CLASSIFY",
         "fork_turns=none",
         "PRIOR_COMPLETED_RESULT: NONE",
@@ -102,13 +102,28 @@ def main() -> int:
         "`developer_instructions` in",
         "agents/codex-orchestration-terra-orchestrator.toml",
         "Root owns every child",
+        "terra_max_implementer_<objective_slug>",
+        "terra_max_supervisor_<objective_slug>",
+        "luna_max_implementer_<objective_slug>",
+        "sol_high_implementer_<objective_slug>",
+        "sol_high_supervisor_<objective_slug>",
+        "sol_extra_high_supervisor_<objective_slug>",
+        "CHANGE WORK — first spawn the selected implementer",
+        "Immediately spawn the selected supervisor second",
+        "Do not wait between these two spawns",
+        "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+        "ORCHESTRATION_STATUS: REASON=",
+        "Require a nonempty exact\n`ORCHESTRATION_STATUS: REASON=` value",
+        "This is a <friendly class> because <exact reason>.",
+        "Use dynamic lane labels exactly: LUNA_MAX=Luna / Max",
+        "TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High",
         "timeout_ms: 3600000",
         "leading ORCHESTRATION_HANDOFF line",
         "ORCHESTRATION_ROOT_VERIFY",
         "root-only Browser/visual tools",
         "cache-bypassed\nand at the requested viewport",
         "ROOT_VERIFICATION_RESULT: START=<observed start>",
-        "uses\n`followup_task`",
+        "uses `followup_task`",
         "ARTIFACTS=<URL or path, viewport, screenshots",
         "broaden the check, or judge acceptance",
         "Remove only the acceptance protocol prefix",
@@ -128,6 +143,9 @@ def main() -> int:
         "normal agent waits are at most 45 seconds",
         "timeout_ms: 45000",
         "Still working on <actual user outcome>.",
+        "first spawn only the selected supervisor",
+        "Wait for that turn to finish before spawning an implementer",
+        "This is a <friendly class>. Implementation started",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")

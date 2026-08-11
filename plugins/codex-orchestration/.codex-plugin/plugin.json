@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Six-class taxonomy with artifact-aware and code-aware orchestration.",
   "author": {
     "name": "Daniel McAteer",
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Event-driven orchestration with milestone-only progress",
-    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.10.0 uses six outcome-based classes: READ_ONLY, STANDARD_ARTIFACT, DESIGN_ARTIFACT, SMALL_TWEAK, BIG_TWEAK, and BUILD. Non-code deliverables are separated from code changes: standard artifacts use GPT-5.6 Luna / Max with a Terra / Max supervisor, design-critical artifacts use Terra / Max for implementation and supervision, small tweaks use Luna / Max with Terra / Max supervision, big tweaks use Terra / Max with a Sol / High supervisor, and every net-new code capability uses Sol / High with a Sol / Extra High supervisor. The Terra / Max orchestrator still has one job: read the current query plus bounded conversational continuity, return the taxonomy route to root, and stop. It receives no workspace dependencies or task-specific instructions and never researches, implements, supervises, spawns, or coordinates. Root owns serial handoffs, loads artifact dependencies only after classification, performs root-only experience observations, and returns the supervisor's readable report. Seven conflict-safe companion profiles preserve the taxonomy-only orchestrator, three implementation lanes, three supervisor lanes, continuity, and fixed routing.",
+    "longDescription": "Activate Codex Orchestration in a new or already-open task with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.10.1 uses six outcome-based classes: READ_ONLY, STANDARD_ARTIFACT, DESIGN_ARTIFACT, SMALL_TWEAK, BIG_TWEAK, and BUILD. Non-code deliverables are separated from code changes: standard artifacts use GPT-5.6 Luna / Max with a Terra / Max supervisor, design-critical artifacts use Terra / Max for implementation and supervision, small tweaks use Luna / Max with Terra / Max supervision, big tweaks use Terra / Max with a Sol / High supervisor, and every net-new code capability uses Sol / High with a Sol / Extra High supervisor. The Terra / Max orchestrator still has one job: read the current query plus bounded conversational continuity, return the taxonomy route and a concrete reason to root, and stop. Root names every child from its actual model, starts the selected implementer first, immediately gives the read-only supervisor full context, loads artifact dependencies only after classification, performs root-only experience observations, and returns the supervisor's readable report. Only the supervisor's tool-free context-loading turn overlaps implementation; all workspace review remains checkpoint-serialized. Seven conflict-safe companion profiles preserve the taxonomy-only orchestrator, three implementation lanes, three supervisor lanes, continuity, and fixed routing.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

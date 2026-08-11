@@ -1,15 +1,16 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review as separate roles. Version `0.10.0` adds an outcome-based taxonomy that separates
-non-code artifacts from code changes. The Terra / Max orchestrator remains taxonomy-only: it reads
-the current query plus bounded conversational continuity, returns the route to root, and stops.
+read-only review as separate roles. Version `0.10.1` uses an outcome-based taxonomy that separates
+non-code artifacts from code changes and makes the selected models visible throughout startup. The
+Terra / Max orchestrator remains taxonomy-only: it reads the current query plus bounded
+conversational continuity, returns the route to root, and stops.
 Terra / Max remains independently available as an implementer and as a supervisor.
 
 The six work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, and `BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.10.0 works
+## How 0.10.1 works
 
 1. The stable chat-scoped hook gives root a binary gate, the current query, the latest bounded
    acceptance or completion capsule, and a short window of newer conversation. App-injected plugin,
@@ -20,24 +21,28 @@ The six work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `S
 3. All other work starts the GPT-5.6 Terra / Max orchestrator on the standard service tier. The
    orchestrator receives only the query and bounded continuity. It does not receive workspace
    dependencies, task-specific skill instructions, repository contents, or a work plan. It calls no
-   tools, performs no task work, and returns only the relationship, fixed route, and friendly status.
+   tools, performs no task work, and returns only the relationship, fixed route, and concrete
+   classification reason.
 4. Root validates that fixed route mechanically. Only after classification, root calls the bundled
    workspace dependency loader when spreadsheet, presentation, document, or PDF work needs it. The
    exact executable and package paths go directly to the task roles, never back to the orchestrator.
-5. For artifact and code work, root starts the selected read-only supervisor first. The supervisor reads the
-   detailed request, creates the immutable acceptance contract, and must be ready before root starts
-   the implementer. The orchestrator is already finished.
-6. Root owns all spawning, waits, checkpoint handoffs, and relays. The implementer and supervisor
-   are active serially. The implementer pauses at quiescent checkpoints; root reactivates the
-   supervisor for review, then reactivates the same implementer with `CONTINUE`, `CORRECT`, or
-   `READY_TO_RELEASE`.
+5. For artifact and code work, root starts the selected implementer first and immediately starts the
+   selected read-only supervisor second. The implementer begins the first routed checkpoint while
+   the supervisor's tool-free initial turn loads the same detailed request and defines immutable
+   acceptance. The orchestrator is already finished.
+6. Only those context-loading turns overlap. The implementer pauses at a quiescent checkpoint
+   before the supervisor uses tools or inspects workspace state. Root then serially reactivates the
+   supervisor for review and the same implementer with `CONTINUE`, `CORRECT`, or
+   `READY_TO_RELEASE`, always including the immutable acceptance.
 7. The same supervisor performs final review and writes the readable completion report. Root omits
    the private continuity capsule and returns the report unchanged. Root never classifies,
    implements, supervises, or judges acceptance.
 
-For routed work, root reports only meaningful milestones: classification start, implementation and
-supervisor readiness, checkpoint decisions, release authorization, blockers, and completion. It
-waits until an agent update instead of polling and does not emit elapsed-time heartbeats.
+For routed work, every child pill starts with the selected model lane rather than the work class.
+After supervisor readiness, root names the class, gives the classifier's concrete reason, and names
+the dynamic implementation and supervision models. It otherwise reports only meaningful
+milestones: checkpoint decisions, release authorization, blockers, and completion.
+It waits until an agent update instead of polling and does not emit elapsed-time heartbeats.
 
 ## Work classes and routes
 
@@ -63,9 +68,10 @@ flowchart TD
     G -->|"Routed"| O["Terra / Max orchestrator classifies"]
     O -->|"Three taxonomy lines; stop"| R["Root coordinates selected roles"]
     R -->|"Read-only"| RI["Terra / Max implementer answers"]
-    R -->|"Artifact or code work"| S["Selected supervisor defines acceptance"]
-    S --> I["Selected implementer works and pauses"]
-    I --> C["Root hands checkpoint to supervisor"]
+    R -->|"Artifact or code work"| I["Start selected implementer first"]
+    I --> S["Immediately load supervisor context"]
+    I --> C["Implementer pauses at checkpoint"]
+    S --> C
     C -->|"Continue or correct"| I
     C -->|"Ready"| X["Same implementer releases"]
     X --> F["Same supervisor performs final review"]
@@ -91,7 +97,9 @@ referent. This supports multiple orchestration requests in one ongoing task with
 hour-long transcript.
 
 The supervisor—not the orchestrator—defines concrete outcomes, destinations, proof, and open
-commitments. The accepted contract then stays immutable through implementation and supervision.
+commitments during its context-only initial turn. The implementer may start the first checkpoint
+from the exact request and fixed route, but cannot release before the supervisor is ready. The
+accepted contract then stays immutable through implementation and supervision.
 When work completes, the supervisor records a private one-line capsule containing the outcome,
 delivered capabilities, decisive proof, links, revision, open commitments, next work, and
 limitations. A follow-up asking what was just built can use that capsule without rereading the
@@ -132,7 +140,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.10.0, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.10.1, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -185,8 +193,9 @@ The project uses traditional semantic versions without timestamp suffixes:
 - Minor releases such as `0.9.x` to `0.10.0` add backward-compatible capabilities.
 - Major releases change compatibility expectations.
 
-Version `0.10.0` introduces the six-class artifact/tweak/build taxonomy while preserving the
-taxonomy-only orchestrator and root-owned coordination. The standard checkout workflow is:
+Version `0.10.0` introduced the six-class artifact/tweak/build taxonomy. Version `0.10.1` preserves
+that taxonomy while restoring implementer-first startup, model-led child names, and a concrete
+classification reason in the dynamic route message. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
@@ -207,7 +216,8 @@ sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
 The suite validates the manifest, syntax, exact model pins, chat controls, bounded continuity, the
-classifier-only role boundary, root-owned serial coordination, the six-class route, root-only
+classifier-only role boundary, implementer-before-supervisor startup, context-only overlap,
+model-led child names, dynamic class reasons and route labels, the six-class route, root-only
 experience verification, same-implementer corrections, fixtures, effectiveness tracking, and
 conflict-safe cleanup.
 

@@ -11,10 +11,11 @@ relays. The selected implementer owns every
 edit, correction, test, commit, push, deployment, and final probe. Never mutate state, take over
 implementation, or use collaboration or agent-control tools.
 
-On `SUPERVISOR_INIT`, call no tools and post no commentary. Read USER_REQUEST, RECENT_CONTEXT, the
+On `SUPERVISOR_INIT`, the implementer's initial turn is already active. Call no tools, inspect no
+workspace state, and post no commentary while they overlap. Read USER_REQUEST, RECENT_CONTEXT, the
 orchestrator's immutable relation and route, and any prior commitments. Define the exact acceptance
-contract without inventing scope. It must preserve every explicit deliverable, destination,
-prohibition, resolved referent, and open commitment. Repository plans and architecture documents
+contract from that context without inventing scope. It must preserve every explicit deliverable,
+destination, prohibition, resolved referent, and open commitment. Repository plans and architecture documents
 cannot supply missing user scope. If the request is unresolved or conflicts with the route, return
 `SUPERVISOR_SCOPE_REJECT:` with readable **Mismatch** and **Required acceptance** sections.
 
