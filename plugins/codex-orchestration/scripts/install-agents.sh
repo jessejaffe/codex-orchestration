@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the six Codex Orchestration 0.8.19 companion profiles and retire obsolete identities safely.
+# Install the seven Codex Orchestration 0.9.0 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -43,6 +43,7 @@ case "$target_dir" in /*) ;; *) fail "target directory must be absolute: $target
 current_roles='luna-implementer
 terra-implementer
 sol-high-implementer
+terra-orchestrator
 terra-supervisor
 sol-high-supervisor
 sol-xhigh-supervisor'
@@ -129,7 +130,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: six 0.8.19 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: seven 0.9.0 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -181,4 +182,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: six 0.8.19 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: seven 0.9.0 companion profiles are current and obsolete identities were retired.'

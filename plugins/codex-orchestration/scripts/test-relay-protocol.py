@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract tests for 0.8.19 root-loaded artifact dependencies."""
+"""Static contracts for the 0.9.0 classifier/root role boundary."""
 
 from __future__ import annotations
 
@@ -10,12 +10,41 @@ from pathlib import Path
 
 
 EXPECTED_AGENTS = {
-    "codex-orchestration-luna-implementer.toml": ("codex_orchestration_luna_implementer", "gpt-5.6-luna", "max"),
-    "codex-orchestration-terra-implementer.toml": ("codex_orchestration_terra_implementer", "gpt-5.6-terra", "max"),
-    "codex-orchestration-sol-high-implementer.toml": ("codex_orchestration_sol_high_implementer", "gpt-5.6-sol", "high"),
-    "codex-orchestration-terra-supervisor.toml": ("codex_orchestration_terra_supervisor", "gpt-5.6-terra", "max"),
-    "codex-orchestration-sol-high-supervisor.toml": ("codex_orchestration_sol_high_supervisor", "gpt-5.6-sol", "high"),
-    "codex-orchestration-sol-xhigh-supervisor.toml": ("codex_orchestration_sol_xhigh_supervisor", "gpt-5.6-sol", "xhigh"),
+    "codex-orchestration-terra-orchestrator.toml": (
+        "codex_orchestration_terra_orchestrator",
+        "gpt-5.6-terra",
+        "max",
+    ),
+    "codex-orchestration-luna-implementer.toml": (
+        "codex_orchestration_luna_implementer",
+        "gpt-5.6-luna",
+        "max",
+    ),
+    "codex-orchestration-terra-implementer.toml": (
+        "codex_orchestration_terra_implementer",
+        "gpt-5.6-terra",
+        "max",
+    ),
+    "codex-orchestration-sol-high-implementer.toml": (
+        "codex_orchestration_sol_high_implementer",
+        "gpt-5.6-sol",
+        "high",
+    ),
+    "codex-orchestration-terra-supervisor.toml": (
+        "codex_orchestration_terra_supervisor",
+        "gpt-5.6-terra",
+        "max",
+    ),
+    "codex-orchestration-sol-high-supervisor.toml": (
+        "codex_orchestration_sol_high_supervisor",
+        "gpt-5.6-sol",
+        "high",
+    ),
+    "codex-orchestration-sol-xhigh-supervisor.toml": (
+        "codex_orchestration_sol_xhigh_supervisor",
+        "gpt-5.6-sol",
+        "xhigh",
+    ),
 }
 
 
@@ -23,6 +52,12 @@ def require(text: str, values: tuple[str, ...], label: str) -> None:
     for value in values:
         if value not in text:
             raise AssertionError(f"{label} omits {value!r}")
+
+
+def forbid(text: str, values: tuple[str, ...], label: str) -> None:
+    for value in values:
+        if value in text:
+            raise AssertionError(f"{label} retains forbidden {value!r}")
 
 
 def main() -> int:
@@ -33,303 +68,129 @@ def main() -> int:
     paths = {path.name for path in agents.glob("*.toml")}
     if paths != set(EXPECTED_AGENTS):
         raise AssertionError(
-            f"agent inventory mismatch: missing={set(EXPECTED_AGENTS) - paths}, extra={paths - set(EXPECTED_AGENTS)}"
+            f"agent inventory mismatch: missing={set(EXPECTED_AGENTS) - paths}, "
+            f"extra={paths - set(EXPECTED_AGENTS)}"
         )
 
     documents: dict[str, str] = {}
     for filename, expected in EXPECTED_AGENTS.items():
-        path = agents / filename
-        text = path.read_text(encoding="utf-8")
+        text = (agents / filename).read_text(encoding="utf-8")
         documents[filename] = text
         parsed = tomllib.loads(text)
-        actual = (parsed.get("name"), parsed.get("model"), parsed.get("model_reasoning_effort"))
+        actual = (
+            parsed.get("name"),
+            parsed.get("model"),
+            parsed.get("model_reasoning_effort"),
+        )
         if actual != expected:
             raise AssertionError(f"wrong model pin for {filename}: {actual!r}")
-        if "supervisor" in filename:
+        if "supervisor" in filename or "orchestrator" in filename:
             if parsed.get("sandbox_mode") != "read-only":
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.8.19":
-        raise AssertionError(f"manifest does not use traditional 0.8.19: {manifest.get('version')!r}")
-    if "+" in manifest["version"]:
-        raise AssertionError("manifest still contains a cachebuster suffix")
+    if manifest.get("version") != "0.9.0":
+        raise AssertionError(f"manifest does not use 0.9.0: {manifest.get('version')!r}")
 
-    router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
+    orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
     require(
-        router,
+        orchestrator,
         (
-            "DIRECT READ-ONLY FAST PATH",
-            "binary fast-path gate",
-            "answer in root immediately",
-            "use no tools or agents",
-            "brief\nbrainstorming or planning",
-            "stable general knowledge",
-            "Starting Terra / Max classification now.",
-            "terra_orchestrator_<objective_slug>",
-            "ORCHESTRATE_INIT",
-            "PARENT_TASK=/root",
-            "PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__",
-            "RECENT_CONTEXT_FRESHNESS: __RECENT_CONTEXT_FRESHNESS__",
-            "RECENT_CONTEXT: __RECENT_CONTEXT__",
-            "WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__",
-            "codex_app__load_workspace_dependencies",
-            "WORKSPACE_DEPENDENCIES=<exact loader result above",
-            "without spawning",
-            "codex_orchestration_terra_supervisor",
-            "Start no implementer or supervisor in root",
-            "timeout_ms: 3600000",
-            "ORCHESTRATION_STATE:",
-            "ORCHESTRATION_HANDOFF:",
-            "ORCHESTRATION_UPDATE: <text>",
-            "ORCHESTRATION_ROOT_VERIFY: CHECK=<bounded check>",
-            "root-only Browser/visual tools",
-            "cache-bypassed and at the requested viewport",
-            "ROOT_VERIFICATION_RESULT: START=<observed starting condition>",
-            "with `followup_task`",
-            "ARTIFACTS=<URL or path, viewport, screenshot",
-            "broaden the check, or judge acceptance",
-            "ORCHESTRATION_BLOCKED: <text>",
-            "no analysis or reasoning heading",
-            "return the entire remaining payload exactly",
-            "Preserve all Markdown, line breaks, links",
-            "without summarizing, truncating, adding, or reformatting anything",
-            "MAX_PRIOR_COMPLETED_CHARS = 4_096",
-            "MAX_RECENT_CONTEXT_CHARS = 6_144",
-            "MAX_RECENT_MESSAGE_CHARS = 1_536",
-            "def bounded_single_line",
-            "def bounded_recent_context",
-            "if prior_acceptance is None and prior_completed",
-            "def conversation_message",
-            "def workspace_dependencies_required",
-            "WORKSPACE_ARTIFACT_PATTERN",
-            'freshness = "STALE" if any(role == "user" for role, _ in selected_tail) else "FRESH"',
-        ),
-        "root relay contract",
-    )
-    for noisy in (
-        "is loading the full task context now",
-        "Supervisor ready and staying read-only",
-        "On timeout report active phase",
-        "Complexity telemetry:",
-        "normal agent waits are at most 45 seconds",
-        "timeout_ms: 45000",
-        "Still working on <actual user outcome>.",
-    ):
-        if noisy in router:
-            raise AssertionError(f"router retains noisy parent copy: {noisy!r}")
-    for obsolete in ("headless-grader.py", "--request-token", "grader-requests"):
-        if obsolete in router:
-            raise AssertionError(f"router retains obsolete headless path: {obsolete!r}")
-    for downstream in (
-        "codex_orchestration_luna_implementer",
-        "codex_orchestration_terra_implementer",
-        "codex_orchestration_sol_high_implementer",
-        "codex_orchestration_sol_high_supervisor",
-        "codex_orchestration_sol_xhigh_supervisor",
-    ):
-        if downstream in router:
-            raise AssertionError(f"root still owns downstream role {downstream!r}")
-    for legacy_identity in ("terra_executive", "sol_high_executive", "sol_xhigh_executive"):
-        if legacy_identity in router:
-            raise AssertionError(f"router retains legacy identity {legacy_identity!r}")
-
-    fused = documents["codex-orchestration-terra-supervisor.toml"]
-    require(
-        fused,
-        (
-            "fused GPT-5.6 Terra / Max orchestrator",
-            "ORCHESTRATE_INIT",
-            "PARENT_TASK",
-            "PRIOR_COMPLETED_RESULT",
-            "bounded continuity capsule",
-            "RECENT_CONTEXT_FRESHNESS",
-            "WORKSPACE_DEPENDENCIES",
-            "authoritative complete output from root's workspace dependency loader",
-            "block before spawning if it is NONE",
-            "use its exact paths yourself for READ_ONLY artifact work",
-            "pass it verbatim to every downstream\nchild",
-            "newer RECENT_CONTEXT is\nauthoritative over conflicting or incomplete capsule fields",
-            "do the next step",
-            "Never infer their meaning from repository plans",
+            "orchestrator role",
+            "always GPT-5.6 Terra / Max",
+            "current query plus its bounded conversation continuity",
+            "determine the existing orchestration taxonomy",
+            "Terra /\nMax may separately be selected as an implementer or supervisor",
+            "ORCHESTRATE_CLASSIFY",
+            "Do not call tools",
+            "Do not\nwrite an acceptance contract or a plan",
             "READ_ONLY: TERRA_MAX / NONE / NONE",
             "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
             "BIG_TWEAK: TERRA_MAX / TERRA_MAX / ROOT_CAUSE,RELEASE_CANDIDATE",
             "SMALL_BUILD: TERRA_MAX / SOL_HIGH / DESIGN,RELEASE_CANDIDATE",
             "BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
-            "A feature release is a build",
-            "ORCHESTRATION_RELATION: RELATION=<NEW|AMEND|REPLACE|CANCEL>",
-            "OPEN_COMMITMENTS=<unresolved promised work or NONE>",
-            "next project-defined milestone",
-            "DESTINATIONS must name the intended destination",
-            "COMPLEXITY=<1.0-10.0>",
-            "Prefix it `ROOT_EXPERIENCE:`",
-            "Merely touching frontend or UI files does not trigger it",
-            "HTTP 200, asset presence, DOM text, source code",
-            "direct experience proof is mandatory",
-            "root-executable experience check with live URL or rendered artifact",
-            "Do not perform the check\nyourself",
-            "ROOT_VERIFICATION_RESULT",
-            "For builds, use `followup_task` to reactivate the same\nSol supervisor with the exact result",
-            "Do not end your turn after constructing them",
-            "continue the workflow in this same turn",
-            "For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE",
-            "ORCHESTRATION_STATE:",
-            "ORCHESTRATION_HANDOFF:",
-            "ORCHESTRATION_UPDATE:",
-            "ORCHESTRATION_BLOCKED",
-            "codex_orchestration_luna_implementer",
-            "codex_orchestration_sol_xhigh_supervisor",
-            "`send_message`",
-            "wait_agent",
-            "timeout_ms: 3600000",
-            "first start only the\nselected Sol supervisor",
-            "Start the selected implementer only\nafter `SUPERVISOR_READY`",
-            "SUPERVISOR_SCOPE_REJECT",
-            "After a second rejection,\nblock; never start the implementer",
-            "keep sibling activity strictly serial",
-            "Never activate the implementer and Sol supervisor at the same time",
-            "concurrent descendants can be promoted into an unanchored parent activity row",
-            "Use `send_message` only for PARENT_TASK",
-            "it only queues text and does not start a\nturn",
-            "Every handoff to an existing child must use collaboration `followup_task`",
-            "use `followup_task` to reactivate the\nsame Sol supervisor",
-            "reactivate the same implementer with `SUPERVISOR_CONTINUE`",
-            "reactivate the same implementer with the exact correction",
-            "reactivate the same Sol supervisor with `FINAL_REVIEW`",
-            "The implementer's checkpoint names the\ncompleted phase",
-            "Never describe the next\nphase as already approved",
-            "ORCHESTRATION_UPDATE: Supervisor approved <completed checkpoint>. Implementation continues to <next checkpoint>.",
-            "readable Markdown shapes",
-            "Keep the first line\nmachine-readable",
-            "**Findings**",
-            "**Required corrections**",
-            "**Evidence**",
-            "**Reason**",
-            "**Outcome**",
-            "**Check**",
-            "**Required observations**",
-            "semicolon-delimited line",
-            "Downstream agents\nare your children, never root's",
-            "the cumulative `IMPLEMENTATION_RESULT`",
-            "any `ROOT_VERIFICATION_RESULT`",
-            "reporting agent or ask the implementer to restate it",
-            "ORCHESTRATION_ACCEPT: ## Completed",
-            "## What changed",
-            "## Verification",
-            "## Links",
-            "[Live website](<exact verified URL>)",
-            "[GitHub commit](<exact verified URL>)",
-            "## Release",
-            "## Remaining",
-            "## Orchestration",
-            "Preserve every exact verified HTTP(S) destination",
-            "render it as a\ndescriptive Markdown link",
-            "what was initially visible, what root\ndid, and what visibly happened",
-            "Never say work is\nlive, deployed, released, or on GitHub without the corresponding exact destination and evidence",
-            "Do not invent URLs, revisions, test results, browser observations, or missing details",
-            "summary, explanation, current-state, or next-step",
-            "answer directly in this same turn even if root\nrouted conservatively",
-            "Do not inspect the repository, deployment, browser, prior child tasks, or\nother task history merely to rediscover those facts",
-            "Explaining a prior verified UI\nor deployment is not itself ROOT_EXPERIENCE",
-            "ORCHESTRATION_HANDOFF: OUTCOME=<accepted outcome>",
-            "no longer than 4,096 characters",
-            "without rereading the completed parent turn",
-            "carry forward its still-relevant delivered state",
-            "This handoff is\ninternal and is not a user-visible progress update",
-            "Do not send\nORCHESTRATION_STATE or a read-only ORCHESTRATION_UPDATE",
-            "root wakes only once",
-            "never say `Remaining: None` merely because the implementation completed its own\ninferred milestone",
+            "exactly these three single lines and\nnothing else",
+            "Root owns every subsequent spawn, handoff, wait, checkpoint, and relay",
         ),
-        "fused Terra contract",
+        "Terra / Max orchestrator",
     )
-    if "Return exactly four single lines and nothing else" in fused:
-        raise AssertionError("fused Terra still stops after classification")
-    if "orchestrator-executable experience check" in fused:
-        raise AssertionError("fused Terra can still consume a root-only experience check")
-    if "Build events may arrive out of order" in fused:
-        raise AssertionError("fused Terra still permits overlapping build-child startup")
-    supervisor_start = fused.index("first start only the\nselected Sol supervisor")
-    implementer_start = fused.index("Start the selected implementer only\nafter `SUPERVISOR_READY`")
-    if supervisor_start >= implementer_start:
-        raise AssertionError("build startup no longer readies the supervisor before the implementer")
-    if fused.count("`followup_task`") < 9:
-        raise AssertionError("fused Terra does not reactivate every idle-child handoff")
-    if "Supervisor approved <phase>. Implementation continues." in fused:
-        raise AssertionError("fused Terra still labels the next phase as already approved")
-    if "on that same line by a concise user-facing result" in fused:
-        raise AssertionError("fused Terra still compresses acceptance to a one-line result")
-    for unreadable in (
-        "SUPERVISOR_CONTINUE: PHASE=<next checkpoint>; FINDINGS=",
-        "SUPERVISOR_CORRECT: PHASE=<same checkpoint>; FINDINGS=",
-        "SUPERVISOR_READY_TO_RELEASE: FINDINGS=",
-        "SUPERVISOR_BLOCKED: REASON=",
-        "ORCHESTRATION_ACCEPT: OUTCOME=",
-    ):
-        if unreadable in fused:
-            raise AssertionError(f"fused Terra retains unreadable supervisor schema: {unreadable!r}")
-    completion_template = fused[fused.index("\nORCHESTRATION_ACCEPT: ## Completed\n") :]
-    completion_sections = (
-        "ORCHESTRATION_ACCEPT: ## Completed",
-        "## What changed",
-        "## Verification",
-        "## Links",
-        "## Release",
-        "## Remaining",
-        "## Orchestration",
-    )
-    if list(map(completion_template.index, completion_sections)) != sorted(
-        map(completion_template.index, completion_sections)
-    ):
-        raise AssertionError("completion report sections are out of order")
-    for deadlocking_copy in (
-        "send the checkpoint and immutable lines",
-        "then relay\n`SUPERVISOR_CONTINUE`",
-        "or send `FINAL_REVIEW`",
-        "forward the exact result to the same Sol",
-    ):
-        if deadlocking_copy in fused:
-            raise AssertionError(f"fused Terra retains a message-only child handoff: {deadlocking_copy!r}")
-
-    installer = (plugin / "scripts" / "install-agents.sh").read_text(encoding="utf-8")
-    previous_release_digests = {
-        "luna": "dc769716110ab9b99b0c7caa7de8c5992c39414096d5a79c7b0f6619ee2592e5",
-        "terra": "35723b41371a65bf52af621aafc0663022aa51ffb6236b816bc21cd65cdb080e",
-        "sol-high": "ad167cec124a4ad4389d92b7e49fe5ba2effbe070bf3a9ced51fc1550edfda83",
-        "terra-supervisor": "2e124c8a94ff4aaad427c85910e52b370f732321aaa4e3689af0c9dffffc346b",
-        "sol-high-supervisor": "5993929d08fb1003e8def633e41b8aa457cfcd6a748399f513a3c942b5877857",
-        "sol-xhigh-supervisor": "c4d37bc0579ed9a2c035bee510fa6fa7a236122fd5178e004bfb3c5df78059b3",
-        "0.8.11-terra-supervisor": "d44f6d70de581d3e8895b396cc7a2bba0a2e7fc35cb6ea8531e920cae457aab4",
-        "0.8.11-sol-high-supervisor": "427075380b9a3a8a136a6fde53a95252c3031621d51181ec1161318330d027a0",
-        "0.8.11-sol-xhigh-supervisor": "30ba4bbee0dcb1ecf22dfb6c6ce98377e72740e717011f7d319e9ccc1f7104bf",
-        "0.8.12-terra-supervisor": "bcf97708c68712984c6345476595e832c933763d2e5edde854cfcc295794e1a5",
-        "0.8.13-terra-supervisor": "c296cd101b91debb8ac800d4d18339f9da8d9606a7048c70e72d37cf0b8885b4",
-        "0.8.14-terra-supervisor": "fb1a6905fca9345fabfc3b1ff9d98cfb784514600d67b372bd4fb60c6afcd85f",
-        "0.8.15-terra-supervisor": "cb7d464796bc18b9f371ce9f6036ffbdfe32914946c9ac18c78c8aec1c4bec44",
-        "0.8.16-terra-supervisor": "310f47cd149493a376a1625786a98f0f763b8f4558faccc1e28b9a2b4394cc39",
-        "0.8.16-sol-high-supervisor": "3283d5d4c93674855694d10b96922911d9bafb186ee08fb85b0b7548daa72b5a",
-        "0.8.16-sol-xhigh-supervisor": "9bf1374469493ef6ad866ba6e11082a86427210c23806d86a643c1325e0f6576",
-        "0.8.17-luna-implementer": "fd75a5160451b266bc8ae35b34e0865d23ccb96f5019e656ef8e898ccafd8d5d",
-        "0.8.17-terra-implementer": "8001b202cede42454fa4cbcd0bb29cb580716e738cb533396e033dc132f402f4",
-        "0.8.17-sol-high-implementer": "c1d47ebd4825dd497cfddc7dfe9b6d3f6685eb1323019f2c969851b8861eb674",
-        "0.8.17-terra-supervisor": "47a605dbf390f842a0bd373fb20511bfd630cf5f647f76dab71c9085627a8465",
-    }
-    for role, digest in previous_release_digests.items():
-        if digest not in installer:
-            raise AssertionError(f"installer omits a released role digest for {role}")
-
-    require(
-        fused,
+    forbid(
+        orchestrator,
         (
-            "read-only",
-            "SUPERVISOR_CORRECT:",
-            "SUPERVISOR_READY_TO_RELEASE:",
+            "WORKSPACE_DEPENDENCIES=",
+            "codex_app__load_workspace_dependencies",
+            "spawn_agent",
+            "followup_task",
+            "wait_agent",
+            "SUPERVISOR_INIT",
+            "IMPLEMENTATION_CHECKPOINT",
+            "ORCHESTRATION_ACCEPTANCE:",
+            "ORCHESTRATION_HANDOFF:",
             "ORCHESTRATION_ACCEPT:",
-            "same implementer",
-            "Do not narrate role\nselection, contracts",
         ),
-        "codex-orchestration-terra-supervisor.toml",
+        "classifier-only orchestrator",
     )
+
+    router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
+    require(
+        router,
+        (
+            "Orchestration ON (0.9.0)",
+            "DIRECT READ-ONLY FAST PATH",
+            "ORCHESTRATE_CLASSIFY",
+            "fork_turns=none",
+            "codex_orchestration_terra_orchestrator",
+            "Do\nnot pass FORK, WORKSPACE_DEPENDENCIES, task-specific skill instructions",
+            "exactly these three\nlines: ORCHESTRATION_RELATION, ORCHESTRATION_ROUTE, and ORCHESTRATION_STATUS",
+            "only\nafter classification, resolve WORKSPACE_DEPENDENCIES",
+            "ROOT ROLE MAP",
+            "codex_orchestration_terra_implementer",
+            "codex_orchestration_luna_implementer",
+            "codex_orchestration_sol_high_implementer",
+            "codex_orchestration_terra_supervisor",
+            "codex_orchestration_sol_high_supervisor",
+            "codex_orchestration_sol_xhigh_supervisor",
+            "Root owns every child",
+            "first spawn only the selected supervisor",
+            "Every handoff to an idle existing child uses\n`followup_task`",
+            "Never activate implementer and supervisor simultaneously",
+            "CHECKPOINT_REVIEW",
+            "FINAL_REVIEW",
+            "ORCHESTRATION_ROOT_VERIFY",
+            "omit it from the user response",
+            "__ORCHESTRATOR_PROFILE_PATH__",
+            "__AGENTS_DIR__",
+        ),
+        "root coordinator contract",
+    )
+    classifier_packet = router[
+        router.index("classification packet:") : router.index("After spawning")
+    ]
+    forbid(
+        classifier_packet,
+        ("FORK=<", "WORKSPACE_DEPENDENCIES=<", "CURRENT_ROOT_ROUTE=<"),
+        "classifier packet",
+    )
+    if router.index("only\nafter classification, resolve WORKSPACE_DEPENDENCIES") > router.index(
+        "call root's `codex_app__load_workspace_dependencies` exactly once"
+    ):
+        raise AssertionError("workspace dependencies are no longer loaded after classification")
+
+    terra_supervisor = documents["codex-orchestration-terra-supervisor.toml"]
+    require(
+        terra_supervisor,
+        (
+            "read-only supervisor for `SMALL_TWEAK` or `BIG_TWEAK`",
+            "Root owns all\nagent spawning, waits, checkpoint handoffs, and user relays",
+            "ORCHESTRATION_ACCEPTANCE:",
+            "CHECKPOINT_REVIEW",
+            "FINAL_REVIEW",
+            "ORCHESTRATION_HANDOFF:",
+            "ORCHESTRATION_ACCEPT: ## Completed",
+        ),
+        "Terra / Max supervisor",
+    )
+    forbid(terra_supervisor, ("fused", "spawn_agent", "followup_task"), "Terra supervisor")
 
     for filename in (
         "codex-orchestration-sol-high-supervisor.toml",
@@ -338,53 +199,31 @@ def main() -> int:
         require(
             documents[filename],
             (
-                "read-only",
+                "Root owns all",
                 "SUPERVISOR_READY:",
+                "ORCHESTRATION_ACCEPTANCE:",
                 "SUPERVISOR_CORRECT:",
                 "SUPERVISOR_READY_TO_RELEASE:",
-                "ORCHESTRATION_ACCEPT:",
-                "same implementer",
-                "before the implementer starts",
-                "sibling activity remains serial",
-                "fused Terra orchestrator",
-                "structured, readable",
-                "ROOT_EXPERIENCE",
-                "direct experience proof is mandatory",
-                "root-executable experience check with live URL or rendered artifact",
-                "ROOT_VERIFICATION_RESULT follow-up",
-                "ARTIFACTS, and BLOCKER",
-                "readable Markdown shape",
-                "Keep the first line machine-readable",
-                "**Acceptance**",
-                "**Findings**",
-                "**Required corrections**",
-                "**Evidence**",
-                "**Reason**",
-                "**Outcome**",
-                "**Check**",
-                "**Required observations**",
-                "semicolon-delimited line",
-                "SUPERVISOR_SCOPE_REJECT:",
-                "**Mismatch**",
-                "**Required acceptance**",
-                "Repository plans and architecture documents cannot supply\nmissing user scope",
-                "OPEN_COMMITMENT",
+                "ORCHESTRATION_ROOT_VERIFY:",
+                "ORCHESTRATION_HANDOFF:",
+                "ORCHESTRATION_ACCEPT: ## Completed",
             ),
             filename,
         )
-        if "I have the full task context. I am staying read-only" in documents[filename]:
-            raise AssertionError(f"{filename} retains the initial supervisor narration")
-        for unreadable in (
-            "; ACCEPTANCE=<short identifier",
-            "SUPERVISOR_CONTINUE: PHASE=<next checkpoint>; FINDINGS=",
-            "SUPERVISOR_CORRECT: PHASE=<same checkpoint>; FINDINGS=",
-            "SUPERVISOR_READY_TO_RELEASE: FINDINGS=",
-            "SUPERVISOR_BLOCKED: REASON=",
-            "ORCHESTRATION_ACCEPT: OUTCOME=",
-        ):
-            if unreadable in documents[filename]:
-                raise AssertionError(f"{filename} retains unreadable supervisor schema: {unreadable!r}")
+        forbid(documents[filename], ("fused Terra orchestrator",), filename)
 
+    terra_implementer = documents["codex-orchestration-terra-implementer.toml"]
+    require(
+        terra_implementer,
+        (
+            "`READ_ONLY`, `BIG_TWEAK`, or `SMALL_BUILD`",
+            "On `READ_ONLY_WORK`",
+            "without changing files or external state",
+            "ORCHESTRATION_ACCEPT:",
+            "Never mutate, commit, push, or deploy on this\nroute",
+        ),
+        "Terra implementer",
+    )
     for filename in (
         "codex-orchestration-luna-implementer.toml",
         "codex-orchestration-terra-implementer.toml",
@@ -394,48 +233,27 @@ def main() -> int:
             documents[filename],
             (
                 "IMPLEMENTATION_CHECKPOINT:",
-                "SUPERVISOR_CORRECT",
                 "SUPERVISOR_READY_TO_RELEASE",
                 "IMPLEMENTATION_RESULT:",
-                "yourself",
-                "routine waiting",
-                "orchestrator's milestone\nsignals",
-                "If it does not start ROOT_EXPERIENCE",
-                "visual criterion merely because UI files changed",
-                "Browser, screenshot, and\nvisual acceptance tools are root-only; do not call or use them",
-                "URL-or-path/viewport/START/ACTION/expected RESULT",
-                "readable Markdown",
-                "**State**",
-                "**Changes**",
-                "**Evidence**",
-                "**Next**",
-                "**Blockers**",
-                "semicolon-delimited line",
+                "root's milestone\nsignals",
+                "Root relays the supervisor's",
                 "Parse WORKSPACE_DEPENDENCIES before artifact work",
-                "authoritative complete\noutput of root's workspace dependency loader",
-                "loader-provided Node.js and node_modules paths",
-                "Do not call the root-only loader",
             ),
             filename,
         )
-        if "Return exactly one line:" in documents[filename]:
-            raise AssertionError(f"{filename} still emits an unreadable single-line checkpoint")
-        if "; STATE=<cumulative completed work>;" in documents[filename]:
-            raise AssertionError(f"{filename} still contains the semicolon checkpoint schema")
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
     expected_classes = {case["expected"] for case in fixtures["cases"]}
-    all_classes = {"READ_ONLY", "SMALL_TWEAK", "BIG_TWEAK", "SMALL_BUILD", "BIG_BUILD"}
-    if expected_classes != all_classes:
+    if expected_classes != {
+        "READ_ONLY",
+        "SMALL_TWEAK",
+        "BIG_TWEAK",
+        "SMALL_BUILD",
+        "BIG_BUILD",
+    }:
         raise AssertionError(f"triage fixtures do not cover every class: {expected_classes!r}")
-    ids = [case["id"] for case in fixtures["cases"]]
-    if len(ids) != len(set(ids)):
-        raise AssertionError("triage fixture ids are not unique")
-    steering_relations = {case["expected_relation"] for case in fixtures["steering_cases"]}
-    if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
-        raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.8.19 root-loaded artifact dependencies")
+    print("PASS: 0.9.0 classifier/root role boundary")
     return 0
 
 

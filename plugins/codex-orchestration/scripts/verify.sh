@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verify the Codex Orchestration 0.8.19 release without network access.
+# Verify the Codex Orchestration 0.9.0 release without network access.
 
 set -eu
 
@@ -18,10 +18,10 @@ done
 
 jq -e . "$manifest" >/dev/null || fail 'plugin manifest is invalid JSON'
 [ "$(jq -r .name "$manifest")" = codex-orchestration ] || fail 'wrong plugin name'
-[ "$(jq -r .version "$manifest")" = 0.8.19 ] || fail 'manifest version must be exactly 0.8.19'
+[ "$(jq -r .version "$manifest")" = 0.9.0 ] || fail 'manifest version must be exactly 0.9.0'
 printf '%s\n' "$(jq -r .version "$manifest")" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' ||
   fail 'manifest must use traditional semantic versioning without a cachebuster'
-pass 'manifest uses traditional version 0.8.19'
+pass 'manifest uses traditional version 0.9.0'
 
 for shell_script in "$script_dir"/*.sh; do
   sh -n "$shell_script" || fail "invalid shell syntax: $shell_script"
@@ -42,6 +42,7 @@ import sys
 import tomllib
 
 expected = {
+    "codex-orchestration-terra-orchestrator.toml": ("gpt-5.6-terra", "max"),
     "codex-orchestration-luna-implementer.toml": ("gpt-5.6-luna", "max"),
     "codex-orchestration-terra-implementer.toml": ("gpt-5.6-terra", "max"),
     "codex-orchestration-sol-high-implementer.toml": ("gpt-5.6-sol", "high"),
@@ -59,11 +60,11 @@ for name, pin in expected.items():
         raise SystemExit(f"wrong model pin: {name}")
     if not document.get("developer_instructions"):
         raise SystemExit(f"missing developer instructions: {name}")
-    if "supervisor" in name:
+    if "supervisor" in name or "orchestrator" in name:
         if document.get("sandbox_mode") != "read-only":
             raise SystemExit(f"read-only role is not sandboxed: {name}")
 PY
-pass 'exact six-profile inventory; fused router is pinned to Terra / Max'
+pass 'exact seven-profile inventory; orchestrator is pinned to Terra / Max'
 
 tmp_base=${TMPDIR:-/tmp}
 case "$tmp_base" in /*) ;; *) tmp_base=/tmp ;; esac
@@ -81,8 +82,8 @@ pass 'dispatch, relay, and effectiveness fixtures'
 target=$temporary/agents
 sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null
 sh "$script_dir/install-agents.sh" --target-dir "$target" --check >/dev/null
-[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 6 ] ||
-  fail 'agent installer did not produce exactly six companion profiles'
+[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 7 ] ||
+  fail 'agent installer did not produce exactly seven companion profiles'
 printf '%s\n' '# user customization' >> "$target/codex-orchestration-luna-implementer.toml"
 custom_digest=$(shasum -a 256 "$target/codex-orchestration-luna-implementer.toml" | awk '{print $1}')
 if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; then
@@ -98,13 +99,13 @@ if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; th
 fi
 [ "$(shasum -a 256 "$target/codex-orchestration-terra-medium-implementer.toml" | awk '{print $1}')" = "$retired_digest" ] ||
   fail 'customized retired role changed during rejected migration'
-pass 'conflict-safe six-profile installer behavior'
+pass 'conflict-safe seven-profile installer behavior'
 
-grep -Fq "requires the traditional release version 0.8.19" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller does not enforce 0.8.19'
-grep -Fq "grep -Eq '^0\\.8\\.19$'" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller version matcher is not pinned to 0.8.19'
-for role in luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
+grep -Fq "requires the traditional release version 0.9.0" "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller does not enforce 0.9.0'
+grep -Fq "grep -Eq '^0\\.9\\.0$'" "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller version matcher is not pinned to 0.9.0'
+for role in terra-orchestrator luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
 done
@@ -127,19 +128,19 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'same implementer' \
     'ongoing task' \
     'waits until an agent' \
-    'six companion profiles' \
+    'seven companion profiles' \
     'standard service tier' \
     'ROOT_EXPERIENCE:' \
     'root-only Browser/visual check' \
-    '0.8.19'; do
+    '0.9.0'; do
     grep -Fq "$value" "$repo_readme" || fail "README omits $value"
   done
   if grep -Eq '0\.8\.0\+codex|cachebuster version|seven implementation lanes|numeric routing' "$repo_readme"; then
     fail 'README still teaches the old version or routing scheme'
   fi
-  pass '0.8.19 documentation'
+  pass '0.9.0 documentation'
 else
   pass 'repository documentation is intentionally outside the installed plugin package'
 fi
 
-pass 'Codex Orchestration 0.8.19 release verification complete'
+pass 'Codex Orchestration 0.9.0 release verification complete'

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.8.19 context-safe routing."""
+"""Hermetic tests for chat-scoped activation and 0.9.0 root coordination."""
 
 from __future__ import annotations
 
@@ -86,34 +86,33 @@ def main() -> int:
         "use no tools or agents",
         "Starting Terra / Max classification now.",
         "terra_orchestrator_<objective_slug>",
-        "ORCHESTRATE_INIT",
-        "PARENT_TASK=/root",
+        "ORCHESTRATE_CLASSIFY",
+        "fork_turns=none",
         "PRIOR_COMPLETED_RESULT: NONE",
         "RECENT_CONTEXT_FRESHNESS: NONE",
         "RECENT_CONTEXT: NONE",
         "WORKSPACE_DEPENDENCIES_REQUIRED: NO",
         "codex_app__load_workspace_dependencies",
-        "WORKSPACE_DEPENDENCIES=<exact loader result above",
-        "stop\nwithout spawning",
+        "only\nafter classification, resolve WORKSPACE_DEPENDENCIES",
         "codex_orchestration_terra_supervisor",
-        "read and obey the `developer_instructions`",
-        "agents/codex-orchestration-terra-supervisor.toml",
-        "Start no implementer or supervisor in root",
+        "codex_orchestration_terra_orchestrator",
+        "codex_orchestration_terra_implementer",
+        "codex_orchestration_luna_implementer",
+        "codex_orchestration_sol_high_implementer",
+        "`developer_instructions` in",
+        "agents/codex-orchestration-terra-orchestrator.toml",
+        "Root owns every child",
         "timeout_ms: 3600000",
-        "ORCHESTRATION_STATE:",
-        "ORCHESTRATION_HANDOFF:",
-        "ORCHESTRATION_UPDATE: <text>",
-        "ORCHESTRATION_ROOT_VERIFY: CHECK=<bounded check>",
+        "leading ORCHESTRATION_HANDOFF line",
+        "ORCHESTRATION_ROOT_VERIFY",
         "root-only Browser/visual tools",
-        "cache-bypassed and at the requested viewport",
-        "ROOT_VERIFICATION_RESULT: START=<observed starting condition>",
-        "with `followup_task`",
-        "ARTIFACTS=<URL or path, viewport, screenshot",
+        "cache-bypassed\nand at the requested viewport",
+        "ROOT_VERIFICATION_RESULT: START=<observed start>",
+        "uses\n`followup_task`",
+        "ARTIFACTS=<URL or path, viewport, screenshots",
         "broaden the check, or judge acceptance",
-        "ORCHESTRATION_BLOCKED: <text>",
-        "no analysis or reasoning heading",
-        "return the entire remaining payload exactly",
-        "Preserve all Markdown, line breaks, links",
+        "Remove only the acceptance protocol prefix",
+        "preserving\nline breaks, links, sections",
     )
     for value in required:
         if value not in routed_context:
@@ -129,15 +128,12 @@ def main() -> int:
         "normal agent waits are at most 45 seconds",
         "timeout_ms: 45000",
         "Still working on <actual user outcome>.",
-        "CHECKPOINT_REVIEW:",
-        "SUPERVISOR_CONTINUE:",
-        "Implementation started with <implementer model>",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     if (state / "grader-requests").exists():
         raise AssertionError("dispatch still staged a grader request")
-    if len(routed_context) > 5_200:
+    if len(routed_context) > 14_000:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
 
     artifact_context = context(
@@ -166,7 +162,7 @@ def main() -> int:
     combined_context = context(combined)
     if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
         raise AssertionError("combined activation does not acknowledge ON")
-    if "ORCHESTRATE_INIT" not in combined_context:
+    if "ORCHESTRATE_CLASSIFY" not in combined_context:
         raise AssertionError("combined activation did not select nested Terra orchestration")
 
     transcript = temporary / "root.jsonl"
@@ -236,7 +232,8 @@ def main() -> int:
             "__RECENT_CONTEXT_FRESHNESS__",
             "__RECENT_CONTEXT__",
             "__WORKSPACE_DEPENDENCIES_REQUIRED__",
-            "__FUSED_PROFILE_PATH__",
+            "__ORCHESTRATOR_PROFILE_PATH__",
+            "__AGENTS_DIR__",
         )
     ):
         raise AssertionError("dispatch placeholders leaked")
@@ -539,7 +536,7 @@ def main() -> int:
     completed_value = completed_line.removeprefix("PRIOR_COMPLETED_RESULT: ")
     if completed_value != oversized_handoff[:4_096]:
         raise AssertionError("completion handoff was not bounded to exactly 4,096 characters")
-    if len(oversized) > 9_500:
+    if len(oversized) > 14_500:
         raise AssertionError(f"bounded completion dispatch exceeds latency budget: {len(oversized)}")
 
     subagent_transcript = temporary / "subagent.jsonl"

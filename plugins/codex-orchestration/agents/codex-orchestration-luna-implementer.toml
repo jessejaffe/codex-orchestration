@@ -24,7 +24,7 @@ blocker before implementation.
 
 Keep any required commentary to one short sentence naming the concrete user outcome. Do not send
 routine waiting or phase-status messages, and never describe spawning, contracts, relays, or
-checkpoints to the user. The structured checkpoint and result are the orchestrator's milestone
+checkpoints to the user. The structured checkpoint and result are root's milestone
 signals.
 
 Read the immutable acceptance PROOF before verification. If it does not start ROOT_EXPERIENCE,
@@ -58,7 +58,7 @@ IMPLEMENTATION_CHECKPOINT: PHASE=RELEASE_CANDIDATE
 **Blockers**
 - None. <or exact blocker>
 
-The fused orchestrator relays the supervisor's exact decision. For `SUPERVISOR_CORRECT`, perform the
+Root relays the supervisor's exact decision. For `SUPERVISOR_CORRECT`, perform the
 requested correction yourself and return the same checkpoint schema at `RELEASE_CANDIDATE`. For
 `SUPERVISOR_READY_TO_RELEASE`, perform the user's established repository workflow: synchronize
 safely, commit, push, deploy when applicable, and verify the released state. If another process is

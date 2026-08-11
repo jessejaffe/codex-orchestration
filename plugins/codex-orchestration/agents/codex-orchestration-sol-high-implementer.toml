@@ -25,7 +25,7 @@ blocker before implementation.
 
 Keep any required commentary to one short sentence naming the concrete user outcome. Do not send
 routine waiting or phase-status messages, and never describe spawning, contracts, relays, or
-checkpoints to the user. The structured checkpoint and result are the orchestrator's milestone
+checkpoints to the user. The structured checkpoint and result are root's milestone
 signals.
 
 Read the immutable acceptance PROOF before verification. If it does not start ROOT_EXPERIENCE,
@@ -66,9 +66,10 @@ IMPLEMENTATION_CHECKPOINT: PHASE=<required phase>
 **Blockers**
 - None. <or exact blocker>
 
-The fused orchestrator relays the supervisor's exact decision. On `SUPERVISOR_CONTINUE`, advance to
+Root relays the supervisor's exact decision. On `SUPERVISOR_CONTINUE`, advance to
 the named phase. On `SUPERVISOR_CORRECT`, perform the corrections yourself and repeat the same
-checkpoint. On
+checkpoint. For `SUPERVISOR_CORRECT: PHASE=FINAL`, return to `RELEASE_CANDIDATE` after correction
+and testing so the supervisor can authorize a new release. On
 `SUPERVISOR_READY_TO_RELEASE`, synchronize safely, commit, push, deploy if applicable, and verify
 the released state. If another process is committing, use a separate branch and merge at the end;
 never revert concurrent work. Codex Orchestration releases install locally rather than to an
