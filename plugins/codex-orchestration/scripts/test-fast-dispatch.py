@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.10.5 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.11.0 context dispatch."""
 
 from __future__ import annotations
 
@@ -136,6 +136,8 @@ def main() -> int:
         "AMENDMENT_REVIEW",
         "PAUSE_FOR_REVISED_ACCEPTANCE",
         "ORCHESTRATION_STATUS: REASON=",
+        "SMALL_BUILD: TERRA_MAX / SOL_HIGH / ARCHITECTURE,RELEASE_CANDIDATE",
+        "BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
         "Require a nonempty exact `ORCHESTRATION_STATUS: REASON=` value",
         "This is a <friendly class> because <exact reason>.",
         "Use dynamic lane labels exactly: LUNA_MAX=Luna / Max",

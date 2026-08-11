@@ -1,5 +1,5 @@
 {
-  "policy": "Work class, not numeric complexity, selects the route. Artifacts are non-code deliverables; any net-new code capability is BUILD. Ambiguous artifact or tweak boundaries route upward.",
+  "policy": "Work class, not numeric complexity, selects the route. Artifacts are non-code deliverables. One bounded component-local new capability is SMALL_BUILD; multiple capabilities or a boundary-crossing new capability is BIG_BUILD. Ambiguous artifact, tweak, or build boundaries route upward.",
   "cases": [
     {
       "id": "explain_known_code",
@@ -58,22 +58,22 @@
     },
     {
       "id": "one_component_feature",
-      "expected": "BUILD",
+      "expected": "SMALL_BUILD",
       "request": "Add one new CSV export capability to the existing reporting package."
     },
     {
       "id": "two_component_feature",
-      "expected": "BUILD",
+      "expected": "BIG_BUILD",
       "request": "Add one new saved-filter capability spanning the existing API and dashboard."
     },
     {
       "id": "release_with_feature",
-      "expected": "BUILD",
+      "expected": "SMALL_BUILD",
       "request": "Release version 2.4 with one new dark-mode preference in the frontend."
     },
     {
       "id": "multi_feature_product_build",
-      "expected": "BUILD",
+      "expected": "BIG_BUILD",
       "request": "Build a new customer portal with login, billing history, and downloadable invoices."
     }
   ],
@@ -84,7 +84,7 @@
       "events": ["turn_aborted"],
       "request": "Should the new framework also support JPEGs and PNGs?",
       "expected_relation": "AMEND",
-      "expected_class": "BUILD",
+      "expected_class": "BIG_BUILD",
       "preserve": ["implement", "commit", "deploy", "detector", "recovery"],
       "add": ["JPEG", "PNG"]
     },
@@ -94,7 +94,7 @@
       "events": ["turn_aborted"],
       "request": "Explain what missing page bytes means, then continue the framework.",
       "expected_relation": "AMEND",
-      "expected_class": "BUILD",
+      "expected_class": "BIG_BUILD",
       "preserve": ["implement", "verify"],
       "add": ["explain missing page bytes"]
     },

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.10.5 context-bundle and activity protocol."""
+"""Static contracts for the 0.11.0 seven-class context protocol."""
 
 from __future__ import annotations
 
@@ -53,7 +53,8 @@ ROUTES = (
     "DESIGN_ARTIFACT: TERRA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
     "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE",
     "BIG_TWEAK: TERRA_MAX / SOL_HIGH / ROOT_CAUSE,RELEASE_CANDIDATE",
-    "BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
+    "SMALL_BUILD: TERRA_MAX / SOL_HIGH / ARCHITECTURE,RELEASE_CANDIDATE",
+    "BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
 )
 
 
@@ -98,8 +99,8 @@ def main() -> int:
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.10.5":
-        raise AssertionError(f"manifest does not use 0.10.5: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.11.0":
+        raise AssertionError(f"manifest does not use 0.11.0: {manifest.get('version')!r}")
 
     orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -117,7 +118,9 @@ def main() -> int:
             "DESIGN_ARTIFACT: create or edit a non-code deliverable whose visual composition",
             "SMALL_TWEAK: one bounded change to existing code behavior in one component",
             "BIG_TWEAK: multiple existing code behavior changes",
-            "BUILD: any net-new code capability, regardless of component count",
+            "SMALL_BUILD: one bounded net-new code capability contained within one existing component",
+            "BIG_BUILD: multiple net-new code capabilities",
+            "When small versus big\nbuild is ambiguous, choose BIG_BUILD",
             "Writing an artifact is a mutation but is not a code tweak or build",
             "A UI change inside an app or\nwebsite is code",
             *ROUTES,
@@ -137,8 +140,7 @@ def main() -> int:
             "followup_task",
             "SUPERVISOR_INIT",
             "ORCHESTRATION_ACCEPTANCE:",
-            "SMALL_BUILD",
-            "BIG_BUILD",
+            "- BUILD:",
         ),
         "taxonomy-only orchestrator",
     )
@@ -156,7 +158,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.10.5)",
+            "Orchestration ON (0.11.0)",
             "DESKTOP ACTIVITY DISPLAY",
             "one plain 2-7 word current milestone",
             "Waiting for Terra / Extra High classification",
@@ -211,8 +213,7 @@ def main() -> int:
     forbid(
         router,
         (
-            "SMALL_BUILD: TERRA_MAX",
-            "BIG_BUILD: SOL_HIGH",
+            "- BUILD: SOL_HIGH / SOL_XHIGH",
             "first spawn only the selected supervisor",
             "Wait for that turn to finish before spawning an implementer",
             "This is a <friendly class>. Implementation started",
@@ -260,11 +261,13 @@ def main() -> int:
     require(
         terra_implementer,
         (
-            "`READ_ONLY`, `DESIGN_ARTIFACT`, or `BIG_TWEAK`",
+            "`READ_ONLY`, `DESIGN_ARTIFACT`, `BIG_TWEAK`, or\n`SMALL_BUILD`",
             "On `READ_ONLY_WORK`",
             "`DESIGN_ARTIFACT`: `RELEASE_CANDIDATE` only",
             "does not add a software-design checkpoint",
             "`BIG_TWEAK`: `ROOT_CAUSE`, then `RELEASE_CANDIDATE`",
+            "`SMALL_BUILD`: `ARCHITECTURE`, then `RELEASE_CANDIDATE`",
+            "component-local design, invariants, compatibility, failure behavior",
         ),
         "Terra implementer",
     )
@@ -273,8 +276,9 @@ def main() -> int:
     require(
         sol_implementer,
         (
-            "implementer for `BUILD`",
-            "any net-new code capability, regardless of\ncomponent count",
+            "implementer for `BIG_BUILD`",
+            "multiple net-new code capabilities",
+            "interface/runtime/storage boundary",
             "`ARCHITECTURE`",
             "`VERTICAL_SLICE`",
             "`RELEASE_CANDIDATE`",
@@ -301,25 +305,26 @@ def main() -> int:
     require(
         big_tweak_supervisor,
         (
-            "supervisor for `BIG_TWEAK`",
-            "multiple existing\ncode behavior changes",
-            "SUPERVISOR_READY: CLASS=BIG_TWEAK",
-            "CHECKPOINT_REVIEW: PHASE=ROOT_CAUSE",
-            "- Work class: BIG_TWEAK",
+            "supervisor for `BIG_TWEAK` or `SMALL_BUILD`",
+            "small\nbuild adds one bounded capability inside one existing component",
+            "SUPERVISOR_READY: CLASS=<BIG_TWEAK|SMALL_BUILD>",
+            "For BIG_TWEAK, review `ROOT_CAUSE`",
+            "For SMALL_BUILD, review\n`ARCHITECTURE`",
+            "- Work class: <BIG_TWEAK|SMALL_BUILD>",
             "- Supervisor: GPT-5.6 Sol / High",
             "- Implementation: GPT-5.6 Terra / Max",
             "ORCHESTRATION_ACCEPT: ## Completed",
         ),
-        "Sol / High big-tweak supervisor",
+        "Sol / High big-tweak and small-build supervisor",
     )
 
     sol_supervisor = documents["codex-orchestration-sol-xhigh-supervisor.toml"]
     require(
         sol_supervisor,
         (
-            "supervisor for `BUILD`: any net-new code",
-            "SUPERVISOR_READY: CLASS=BUILD",
-            "- Work class: BUILD",
+            "supervisor for `BIG_BUILD`",
+            "SUPERVISOR_READY: CLASS=BIG_BUILD",
+            "- Work class: BIG_BUILD",
             "ORCHESTRATION_ACCEPT: ## Completed",
         ),
         "Sol / Extra High supervisor",
@@ -401,6 +406,14 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.10.5 profiles accepted for the 0.11.0 seven-class migration",
+            "57fa0c83e001f8300054982123580bf63ec8d2ac6c5adbd9ea5c5a47e395310f",
+            "eb96828e0c7e76d2b08f2a1950f09b833c305d03b0c154e1a4f43982c7e340df",
+            "5f1fd1f92efe8ee64818db1377a4bd396bea77224f1881ea7f8e7297cbed0d1c",
+            "4b5daaf3eeb4c4476b9f1b91f847b96ed0eccb2594bb706ecdc720e64ffa2898",
+            "b973df71184208d9f2bdc1fb18fe92364a402e2140d3b2eac932b4d31fd1532d",
+            "91aaffded1378dee480edbb7a0ce928b8b354c1def6fd1c78be4129c042eb084",
+            "b1d57d6e649bef6275a87994587010594dc16344f27ec2979f7964b295964dc4",
             "Exact 0.10.4 profiles accepted for the 0.10.5 context-bundle migration",
             "daad8fa64a161d02615b2df99e7ffef1a56e7a6114e3831b116d42a2e1c18fa2",
             "06e935c579bc2797cbb86a2f146cdc1eddfdd1a389ebded53e4e57cea9a64079",
@@ -441,7 +454,7 @@ def main() -> int:
             "48520a33a70bfceb920fee852ee991f0305170bd255bbf5455146e6ac88281d8",
             "7dc6715eec52fda116d10bb3154353b2020e093976dc47dc4cdee55bee12b24d",
         ),
-        "0.10.4, 0.10.3, 0.10.2, 0.10.0, and 0.9.0 migration digests",
+        "0.10.5 through 0.9.0 migration digests",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
@@ -452,7 +465,8 @@ def main() -> int:
         "DESIGN_ARTIFACT",
         "SMALL_TWEAK",
         "BIG_TWEAK",
-        "BUILD",
+        "SMALL_BUILD",
+        "BIG_BUILD",
     }
     if expected_classes != all_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {expected_classes!r}")
@@ -463,7 +477,7 @@ def main() -> int:
     if steering_relations != {"AMEND", "REPLACE", "CANCEL"}:
         raise AssertionError("steering fixtures do not cover continuity relations")
 
-    print("PASS: 0.10.5 exact-context activity and relay protocol")
+    print("PASS: 0.11.0 seven-class context and relay protocol")
     return 0
 
 

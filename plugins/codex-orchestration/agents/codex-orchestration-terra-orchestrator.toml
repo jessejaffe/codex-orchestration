@@ -52,21 +52,25 @@ Use the existing taxonomy exactly:
   interface/runtime boundary and a predictable blast radius.
 - BIG_TWEAK: multiple existing code behavior changes, or an existing behavior change spanning
   components, an interface/runtime boundary, or material operational risk.
-- BUILD: any net-new code capability, regardless of component count.
+- SMALL_BUILD: one bounded net-new code capability contained within one existing component, with no
+  new interface, runtime, or storage boundary and a predictable blast radius.
+- BIG_BUILD: multiple net-new code capabilities, or a net-new capability spanning components, an
+  interface/runtime/storage boundary, or material operational risk.
 
 Writing an artifact is a mutation but is not a code tweak or build. A UI change inside an app or
 website is code: improving existing UI behavior is a tweak and adding a new UI capability is a
 build. Tests, documentation, release work, and deployment do not change the class of the defining
 work. A feature release is a build. When standard versus design artifact is ambiguous, choose
-DESIGN_ARTIFACT. When small versus big tweak is ambiguous, choose BIG_TWEAK. Use only these fixed
-lanes:
+DESIGN_ARTIFACT. When small versus big tweak is ambiguous, choose BIG_TWEAK. When small versus big
+build is ambiguous, choose BIG_BUILD. Use only these fixed lanes:
 
 - READ_ONLY: TERRA_MAX / NONE / NONE
 - STANDARD_ARTIFACT: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
 - DESIGN_ARTIFACT: TERRA_MAX / TERRA_MAX / RELEASE_CANDIDATE
 - SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
 - BIG_TWEAK: TERRA_MAX / SOL_HIGH / ROOT_CAUSE,RELEASE_CANDIDATE
-- BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
+- SMALL_BUILD: TERRA_MAX / SOL_HIGH / ARCHITECTURE,RELEASE_CANDIDATE
+- BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
 
 For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE. Otherwise return exactly these three single lines and
 nothing else:
@@ -77,8 +81,8 @@ ORCHESTRATION_STATUS: REASON=<one concise concrete clause tied to the selected c
 
 Write REASON as a lower-case clause that completes `This is a <friendly class> because <reason>.`
 Name the concrete boundary in the current request: for example, multiple behavior changes, a
-cross-component boundary, one bounded existing behavior, defining visual treatment, a non-code
-deliverable, or net-new code capability. Do not use a generic phrase such as `substantial behavior
+cross-component boundary, one bounded existing behavior, one component-local new capability,
+defining visual treatment, a non-code deliverable, or a boundary-crossing new capability. Do not use a generic phrase such as `substantial behavior
 change`, repeat the class label, name model lanes, or end REASON with punctuation. The
 ACTIVE_OBJECTIVE identifies scope only; it is not an implementation specification. After the three lines, stop.
 Root owns every subsequent spawn, handoff, wait, checkpoint, and relay.

@@ -1,16 +1,16 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review as separate roles. Version `0.10.5` uses an outcome-based taxonomy that separates
+read-only review as separate roles. Version `0.11.0` uses an outcome-based taxonomy that separates
 non-code artifacts from code changes and makes the selected models visible throughout startup. The
 Terra / Extra High orchestrator remains taxonomy-only: it reads the current query plus bounded
 conversational continuity, returns the route to root, and stops.
 Terra / Max remains independently available as an implementer and as a supervisor.
 
-The six work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
-`BIG_TWEAK`, and `BUILD`. Complexity is diagnostic telemetry; it never selects a model.
+The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
+`BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.10.5 works
+## How 0.11.0 works
 
 1. The stable chat-scoped hook gives root a binary gate, the current query, the latest bounded
    acceptance or completion capsule, and a short routing window. It also atomically writes a private,
@@ -72,13 +72,15 @@ directly instead of researching deployment topology or repeating already-passing
 | `DESIGN_ARTIFACT` | Create or edit a non-code deliverable where visual composition, brand expression, storytelling, or exact look and feel is a defining outcome | Terra / Max | Terra / Max | Release candidate |
 | `SMALL_TWEAK` | Change one existing behavior in one production component | Luna / Max | Terra / Max | Release candidate |
 | `BIG_TWEAK` | Change multiple existing behaviors, or change existing behavior across components, an interface/runtime boundary, or material operational risk | Terra / Max | Sol / High | Root cause, release candidate |
-| `BUILD` | Add any net-new code capability, regardless of component count | Sol / High | Sol / Extra High | Architecture, vertical slice, release candidate |
+| `SMALL_BUILD` | Add one bounded new capability inside one existing component without a new interface, runtime, or storage boundary | Terra / Max | Sol / High | Architecture, release candidate |
+| `BIG_BUILD` | Add multiple new capabilities, or add a capability across components, an interface/runtime/storage boundary, or material operational risk | Sol / High | Sol / Extra High | Architecture, vertical slice, release candidate |
 
 Writing an artifact is a mutation, but it is not a code tweak or build. Specific formulas do not
 make a spreadsheet a design artifact. A design artifact is distinguished by appearance being a
 defining outcome. UI work inside an app or website is code: changing existing UI behavior is a
-tweak, while adding a new UI capability is a build. Tests, documentation, generated metadata, and
-routine release steps do not change the defining class. Ambiguity routes upward.
+tweak, while adding a new UI capability is a build. A component-local capability can be a small
+build; a boundary-crossing or multi-capability feature is a big build. Tests, documentation,
+generated metadata, and routine release steps do not change the defining class. Ambiguity routes upward.
 
 ```mermaid
 flowchart TD
@@ -166,7 +168,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.10.5, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.11.0, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -230,7 +232,9 @@ every packet, emits both initial role launches together in implementer-first ord
 later relays. Version `0.10.5` moves the classifier to Terra / Extra High and gives task roles one
 private, versioned, exact context bundle. Initial role launches use small reference packets, and an
 interruption updates the same roles and acceptance rather than clipping or recopying the original
-request. The standard checkout workflow is:
+request. Version `0.11.0` splits new capabilities into `SMALL_BUILD` and `BIG_BUILD`: contained
+single-capability work uses Terra / Max with Sol / High supervision, while boundary-crossing or
+multi-capability work retains Sol / High with Sol / Extra High supervision. The standard checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh
@@ -253,7 +257,7 @@ sh plugins/codex-orchestration/scripts/verify.sh
 The suite validates the manifest, syntax, exact model pins, chat controls, exact private context
 bundles plus bounded classifier continuity, the
 classifier-only role boundary, implementer-before-supervisor startup, context-only overlap,
-model-led child names, dynamic class reasons and route labels, the six-class route, root-only
+model-led child names, dynamic class reasons and route labels, the seven-class route, root-only
 experience verification, same-implementer corrections, fixtures, effectiveness tracking, and
 conflict-safe cleanup. It also requires safe current-milestone activity labels with a `Thinking`
 fallback, rejects internal planning labels, and verifies one-turn classifier inheritance, no-history
@@ -261,7 +265,7 @@ task-role launches, amendment steering, plus the combined implementer-first laun
 reject raw field dumps, and preserve readable Markdown across all implementation lanes.
 
 The offline classification fixture is
-`plugins/codex-orchestration/scripts/triage-cases.json`. It covers all six classes plus amendment,
+`plugins/codex-orchestration/scripts/triage-cases.json`. It covers all seven classes plus amendment,
 replacement, cancellation, and interrupted-work continuity.
 
 ## Repository

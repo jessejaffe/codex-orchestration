@@ -70,7 +70,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.10.5). Root applies the binary fast-path gate, then
+DISPATCH_CONTEXT = """Orchestration ON (0.11.0). Root applies the binary fast-path gate, then
 mechanically coordinates Terra-selected roles. Root never classifies taxonomy, constructs
 acceptance, implements, supervises, or judges change work.
 
@@ -136,7 +136,8 @@ validate mechanically against only these lanes:
 - DESIGN_ARTIFACT: TERRA_MAX / TERRA_MAX / RELEASE_CANDIDATE
 - SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
 - BIG_TWEAK: TERRA_MAX / SOL_HIGH / ROOT_CAUSE,RELEASE_CANDIDATE
-- BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
+- SMALL_BUILD: TERRA_MAX / SOL_HIGH / ARCHITECTURE,RELEASE_CANDIDATE
+- BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
 
 ACTIVE STEERING — For RELATION=AMEND, REPLACE, or CANCEL, call `list_agents` once immediately after
 classification to find root's unfinished model-named children. Never wait for a running child before
