@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.3 recovery protocol."""
+"""Static contracts for the 0.12.4 lean orchestration protocol."""
 
 from __future__ import annotations
 
@@ -97,22 +97,29 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.3":
-        raise AssertionError(f"manifest does not use 0.12.3: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.4":
+        raise AssertionError(f"manifest does not use 0.12.4: {manifest.get('version')!r}")
 
-    if sum(map(len, prompts.values())) > 27_000:
-        raise AssertionError("agent prompts exceed the 27,000-character lean budget")
+    if sum(map(len, prompts.values())) > 19_000:
+        raise AssertionError("agent prompts exceed the 19,000-character lean budget")
 
     orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
     require(
         orchestrator,
         (
-            "taxonomy-only", "latency-critical bounded lookup", "optional ROUTING_CONTEXT",
-            "do not request or consume LAST_TASK_CONTEXT", "prior transcripts",
-            "Do not turn background details", "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / NONE",
-            "BIG_TWEAK: TERRA_MAX / SOL_HIGH / RELEASE_CANDIDATE", "## Classification blocked",
+            "only classify", "Use only the current request and bounded routing context",
+            "## Classification blocked",
             "## Classification", "- Relationship: <New|Amend|Replace|Cancel>",
-            "- Why: <one concrete lower-case clause", "must not use a\ngeneric phrase",
+            "- Work class:", "- Complexity:", "- Why: <brief reason>",
+        ),
+        "orchestrator",
+    )
+    forbid(
+        orchestrator,
+        (
+            "Do not call tools", "prior transcripts", "The current request controls",
+            "UI work is code", "Ambiguity routes", "Fixed lanes", "- Implementation:",
+            "- Supervision:", "- Checkpoints:", "Do not expose uppercase lane identifiers",
         ),
         "orchestrator",
     )
@@ -123,24 +130,25 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.3)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "Orchestration ON (0.12.4)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
             "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
-            "only to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
-            "only to supervisors and implementers", "never to the classifier",
+            "Send it to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
+            "Send it to supervisors and implementers",
             "missing optional artifact never blocks work", "Starting Terra / Extra High classification now.",
             "fork_turns=1", "fork_turns=none", *HUMAN_ROUTES,
             "CHANGE WORK — Start implementation before acceptance construction",
-            "spawn the selected implementer first", "Immediately spawn the selected supervisor second",
-            "Emit both `spawn_agent` calls back-to-back", "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+            "Launch the selected implementer first", "Launch the selected supervisor immediately next",
+            "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
             "Deliver it immediately", "`send_message` if the implementer runs",
+            "stop or redirect work that no longer matches",
             "Small tweak starts immediately",
             "activity label must stay exactly `Thinking`", "dynamic phase, plan, repository",
             "big tweak has three", "## Root verification needed", "## Continuity", "## Completed",
         ),
         "root coordinator",
     )
-    implementer_start = router.index("spawn the selected implementer first")
-    supervisor_start = router.index("Immediately spawn the selected supervisor second")
+    implementer_start = router.index("Launch the selected implementer first")
+    supervisor_start = router.index("Launch the selected supervisor immediately next")
     if implementer_start >= supervisor_start:
         raise AssertionError("the implementer is not launched before the supervisor")
     forbid(
@@ -148,7 +156,8 @@ def main() -> int:
         (
             "Small tweak: Luna / Max; Terra / Max; Release candidate",
             "Big tweak: Terra / Max; Sol / High; Root cause → Release candidate",
-            "Spawn the selected supervisor first", "Acceptance is the first checkpoint",
+            "Spawn the selected supervisor first", "Emit both `spawn_agent` calls back-to-back",
+            "RELATIONSHIPS —", "Never mutate under superseded acceptance",
             "latest verified milestone", "Building with Luna / Max",
         ),
         "root coordinator",
@@ -163,15 +172,21 @@ def main() -> int:
         require(
             prompt,
             (
-                "TASK_CONTEXT_BUNDLE", "TASK_CONTEXT_REVISION", "LAST_TASK_CONTEXT",
-                "ACCEPTANCE=PENDING_SUPERVISOR_INIT", "not a blocker", "reversible local edits",
-                "## Awaiting acceptance",
-                "fetch GitHub once", "push reports",
-                "Inspect dirt first", "same-objective", "stopped-run edits",
-                "dirt does not prove active ownership", "Isolate only",
-                "actively owned work",
+                "TASK_CONTEXT_BUNDLE", "start immediately", "Before acceptance",
+                "do not commit", "deploy", "return `## Awaiting acceptance`",
+                "fetch GitHub once", "Reuse one", "synchronization baseline",
                 "## Checkpoint", "**Release plan**", "## Implementation result",
                 "**Acceptance evidence**", "**Release**", "**Remaining**",
+            ),
+            filename,
+        )
+        forbid(
+            prompt,
+            (
+                "TASK_CONTEXT_REVISION", "LAST_TASK_CONTEXT", "not a blocker",
+                "background artifacts", "Inspect dirt first", "stopped-run edits",
+                "dirt does not prove active ownership", "Isolate only", "project discovery",
+                "narrowest decisive", "applicable skills", "fresh deployment research",
             ),
             filename,
         )
@@ -183,7 +198,7 @@ def main() -> int:
     )
     require(
         prompts["codex-orchestration-terra-implementer.toml"],
-        ("`BIG_TWEAK`: `RELEASE_CANDIDATE` only", "there is no root-cause checkpoint", "On `READ_ONLY_WORK`"),
+        ("`BIG_TWEAK`: `RELEASE_CANDIDATE` only", "On `READ_ONLY_WORK`"),
         "Terra flow",
     )
 
@@ -196,17 +211,24 @@ def main() -> int:
         require(
             prompt,
             (
-                "TASK_CONTEXT_BUNDLE", "LAST_TASK_CONTEXT", "## Ready",
-                "already working provisionally", "do not wait",
+                "read TASK_CONTEXT_BUNDLE", "## Ready", "already working", "do not wait",
+                "Inspect no workspace yet", "Missing optional material must not become",
                 "- Work class:", "- Outcome:", "- Must:", "- Must not:", "- Destinations:",
-                "- Open commitments:", "- Proof:", "## Acceptance updated", "## Scope mismatch",
+                "- Open commitments:", "- Proof:",
                 "## Corrections required", "## Ready to release", "## Blocked",
                 "## Root verification needed", "## Continuity", "## Completed",
             ),
             filename,
         )
-        if "missing optional" not in prompt.lower():
-            raise AssertionError(f"{filename} does not protect optional artifacts")
+        forbid(
+            prompt,
+            (
+                "TASK_CONTEXT_REVISION", "LAST_TASK_CONTEXT", "mentioned attachment",
+                "On route conflict", "## Scope mismatch", "AMENDMENT_REVIEW",
+                "Optional evidence cannot block", "without broadening", "Never fix",
+            ),
+            filename,
+        )
 
     require(
         prompts["codex-orchestration-terra-supervisor.toml"],
@@ -215,7 +237,7 @@ def main() -> int:
     )
     require(
         prompts["codex-orchestration-sol-high-supervisor.toml"],
-        ("`BIG_TWEAK`: `RELEASE_CANDIDATE` only", "root-cause checkpoint is removed"),
+        ("`BIG_TWEAK`: `RELEASE_CANDIDATE` only",),
         "Sol supervisor big-tweak flow",
     )
 
@@ -223,6 +245,10 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.12.3 profiles accepted for the 0.12.4 prompt-simplification migration",
+            "cb92150a2164cc1d1f89952320119111669e9953a0b8a837a539eec191167430",
+            "d2084c6421ef931e0efd1b7b377df59662a2fcbd526b7e023492d0bc875e24e2",
+            "52b773dd1602abcf38e1bc04b7e4271b46547a19a30b2dbb2b8a15410c4f3429",
             "Exact 0.12.2 profiles accepted for the 0.12.3 recovery-policy migration",
             "9e28f2e3d38aa6300a399d12be19f2ab5e787d3efdd616d38e2653009dfc375b",
             "0091625c0a072a2a5638b4a8d20ecbe4c2e019d3ce9fba5f1e2a47dac2fe7ef2",
@@ -261,7 +287,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.3 stopped-run recovery and fixed Thinking label")
+    print("PASS: 0.12.4 lean orchestration protocol")
     return 0
 
 

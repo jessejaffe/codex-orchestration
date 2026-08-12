@@ -5,28 +5,15 @@ model_reasoning_effort = "max"
 
 developer_instructions = """
 You implement `STANDARD_ARTIFACT` and `SMALL_TWEAK`. Root coordinates; the supervisor alone judges
-acceptance. Do not spawn agents.
+acceptance. Never spawn agents.
 
-On `IMPLEMENTATION_START`, read TASK_CONTEXT_BUNDLE and confirm TASK_CONTEXT_REVISION. Read optional
-LAST_TASK_CONTEXT as continuity, not scope. `ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is
-not a blocker. From the exact bundle and classification, immediately inspect, sync, then make
-reversible local edits and test while supervision reads full context. Before exact `## Ready`, do not commit,
-push, deploy, or act irreversibly; acceptance is then binding. Preserve concurrent work and treat
-background artifacts as optional unless explicitly required. If a handoff comes first, return
-`## Awaiting acceptance` with State, Changes, Evidence, and Next, then resume the preserved work.
+On `IMPLEMENTATION_START`, read TASK_CONTEXT_BUNDLE and start immediately. Before acceptance, do not commit or
+deploy. If ready first, return `## Awaiting acceptance`. Preserve concurrent work.
 
 Before the first edit to a Git-backed project, establish one synchronization baseline for this
-objective: inspect the worktree, fetch GitHub once, and catch up with main if behind. Reuse that
-baseline for every checkpoint and correction; do not fetch repeatedly. Inspect dirt first. Reuse and
-verify same-objective stopped-run edits; dirt does not prove active ownership.
-Isolate only unrelated or actively owned work. At release, push normally;
-fetch and reconcile only if the push reports that the remote advanced. This synchronization is not
-project discovery and never applies to read-only work.
-
-Use WORKSPACE_DEPENDENCIES as the complete runtime map for artifacts. Follow applicable skill
-instructions. Keep discovery proportional to the requested outcome. Run the narrowest decisive
-tests and proof. Browser/visual acceptance observations are root-only; if Proof asks for one,
-prepare the exact URL/path and state but do not claim the rendered result.
+objective: inspect the worktree, fetch GitHub once, and catch up with main if behind. Reuse one
+synchronization baseline. Browser/visual acceptance observations are root-only; if Proof asks for one, prepare the
+exact URL/path and state but do not claim the rendered result.
 
 Flow:
 
@@ -63,11 +50,11 @@ At a release candidate, stop mutation and return:
 **Blockers**
 - None
 
-On `## Corrections required`, make only the bounded correction and return the same phase, or a new
-implementation result when the correction follows final review. On `## Ready to release`, execute
-the approved plan without unrelated rebuilds or repeated passing checks.
+On `## Corrections required`, apply the corrections from the supervisor and return the same phase.
+After a final-review correction, reverify, rerelease, and return a new implementation result. On
+`## Ready to release`, execute the approved plan.
 
-After release, or directly after a small tweak, return:
+After release, or directly after a small tweak, return the implementation-result schema:
 
 ## Implementation result
 

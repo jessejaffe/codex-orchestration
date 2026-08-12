@@ -1,48 +1,34 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.3` keeps implementer-first startup, recovers matching
-uncommitted work from stopped runs instead of recreating it, and fixes the desktop activity label at
-`Thinking`. The explicit previous-task continuity, split routing capsule, reduced tweak checkpoints,
-and lean prompts remain unchanged. The Terra / Extra High orchestrator receives only
-classification-relevant context, returns the route, and stops.
+read-only review separate. Version `0.12.4` removes incident-specific prompt rules and trusts each
+role to exercise judgment inside a small structural contract. The Terra / Extra High orchestrator
+only classifies; root derives the fixed route.
 Terra / Max remains independently available as an implementer and as a supervisor.
 
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.3 works
+## How 0.12.4 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
-2. When the user explicitly says to read the last chat/task or continue where they left off, root
-   first lists recent Codex tasks, excludes the current one, reads the newest task from the same
-   project or working directory, and reads it once. Root gives the orchestrator only a structured
-   routing capsule of at most 1,200 characters: previous objective, last result, open work, resolved
-   referent, and critical paths. The fuller 6,000-character continuity block goes only to the
-   supervisor and implementer. Ambiguous task selection produces one question.
+2. When the user explicitly asks to read the last task, root reads the newest relevant task once.
+   The classifier receives a routing capsule of at most 1,200 characters; the supervisor and
+   implementer receive a continuity block of at most 6,000 characters.
 3. Root answers a simple explanation or brief brainstorming request directly only when it needs no
    tools, mutation, fresh verification, audit, or substantial research. All other work is classified
-   by Terra / Extra High, which calls no tools and returns only the relationship, route, and reason.
-4. For change work, root starts the selected implementer first, then immediately starts the read-only
-   supervisor without waiting between the two launches. Both receive the exact bundle and optional
-   previous-task context. The implementer begins inspection, synchronization, reversible local edits,
-   and tests while the supervisor reads the full context and constructs acceptance.
-5. The supervisor's acceptance is delivered to the already-running implementer. Until it arrives,
-   the implementer may make reversible local progress but cannot commit, push, deploy, migrate
-   irreversibly, or finalize the result. Background files, ZIPs, screenshots, competitors, and sample
-   inputs stay optional unless explicitly required. Missing optional artifacts never block work.
-6. The implementer records one GitHub baseline before the first edit, catches up with main if behind,
-   and reuses that baseline for the objective. It inspects dirty changes before choosing isolation:
-   matching work from a stopped run is adopted and verified, while a separate branch/worktree is
-   reserved for unrelated changes or an active concurrent owner. It does not fetch at every
-   checkpoint; a later push conflict triggers reconciliation. Small tweaks have no implementer checkpoint. Big
-   tweaks have one release-candidate review between acceptance and release. Builds retain their
-   architecture and vertical-slice checkpoints. Every release candidate includes the narrow commit,
-   deployment, probe, and tunnel plan as an executable release plan.
-7. Amendments revise the exact bundle and acceptance before mutation resumes. Replacement or
-   cancellation interrupts unfinished roles. The same supervisor performs final review and writes
-   the readable completion report, which root returns unchanged.
+   by Terra / Extra High, which only classifies. Root derives models and checkpoints from the class.
+4. For change work, root starts the selected implementer first and the supervisor immediately next.
+   The implementer begins while the supervisor constructs acceptance.
+5. Before acceptance, the implementer does not commit or deploy. If it finishes first, it returns
+   `Awaiting acceptance`; root joins the two parallel paths.
+6. The implementer records one GitHub baseline before the first edit and catches up with main if
+   behind. Small tweaks have no implementer checkpoint. Big tweaks have one release-candidate
+   review. Builds retain architecture and vertical-slice checkpoints where applicable. Every release
+   candidate includes an executable release plan.
+7. If the user's request changes, root stops or redirects work that no longer matches it. The same
+   supervisor performs final review and writes the readable completion report.
 
 For routed work, every child pill starts with the selected model lane rather than the work class.
 At role startup, root names the class, gives the classifier's concrete reason, and names the dynamic
@@ -54,8 +40,8 @@ an internal plan, repository action, deployment question, agent state, or checkp
 persistent label.
 Classifications, implementer checkpoints and release results, supervisor decisions, continuity
 summaries, and final reports all use readable Markdown headings and labeled bullets. Raw field
-dumps are never shown in a child response. After approval, the release turn executes the prepared plan
-directly instead of researching deployment topology or repeating already-passing checks.
+dumps are never shown in a child response. After approval, the release turn executes the prepared
+plan.
 
 ## Work classes and routes
 
@@ -102,31 +88,20 @@ The Terra identities are roles, not model restrictions:
 
 ## Context continuity
 
-The orchestrator classifies a new query as `NEW`, `AMEND`, `REPLACE`, or `CANCEL`. Unfinished work
-remains active unless the newest request explicitly replaces or cancels it. An interrupted turn
-stops execution, not the objective.
+The orchestrator classifies the relationship as `NEW`, `AMEND`, `REPLACE`, or `CANCEL` and assigns
+one of the seven work classes. Root derives the model route and checkpoints from that class.
 
 The classifier inherits only the current root turn and receives compact routing continuity. Task
 roles receive a private JSON bundle containing the exact current objective. An explicit request to
 read the last chat makes root produce two previous-task payloads from one read: the orchestrator gets
 only the 1,200-character routing capsule, while the supervisor and implementer get the fuller
-6,000-character continuity block. The classifier never receives the prior transcript, detailed
-evidence, screenshots, tests, or implementation history. Both payloads resolve references without
-creating requirements; incidental artifacts remain optional.
-
-A newer direct conversation marks an older capsule stale. Commands such as “do the next step” must
-resolve to an exact recent or previous-task decision; repositories and generic NEXT fields cannot
-invent a missing referent.
-
-When a user adds scope during unfinished work, the hook publishes a new bundle revision. Root sends
-that revision to the same running implementer and supervisor. The implementer pauses mutation while
-the supervisor revises acceptance. Explicit replacement or cancellation interrupts the old roles.
+6,000-character continuity block. If the user's request changes, root stops or redirects work that
+no longer matches it. Missing optional artifacts never block work.
 
 The supervisor—not the orchestrator—defines concrete outcomes, destinations, proof, and open
 commitments during its initial turn. The implementer starts first and makes reversible local progress
 while that full-context acceptance is constructed. Acceptance becomes binding when delivered;
-commit, push, deployment, irreversible migration, and completion remain gated by it. The accepted
-contract then stays immutable through implementation and supervision.
+commit and deployment remain gated by it.
 When work completes, the supervisor records a private readable continuity section containing the outcome,
 delivered capabilities, decisive proof, links, revision, open commitments, next work, and
 limitations. A follow-up asking what was just built can use that capsule without rereading the
@@ -134,19 +109,9 @@ completed rollout.
 
 ## Repository synchronization
 
-Synchronization is a release-safety check, not a way to understand the project. Local files remain
-the source used for code discovery. For each new mutation objective, the implementer records one
-baseline before the first edit: current branch/worktree state, a single GitHub fetch, and whether
-local main must catch up. The same objective reuses that baseline across agent turns, checkpoints,
-and corrections, even when they occur in one long task.
-
-At release, the implementer pushes normally instead of performing a second routine fetch. GitHub's
-push rejection is the guard against a remote branch that advanced after the baseline; only that
-rejection triggers another fetch and reconciliation. Dirty work is inspected before isolation.
-Matching same-objective edits left by a stopped or interrupted run are adopted, verified, and
-continued in place; dirty files alone do not prove active ownership. A separate branch/worktree is
-used only for unrelated dirty changes or work still owned by an active concurrent process. Read-only
-research and brainstorming never commit or deploy.
+For each mutation objective, the implementer records one baseline before the first edit: current
+branch/worktree state, one GitHub fetch, and whether local main must catch up. The same objective
+reuses that baseline. Read-only research and brainstorming never commit or deploy.
 
 ## Checkpoints and readable output
 
@@ -187,14 +152,14 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.3, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.4, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
 
 ## Final completion receipt
 
-Every accepted change ends with a supervisor-authored Markdown report that root relays unchanged.
+Every accepted change ends with a supervisor-authored Markdown report.
 It describes the outcome, major changes, decisive verification, exact links, release identity,
 remaining commitments, and route. A result can say work is live, deployed, released, or on GitHub
 only when it includes the exact destination and evidence. `Remaining: None` is allowed only when
@@ -266,7 +231,9 @@ roles retain the fuller continuity. Version `0.12.2` restores implementer-first 
 the implementer and then the supervisor back-to-back, so reversible local work overlaps full-context
 acceptance construction while release and irreversible actions remain gated. Version `0.12.3`
 recovers matching stopped-run edits before considering worktree isolation and makes `Thinking` the
-only desktop activity label. The standard
+only desktop activity label. Version `0.12.4` removes incident-specific prompt rules, reduces the
+classifier to classification, moves route derivation to root, and keeps only four compact dependency
+rules for context loading, acceptance joining, route derivation, and changed work. The standard
 checkout workflow is:
 
 ```sh
@@ -287,13 +254,12 @@ Run the offline release suite with:
 sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
-The suite validates the manifest, syntax, exact model pins, chat controls, exact current-task
-bundles, bounded classifier continuity, explicit previous-task lookup, acceptance-gated release
-safety, implementer-first launch ordering, stopped-run work recovery, a fixed `Thinking` activity
-label, optional-artifact boundaries, reduced tweak checkpoints, one-turn classifier inheritance,
-no-history task roles, amendment steering, root-only experience checks,
-readable Markdown, effectiveness tracking, and conflict-safe upgrades. Hard budgets keep the root
-dispatch prompt below 7,500 characters and all seven role prompts below 27,000 characters total.
+The suite validates the manifest, syntax, exact model pins, chat controls, current-task bundles,
+bounded classifier continuity, previous-task lookup, acceptance-gated release safety,
+implementer-first launch ordering, a fixed `Thinking` activity label, reduced tweak checkpoints,
+root-only experience checks, readable Markdown, effectiveness tracking, and conflict-safe upgrades.
+Hard budgets keep the root dispatch prompt below 7,500 characters and all seven role prompts below
+19,000 characters total.
 
 The offline classification fixture is
 `plugins/codex-orchestration/scripts/triage-cases.json`. It covers all seven classes plus amendment,

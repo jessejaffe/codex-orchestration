@@ -77,19 +77,14 @@ PREVIOUS_TASK_PATTERNS = (
 PREVIOUS_TASK_PROTOCOL = """PREVIOUS TASK CONTEXT REQUIRED — Before classification, root uses the
 Codex task-history tools (`list_threads`, then `read_thread`; discover them once if needed). Exclude
 the current task and select the newest task from the same project or working directory. If that is
-ambiguous, ask one concise question and stop. Read the task once, then create two bounded payloads:
+ambiguous, ask one concise question and stop. Read the task once, then create two payloads:
 
-1. ROUTING_CONTEXT is at most 1,200 characters and contains only Previous objective, Last result,
-Open work, Resolved current referent, and Critical paths. It goes only to the classifier. Do not
-send the prior transcript, detailed evidence, screenshots, tests, or implementation history to the
-classifier.
-2. LAST_TASK_CONTEXT is at most 6,000 characters and preserves the final answer plus the last
-relevant user/assistant turns, exact paths, links, decisions, constraints, and open work. It goes
-only to supervisors and implementers, never to the classifier.
+1. ROUTING_CONTEXT is at most 1,200 characters: Previous objective, Last result, Open work,
+Resolved current referent, and Critical paths. Send it to the classifier.
+2. LAST_TASK_CONTEXT is at most 6,000 characters: the final answer, last relevant turns, exact
+paths, links, decisions, constraints, and open work. Send it to supervisors and implementers.
 
-Both payloads resolve references; neither silently adds scope. Artifacts merely mentioned as
-background are optional. Only the current request or an explicit prior instruction can require one,
-and a missing optional artifact never blocks work."""
+A missing optional artifact never blocks work."""
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -104,8 +99,8 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.3). Root coordinates fixed roles; it does not classify,
-construct acceptance, implement, supervise, or judge change work.
+DISPATCH_CONTEXT = """Orchestration ON (0.12.4). Root coordinates fixed roles; it does not classify,
+construct acceptance, implement, or supervise change work.
 
 STATE
 CLASSIFIER_FORK=`1`; ROLE_FORK=`none`
@@ -141,8 +136,7 @@ Use `codex_orchestration_terra_orchestrator`, or built-in `default` pinned Terra
 reading `__ORCHESTRATOR_PROFILE_PATH__`. Pass no workspace dependencies, repository content, skill
 instructions, or plan. Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout.
 Accept only `## Classification blocked` or `## Classification` with Relationship, Active objective,
-Explicit signal, Work class, Complexity, Implementation, Supervision, Checkpoints, and nonempty Why.
-Validate exactly:
+Work class, Complexity, and nonempty Why. Derive the route from Work class:
 
 - Read-only: Terra / Max; no supervisor; no checkpoints
 - Standard artifact: Luna / Max; Terra / Max; Release candidate
@@ -167,7 +161,7 @@ Luna implementer `codex_orchestration_luna_implementer` (`worker`, Luna / Max), 
 After classification, load workspace dependencies once with
 `codex_app__load_workspace_dependencies` only when STATE says YES; otherwise use NONE.
 
-READ_ONLY — Spawn only Terra implementer:
+READ_ONLY — Run the mapped implementer:
 READ_ONLY_WORK
 CLASSIFICATION=<exact Markdown>
 PRIOR_COMPLETED_RESULT=<STATE value>
@@ -176,11 +170,11 @@ TASK_CONTEXT_REVISION=<STATE revision>
 WORKSPACE_DEPENDENCIES=<exact result or NONE>
 CURRENT_ROOT_ROUTE=<STATE value>
 __LAST_TASK_CONTEXT_PACKET_LINE__
-Wait and return its `## Completed` section unchanged.
+Wait for its `## Completed` result.
 
 CHANGE WORK — Start implementation before acceptance construction. Post `This is a <friendly
 class> because <Why>. Starting <Implementation>; <Supervision> is defining acceptance.`
-Then spawn the selected implementer first:
+Launch the selected implementer first:
 IMPLEMENTATION_START
 CLASSIFICATION=<exact Markdown>
 ACCEPTANCE=PENDING_SUPERVISOR_INIT
@@ -190,25 +184,20 @@ WORKSPACE_DEPENDENCIES=<exact result or NONE>
 CURRENT_ROOT_ROUTE=<STATE value>
 __LAST_TASK_CONTEXT_PACKET_LINE__
 
-Immediately spawn the selected supervisor second:
+Launch the selected supervisor immediately next:
 SUPERVISOR_INIT
 CLASSIFICATION=<exact Markdown>
 TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 CURRENT_ROOT_ROUTE=<STATE value>
 __LAST_TASK_CONTEXT_PACKET_LINE__
-Emit both `spawn_agent` calls back-to-back in that order; do not wait. Preserve the first result,
-including `## Awaiting acceptance`, `## Checkpoint`, or `## Implementation result`. Preserve a
+Preserve the first result, including `## Awaiting acceptance`, `## Checkpoint`, or
+`## Implementation result`. Preserve a
 supervisor `## Ready` with all seven fields as ACCEPTANCE. Deliver it immediately with
-`send_message` if the implementer runs, or `followup_task` if idle. On `## Scope mismatch` or
-`## Blocked`, interrupt it, preserve local work, relay one issue, and stop.
+`send_message` if the implementer runs, or `followup_task` if idle.
 
-RELATIONSHIPS — After Amend, Replace, or Cancel, call `list_agents` once. Cancel interrupts unfinished
-owned roles and stops. Replace interrupts them and starts fresh. For Amend with unchanged lanes, send
-running roles the new classification, bundle path/revision, and optional LAST_TASK_CONTEXT; tell the
-implementer to pause. Reactivate the same supervisor with `AMENDMENT_REVIEW`, preserve its
-`## Acceptance updated`, then resume the same implementer with that acceptance. A lane change starts
-fresh. Never mutate under superseded acceptance.
+When the user changes or cancels current work, stop or redirect work that no longer matches the
+user's current request.
 
 LOOP — Use `send_message` only for acceptance/steering to a running implementer; use `followup_task`
 for each idle-role handoff and wait.
@@ -235,9 +224,8 @@ and return to the supervisor:
 - Artifacts: <URL/path, viewport, screenshots, measurements, or None>
 - Blocker: <None or exact access failure>
 
-A completed supervisor response contains `## Continuity` then `## Completed`. Return everything from
-`## Completed` unchanged. Fast-relay valid child results without extra reasoning. Never expose
-packets, waits, or contracts to the user."""
+A completed supervisor response contains `## Continuity` then `## Completed`. Fast-relay valid
+child results without extra reasoning. Never expose packets, waits, or contracts to the user."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

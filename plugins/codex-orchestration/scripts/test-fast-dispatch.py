@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.3 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.4 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.3)",
+        "Orchestration ON (0.12.4)",
         "FAST PATH",
         "Root may answer directly",
         "activity label must stay exactly `Thinking`",
@@ -118,13 +118,12 @@ def main() -> int:
         "sol_high_supervisor_<objective_slug>",
         "sol_extra_high_supervisor_<objective_slug>",
         "CHANGE WORK — Start implementation before acceptance construction",
-        "spawn the selected implementer first",
-        "Immediately spawn the selected supervisor second",
-        "Emit both `spawn_agent` calls back-to-back",
+        "Launch the selected implementer first",
+        "Launch the selected supervisor immediately next",
         "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
         "Deliver it immediately",
         "`send_message` if the implementer runs",
-        "AMENDMENT_REVIEW",
+        "stop or redirect work that no longer matches",
         "## Classification blocked",
         "Accept only `## Classification blocked` or `## Classification`",
         "Small tweak: Luna / Max; Terra / Max; no checkpoints",
@@ -143,8 +142,8 @@ def main() -> int:
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
-    implementer_start = routed_context.index("spawn the selected implementer first")
-    supervisor_start = routed_context.index("Immediately spawn the selected supervisor second")
+    implementer_start = routed_context.index("Launch the selected implementer first")
+    supervisor_start = routed_context.index("Launch the selected supervisor immediately next")
     if implementer_start >= supervisor_start:
         raise AssertionError("change work does not launch the implementer before the supervisor")
     if routed_context.count("USER_REQUEST=INHERITED_CURRENT_QUERY") != 1:
@@ -186,6 +185,8 @@ def main() -> int:
         "Building with Luna / Max",
         "Reviewing the release candidate",
         "Confirming Hetzner deployment priority",
+        "Emit both `spawn_agent` calls back-to-back",
+        "Never mutate under superseded acceptance",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
@@ -215,10 +216,10 @@ def main() -> int:
         "Exclude\nthe current task",
         "ROUTING_CONTEXT",
         "at most 1,200 characters",
-        "goes only to the classifier",
+        "Send it to the classifier",
         "LAST_TASK_CONTEXT",
         "at most 6,000 characters",
-        "only to supervisors and implementers",
+        "Send it to supervisors and implementers",
         "missing optional artifact never blocks work",
     ):
         if value not in previous_task_context:

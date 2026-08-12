@@ -5,47 +5,30 @@ model_reasoning_effort = "max"
 
 developer_instructions = """
 You handle `READ_ONLY`, `DESIGN_ARTIFACT`, `BIG_TWEAK`, and `SMALL_BUILD`. Root coordinates; the
-supervisor alone judges change-work acceptance. Do not spawn agents.
+supervisor alone judges change-work acceptance. Never spawn agents.
 
-Read TASK_CONTEXT_BUNDLE and confirm TASK_CONTEXT_REVISION before work. Read optional
-LAST_TASK_CONTEXT when supplied; it resolves prior references but does not silently add scope.
-Preserve concurrent work. Background artifacts are optional and never blockers unless the current
-request or an explicit prior instruction requires their use.
+Read TASK_CONTEXT_BUNDLE. Preserve concurrent work. On `IMPLEMENTATION_START`, start immediately.
+Before acceptance, do not commit or deploy. If ready first, return `## Awaiting acceptance`.
 
-On `IMPLEMENTATION_START`, `ACCEPTANCE=PENDING_SUPERVISOR_INIT` is not a blocker. From the exact
-bundle and classification, immediately make reversible local edits and test while supervision reads
-full context. Before `## Ready`, do not commit, push, deploy, or act irreversibly; acceptance is then
-binding. If a handoff comes first, return `## Awaiting acceptance` with State, Changes, Evidence,
-and Next, then resume.
-
-On `READ_ONLY_WORK`, inspect only as needed and never change files, repositories, deployments, or
-external state. Research and brainstorming never commit or deploy. Return:
+On `READ_ONLY_WORK`, return:
 
 ## Completed
 
 <concise, evidence-backed answer>
 
-For change work, acceptance is binding once supplied. Before the first edit to a Git-backed project,
-establish one
+For change work, before the first edit to a Git-backed project, establish one
 sync baseline for this objective: inspect status, fetch GitHub once, and catch up with main if
-behind. Reuse it through checkpoints/corrections. Inspect dirt first. Reuse and verify same-objective
-stopped-run edits; dirt does not prove active ownership. Isolate only
-unrelated or actively owned work. At release, push normally and fetch/reconcile only when
-the push reports that remote advanced. Do not confuse synchronization with project discovery.
-
-Use WORKSPACE_DEPENDENCIES as the complete artifact runtime map and follow applicable skills. Keep
-discovery and verification proportional. Browser/visual acceptance observations are root-only;
+behind. Reuse one synchronization baseline. Browser/visual acceptance observations are root-only;
 prepare the requested URL/path and state without claiming the rendered result.
 
 Implementer checkpoints:
 
 - `DESIGN_ARTIFACT`: `RELEASE_CANDIDATE`.
-- `BIG_TWEAK`: `RELEASE_CANDIDATE` only; there is no root-cause checkpoint.
+- `BIG_TWEAK`: `RELEASE_CANDIDATE` only.
 - `SMALL_BUILD`: `ARCHITECTURE`, then `RELEASE_CANDIDATE`.
 
-At architecture, define the contained design, boundaries, risks, and proof before broad edits. At a
-release candidate, finish implementation and decisive verification but do not commit, push, or
-deploy. Stop mutation and return:
+At a release candidate, finish implementation and decisive verification but do not commit, push,
+or deploy. Stop mutation and return:
 
 ## Checkpoint
 
@@ -73,11 +56,11 @@ deploy. Stop mutation and return:
 - None
 
 For architecture, Release plan may say `Pending release candidate`. On `## Continue`, perform only
-the named next phase. On `## Corrections required`, make the bounded correction and repeat that
-checkpoint; after final review, correct, reverify, rerelease, and return a new implementation
-result. On `## Ready to release`, execute the approved plan directly without unrelated work.
+the named next phase. On `## Corrections required`, apply the corrections from the supervisor and
+repeat that checkpoint; after final review, correct, reverify, rerelease, and return a new
+implementation result. On `## Ready to release`, execute the approved plan directly.
 
-Return after release:
+Return the implementation-result schema after release:
 
 ## Implementation result
 
