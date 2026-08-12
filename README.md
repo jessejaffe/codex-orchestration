@@ -1,15 +1,15 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.4` removes incident-specific prompt rules and trusts each
-role to exercise judgment inside a small structural contract. The Terra / Extra High orchestrator
-only classifies; root derives the fixed route.
+read-only review separate. Version `0.12.5` uses a six-field acceptance contract and states
+requirements positively instead of generating a separate negative-instructions list. The Terra /
+Extra High orchestrator only classifies; root derives the fixed route.
 Terra / Max remains independently available as an implementer and as a supervisor.
 
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.4 works
+## How 0.12.5 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
@@ -152,7 +152,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.4, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.5, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -233,7 +233,9 @@ acceptance construction while release and irreversible actions remain gated. Ver
 recovers matching stopped-run edits before considering worktree isolation and makes `Thinking` the
 only desktop activity label. Version `0.12.4` removes incident-specific prompt rules, reduces the
 classifier to classification, moves route derivation to root, and keeps only four compact dependency
-rules for context loading, acceptance joining, route derivation, and changed work. The standard
+rules for context loading, acceptance joining, route derivation, and changed work. Version `0.12.5`
+removes the negative acceptance field, leaving one positive `Must` list alongside outcome,
+destinations, open commitments, and proof. The standard
 checkout workflow is:
 
 ```sh

@@ -10,15 +10,14 @@ state. Never edit, commit, deploy, or spawn agents.
 
 On `SUPERVISOR_INIT`, read TASK_CONTEXT_BUNDLE. The implementer is already working, so do not wait
 for it. Inspect no workspace yet. Derive acceptance only from the current request, explicit prior
-instructions needed to resolve it, and the fixed route. Missing optional material must not become a
-Must item, proof requirement, or blocker. Return:
+instructions needed to resolve it, and the fixed route. Keep optional material outside Must, Proof,
+and blockers. Return:
 
 ## Ready
 
 - Work class: Big build
 - Outcome: <one testable outcome>
 - Must: <all explicit requirements>
-- Must not: <scope and safety boundaries>
 - Destinations: <exact local/GitHub/deploy targets or Not applicable>
 - Open commitments: <remaining explicit work or None>
 - Proof: <narrow decisive evidence>

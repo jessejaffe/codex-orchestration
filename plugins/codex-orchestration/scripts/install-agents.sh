@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the seven Codex Orchestration 0.12.4 companion profiles and retire obsolete identities safely.
+# Install the seven Codex Orchestration 0.12.5 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -62,6 +62,12 @@ sol-xhigh-executive
 sol-reviewer'
 
 previous_digest() {
+  # Exact 0.12.4 supervisor profiles accepted for the 0.12.5 positive-acceptance migration.
+  case "$1" in
+    terra-supervisor) printf '%s\n' 8fc6bdccbf27ec2344adca5e458d2330a16fac98d3db6b0fec0cdb14da8480f4 ;;
+    sol-high-supervisor) printf '%s\n' b4e326ac895bc23df8bd30f6ed209b44fa80c049617a2ba605049599c0b4e6fd ;;
+    sol-xhigh-supervisor) printf '%s\n' 9fd4345c1481e4775a0340b54cd64b16932f42cafff06505396cbfd39a92b418 ;;
+  esac
   # Exact 0.12.3 profiles accepted for the 0.12.4 prompt-simplification migration.
   case "$1" in
     luna-implementer) printf '%s\n' cb92150a2164cc1d1f89952320119111669e9953a0b8a837a539eec191167430 ;;
@@ -249,7 +255,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: seven 0.12.4 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: seven 0.12.5 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -301,4 +307,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: seven 0.12.4 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: seven 0.12.5 companion profiles are current and obsolete identities were retired.'

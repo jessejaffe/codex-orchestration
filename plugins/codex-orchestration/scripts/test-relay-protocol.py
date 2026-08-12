@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.4 lean orchestration protocol."""
+"""Static contracts for the 0.12.5 lean orchestration protocol."""
 
 from __future__ import annotations
 
@@ -97,8 +97,8 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.4":
-        raise AssertionError(f"manifest does not use 0.12.4: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.5":
+        raise AssertionError(f"manifest does not use 0.12.5: {manifest.get('version')!r}")
 
     if sum(map(len, prompts.values())) > 19_000:
         raise AssertionError("agent prompts exceed the 19,000-character lean budget")
@@ -130,7 +130,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.4)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "Orchestration ON (0.12.5)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
             "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
             "Send it to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
             "Send it to supervisors and implementers",
@@ -212,8 +212,8 @@ def main() -> int:
             prompt,
             (
                 "read TASK_CONTEXT_BUNDLE", "## Ready", "already working", "do not wait",
-                "Inspect no workspace yet", "Missing optional material must not become",
-                "- Work class:", "- Outcome:", "- Must:", "- Must not:", "- Destinations:",
+                "Inspect no workspace yet", "Keep optional material outside Must",
+                "- Work class:", "- Outcome:", "- Must:", "- Destinations:",
                 "- Open commitments:", "- Proof:",
                 "## Corrections required", "## Ready to release", "## Blocked",
                 "## Root verification needed", "## Continuity", "## Completed",
@@ -226,6 +226,7 @@ def main() -> int:
                 "TASK_CONTEXT_REVISION", "LAST_TASK_CONTEXT", "mentioned attachment",
                 "On route conflict", "## Scope mismatch", "AMENDMENT_REVIEW",
                 "Optional evidence cannot block", "without broadening", "Never fix",
+                "- Must not:",
             ),
             filename,
         )
@@ -245,6 +246,10 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.12.4 supervisor profiles accepted for the 0.12.5 positive-acceptance migration",
+            "8fc6bdccbf27ec2344adca5e458d2330a16fac98d3db6b0fec0cdb14da8480f4",
+            "b4e326ac895bc23df8bd30f6ed209b44fa80c049617a2ba605049599c0b4e6fd",
+            "9fd4345c1481e4775a0340b54cd64b16932f42cafff06505396cbfd39a92b418",
             "Exact 0.12.3 profiles accepted for the 0.12.4 prompt-simplification migration",
             "cb92150a2164cc1d1f89952320119111669e9953a0b8a837a539eec191167430",
             "d2084c6421ef931e0efd1b7b377df59662a2fcbd526b7e023492d0bc875e24e2",
@@ -287,7 +292,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.4 lean orchestration protocol")
+    print("PASS: 0.12.5 lean orchestration protocol")
     return 0
 
 

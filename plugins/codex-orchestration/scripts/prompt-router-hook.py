@@ -99,7 +99,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.4). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.5). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, or supervise change work.
 
 STATE
@@ -193,7 +193,7 @@ CURRENT_ROOT_ROUTE=<STATE value>
 __LAST_TASK_CONTEXT_PACKET_LINE__
 Preserve the first result, including `## Awaiting acceptance`, `## Checkpoint`, or
 `## Implementation result`. Preserve a
-supervisor `## Ready` with all seven fields as ACCEPTANCE. Deliver it immediately with
+supervisor `## Ready` with all six fields as ACCEPTANCE. Deliver it immediately with
 `send_message` if the implementer runs, or `followup_task` if idle.
 
 When the user changes or cancels current work, stop or redirect work that no longer matches the
@@ -431,7 +431,6 @@ def transcript_context(
                     "Work class",
                     "Outcome",
                     "Must",
-                    "Must not",
                     "Destinations",
                     "Open commitments",
                     "Proof",
@@ -468,7 +467,6 @@ def transcript_context(
                     if (
                         message_line.startswith("ORCHESTRATION_ACCEPTANCE: OUTCOME=")
                         and "; MUST=" in message_line
-                        and "; MUST_NOT=" in message_line
                         and "; DESTINATIONS=" in message_line
                         and "; PROOF=" in message_line
                     ):

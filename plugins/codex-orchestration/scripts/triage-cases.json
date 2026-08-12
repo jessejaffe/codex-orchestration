@@ -80,7 +80,7 @@
   "steering_cases": [
     {
       "id": "interrupted_build_question",
-      "prior_active_acceptance": "OUTCOME=Build, commit, and deploy the new recovery framework; MUST=implement detector and recovery capabilities; MUST_NOT=discard unfinished implementation; DESTINATIONS=GitHub main and Hetzner; PROOF=end-to-end recovery checks",
+      "prior_active_acceptance": "OUTCOME=Build, commit, and deploy the new recovery framework; MUST=implement detector and recovery capabilities; DESTINATIONS=GitHub main and Hetzner; PROOF=end-to-end recovery checks",
       "events": ["turn_aborted"],
       "request": "Should the new framework also support JPEGs and PNGs?",
       "expected_relation": "AMEND",
@@ -90,7 +90,7 @@
     },
     {
       "id": "explain_then_continue",
-      "prior_active_acceptance": "OUTCOME=Implement the new recovery framework; MUST=finish and verify the feature; MUST_NOT=abandon the build; DESTINATIONS=repository; PROOF=tests",
+      "prior_active_acceptance": "OUTCOME=Implement the new recovery framework; MUST=finish and verify the feature; DESTINATIONS=repository; PROOF=tests",
       "events": ["turn_aborted"],
       "request": "Explain what missing page bytes means, then continue the framework.",
       "expected_relation": "AMEND",
@@ -100,7 +100,7 @@
     },
     {
       "id": "explicit_replace_with_explanation",
-      "prior_active_acceptance": "OUTCOME=Implement the recovery framework; MUST=commit and deploy; MUST_NOT=abandon implementation; DESTINATIONS=GitHub and Hetzner; PROOF=live verification",
+      "prior_active_acceptance": "OUTCOME=Implement the recovery framework; MUST=commit and deploy; DESTINATIONS=GitHub and Hetzner; PROOF=live verification",
       "events": ["turn_aborted"],
       "request": "Stop building the framework; replace that task with only a short explanation.",
       "expected_relation": "REPLACE",
@@ -109,7 +109,7 @@
     },
     {
       "id": "explicit_cancel",
-      "prior_active_acceptance": "OUTCOME=Implement the recovery framework; MUST=commit and deploy; MUST_NOT=abandon implementation; DESTINATIONS=GitHub and Hetzner; PROOF=live verification",
+      "prior_active_acceptance": "OUTCOME=Implement the recovery framework; MUST=commit and deploy; DESTINATIONS=GitHub and Hetzner; PROOF=live verification",
       "events": ["turn_aborted"],
       "request": "Cancel everything that is still running for this task.",
       "expected_relation": "CANCEL",

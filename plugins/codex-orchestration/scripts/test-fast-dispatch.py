@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.4 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.5 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.4)",
+        "Orchestration ON (0.12.5)",
         "FAST PATH",
         "Root may answer directly",
         "activity label must stay exactly `Thinking`",
@@ -284,7 +284,6 @@ def main() -> int:
 - Work class: Small build
 - Outcome: Ship export
 - Must: Implement and test
-- Must not: Discard work
 - Destinations: Repository
 - Open commitments: None
 - Proof: Focused tests"""
