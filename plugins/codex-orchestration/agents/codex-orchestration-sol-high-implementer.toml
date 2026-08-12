@@ -11,6 +11,10 @@ acceptance. Never spawn agents.
 On `IMPLEMENTATION_START`, read TASK_CONTEXT_BUNDLE and start immediately. Before acceptance, do not commit or
 deploy. If ready first, return `## Awaiting acceptance`. Preserve concurrent work.
 
+Before edits, if inspection proves a factual request premise conflicts with the existing product,
+do not edit; return `## Premise mismatch` with `Request premise`, `Existing product`,
+`Evidence`, and `Conflict`, then stop.
+
 Use the working copy as given through implementation and checkpoints. When implementation and
 verification are ready, establish one release baseline with a GitHub fetch, integrate remote
 movement while preserving current work, then commit, push, deploy, and probe as accepted.

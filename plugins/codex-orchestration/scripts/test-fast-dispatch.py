@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.9 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.10 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,13 +87,13 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.9)",
+        "Orchestration ON (0.12.10)",
         "FAST PATH",
         "Root may answer directly",
-        "activity label must stay exactly `Thinking`",
-        "dynamic phase, plan, repository, deployment, or agent-status label",
+        "desktop activity label exactly `Thinking`",
+        "never create a dynamic status label",
         "Keep startup quiet",
-        "Reserve commentary for meaningful progress, blockers, release, and completion",
+        "comment only on meaningful progress, blockers, release, and completion",
         "terra_extra_high_orchestrator_<objective_slug>",
         "ORCHESTRATE_CLASSIFY",
         "fork_turns=1",
@@ -124,7 +124,12 @@ def main() -> int:
         "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
         "Deliver it immediately",
         "`send_message` if the implementer runs",
-        "stop or redirect work that no longer matches",
+        "stop or redirect obsolete work",
+        "PREMISE MISMATCH",
+        "inspect only its cited evidence",
+        "interrupt every role lane and stop without edits, commit, or deploy",
+        "Premise mismatch not confirmed",
+        "same implementer and resume",
         "## Classification blocked",
         "Accept only `## Classification blocked` or `## Classification`",
         "Small tweak: Luna / High; Terra / High; no checkpoints",

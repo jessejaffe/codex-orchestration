@@ -1,9 +1,12 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.9` keeps startup quiet after its one chat-scoped activation
-acknowledgement: the child pills show the selected roles, while commentary is reserved for meaningful
-progress, blockers, release, and completion. Closely related, low-output inspections remain grouped
+read-only review separate. Version `0.12.10` stops change work when initial inspection proves a factual
+request premise conflicts with the existing product. Root checks the cited evidence and, if it
+confirms the conflict, ends every lane without edits, commit, or deployment and explains the mismatch
+to the user. Startup stays quiet after its one chat-scoped activation acknowledgement: child pills
+show the selected roles, while commentary is reserved for meaningful progress, blockers, release,
+and completion. Closely related, low-output inspections remain grouped
 when they answer one immediate question, while unrelated or noisy checks stay separate. The compact
 route footer remains on every completed orchestration task. Work starts from the
 working copy left by the previous task and moves its one GitHub comparison to the release boundary.
@@ -14,7 +17,7 @@ unchanged.
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.9 works
+## How 0.12.10 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
@@ -29,7 +32,11 @@ The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, 
    Every completed direct or routed response ends with the same compact route footer.
 4. For change work, root starts the selected implementer first and the supervisor immediately next.
    The implementer begins while the supervisor constructs acceptance.
-5. Before acceptance, the implementer does not commit or deploy. If it finishes first, it returns
+5. Before editing change work, the implementer stops and reports when inspection proves that a
+   factual request premise conflicts with the existing product. Root checks only the cited evidence.
+   A confirmed mismatch ends every lane and is reported to the user without edits, commit, or
+   deployment; an unconfirmed report returns to the same implementer. Otherwise, before acceptance,
+   the implementer does not commit or deploy. If it finishes first, it returns
    `Awaiting acceptance`; root joins the two parallel paths.
 6. The implementer uses the working copy as given. Once implementation and verification are ready,
    it fetches GitHub once, integrates remote movement, and releases. Small tweaks have no
@@ -161,7 +168,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.9, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.10, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -255,6 +262,9 @@ implementation, and supervision tasks without combining unrelated questions or n
 Version `0.12.9` removes the classification/route/model startup preamble and generic workspace-loading
 announcement. The chat-scoped ON acknowledgement, child pills, meaningful milestones, and compact
 completion footer remain visible.
+Version `0.12.10` adds a factual-premise mismatch stop: implementers surface exact contradictory
+product evidence before editing, root confirms or rejects it, and a confirmed conflict stops all
+work without edits, commit, or deployment so the user can correct the premise.
 The standard
 checkout workflow is:
 
@@ -281,7 +291,7 @@ bounded classifier continuity, previous-task lookup, acceptance-gated release sa
 implementer-first launch ordering, a fixed `Thinking` activity label, reduced tweak checkpoints,
 root-only experience checks, readable Markdown, effectiveness tracking, and conflict-safe upgrades.
 Hard budgets keep the root dispatch prompt below 7,500 characters and all seven role prompts below
-19,000 characters total.
+19,500 characters total.
 
 The offline classification fixture is
 `plugins/codex-orchestration/scripts/triage-cases.json`. It covers all seven classes plus amendment,

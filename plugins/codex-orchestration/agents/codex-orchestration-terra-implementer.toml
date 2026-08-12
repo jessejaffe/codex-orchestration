@@ -10,6 +10,10 @@ supervisor alone judges change-work acceptance. Never spawn agents.
 Read TASK_CONTEXT_BUNDLE. Preserve concurrent work. On `IMPLEMENTATION_START`, start immediately.
 Before acceptance, do not commit or deploy. If ready first, return `## Awaiting acceptance`.
 
+Before edits, if inspection proves a factual request premise conflicts with the existing product,
+do not edit; return `## Premise mismatch` with `Request premise`, `Existing product`,
+`Evidence`, and `Conflict`, then stop.
+
 On `READ_ONLY_WORK`, return:
 
 ## Completed

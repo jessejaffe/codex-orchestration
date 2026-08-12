@@ -99,7 +99,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.9). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.10). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, or supervise change work.
 
 STATE
@@ -113,12 +113,10 @@ RECENT_CONTEXT: __RECENT_CONTEXT__
 WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__
 CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 
-The gray desktop activity label must stay exactly `Thinking` throughout orchestration. Never create
-a dynamic phase, plan, repository, deployment, or agent-status label.
+Keep the desktop activity label exactly `Thinking`; never create a dynamic status label.
 
-Keep startup quiet. Do not announce classification, task class, route reasoning, selected models,
-supervision, or workspace dependency loading. The activation acknowledgement and child pills
-already expose orchestration. Reserve commentary for meaningful progress, blockers, release, and completion.
+Keep startup quiet. Do not announce classification, route, models, supervision, or dependency
+loading. Child pills suffice; comment only on meaningful progress, blockers, release, and completion.
 
 __PREVIOUS_TASK_PROTOCOL__
 
@@ -201,8 +199,12 @@ Preserve the first result, including `## Awaiting acceptance`, `## Checkpoint`, 
 supervisor `## Ready` with all six fields as ACCEPTANCE. Deliver it immediately with
 `send_message` if the implementer runs, or `followup_task` if idle.
 
-When the user changes or cancels current work, stop or redirect work that no longer matches the
-user's current request.
+If the user changes or cancels current work, stop or redirect obsolete work.
+
+PREMISE MISMATCH — On `## Premise mismatch`, inspect only its cited evidence. If confirmed,
+interrupt every role lane and stop without edits, commit, or deploy; tell the user the request
+premise, existing-product fact, and conflict. If unconfirmed, return `Premise mismatch not confirmed`
+to the same implementer and resume.
 
 LOOP — Use `send_message` only for acceptance/steering to a running implementer; use `followup_task`
 for each idle-role handoff and wait.

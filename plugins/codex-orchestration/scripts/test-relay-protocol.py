@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.9 lean orchestration protocol."""
+"""Static contracts for the 0.12.10 lean orchestration protocol."""
 
 from __future__ import annotations
 
@@ -97,11 +97,11 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.9":
-        raise AssertionError(f"manifest does not use 0.12.9: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.10":
+        raise AssertionError(f"manifest does not use 0.12.10: {manifest.get('version')!r}")
 
-    if sum(map(len, prompts.values())) > 19_000:
-        raise AssertionError("agent prompts exceed the 19,000-character lean budget")
+    if sum(map(len, prompts.values())) > 19_500:
+        raise AssertionError("agent prompts exceed the 19,500-character lean budget")
 
     orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -130,20 +130,22 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.9)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "Orchestration ON (0.12.10)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
             "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
             "Send it to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
             "Send it to supervisors and implementers",
             "missing optional artifact never blocks work", "Keep startup quiet",
-            "Reserve commentary for meaningful progress, blockers, release, and completion",
+            "comment only on meaningful progress, blockers, release, and completion",
             "fork_turns=1", "fork_turns=none", *HUMAN_ROUTES,
             "CHANGE WORK — Start implementation before acceptance construction",
             "Launch the selected implementer first", "Launch the selected supervisor immediately next",
             "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
             "Deliver it immediately", "`send_message` if the implementer runs",
-            "stop or redirect work that no longer matches",
+            "stop or redirect obsolete work", "PREMISE MISMATCH", "inspect only its cited evidence",
+            "interrupt every role lane and stop without edits, commit, or deploy",
+            "Premise mismatch not confirmed", "same implementer and resume",
             "Small tweak starts immediately",
-            "activity label must stay exactly `Thinking`", "dynamic phase, plan, repository",
+            "desktop activity label exactly `Thinking`", "never create a dynamic status label",
             "big tweak has three", "## Root verification needed", "## Continuity", "## Completed",
             "Every completed user-facing task must end with this compact", "## Route",
             "- Class: <friendly class>", "- Implementation: <model lane>",
@@ -191,6 +193,9 @@ def main() -> int:
                 "working copy as given", "release baseline", "GitHub fetch",
                 "## Checkpoint", "**Release plan**", "## Implementation result",
                 "**Acceptance evidence**", "**Release**", "**Remaining**",
+                "Before edits", "factual request premise", "existing product",
+                "## Premise mismatch", "`Request premise`", "`Existing product`",
+                "`Evidence`", "`Conflict`", "then stop",
             ),
             filename,
         )
@@ -328,7 +333,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.9 lean orchestration protocol")
+    print("PASS: 0.12.10 lean orchestration protocol")
     return 0
 
 
