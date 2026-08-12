@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration 0.12.10 and safely retire obsolete identities.
+# Install the Codex Orchestration 0.13.0 development line and retire obsolete identities.
 
 set -eu
 
@@ -24,8 +24,8 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-printf '%s\n' "$manifest_version" | grep -Eq '^0\.12\.10$' ||
-  fail "this installer requires the traditional release version 0.12.10: $manifest_version"
+printf '%s\n' "$manifest_version" | grep -Eq '^0\.13\.0(\+codex\.[0-9A-Za-z._-]+)?$' ||
+  fail "this installer requires the 0.13.0 development line: $manifest_version"
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
   cache_root=$CODEX_ORCHESTRATION_CACHE_ROOT
@@ -95,9 +95,6 @@ agents/codex-orchestration-luna-implementer.toml
 agents/codex-orchestration-terra-implementer.toml
 agents/codex-orchestration-sol-high-implementer.toml
 agents/codex-orchestration-terra-orchestrator.toml
-agents/codex-orchestration-terra-supervisor.toml
-agents/codex-orchestration-sol-high-supervisor.toml
-agents/codex-orchestration-sol-xhigh-supervisor.toml
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
@@ -350,10 +347,10 @@ current=$(installed_version "$current_plugin_id") || fail "new plugin was not li
 current_cache=$cache_root/$manifest_version
 validate_complete_package "$current_cache"
 
-# A complete, conflict-free seven-profile install is a prerequisite for retiring either
-# legacy configured identity. The companion installer preflights every current and
-# legacy file, proves all seven current files, and only then removes exact obsolete
-# legacy files. Customized legacy agents therefore stop this migration without being
+# A complete, conflict-free four-profile install is a prerequisite for retiring either
+# legacy configured identity. The companion installer preflights every current profile
+# and former supervisor, proves all four current files, and only then removes exact
+# obsolete files. Customized profiles therefore stop this migration without being
 # overwritten and before plugin or marketplace removal.
 sh "$current_cache/scripts/install-agents.sh"
 sh "$current_cache/scripts/install-agents.sh" --check

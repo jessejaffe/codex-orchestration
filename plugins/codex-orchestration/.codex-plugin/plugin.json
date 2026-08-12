@@ -1,7 +1,7 @@
 {
   "name": "codex-orchestration",
-  "version": "0.12.10",
-  "description": "Lean seven-class orchestration with previous-task continuity.",
+  "version": "0.13.0+codex.single-agent-handoff",
+  "description": "Two-stage classification and single-agent execution with previous-task continuity.",
   "author": {
     "name": "Daniel McAteer",
     "url": "https://github.com/DannyMac180"
@@ -17,8 +17,8 @@
   ],
   "interface": {
     "displayName": "Codex Orchestration",
-    "shortDescription": "Lean orchestration with previous-task continuity",
-    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.12.10 stops change work when initial inspection proves that a factual premise in the request conflicts with the existing product: root checks the cited evidence and, when confirmed, ends every lane without edits, commit, or deployment and reports the conflict to the user. Startup remains quiet after the chat-scoped activation acknowledgement; child pills show the selected roles, while commentary is reserved for meaningful progress, blockers, release, and completion. Closely related, low-output inspections that answer one immediate question remain grouped while unrelated or noisy checks stay separate. Every completed task retains the compact route footer. Work starts from the current working copy and performs one GitHub comparison only when verified work is ready to release. Small tweaks use GPT-5.6 Luna / High with Terra / High supervision, no implementer checkpoint, and root-only experience verification when appearance materially matters. The classifier only classifies; root derives the route. Change work launches the implementer first and the supervisor immediately next. Explicit previous-task requests still load bounded continuity. The desktop activity label remains Thinking.",
+    "shortDescription": "Classifier-routed single-agent execution",
+    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.13.0 uses two stages only: GPT-5.6 Terra / Extra High classifies the request, then one Luna / High, Terra / Max, or Sol / High agent owns the entire task. There are no supervisors, acceptance gates, implementation checkpoints, or final-review lanes. The selected agent interprets scope, performs the work, verifies it, completes any explicitly authorized release, and writes the final response. When appearance materially matters, root performs the root-only visual observation and hands the evidence back to that same agent, which either corrects the work or finishes. Previous-task continuity, quiet startup, premise-mismatch checks, exact task bundles, and the compact route footer remain.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

@@ -82,7 +82,7 @@ ambiguous, ask one concise question and stop. Read the task once, then create tw
 1. ROUTING_CONTEXT is at most 1,200 characters: Previous objective, Last result, Open work,
 Resolved current referent, and Critical paths. Send it to the classifier.
 2. LAST_TASK_CONTEXT is at most 6,000 characters: the final answer, last relevant turns, exact
-paths, links, decisions, constraints, and open work. Send it to supervisors and implementers.
+paths, links, decisions, constraints, and open work. Send it to the selected implementer.
 
 A missing optional artifact never blocks work."""
 MODEL_LABELS = {
@@ -99,8 +99,9 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.10). Root coordinates fixed roles; it does not classify,
-construct acceptance, implement, or supervise change work.
+DISPATCH_CONTEXT = """Orchestration ON (0.13.0). Root coordinates exactly two stages: Terra / Extra
+High classifies, then one selected implementer owns the task end to end. Root does not classify,
+implement, supervise, or add review gates.
 
 STATE
 CLASSIFIER_FORK=`1`; ROLE_FORK=`none`
@@ -120,10 +121,6 @@ loading. Child pills suffice; comment only on meaningful progress, blockers, rel
 
 __PREVIOUS_TASK_PROTOCOL__
 
-FAST PATH — Root may answer directly only when there is no active acceptance, mutation, tool use,
-fresh verification, audit, browsing, or substantial research and the answer is already supported
-by current continuity or stable knowledge. Otherwise classify.
-
 CLASSIFY — Immediately spawn
 `terra_extra_high_orchestrator_<objective_slug>` with `fork_turns=1`:
 ORCHESTRATE_CLASSIFY
@@ -140,90 +137,47 @@ instructions, or plan. Wait with `wait_agent(timeout_ms=3600000)` and repeat sil
 Accept only `## Classification blocked` or `## Classification` with Relationship, Active objective,
 Work class, Complexity, and nonempty Why. Derive the route from Work class:
 
-- Read-only: Terra / Max; no supervisor; no checkpoints
-- Standard artifact: Luna / High; Terra / High; Release candidate
-- Design artifact: Terra / Max; Terra / High; Release candidate
-- Small tweak: Luna / High; Terra / High; no checkpoints
-- Big tweak: Terra / Max; Sol / High; Release candidate
-- Small build: Terra / Max; Sol / High; Architecture → Release candidate
-- Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate
+- Read-only: Terra / Max
+- Standard artifact: Luna / High
+- Design artifact: Terra / Max
+- Small tweak: Luna / High
+- Big tweak: Terra / Max
+- Small build: Terra / Max
+- Big build: Sol / High
 
-ROLES — Prefer these custom types; fallback to the stated built-in and matching profile in
-`__AGENTS_DIR__`: Terra implementer `codex_orchestration_terra_implementer` (`worker`, Terra / Max),
-Luna implementer `codex_orchestration_luna_implementer` (`worker`, Luna / High), Sol implementer
-`codex_orchestration_sol_high_implementer` (`worker`, Sol / High), Terra supervisor
-`codex_orchestration_terra_supervisor` (`default`, Terra / High), Sol supervisor
-`codex_orchestration_sol_high_supervisor` (`default`, Sol / High), Sol Extra High supervisor
-`codex_orchestration_sol_xhigh_supervisor` (`default`, Sol / Extra High). Initial task roles use
-`fork_turns=none`. Name children by model: `terra_max_implementer_<objective_slug>`,
-`luna_high_implementer_<objective_slug>`, `sol_high_implementer_<objective_slug>`,
-`terra_high_supervisor_<objective_slug>`, `sol_high_supervisor_<objective_slug>`, or
-`sol_extra_high_supervisor_<objective_slug>`.
+ROLE — Prefer the selected custom type; fallback to built-in `worker` pinned to the stated model and
+matching profile in `__AGENTS_DIR__`: Terra `codex_orchestration_terra_implementer` (Terra / Max),
+Luna `codex_orchestration_luna_implementer` (Luna / High), or Sol
+`codex_orchestration_sol_high_implementer` (Sol / High). Use `fork_turns=none`. Name the only task
+child `terra_max_implementer_<objective_slug>`, `luna_high_implementer_<objective_slug>`, or
+`sol_high_implementer_<objective_slug>`.
 
 After classification, silently load workspace dependencies once with
 `codex_app__load_workspace_dependencies` only when STATE says YES; otherwise use NONE.
 
-READ_ONLY — Run the mapped implementer:
-READ_ONLY_WORK
+EXECUTE — Spawn exactly one mapped implementer. Never spawn a supervisor, reviewer, grader, or a
+second writer. Send:
+END_TO_END_WORK
 CLASSIFICATION=<exact Markdown>
 PRIOR_COMPLETED_RESULT=<STATE value>
 TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 WORKSPACE_DEPENDENCIES=<exact result or NONE>
 CURRENT_ROOT_ROUTE=<STATE value>
+IMPLEMENTATION_ROUTE=<friendly selected model lane>
 INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 __LAST_TASK_CONTEXT_PACKET_LINE__
-Wait for its `## Completed` result.
-
-CHANGE WORK — Start implementation before acceptance construction. Launch the selected implementer first:
-IMPLEMENTATION_START
-CLASSIFICATION=<exact Markdown>
-ACCEPTANCE=PENDING_SUPERVISOR_INIT
-TASK_CONTEXT_BUNDLE=<STATE path>
-TASK_CONTEXT_REVISION=<STATE revision>
-WORKSPACE_DEPENDENCIES=<exact result or NONE>
-CURRENT_ROOT_ROUTE=<STATE value>
-INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
-__LAST_TASK_CONTEXT_PACKET_LINE__
-
-Launch the selected supervisor immediately next:
-SUPERVISOR_INIT
-CLASSIFICATION=<exact Markdown>
-TASK_CONTEXT_BUNDLE=<STATE path>
-TASK_CONTEXT_REVISION=<STATE revision>
-CURRENT_ROOT_ROUTE=<STATE value>
-INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
-__LAST_TASK_CONTEXT_PACKET_LINE__
-Preserve the first result, including `## Awaiting acceptance`, `## Checkpoint`, or
-`## Implementation result`. Preserve a
-supervisor `## Ready` with all six fields as ACCEPTANCE. Deliver it immediately with
-`send_message` if the implementer runs, or `followup_task` if idle.
+Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout. The implementer owns
+scope interpretation, implementation, verification, authorized release, and the final report.
 
 If the user changes or cancels current work, stop or redirect obsolete work.
 
-PREMISE MISMATCH — On `## Premise mismatch`, inspect only its cited evidence. If confirmed,
-interrupt every role lane and stop without edits, commit, or deploy; tell the user the request
-premise, existing-product fact, and conflict. If unconfirmed, return `Premise mismatch not confirmed`
-to the same implementer and resume.
-
-LOOP — Use `send_message` only for acceptance/steering to a running implementer; use `followup_task`
-for each idle-role handoff and wait.
-
-- `## Awaiting acceptance` → same implementer with ACCEPTANCE after supervisor readiness.
-- `## Checkpoint` → supervisor: `CHECKPOINT_REVIEW` plus checkpoint and ACCEPTANCE.
-- `## Continue` → same implementer with decision and ACCEPTANCE.
-- `## Corrections required` → same implementer with decision and ACCEPTANCE.
-- `## Ready to release` → same implementer with decision and ACCEPTANCE; announce the release.
-- `## Implementation result` → same supervisor: `FINAL_REVIEW` plus result, ACCEPTANCE, and route.
-- `## Blocked` → relay one concise blocker and stop.
-
-Small tweak starts immediately with no implementer checkpoint; after acceptance it may release.
-Big tweak has only `RELEASE_CANDIDATE`. Thus small tweak has two
-supervisory gates (acceptance and final review), while big tweak has three (acceptance, release
-candidate, final review).
+PREMISE MISMATCH — On `## Premise mismatch`, inspect only its cited evidence and return a concise
+`## Premise review` to the same implementer with Confirmed, Evidence, and Reason. The same
+implementer either resumes or reports the confirmed conflict. Do not create another role lane.
 
 On `## Root verification needed`, perform exactly the requested read-only Browser/visual observation
-and return to the supervisor:
+and hand the evidence back to the same implementer with `followup_task`:
 ## Root verification result
 - Start: <observed condition>
 - Action: <actual action>
@@ -231,17 +185,18 @@ and return to the supervisor:
 - Artifacts: <URL/path, viewport, screenshots, measurements, or None>
 - Blocker: <None or exact access failure>
 
-A completed supervisor response contains `## Continuity` then `## Completed`. Fast-relay valid
-child results without extra reasoning. Every completed user-facing task must end with this compact
+A failed visual check is evidence, not a new review lane: the same implementer corrects the work and
+may request another root check. On `## Blocked`, relay one concise blocker and stop. A completed
+implementer response contains `## Continuity` then `## Completed`. Fast-relay valid child results
+without extra reasoning. Every completed user-facing task must end with this compact
 footer:
 ## Route
 - Class: <friendly class>
 - Implementation: <model lane>
-- Supervision: <model lane or None>
+- Supervision: None
 - Root: <CURRENT_ROOT_ROUTE>
-For FAST PATH use `Read-only`, `Root direct`, and `None`; for routed work preserve the child's footer
-without duplicating it. The activation-only acknowledgement is not task completion. Never expose
-packets, waits, or contracts to the user."""
+Preserve the child's footer without duplicating it. The activation-only acknowledgement is not task
+completion. Never expose packets, waits, or contracts to the user."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

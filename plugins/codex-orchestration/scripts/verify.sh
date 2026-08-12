@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verify the Codex Orchestration 0.12.10 release without network access.
+# Verify the Codex Orchestration 0.13.0 single-agent branch without network access.
 
 set -eu
 
@@ -18,10 +18,10 @@ done
 
 jq -e . "$manifest" >/dev/null || fail 'plugin manifest is invalid JSON'
 [ "$(jq -r .name "$manifest")" = codex-orchestration ] || fail 'wrong plugin name'
-[ "$(jq -r .version "$manifest")" = 0.12.10 ] || fail 'manifest version must be exactly 0.12.10'
-printf '%s\n' "$(jq -r .version "$manifest")" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' ||
-  fail 'manifest must use traditional semantic versioning without a cachebuster'
-pass 'manifest uses traditional version 0.12.10'
+manifest_version=$(jq -r .version "$manifest")
+printf '%s\n' "$manifest_version" | grep -Eq '^0\.13\.0(\+codex\.[0-9A-Za-z._-]+)?$' ||
+  fail "manifest version is not on the 0.13.0 development line: $manifest_version"
+pass "manifest uses the 0.13.0 development line ($manifest_version)"
 
 for shell_script in "$script_dir"/*.sh; do
   sh -n "$shell_script" || fail "invalid shell syntax: $shell_script"
@@ -46,9 +46,6 @@ expected = {
     "codex-orchestration-luna-implementer.toml": ("gpt-5.6-luna", "high"),
     "codex-orchestration-terra-implementer.toml": ("gpt-5.6-terra", "max"),
     "codex-orchestration-sol-high-implementer.toml": ("gpt-5.6-sol", "high"),
-    "codex-orchestration-terra-supervisor.toml": ("gpt-5.6-terra", "high"),
-    "codex-orchestration-sol-high-supervisor.toml": ("gpt-5.6-sol", "high"),
-    "codex-orchestration-sol-xhigh-supervisor.toml": ("gpt-5.6-sol", "xhigh"),
 }
 root = pathlib.Path(sys.argv[1])
 actual = {path.name for path in root.glob("*.toml")}
@@ -60,11 +57,12 @@ for name, pin in expected.items():
         raise SystemExit(f"wrong model pin: {name}")
     if not document.get("developer_instructions"):
         raise SystemExit(f"missing developer instructions: {name}")
-    if "supervisor" in name or "orchestrator" in name:
-        if document.get("sandbox_mode") != "read-only":
-            raise SystemExit(f"read-only role is not sandboxed: {name}")
+    if "orchestrator" in name and document.get("sandbox_mode") != "read-only":
+        raise SystemExit("classifier is not read-only")
+    if "implementer" in name and "sandbox_mode" in document:
+        raise SystemExit(f"end-to-end agent is unexpectedly read-only: {name}")
 PY
-pass 'exact seven-profile inventory; orchestrator is pinned to Terra / Extra High'
+pass 'exact four-profile inventory and model pins'
 
 tmp_base=${TMPDIR:-/tmp}
 case "$tmp_base" in /*) ;; *) tmp_base=/tmp ;; esac
@@ -82,68 +80,44 @@ pass 'dispatch, relay, and effectiveness fixtures'
 target=$temporary/agents
 sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null
 sh "$script_dir/install-agents.sh" --target-dir "$target" --check >/dev/null
-[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 7 ] ||
-  fail 'agent installer did not produce exactly seven companion profiles'
+[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 4 ] ||
+  fail 'agent installer did not produce exactly four profiles'
+
 printf '%s\n' '# user customization' >> "$target/codex-orchestration-luna-implementer.toml"
 custom_digest=$(shasum -a 256 "$target/codex-orchestration-luna-implementer.toml" | awk '{print $1}')
 if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; then
-  fail 'agent installer overwrote a customized current role'
+  fail 'agent installer overwrote a customized active profile'
 fi
 [ "$(shasum -a 256 "$target/codex-orchestration-luna-implementer.toml" | awk '{print $1}')" = "$custom_digest" ] ||
-  fail 'customized current role changed during rejected migration'
+  fail 'customized active profile changed during rejected migration'
 cp "$agents/codex-orchestration-luna-implementer.toml" "$target/codex-orchestration-luna-implementer.toml"
-printf '%s\n' '# customized retired role' > "$target/codex-orchestration-terra-medium-implementer.toml"
-retired_digest=$(shasum -a 256 "$target/codex-orchestration-terra-medium-implementer.toml" | awk '{print $1}')
+
+printf '%s\n' '# customized former supervisor' > "$target/codex-orchestration-terra-supervisor.toml"
+retired_digest=$(shasum -a 256 "$target/codex-orchestration-terra-supervisor.toml" | awk '{print $1}')
 if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; then
-  fail 'agent installer deleted an unrecognized retired role'
+  fail 'agent installer deleted an unrecognized former supervisor'
 fi
-[ "$(shasum -a 256 "$target/codex-orchestration-terra-medium-implementer.toml" | awk '{print $1}')" = "$retired_digest" ] ||
-  fail 'customized retired role changed during rejected migration'
-pass 'conflict-safe seven-profile installer behavior'
+[ "$(shasum -a 256 "$target/codex-orchestration-terra-supervisor.toml" | awk '{print $1}')" = "$retired_digest" ] ||
+  fail 'customized former supervisor changed during rejected migration'
+pass 'conflict-safe four-profile installer behavior'
 
-previous_target=$temporary/previous-agents
-mkdir -p "$previous_target"
-cp "$agents"/*.toml "$previous_target/"
-python3 - "$previous_target" <<'PY'
-import pathlib
-import sys
-
-root = pathlib.Path(sys.argv[1])
-block = """
-Before edits, if inspection proves a factual request premise conflicts with the existing product,
-do not edit; return `## Premise mismatch` with `Request premise`, `Existing product`,
-`Evidence`, and `Conflict`, then stop.
-"""
-for name in (
-    "codex-orchestration-luna-implementer.toml",
-    "codex-orchestration-terra-implementer.toml",
-    "codex-orchestration-sol-high-implementer.toml",
-):
-    path = root / name
-    source = path.read_text(encoding="utf-8")
-    if source.count(block) != 1:
-        raise SystemExit(f"premise-mismatch block missing from {name}")
-    path.write_text(source.replace(block, "", 1), encoding="utf-8")
-PY
-sh "$script_dir/install-agents.sh" --target-dir "$previous_target" >/dev/null
-sh "$script_dir/install-agents.sh" --target-dir "$previous_target" --check >/dev/null
-pass 'exact 0.12.9 implementers migrate without weakening customization protection'
-
-grep -Fq "requires the traditional release version 0.12.10" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller does not enforce 0.12.10'
-grep -Fq "grep -Eq '^0\\.12\\.10$'" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller version matcher is not pinned to 0.12.10'
-for role in terra-orchestrator luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
+grep -Fq 'requires the 0.13.0 development line' "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller does not enforce the 0.13.0 development line'
+for role in terra-orchestrator luna-implementer terra-implementer sol-high-implementer; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
 done
-if grep -Eq 'agents/codex-orchestration-(terra-read-only|terra-grader|terra-executive|sol-(high|xhigh)-executive)\.toml' "$script_dir/reinstall-plugin.sh"; then
-  fail 'reinstaller package inventory retains retired custom identities'
+if grep -Eq 'agents/codex-orchestration-(terra|sol-high|sol-xhigh)-supervisor\.toml' "$script_dir/reinstall-plugin.sh"; then
+  fail 'reinstaller package inventory retains supervisor profiles'
 fi
 pass 'reinstaller package inventory'
 
 if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
   for value in \
+    'two-stage experiment' \
+    'Terra / Extra High classifies' \
+    'One selected agent owns the task end to end' \
+    'There is exactly one task agent after classification' \
     'READ_ONLY' \
     'STANDARD_ARTIFACT' \
     'DESIGN_ARTIFACT' \
@@ -151,46 +125,18 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'BIG_TWEAK' \
     'SMALL_BUILD' \
     'BIG_BUILD' \
-    'open commitments' \
-    'same implementer' \
-    'ongoing task' \
-    'seven companion profiles' \
-    'Terra / Extra High' \
-    'Root experience check required' \
-    'root-only Browser/visual check' \
-    'Thinking' \
-    'executable release plan' \
-    'readable Markdown' \
-    '1,200-character routing capsule' \
-    '6,000-character continuity block' \
-    'implementer-first startup' \
-    'immediately next' \
-    'only classifies' \
-    'prompt rules' \
-    'stays exactly `Thinking`' \
-    'Missing optional artifacts never block work' \
-    'one release baseline' \
-    'two gates total' \
-    'three gates total' \
-    'six-field acceptance' \
-    '7,500 characters' \
-    '19,500 characters total' \
-    'research and brainstorming never commit or deploy' \
-    'compact route footer' \
-    'Root direct' \
-    'closely related, low-output inspections' \
-    'unrelated or noisy checks separate' \
-    'keeps startup quiet' \
-    'factual request premise' \
-    '0.12.10'; do
+    'Root-only visual evidence' \
+    'evidence back' \
+    'Root does not judge' \
+    'Supervision: None' \
+    'A request to implement locally does not itself authorize deployment' \
+    'four companion profiles' \
+    '0.13.0'; do
     grep -Fq "$value" "$repo_readme" || fail "README omits $value"
   done
-  if grep -Eq '0\.8\.0\+codex|cachebuster version|seven implementation lanes|numeric routing' "$repo_readme"; then
-    fail 'README still teaches the old version or routing scheme'
-  fi
-  pass '0.12.10 documentation'
+  pass '0.13.0 branch documentation'
 else
   pass 'repository documentation is intentionally outside the installed plugin package'
 fi
 
-pass 'Codex Orchestration 0.12.10 release verification complete'
+pass 'Codex Orchestration 0.13.0 single-agent verification complete'

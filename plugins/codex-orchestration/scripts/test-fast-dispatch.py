@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.10 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.13.0 single-agent dispatch."""
 
 from __future__ import annotations
 
@@ -87,9 +87,9 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.10)",
-        "FAST PATH",
-        "Root may answer directly",
+        "Orchestration ON (0.13.0)",
+        "exactly two stages",
+        "one selected implementer owns the task end to end",
         "desktop activity label exactly `Thinking`",
         "never create a dynamic status label",
         "Keep startup quiet",
@@ -106,56 +106,48 @@ def main() -> int:
         "RECENT_CONTEXT: NONE",
         "WORKSPACE_DEPENDENCIES_REQUIRED: NO",
         "codex_app__load_workspace_dependencies",
-        "codex_orchestration_terra_supervisor",
         "codex_orchestration_terra_orchestrator",
         "codex_orchestration_terra_implementer",
         "codex_orchestration_luna_implementer",
         "codex_orchestration_sol_high_implementer",
         "agents/codex-orchestration-terra-orchestrator.toml",
         "terra_max_implementer_<objective_slug>",
-        "terra_high_supervisor_<objective_slug>",
         "luna_high_implementer_<objective_slug>",
         "sol_high_implementer_<objective_slug>",
-        "sol_high_supervisor_<objective_slug>",
-        "sol_extra_high_supervisor_<objective_slug>",
-        "CHANGE WORK — Start implementation before acceptance construction",
-        "Launch the selected implementer first",
-        "Launch the selected supervisor immediately next",
-        "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
-        "Deliver it immediately",
-        "`send_message` if the implementer runs",
+        "EXECUTE — Spawn exactly one mapped implementer",
+        "Never spawn a supervisor, reviewer, grader, or a",
+        "second writer",
+        "END_TO_END_WORK",
+        "IMPLEMENTATION_ROUTE=<friendly selected model lane>",
+        "The implementer owns",
+        "scope interpretation, implementation, verification, authorized release, and the final report",
         "stop or redirect obsolete work",
         "PREMISE MISMATCH",
         "inspect only its cited evidence",
-        "interrupt every role lane and stop without edits, commit, or deploy",
-        "Premise mismatch not confirmed",
-        "same implementer and resume",
+        "same implementer",
+        "Do not create another role lane",
         "## Classification blocked",
         "Accept only `## Classification blocked` or `## Classification`",
-        "Small tweak: Luna / High; Terra / High; no checkpoints",
-        "Big tweak: Terra / Max; Sol / High; Release candidate",
-        "Small build: Terra / Max; Sol / High; Architecture → Release candidate",
-        "Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate",
+        "Small tweak: Luna / High",
+        "Big tweak: Terra / Max",
+        "Small build: Terra / Max",
+        "Big build: Sol / High",
         "timeout_ms=3600000",
-        "Small tweak starts immediately with no implementer checkpoint",
-        "big tweak has three",
         "## Root verification needed",
         "## Root verification result",
-        "for each idle-role handoff",
+        "hand the evidence back to the same implementer with `followup_task`",
+        "same implementer corrects the work",
         "## Continuity",
         "## Completed",
+        "- Supervision: None",
     )
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
-    implementer_start = routed_context.index("Launch the selected implementer first")
-    supervisor_start = routed_context.index("Launch the selected supervisor immediately next")
-    if implementer_start >= supervisor_start:
-        raise AssertionError("change work does not launch the implementer before the supervisor")
     if routed_context.count("USER_REQUEST=INHERITED_CURRENT_QUERY") != 1:
         raise AssertionError("only the classifier should inherit the current query")
-    if routed_context.count("TASK_CONTEXT_BUNDLE=<STATE path>") != 3:
-        raise AssertionError("task-role packets do not consistently reference the context bundle")
+    if routed_context.count("TASK_CONTEXT_BUNDLE=<STATE path>") != 1:
+        raise AssertionError("the only implementer packet does not reference the context bundle once")
     bundle_path = Path(context_field(routed_context, "TASK_CONTEXT_BUNDLE"))
     bundle_revision = context_field(routed_context, "TASK_CONTEXT_REVISION")
     bundle_document = json.loads(bundle_path.read_text(encoding="utf-8"))
@@ -169,7 +161,17 @@ def main() -> int:
         raise AssertionError(f"current request bundle is not exact: {bundle_document!r}")
     if bundle_path.stat().st_mode & 0o077:
         raise AssertionError("task-context bundle is not private")
-    for obsolete in ("headless-grader.py", "--request-token", "grader-requests"):
+    for obsolete in (
+        "headless-grader.py",
+        "--request-token",
+        "grader-requests",
+        "codex_orchestration_terra_supervisor",
+        "codex_orchestration_sol_high_supervisor",
+        "codex_orchestration_sol_xhigh_supervisor",
+        "FAST PATH",
+        "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+        "Launch the selected supervisor",
+    ):
         if obsolete in routed_context:
             raise AssertionError(f"dispatch retains obsolete headless path: {obsolete!r}")
     for noisy in (
@@ -202,7 +204,7 @@ def main() -> int:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     if (state / "grader-requests").exists():
         raise AssertionError("dispatch still staged a grader request")
-    if len(routed_context) > 9_000:
+    if len(routed_context) > 7_500:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
     for capsule_line in (
         "ROUTING_CONTEXT=<exact structured capsule created above>",
@@ -229,7 +231,7 @@ def main() -> int:
         "Send it to the classifier",
         "LAST_TASK_CONTEXT",
         "at most 6,000 characters",
-        "Send it to supervisors and implementers",
+        "Send it to the selected implementer",
         "missing optional artifact never blocks work",
     ):
         if value not in previous_task_context:
@@ -242,14 +244,14 @@ def main() -> int:
     full_line = "LAST_TASK_CONTEXT=<exact full continuity block created above>"
     if previous_task_context.count(routing_line) != 1:
         raise AssertionError("routing capsule is not isolated to one classifier packet")
-    if previous_task_context.count(full_line) != 3:
-        raise AssertionError("full continuity is not present in all three task-role packets")
+    if previous_task_context.count(full_line) != 1:
+        raise AssertionError("full continuity is not isolated to the selected implementer packet")
     classifier_packet = previous_task_context.split("ORCHESTRATE_CLASSIFY", 1)[1].split(
-        "ROLES —", 1
+        "ROLE —", 1
     )[0]
     if routing_line not in classifier_packet or full_line in classifier_packet:
         raise AssertionError("classifier packet did not receive only the routing capsule")
-    role_packets = previous_task_context.split("ROLES —", 1)[1]
+    role_packets = previous_task_context.split("ROLE —", 1)[1]
     if routing_line in role_packets or full_line not in role_packets:
         raise AssertionError("task-role packets did not receive only full continuity")
 
@@ -272,17 +274,16 @@ def main() -> int:
     direct_question_context = context(
         invoke(hook, state, active_id, "Why did the spreadsheet task fail?")
     )
-    if "FAST PATH" not in direct_question_context:
-        raise AssertionError("artifact-related explanation lost the direct read-only gate")
+    if "ORCHESTRATE_CLASSIFY" not in direct_question_context:
+        raise AssertionError("read-only work skipped the classifier")
     for token in (
         "Every completed user-facing task must end with this compact",
         "## Route",
         "- Class: <friendly class>",
         "- Implementation: <model lane>",
-        "- Supervision: <model lane or None>",
+        "- Supervision: None",
         "- Root: <CURRENT_ROOT_ROUTE>",
-        "For FAST PATH use `Read-only`, `Root direct`, and `None`",
-        "activation-only acknowledgement is not task completion",
+        "The activation-only acknowledgement",
     ):
         if token not in direct_question_context:
             raise AssertionError(f"direct route receipt contract is missing {token!r}")
@@ -290,8 +291,8 @@ def main() -> int:
         "INSPECTION_POLICY=Group closely related low-output checks for one immediate question "
         "in one pass; keep unrelated or noisy checks separate."
     )
-    if direct_question_context.count(inspection_policy) != 3:
-        raise AssertionError("inspection grouping policy is not present in all three task packets")
+    if direct_question_context.count(inspection_policy) != 1:
+        raise AssertionError("inspection grouping policy is not isolated to the implementer packet")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
     combined = invoke(

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.10 lean orchestration protocol."""
+"""Static contracts for the 0.13.0 classifier-to-single-agent protocol."""
 
 from __future__ import annotations
 
 import ast
 import json
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -23,31 +24,16 @@ EXPECTED_AGENTS = {
     "codex-orchestration-sol-high-implementer.toml": (
         "codex_orchestration_sol_high_implementer", "gpt-5.6-sol", "high"
     ),
-    "codex-orchestration-terra-supervisor.toml": (
-        "codex_orchestration_terra_supervisor", "gpt-5.6-terra", "high"
-    ),
-    "codex-orchestration-sol-high-supervisor.toml": (
-        "codex_orchestration_sol_high_supervisor", "gpt-5.6-sol", "high"
-    ),
-    "codex-orchestration-sol-xhigh-supervisor.toml": (
-        "codex_orchestration_sol_xhigh_supervisor", "gpt-5.6-sol", "xhigh"
-    ),
 }
 
 HUMAN_ROUTES = (
-    "Read-only: Terra / Max; no supervisor; no checkpoints",
-    "Standard artifact: Luna / High; Terra / High; Release candidate",
-    "Design artifact: Terra / Max; Terra / High; Release candidate",
-    "Small tweak: Luna / High; Terra / High; no checkpoints",
-    "Big tweak: Terra / Max; Sol / High; Release candidate",
-    "Small build: Terra / Max; Sol / High; Architecture → Release candidate",
-    "Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate",
-)
-
-MACHINE_PREFIXES = (
-    "ORCHESTRATION_RELATION:", "ORCHESTRATION_ROUTE:", "ORCHESTRATION_ACCEPTANCE:",
-    "IMPLEMENTATION_CHECKPOINT:", "IMPLEMENTATION_RESULT:", "SUPERVISOR_READY:",
-    "SUPERVISOR_CORRECT:", "SUPERVISOR_READY_TO_RELEASE:",
+    "Read-only: Terra / Max",
+    "Standard artifact: Luna / High",
+    "Design artifact: Terra / Max",
+    "Small tweak: Luna / High",
+    "Big tweak: Terra / Max",
+    "Small build: Terra / Max",
+    "Big build: Sol / High",
 )
 
 
@@ -78,79 +64,73 @@ def main() -> int:
         raise SystemExit("usage: test-relay-protocol.py <plugin-dir>")
     plugin = Path(sys.argv[1])
     agents_dir = plugin / "agents"
-    if {path.name for path in agents_dir.glob("*.toml")} != set(EXPECTED_AGENTS):
-        raise AssertionError("agent inventory mismatch")
+    actual_agents = {path.name for path in agents_dir.glob("*.toml")}
+    if actual_agents != set(EXPECTED_AGENTS):
+        raise AssertionError(f"agent inventory mismatch: {actual_agents!r}")
 
-    documents: dict[str, str] = {}
     prompts: dict[str, str] = {}
     for filename, expected in EXPECTED_AGENTS.items():
-        text = (agents_dir / filename).read_text(encoding="utf-8")
-        parsed = tomllib.loads(text)
-        documents[filename] = text
-        prompts[filename] = parsed["developer_instructions"]
+        parsed = tomllib.loads((agents_dir / filename).read_text(encoding="utf-8"))
         actual = (parsed.get("name"), parsed.get("model"), parsed.get("model_reasoning_effort"))
         if actual != expected:
             raise AssertionError(f"wrong model pin for {filename}: {actual!r}")
-        if "supervisor" in filename or "orchestrator" in filename:
-            if parsed.get("sandbox_mode") != "read-only":
-                raise AssertionError(f"read-only role is not sandboxed: {filename}")
-        forbid(text, MACHINE_PREFIXES, filename)
+        prompt = parsed.get("developer_instructions")
+        if not isinstance(prompt, str) or not prompt.strip():
+            raise AssertionError(f"missing developer instructions: {filename}")
+        prompts[filename] = prompt
+        if "orchestrator" in filename and parsed.get("sandbox_mode") != "read-only":
+            raise AssertionError("the classifier must remain read-only")
+        if "implementer" in filename and "sandbox_mode" in parsed:
+            raise AssertionError(f"end-to-end agent is unexpectedly read-only: {filename}")
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.10":
-        raise AssertionError(f"manifest does not use 0.12.10: {manifest.get('version')!r}")
+    version = manifest.get("version")
+    if not isinstance(version, str) or not re.fullmatch(
+        r"0\.13\.0(?:\+codex\.[0-9A-Za-z._-]+)?", version
+    ):
+        raise AssertionError(f"manifest does not use the 0.13.0 line: {version!r}")
 
-    if sum(map(len, prompts.values())) > 19_500:
-        raise AssertionError("agent prompts exceed the 19,500-character lean budget")
+    if sum(map(len, prompts.values())) > 11_000:
+        raise AssertionError("agent prompts exceed the 11,000-character single-agent budget")
 
     orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
     require(
         orchestrator,
         (
             "only classify", "Use only the current request and bounded routing context",
-            "## Classification blocked",
-            "## Classification", "- Relationship: <New|Amend|Replace|Cancel>",
-            "- Work class:", "- Complexity:", "- Why: <brief reason>",
+            "## Classification blocked", "## Classification",
+            "- Relationship: <New|Amend|Replace|Cancel>", "- Work class:",
+            "- Complexity:", "- Why: <brief reason>",
         ),
         "orchestrator",
     )
     forbid(
         orchestrator,
-        (
-            "Do not call tools", "prior transcripts", "The current request controls",
-            "UI work is code", "Ambiguity routes", "Fixed lanes", "- Implementation:",
-            "- Supervision:", "- Checkpoints:", "Do not expose uppercase lane identifiers",
-        ),
+        ("- Implementation:", "- Supervision:", "- Checkpoints:", "call tools"),
         "orchestrator",
     )
 
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
-    if dispatch_prompt_chars(router) > 7_500:
-        raise AssertionError("root dispatch prompt exceeds the 7,500-character lean budget")
+    if dispatch_prompt_chars(router) > 6_500:
+        raise AssertionError("root dispatch prompt exceeds the 6,500-character budget")
     require(
         router,
         (
-            "Orchestration ON (0.12.10)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
-            "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
-            "Send it to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
-            "Send it to supervisors and implementers",
-            "missing optional artifact never blocks work", "Keep startup quiet",
-            "comment only on meaningful progress, blockers, release, and completion",
-            "fork_turns=1", "fork_turns=none", *HUMAN_ROUTES,
-            "CHANGE WORK — Start implementation before acceptance construction",
-            "Launch the selected implementer first", "Launch the selected supervisor immediately next",
-            "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
-            "Deliver it immediately", "`send_message` if the implementer runs",
-            "stop or redirect obsolete work", "PREMISE MISMATCH", "inspect only its cited evidence",
-            "interrupt every role lane and stop without edits, commit, or deploy",
-            "Premise mismatch not confirmed", "same implementer and resume",
-            "Small tweak starts immediately",
-            "desktop activity label exactly `Thinking`", "never create a dynamic status label",
-            "big tweak has three", "## Root verification needed", "## Continuity", "## Completed",
-            "Every completed user-facing task must end with this compact", "## Route",
-            "- Class: <friendly class>", "- Implementation: <model lane>",
-            "- Supervision: <model lane or None>", "- Root: <CURRENT_ROOT_ROUTE>",
-            "For FAST PATH use `Read-only`, `Root direct`, and `None`",
+            "Orchestration ON (0.13.0)", "exactly two stages",
+            "one selected implementer owns the task end to end",
+            "PREVIOUS TASK CONTEXT REQUIRED", "list_threads", "read_thread",
+            "Send it to the classifier", "Send it to the selected implementer",
+            "Keep startup quiet", "fork_turns=1", "fork_turns=none", *HUMAN_ROUTES,
+            "EXECUTE — Spawn exactly one mapped implementer",
+            "Never spawn a supervisor, reviewer, grader, or a", "second writer",
+            "END_TO_END_WORK", "IMPLEMENTATION_ROUTE=<friendly selected model lane>",
+            "scope interpretation, implementation, verification, authorized release, and the final report",
+            "PREMISE MISMATCH", "## Premise review", "same implementer",
+            "## Root verification needed", "perform exactly the requested read-only Browser/visual observation",
+            "hand the evidence back to the same implementer with `followup_task`",
+            "## Root verification result", "- Start:", "- Action:", "- Result:",
+            "same implementer corrects the work", "## Continuity", "## Completed",
+            "## Route", "- Supervision: None", "- Root: <CURRENT_ROOT_ROUTE>",
         ),
         "root coordinator",
     )
@@ -158,23 +138,15 @@ def main() -> int:
         "INSPECTION_POLICY=Group closely related low-output checks for one immediate question "
         "in one pass; keep unrelated or noisy checks separate."
     )
-    if router.count(inspection_policy) != 3:
-        raise AssertionError("inspection grouping policy must appear in all three task packets")
-    implementer_start = router.index("Launch the selected implementer first")
-    supervisor_start = router.index("Launch the selected supervisor immediately next")
-    if implementer_start >= supervisor_start:
-        raise AssertionError("the implementer is not launched before the supervisor")
+    if router.count(inspection_policy) != 1:
+        raise AssertionError("inspection policy must appear only in the selected-agent packet")
     forbid(
         router,
         (
-            "Small tweak: Luna / High; Terra / High; Release candidate",
-            "Big tweak: Terra / Max; Sol / High; Root cause → Release candidate",
-            "Spawn the selected supervisor first", "Emit both `spawn_agent` calls back-to-back",
-            "RELATIONSHIPS —", "Never mutate under superseded acceptance",
-            "latest verified milestone", "Building with Luna / Max",
-            "Starting Terra / Extra High classification now.",
-            "This is a <friendly class> because <Why>",
-            "workspace setup now", "loading the project",
+            "FAST PATH", "Launch the selected supervisor", "PENDING_SUPERVISOR",
+            "codex_orchestration_terra_supervisor", "codex_orchestration_sol_high_supervisor",
+            "codex_orchestration_sol_xhigh_supervisor", "IMPLEMENTATION_CHECKPOINT",
+            "SUPERVISOR_READY", "FINAL_REVIEW", "Awaiting acceptance",
         ),
         "root coordinator",
     )
@@ -188,59 +160,17 @@ def main() -> int:
         require(
             prompt,
             (
-                "TASK_CONTEXT_BUNDLE", "start immediately", "Before acceptance",
-                "do not commit", "deploy", "return `## Awaiting acceptance`",
-                "working copy as given", "release baseline", "GitHub fetch",
-                "## Checkpoint", "**Release plan**", "## Implementation result",
-                "**Acceptance evidence**", "**Release**", "**Remaining**",
-                "Before edits", "factual request premise", "existing product",
-                "## Premise mismatch", "`Request premise`", "`Existing product`",
-                "`Evidence`", "`Conflict`", "then stop",
-            ),
-            filename,
-        )
-        forbid(
-            prompt,
-            (
-                "TASK_CONTEXT_REVISION", "LAST_TASK_CONTEXT", "not a blocker",
-                "background artifacts", "Inspect dirt first", "stopped-run edits",
-                "dirt does not prove active ownership", "Isolate only", "project discovery",
-                "narrowest decisive", "applicable skills", "fresh deployment research",
-            ),
-            filename,
-        )
-
-    require(
-        prompts["codex-orchestration-luna-implementer.toml"],
-        ("`SMALL_TWEAK` has no implementer checkpoint", "commit/push"),
-        "Luna small-tweak flow",
-    )
-    require(
-        prompts["codex-orchestration-terra-implementer.toml"],
-        (
-            "`BIG_TWEAK`: `RELEASE_CANDIDATE` only", "On `READ_ONLY_WORK`",
-            "## Route", "- Class: Read-only", "- Implementation: Terra / Max",
-            "- Supervision: None", "- Root: <CURRENT_ROOT_ROUTE>",
-        ),
-        "Terra flow",
-    )
-
-    for filename in (
-        "codex-orchestration-terra-supervisor.toml",
-        "codex-orchestration-sol-high-supervisor.toml",
-        "codex-orchestration-sol-xhigh-supervisor.toml",
-    ):
-        prompt = prompts[filename]
-        require(
-            prompt,
-            (
-                "read TASK_CONTEXT_BUNDLE", "## Ready", "already working", "do not wait",
-                "Inspect no workspace yet", "Keep optional material outside Must",
-                "- Work class:", "- Outcome:", "- Must:", "- Destinations:",
-                "- Open commitments:", "- Proof:",
-                "## Corrections required", "## Ready to release", "## Blocked",
-                "## Root verification needed", "## Continuity", "## Completed", "## Route",
-                "- Class:", "- Implementation:", "- Supervision:",
+                "own", "end to end", "Never spawn agents", "END_TO_END_WORK",
+                "read TASK_CONTEXT_BUNDLE and start immediately", "use applicable skills",
+                "proportionate", "verification", "finish the user-facing",
+                "## Premise mismatch", "## Premise review", "working copy as given",
+                "A request to implement locally does not itself authorize",
+                "Browser and visual acceptance observations are root-only",
+                "## Root verification needed", "- Requirement:", "- Check:", "- Targets:",
+                "Stop until root returns `## Root verification result`",
+                "correct the work and request another root check", "## Blocked",
+                "## Continuity", "## Completed", "## Route",
+                "- Implementation: <IMPLEMENTATION_ROUTE>", "- Supervision: None",
                 "- Root: <CURRENT_ROOT_ROUTE>",
             ),
             filename,
@@ -248,80 +178,34 @@ def main() -> int:
         forbid(
             prompt,
             (
-                "TASK_CONTEXT_REVISION", "LAST_TASK_CONTEXT", "mentioned attachment",
-                "On route conflict", "## Scope mismatch", "AMENDMENT_REVIEW",
-                "Optional evidence cannot block", "without broadening", "Never fix",
-                "- Must not:",
+                "## Awaiting acceptance", "## Checkpoint", "## Implementation result",
+                "## Ready to release", "supervisor ready", "final-review agent",
             ),
             filename,
         )
 
+    terra = prompts["codex-orchestration-terra-implementer.toml"]
     require(
-        prompts["codex-orchestration-terra-supervisor.toml"],
-        ("`SMALL_TWEAK`: no implementer checkpoint", "review only `FINAL_REVIEW`"),
-        "Terra supervisor small-tweak flow",
-    )
-    require(
-        prompts["codex-orchestration-sol-high-supervisor.toml"],
-        ("`BIG_TWEAK`: `RELEASE_CANDIDATE` only",),
-        "Sol supervisor big-tweak flow",
+        terra,
+        ("`READ_ONLY`", "`DESIGN_ARTIFACT`", "`BIG_TWEAK`", "`SMALL_BUILD`", "never mutates"),
+        "Terra end-to-end lane",
     )
 
     installer = (plugin / "scripts" / "install-agents.sh").read_text(encoding="utf-8")
     require(
         installer,
         (
-            "Exact 0.12.6 profiles accepted for the 0.12.7 compact-route-footer migration",
-            "717470a4b66b5b66830a726f10f9071866c15677e28d1c0bf05eee8ca34806d5",
-            "31bb8821b0e6792d732e22893975333ed4fd4d976dae28c7f8d8e9433e9309fb",
+            "four Codex Orchestration 0.13.0 profiles",
+            "Exact 0.12.10 profiles accepted for the single-agent migration",
+            "f8c6190b3e4375ece24eb02ab9db0983a5f8c4cad47a126059cbc2c62f344194",
+            "68179487b09d11667c6a0e69e48cec65348847df7ebb0e501e67ed47de0114a6",
+            "86ad93904293ac3bc1613cdb1512274c4524ca19fd9ce1841e5744355207a6f6",
+            "e4ab97f67fed62023c204dd8f3688b144c07f62ec0ee1ba169c5c791232a2d1b",
             "6181d4b59b74c3688c6c5e3c94482c152b52861cd1fbb68c0e003d60fa73f8f5",
             "4a9a6947e04ae14df2855b3c495bf03311571d20f5125ed50a62fd113c28401d",
-            "effb84eaf8c99d04c9540c96b2a88b1eaedaaf383c78b2b3aa8047c3203c0f72",
-            "aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d",
-            "e4ab97f67fed62023c204dd8f3688b144c07f62ec0ee1ba169c5c791232a2d1b",
-            "Exact 0.12.5 profiles accepted for the 0.12.6 release-boundary migration",
-            "57455ba593e58d4d0f8196ed8d00fb96437049c6d2156285b0d3b8a59a6f713f",
-            "9ec35409998be33a18d98400b239ad708519a02ddb9c23213ad1e150f36b6940",
-            "b6ea5ce93e74de8a0002dda2e4de71bcc3baf1161a9eb5eb283346937ed3bf90",
-            "f1fa5048b43514d98cd7685d4c84ac27d9839b9c25e59d7ee3c9fae763de7528",
-            "f41f3837f367762c63fc2b7ef4e76d5d45e8de579357b7324acc40e90fb5806b",
-            "aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d",
-            "11972ab2206de4d04ff5c7a2c4f4e552e390129b8d35fbf67952e3289995ecec",
-            "Exact 0.12.4 supervisor profiles accepted for the 0.12.5 positive-acceptance migration",
-            "8fc6bdccbf27ec2344adca5e458d2330a16fac98d3db6b0fec0cdb14da8480f4",
-            "b4e326ac895bc23df8bd30f6ed209b44fa80c049617a2ba605049599c0b4e6fd",
-            "9fd4345c1481e4775a0340b54cd64b16932f42cafff06505396cbfd39a92b418",
-            "Exact 0.12.3 profiles accepted for the 0.12.4 prompt-simplification migration",
-            "cb92150a2164cc1d1f89952320119111669e9953a0b8a837a539eec191167430",
-            "d2084c6421ef931e0efd1b7b377df59662a2fcbd526b7e023492d0bc875e24e2",
-            "52b773dd1602abcf38e1bc04b7e4271b46547a19a30b2dbb2b8a15410c4f3429",
-            "Exact 0.12.2 profiles accepted for the 0.12.3 recovery-policy migration",
-            "9e28f2e3d38aa6300a399d12be19f2ab5e787d3efdd616d38e2653009dfc375b",
-            "0091625c0a072a2a5638b4a8d20ecbe4c2e019d3ce9fba5f1e2a47dac2fe7ef2",
-            "92cd6c7967721fcfdc806809aba07fa0270b6ff1c3c189822efc782388f328eb",
-            "7d3263b72da6fd4f032e1b054f93edd439e93f44d91c604de46ec276b9dded6e",
-            "5afb5cc35dfc8019af35c716a70cca1bf208d2c7116972671f97a64813885d76",
-            "15a433bdc6435bb1dae245967c93ac439ed775624eb723ffe4d647750b037066",
-            "Exact 0.12.1 profiles accepted for the 0.12.2 implementer-first migration",
-            "4b0f87ceca26a8525524a56e520a2595c5ee95fb8ee216d7f6bd6bba2192471a",
-            "Exact 0.12.0 profiles accepted for the 0.12.1 split-context migration",
-            "e2e6ff81543ba52fb032beab6c3169a2fea9cacc177cb29ef077a88576d41468",
-            "ba553fd5ece225cc3d01c9d16065802bcad97d066f3931b9d2ae2f22eaa2344a",
-            "68def43161e10a599bad5a4e63d12d79178b487ed4f5fb58fe81dd42b0b2c557",
-            "1224f0bbe949d0aa170924fb2d34978d02762d6f6cb02036e3629f645b8da6a5",
-            "c7a70970173bccf55eac14393541a72be027a27e58362213e958acb35e63a69c",
-            "368699b87b35b1704e4b32b9781471183682c18e8ba7d73538bf448551b1e538",
-            "caf2176d6ad6f3aba1f3ed27e3bf4b7b1bfd393fa269149daf25812bdcf24b0f",
-            "Exact 0.11.1 profiles accepted for the 0.12.0 lean-context migration",
-            "0d7289514349fc3ecf7891f8a77a98c275af6389b2ed9a3df73cfde4a87762de",
-            "d225c7ffa7cb27cafc427140b4926d4ccd43132a622a23e97cb9974fa61b1eb1",
-            "bcee12a8397d09cf9900243f4b98149b447d18c4fbf4b727e2a9dd069a5a3b0b",
-            "40ce291a1ea9b0de52d5e7e3b6b25ce9beb3c83c1ed4569d16de8c40e8ef6399",
-            "811a02078feff67e9fa91140b9d143c44637fcde2d3543054f77567a1ef46662",
-            "2b4064414c7b5064584608a4322c7fca06357327ef4eaaf36ce6895a3916c97a",
-            "d46cb59fb0eddc68f7deff81e83f1379ecee9d9a561c2cc22a904626aa165cf2",
+            "Preflight every target", "refusing $state retired role",
         ),
-        "profile migration digests",
+        "profile installer",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
@@ -333,7 +217,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.10 lean orchestration protocol")
+    print("PASS: 0.13.0 classifier-to-single-agent protocol")
     return 0
 
 
