@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.7 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.8 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.7)",
+        "Orchestration ON (0.12.8)",
         "FAST PATH",
         "Root may answer directly",
         "activity label must stay exactly `Thinking`",
@@ -276,6 +276,12 @@ def main() -> int:
     ):
         if token not in direct_question_context:
             raise AssertionError(f"direct route receipt contract is missing {token!r}")
+    inspection_policy = (
+        "INSPECTION_POLICY=Group closely related low-output checks for one immediate question "
+        "in one pass; keep unrelated or noisy checks separate."
+    )
+    if direct_question_context.count(inspection_policy) != 3:
+        raise AssertionError("inspection grouping policy is not present in all three task packets")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
     combined = invoke(

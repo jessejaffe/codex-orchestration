@@ -1,8 +1,9 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.7` restores a compact route footer to every completed
-orchestration task, including Root direct answers and routed read-only work. Work starts from the
+read-only review separate. Version `0.12.8` groups closely related, low-output inspections when they
+answer one immediate question, while keeping unrelated or noisy checks separate. The compact route
+footer remains on every completed orchestration task. Work starts from the
 working copy left by the previous task and moves its one GitHub comparison to the release boundary.
 The Terra / Extra High orchestrator only classifies; root derives the fixed route. Small tweaks use
 Luna / High implementation and Terra / High supervision. The six-field acceptance contract remains
@@ -11,13 +12,15 @@ unchanged.
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.7 works
+## How 0.12.8 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
 2. When the user explicitly asks to read the last task, root reads the newest relevant task once.
    The classifier receives a routing capsule of at most 1,200 characters; the supervisor and
    implementer receive a continuity block of at most 6,000 characters.
+   Every task-role packet tells the role to group closely related, low-output inspections for one
+   immediate question in one pass and to keep unrelated or noisy checks separate.
 3. Root answers a simple explanation or brief brainstorming request directly only when it needs no
    tools, mutation, fresh verification, audit, or substantial research. All other work is classified
    by Terra / Extra High, which only classifies. Root derives models and checkpoints from the class.
@@ -156,7 +159,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.7, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.8, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -245,7 +248,8 @@ destinations, open commitments, and proof. Version `0.12.6` moves GitHub synchro
 startup to the release boundary and gives standard artifacts and small tweaks Luna / High
 implementation with Terra / High supervision. Version `0.12.7` restores the compact route footer
 across Root direct, routed read-only, artifact, tweak, and build completions. Root-only experience
-verification remains unchanged.
+verification remains unchanged. Version `0.12.8` adds bounded inspection grouping across read-only,
+implementation, and supervision tasks without combining unrelated questions or noisy output.
 The standard
 checkout workflow is:
 

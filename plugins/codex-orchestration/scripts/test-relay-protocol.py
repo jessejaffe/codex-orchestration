@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.7 lean orchestration protocol."""
+"""Static contracts for the 0.12.8 lean orchestration protocol."""
 
 from __future__ import annotations
 
@@ -97,8 +97,8 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.7":
-        raise AssertionError(f"manifest does not use 0.12.7: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.8":
+        raise AssertionError(f"manifest does not use 0.12.8: {manifest.get('version')!r}")
 
     if sum(map(len, prompts.values())) > 19_000:
         raise AssertionError("agent prompts exceed the 19,000-character lean budget")
@@ -130,7 +130,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.7)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "Orchestration ON (0.12.8)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
             "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
             "Send it to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
             "Send it to supervisors and implementers",
@@ -151,6 +151,12 @@ def main() -> int:
         ),
         "root coordinator",
     )
+    inspection_policy = (
+        "INSPECTION_POLICY=Group closely related low-output checks for one immediate question "
+        "in one pass; keep unrelated or noisy checks separate."
+    )
+    if router.count(inspection_policy) != 3:
+        raise AssertionError("inspection grouping policy must appear in all three task packets")
     implementer_start = router.index("Launch the selected implementer first")
     supervisor_start = router.index("Launch the selected supervisor immediately next")
     if implementer_start >= supervisor_start:
@@ -318,7 +324,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.7 lean orchestration protocol")
+    print("PASS: 0.12.8 lean orchestration protocol")
     return 0
 
 

@@ -99,7 +99,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.7). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.8). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, or supervise change work.
 
 STATE
@@ -169,6 +169,7 @@ TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 WORKSPACE_DEPENDENCIES=<exact result or NONE>
 CURRENT_ROOT_ROUTE=<STATE value>
+INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 __LAST_TASK_CONTEXT_PACKET_LINE__
 Wait for its `## Completed` result.
 
@@ -182,6 +183,7 @@ TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 WORKSPACE_DEPENDENCIES=<exact result or NONE>
 CURRENT_ROOT_ROUTE=<STATE value>
+INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 __LAST_TASK_CONTEXT_PACKET_LINE__
 
 Launch the selected supervisor immediately next:
@@ -190,6 +192,7 @@ CLASSIFICATION=<exact Markdown>
 TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 CURRENT_ROOT_ROUTE=<STATE value>
+INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 __LAST_TASK_CONTEXT_PACKET_LINE__
 Preserve the first result, including `## Awaiting acceptance`, `## Checkpoint`, or
 `## Implementation result`. Preserve a
