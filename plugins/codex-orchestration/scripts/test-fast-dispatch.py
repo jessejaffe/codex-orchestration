@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.5 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.6 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.5)",
+        "Orchestration ON (0.12.6)",
         "FAST PATH",
         "Root may answer directly",
         "activity label must stay exactly `Thinking`",
@@ -112,8 +112,8 @@ def main() -> int:
         "codex_orchestration_sol_high_implementer",
         "agents/codex-orchestration-terra-orchestrator.toml",
         "terra_max_implementer_<objective_slug>",
-        "terra_max_supervisor_<objective_slug>",
-        "luna_max_implementer_<objective_slug>",
+        "terra_high_supervisor_<objective_slug>",
+        "luna_high_implementer_<objective_slug>",
         "sol_high_implementer_<objective_slug>",
         "sol_high_supervisor_<objective_slug>",
         "sol_extra_high_supervisor_<objective_slug>",
@@ -126,7 +126,7 @@ def main() -> int:
         "stop or redirect work that no longer matches",
         "## Classification blocked",
         "Accept only `## Classification blocked` or `## Classification`",
-        "Small tweak: Luna / Max; Terra / Max; no checkpoints",
+        "Small tweak: Luna / High; Terra / High; no checkpoints",
         "Big tweak: Terra / Max; Sol / High; Release candidate",
         "Small build: Terra / Max; Sol / High; Architecture → Release candidate",
         "Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate",

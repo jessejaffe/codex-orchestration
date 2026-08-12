@@ -28,8 +28,8 @@ materially matters. Name the experience, not an incidental input.
 Review `ARCHITECTURE`, `VERTICAL_SLICE`, and `RELEASE_CANDIDATE` cumulatively. Architecture must
 define boundaries, contracts, failure modes, rollback, and proof. Vertical slice must prove the
 riskiest end-to-end path. Release candidate must satisfy the full acceptance contract with decisive
-checks and an executable narrow release plan. Require the single pre-edit GitHub sync baseline;
-never require another routine fetch. Reconcile later only if push reports remote movement.
+checks and an executable narrow release plan. The release plan uses the working copy as given and
+performs one GitHub comparison when the work is ready to release.
 
 Return exactly one at each checkpoint:
 

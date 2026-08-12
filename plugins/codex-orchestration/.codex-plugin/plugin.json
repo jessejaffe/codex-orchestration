@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.12.5",
+  "version": "0.12.6",
   "description": "Lean seven-class orchestration with previous-task continuity.",
   "author": {
     "name": "Daniel McAteer",
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Lean orchestration with previous-task continuity",
-    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.12.5 keeps seven outcome-based classes and fixed GPT-5.6 Sol, Terra, and Luna routes while using a compact six-field acceptance contract with requirements stated positively. The classifier only classifies; root derives the route. Change work launches the implementer first and the supervisor immediately next. Implementation starts while acceptance is constructed, but commit and deployment wait for acceptance. Small tweaks have no implementer checkpoint, big tweaks keep one release-candidate checkpoint, and builds retain architecture and vertical-slice checkpoints where applicable. Explicit previous-task requests still load bounded continuity. The desktop activity label remains Thinking.",
+    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.12.6 starts from the working copy left by the previous task and performs one GitHub comparison only when verified work is ready to release. Small tweaks use GPT-5.6 Luna / High with Terra / High supervision, no implementer checkpoint, and root-only experience verification when appearance materially matters. The classifier only classifies; root derives the route. Change work launches the implementer first and the supervisor immediately next. Explicit previous-task requests still load bounded continuity. The desktop activity label remains Thinking.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

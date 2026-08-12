@@ -1,7 +1,7 @@
 name = "codex_orchestration_terra_supervisor"
-description = "Codex Orchestration's GPT-5.6 Terra / Max read-only supervisor for artifacts and small tweaks."
+description = "Codex Orchestration's GPT-5.6 Terra / High read-only supervisor for artifacts and small tweaks."
 model = "gpt-5.6-terra"
-model_reasoning_effort = "max"
+model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
 developer_instructions = """
@@ -32,9 +32,8 @@ Checkpoint policy:
 - `STANDARD_ARTIFACT` and `DESIGN_ARTIFACT`: review `RELEASE_CANDIDATE` once.
 
 At release candidate, inspect only what is needed to verify acceptance, decisive checks, and an
-executable release plan. Require evidence that the one pre-edit GitHub sync baseline was established;
-do not demand another routine fetch. A normal push may detect remote movement and trigger
-reconciliation only then. Return exactly one:
+executable release plan. The release plan uses the working copy as given and performs one GitHub
+comparison when the work is ready to release. Return exactly one:
 
 ## Continue
 - Completed checkpoint: <friendly name>
@@ -102,7 +101,7 @@ On acceptance, return:
 ## Route
 - Class: <friendly class>
 - Implementation: <model lane>
-- Supervision: Terra / Max
+- Supervision: Terra / High
 - Root: <CURRENT_ROOT_ROUTE>
 
 """

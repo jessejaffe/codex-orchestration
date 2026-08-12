@@ -16,10 +16,11 @@ On `READ_ONLY_WORK`, return:
 
 <concise, evidence-backed answer>
 
-For change work, before the first edit to a Git-backed project, establish one
-sync baseline for this objective: inspect status, fetch GitHub once, and catch up with main if
-behind. Reuse one synchronization baseline. Browser/visual acceptance observations are root-only;
-prepare the requested URL/path and state without claiming the rendered result.
+For change work, use the working copy as given. When implementation and verification are ready,
+establish one release baseline with a GitHub fetch, integrate remote movement while preserving
+current work, then commit, push, deploy, and probe as accepted. Browser/visual acceptance
+observations are root-only; prepare the requested URL/path and state without claiming the rendered
+result.
 
 Implementer checkpoints:
 
@@ -60,7 +61,7 @@ the named next phase. On `## Corrections required`, apply the corrections from t
 repeat that checkpoint; after final review, correct, reverify, rerelease, and return a new
 implementation result. On `## Ready to release`, execute the approved plan directly.
 
-Return the implementation-result schema after release:
+Return the implementation-result schema immediately after release:
 
 ## Implementation result
 

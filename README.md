@@ -1,15 +1,15 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.5` uses a six-field acceptance contract and states
-requirements positively instead of generating a separate negative-instructions list. The Terra /
-Extra High orchestrator only classifies; root derives the fixed route.
-Terra / Max remains independently available as an implementer and as a supervisor.
+read-only review separate. Version `0.12.6` starts from the working copy left by the previous task
+and moves its one GitHub comparison to the release boundary. The Terra / Extra High orchestrator
+only classifies; root derives the fixed route. Small tweaks use Luna / High implementation and
+Terra / High supervision. The six-field acceptance contract remains unchanged.
 
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.5 works
+## How 0.12.6 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
@@ -23,10 +23,10 @@ The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, 
    The implementer begins while the supervisor constructs acceptance.
 5. Before acceptance, the implementer does not commit or deploy. If it finishes first, it returns
    `Awaiting acceptance`; root joins the two parallel paths.
-6. The implementer records one GitHub baseline before the first edit and catches up with main if
-   behind. Small tweaks have no implementer checkpoint. Big tweaks have one release-candidate
-   review. Builds retain architecture and vertical-slice checkpoints where applicable. Every release
-   candidate includes an executable release plan.
+6. The implementer uses the working copy as given. Once implementation and verification are ready,
+   it fetches GitHub once, integrates remote movement, and releases. Small tweaks have no
+   implementer checkpoint. Big tweaks have one release-candidate review. Builds retain architecture
+   and vertical-slice checkpoints where applicable. Every release candidate includes an executable release plan.
 7. If the user's request changes, root stops or redirects work that no longer matches it. The same
    supervisor performs final review and writes the readable completion report.
 
@@ -48,9 +48,9 @@ plan.
 | Work class | Definition | Implementer | Read-only supervisor | Implementer checkpoints |
 |---|---|---|---|---|
 | `READ_ONLY` | Fresh verification, audit, substantial research, or a read-only request root cannot answer directly | Terra / Max | None | None |
-| `STANDARD_ARTIFACT` | Create or edit a non-code deliverable where content, data, formulas, structure, and ordinary professional formatting matter more than a distinctive visual treatment | Luna / Max | Terra / Max | Release candidate |
-| `DESIGN_ARTIFACT` | Create or edit a non-code deliverable where visual composition, brand expression, storytelling, or exact look and feel is a defining outcome | Terra / Max | Terra / Max | Release candidate |
-| `SMALL_TWEAK` | Change one existing behavior in one production component | Luna / Max | Terra / Max | None |
+| `STANDARD_ARTIFACT` | Create or edit a non-code deliverable where content, data, formulas, structure, and ordinary professional formatting matter more than a distinctive visual treatment | Luna / High | Terra / High | Release candidate |
+| `DESIGN_ARTIFACT` | Create or edit a non-code deliverable where visual composition, brand expression, storytelling, or exact look and feel is a defining outcome | Terra / Max | Terra / High | Release candidate |
+| `SMALL_TWEAK` | Change one existing behavior in one production component | Luna / High | Terra / High | None |
 | `BIG_TWEAK` | Change multiple existing behaviors, or change existing behavior across components, an interface/runtime boundary, or material operational risk | Terra / Max | Sol / High | Release candidate |
 | `SMALL_BUILD` | Add one bounded new capability inside one existing component without a new interface, runtime, or storage boundary | Terra / Max | Sol / High | Architecture, release candidate |
 | `BIG_BUILD` | Add multiple new capabilities, or add a capability across components, an interface/runtime/storage boundary, or material operational risk | Sol / High | Sol / Extra High | Architecture, vertical slice, release candidate |
@@ -109,9 +109,10 @@ completed rollout.
 
 ## Repository synchronization
 
-For each mutation objective, the implementer records one baseline before the first edit: current
-branch/worktree state, one GitHub fetch, and whether local main must catch up. The same objective
-reuses that baseline. Read-only research and brainstorming never commit or deploy.
+For each mutation objective, the implementer starts from the working copy left by the previous task.
+After implementation and verification are ready, it records one release baseline with a GitHub
+fetch, integrates remote movement while preserving current work, and proceeds to the accepted
+commit, push, and deployment. Read-only research and brainstorming never commit or deploy.
 
 ## Checkpoints and readable output
 
@@ -152,7 +153,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.5, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.6, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -235,7 +236,10 @@ only desktop activity label. Version `0.12.4` removes incident-specific prompt r
 classifier to classification, moves route derivation to root, and keeps only four compact dependency
 rules for context loading, acceptance joining, route derivation, and changed work. Version `0.12.5`
 removes the negative acceptance field, leaving one positive `Must` list alongside outcome,
-destinations, open commitments, and proof. The standard
+destinations, open commitments, and proof. Version `0.12.6` moves GitHub synchronization from
+startup to the release boundary and gives standard artifacts and small tweaks Luna / High
+implementation with Terra / High supervision. Root-only experience verification remains unchanged.
+The standard
 checkout workflow is:
 
 ```sh

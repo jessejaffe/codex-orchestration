@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.5 lean orchestration protocol."""
+"""Static contracts for the 0.12.6 lean orchestration protocol."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ EXPECTED_AGENTS = {
         "codex_orchestration_terra_orchestrator", "gpt-5.6-terra", "xhigh"
     ),
     "codex-orchestration-luna-implementer.toml": (
-        "codex_orchestration_luna_implementer", "gpt-5.6-luna", "max"
+        "codex_orchestration_luna_implementer", "gpt-5.6-luna", "high"
     ),
     "codex-orchestration-terra-implementer.toml": (
         "codex_orchestration_terra_implementer", "gpt-5.6-terra", "max"
@@ -24,7 +24,7 @@ EXPECTED_AGENTS = {
         "codex_orchestration_sol_high_implementer", "gpt-5.6-sol", "high"
     ),
     "codex-orchestration-terra-supervisor.toml": (
-        "codex_orchestration_terra_supervisor", "gpt-5.6-terra", "max"
+        "codex_orchestration_terra_supervisor", "gpt-5.6-terra", "high"
     ),
     "codex-orchestration-sol-high-supervisor.toml": (
         "codex_orchestration_sol_high_supervisor", "gpt-5.6-sol", "high"
@@ -36,9 +36,9 @@ EXPECTED_AGENTS = {
 
 HUMAN_ROUTES = (
     "Read-only: Terra / Max; no supervisor; no checkpoints",
-    "Standard artifact: Luna / Max; Terra / Max; Release candidate",
-    "Design artifact: Terra / Max; Terra / Max; Release candidate",
-    "Small tweak: Luna / Max; Terra / Max; no checkpoints",
+    "Standard artifact: Luna / High; Terra / High; Release candidate",
+    "Design artifact: Terra / Max; Terra / High; Release candidate",
+    "Small tweak: Luna / High; Terra / High; no checkpoints",
     "Big tweak: Terra / Max; Sol / High; Release candidate",
     "Small build: Terra / Max; Sol / High; Architecture → Release candidate",
     "Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate",
@@ -97,8 +97,8 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.5":
-        raise AssertionError(f"manifest does not use 0.12.5: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.6":
+        raise AssertionError(f"manifest does not use 0.12.6: {manifest.get('version')!r}")
 
     if sum(map(len, prompts.values())) > 19_000:
         raise AssertionError("agent prompts exceed the 19,000-character lean budget")
@@ -130,7 +130,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.5)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "Orchestration ON (0.12.6)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
             "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
             "Send it to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
             "Send it to supervisors and implementers",
@@ -154,7 +154,7 @@ def main() -> int:
     forbid(
         router,
         (
-            "Small tweak: Luna / Max; Terra / Max; Release candidate",
+            "Small tweak: Luna / High; Terra / High; Release candidate",
             "Big tweak: Terra / Max; Sol / High; Root cause → Release candidate",
             "Spawn the selected supervisor first", "Emit both `spawn_agent` calls back-to-back",
             "RELATIONSHIPS —", "Never mutate under superseded acceptance",
@@ -174,7 +174,7 @@ def main() -> int:
             (
                 "TASK_CONTEXT_BUNDLE", "start immediately", "Before acceptance",
                 "do not commit", "deploy", "return `## Awaiting acceptance`",
-                "fetch GitHub once", "Reuse one", "synchronization baseline",
+                "working copy as given", "release baseline", "GitHub fetch",
                 "## Checkpoint", "**Release plan**", "## Implementation result",
                 "**Acceptance evidence**", "**Release**", "**Remaining**",
             ),
@@ -246,6 +246,14 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.12.5 profiles accepted for the 0.12.6 release-boundary migration",
+            "57455ba593e58d4d0f8196ed8d00fb96437049c6d2156285b0d3b8a59a6f713f",
+            "9ec35409998be33a18d98400b239ad708519a02ddb9c23213ad1e150f36b6940",
+            "b6ea5ce93e74de8a0002dda2e4de71bcc3baf1161a9eb5eb283346937ed3bf90",
+            "f1fa5048b43514d98cd7685d4c84ac27d9839b9c25e59d7ee3c9fae763de7528",
+            "f41f3837f367762c63fc2b7ef4e76d5d45e8de579357b7324acc40e90fb5806b",
+            "aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d",
+            "11972ab2206de4d04ff5c7a2c4f4e552e390129b8d35fbf67952e3289995ecec",
             "Exact 0.12.4 supervisor profiles accepted for the 0.12.5 positive-acceptance migration",
             "8fc6bdccbf27ec2344adca5e458d2330a16fac98d3db6b0fec0cdb14da8480f4",
             "b4e326ac895bc23df8bd30f6ed209b44fa80c049617a2ba605049599c0b4e6fd",
@@ -292,7 +300,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.5 lean orchestration protocol")
+    print("PASS: 0.12.6 lean orchestration protocol")
     return 0
 
 

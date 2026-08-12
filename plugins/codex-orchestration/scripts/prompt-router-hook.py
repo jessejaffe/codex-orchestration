@@ -99,7 +99,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.5). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.6). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, or supervise change work.
 
 STATE
@@ -139,23 +139,23 @@ Accept only `## Classification blocked` or `## Classification` with Relationship
 Work class, Complexity, and nonempty Why. Derive the route from Work class:
 
 - Read-only: Terra / Max; no supervisor; no checkpoints
-- Standard artifact: Luna / Max; Terra / Max; Release candidate
-- Design artifact: Terra / Max; Terra / Max; Release candidate
-- Small tweak: Luna / Max; Terra / Max; no checkpoints
+- Standard artifact: Luna / High; Terra / High; Release candidate
+- Design artifact: Terra / Max; Terra / High; Release candidate
+- Small tweak: Luna / High; Terra / High; no checkpoints
 - Big tweak: Terra / Max; Sol / High; Release candidate
 - Small build: Terra / Max; Sol / High; Architecture → Release candidate
 - Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate
 
 ROLES — Prefer these custom types; fallback to the stated built-in and matching profile in
 `__AGENTS_DIR__`: Terra implementer `codex_orchestration_terra_implementer` (`worker`, Terra / Max),
-Luna implementer `codex_orchestration_luna_implementer` (`worker`, Luna / Max), Sol implementer
+Luna implementer `codex_orchestration_luna_implementer` (`worker`, Luna / High), Sol implementer
 `codex_orchestration_sol_high_implementer` (`worker`, Sol / High), Terra supervisor
-`codex_orchestration_terra_supervisor` (`default`, Terra / Max), Sol supervisor
+`codex_orchestration_terra_supervisor` (`default`, Terra / High), Sol supervisor
 `codex_orchestration_sol_high_supervisor` (`default`, Sol / High), Sol Extra High supervisor
 `codex_orchestration_sol_xhigh_supervisor` (`default`, Sol / Extra High). Initial task roles use
 `fork_turns=none`. Name children by model: `terra_max_implementer_<objective_slug>`,
-`luna_max_implementer_<objective_slug>`, `sol_high_implementer_<objective_slug>`,
-`terra_max_supervisor_<objective_slug>`, `sol_high_supervisor_<objective_slug>`, or
+`luna_high_implementer_<objective_slug>`, `sol_high_implementer_<objective_slug>`,
+`terra_high_supervisor_<objective_slug>`, `sol_high_supervisor_<objective_slug>`, or
 `sol_extra_high_supervisor_<objective_slug>`.
 
 After classification, load workspace dependencies once with

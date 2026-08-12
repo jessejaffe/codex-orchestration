@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install Codex Orchestration 0.12.5 and safely retire obsolete identities.
+# Install Codex Orchestration 0.12.6 and safely retire obsolete identities.
 
 set -eu
 
@@ -24,8 +24,8 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-printf '%s\n' "$manifest_version" | grep -Eq '^0\.12\.5$' ||
-  fail "this installer requires the traditional release version 0.12.5: $manifest_version"
+printf '%s\n' "$manifest_version" | grep -Eq '^0\.12\.6$' ||
+  fail "this installer requires the traditional release version 0.12.6: $manifest_version"
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
   cache_root=$CODEX_ORCHESTRATION_CACHE_ROOT

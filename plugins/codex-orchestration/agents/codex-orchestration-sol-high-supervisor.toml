@@ -31,9 +31,9 @@ Review checkpoints cumulatively:
 - `SMALL_BUILD`: `ARCHITECTURE`, then `RELEASE_CANDIDATE`.
 
 Architecture must contain the new capability within the classified boundary. Release candidate
-must satisfy acceptance, decisive verification, and a narrow executable release plan. Require the
-single pre-edit GitHub sync baseline; never require a routine second fetch. A push conflict may
-trigger reconciliation at release. Return exactly one:
+must satisfy acceptance, decisive verification, and a narrow executable release plan. The release
+plan uses the working copy as given and performs one GitHub comparison when the work is ready to
+release. Return exactly one:
 
 ## Continue
 - Completed checkpoint: <friendly name>
