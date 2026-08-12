@@ -1,24 +1,25 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.0` adds explicit previous-task continuity, constructs
-acceptance before implementation, removes redundant tweak checkpoints, and cuts the root and role
-prompts roughly in half. The Terra / Extra High orchestrator remains taxonomy-only: it reads the
-current query plus bounded continuity supplied by root, returns the route, and stops.
+read-only review separate. Version `0.12.1` keeps explicit previous-task continuity while separating the
+classifier's short routing capsule from the fuller task-role context. Acceptance-first execution,
+reduced tweak checkpoints, and lean prompts remain unchanged. The Terra / Extra High orchestrator
+receives only classification-relevant context, returns the route, and stops.
 Terra / Max remains independently available as an implementer and as a supervisor.
 
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.0 works
+## How 0.12.1 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
 2. When the user explicitly says to read the last chat/task or continue where they left off, root
    first lists recent Codex tasks, excludes the current one, reads the newest task from the same
-   project or working directory, and preserves its last relevant turns, final answer, paths,
-   decisions, constraints, and open work in a 6,000-character context block. Root passes that same
-   block to the orchestrator and both task roles. Ambiguous task selection produces one question.
+   project or working directory, and reads it once. Root gives the orchestrator only a structured
+   routing capsule of at most 1,200 characters: previous objective, last result, open work, resolved
+   referent, and critical paths. The fuller 6,000-character continuity block goes only to the
+   supervisor and implementer. Ambiguous task selection produces one question.
 3. Root answers a simple explanation or brief brainstorming request directly only when it needs no
    tools, mutation, fresh verification, audit, or substantial research. All other work is classified
    by Terra / Extra High, which calls no tools and returns only the relationship, route, and reason.
@@ -101,11 +102,11 @@ stops execution, not the objective.
 
 The classifier inherits only the current root turn and receives compact routing continuity. Task
 roles receive a private JSON bundle containing the exact current objective. An explicit request to
-read the last chat adds a separate bounded prior-task block produced by root from Codex task
-history. That block is handed unchanged to the classifier, supervisor, and implementer, so a path
-or decision from the previous task is available without loading an entire rollout into every
-prompt. A previous-task block resolves references but does not create requirements; incidental
-artifacts remain optional.
+read the last chat makes root produce two previous-task payloads from one read: the orchestrator gets
+only the 1,200-character routing capsule, while the supervisor and implementer get the fuller
+6,000-character continuity block. The classifier never receives the prior transcript, detailed
+evidence, screenshots, tests, or implementation history. Both payloads resolve references without
+creating requirements; incidental artifacts remain optional.
 
 A newer direct conversation marks an older capsule stale. Commands such as “do the next step” must
 resolve to an exact recent or previous-task decision; repositories and generic NEXT fields cannot
@@ -175,7 +176,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.0, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.1, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -248,7 +249,9 @@ while the continuity reader remains backward-compatible with earlier task transc
 `0.12.0` adds explicit previous-task retrieval, acceptance-before-implementation sequencing,
 optional-artifact boundaries, one baseline GitHub sync per mutation objective, no implementer
 checkpoint for small tweaks, and only a release-candidate checkpoint for big tweaks. It also adds
-hard prompt-size budgets after cutting the role prompts by about half. The standard
+hard prompt-size budgets after cutting the role prompts by about half. Version `0.12.1` splits that
+prior-task handoff so the classifier receives only a compact structured routing capsule and task
+roles retain the fuller continuity. The standard
 checkout workflow is:
 
 ```sh

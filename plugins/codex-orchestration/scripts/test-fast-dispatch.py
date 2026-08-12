@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.0 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.1 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.0)",
+        "Orchestration ON (0.12.1)",
         "FAST PATH",
         "Root may answer directly",
         "show exactly `Thinking`",
@@ -181,6 +181,12 @@ def main() -> int:
         raise AssertionError("dispatch still staged a grader request")
     if len(routed_context) > 9_000:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
+    for capsule_line in (
+        "ROUTING_CONTEXT=<exact structured capsule created above>",
+        "LAST_TASK_CONTEXT=<exact full continuity block created above>",
+    ):
+        if capsule_line in routed_context:
+            raise AssertionError("ordinary prompts received previous-task payload fields")
 
     previous_task_context = context(
         invoke(
@@ -195,8 +201,12 @@ def main() -> int:
         "list_threads",
         "read_thread",
         "Exclude\nthe current task",
+        "ROUTING_CONTEXT",
+        "at most 1,200 characters",
+        "goes only to the classifier",
         "LAST_TASK_CONTEXT",
-        "capped at 6,000 characters",
+        "at most 6,000 characters",
+        "only to supervisors and implementers",
         "missing optional artifact never blocks work",
     ):
         if value not in previous_task_context:
@@ -205,6 +215,20 @@ def main() -> int:
         raise AssertionError("previous-task protocol exceeds its dispatch budget")
     if "PREVIOUS TASK CONTEXT REQUIRED" in routed_context:
         raise AssertionError("ordinary prompts pay the previous-task prompt cost")
+    routing_line = "ROUTING_CONTEXT=<exact structured capsule created above>"
+    full_line = "LAST_TASK_CONTEXT=<exact full continuity block created above>"
+    if previous_task_context.count(routing_line) != 1:
+        raise AssertionError("routing capsule is not isolated to one classifier packet")
+    if previous_task_context.count(full_line) != 3:
+        raise AssertionError("full continuity is not present in all three task-role packets")
+    classifier_packet = previous_task_context.split("ORCHESTRATE_CLASSIFY", 1)[1].split(
+        "ROLES —", 1
+    )[0]
+    if routing_line not in classifier_packet or full_line in classifier_packet:
+        raise AssertionError("classifier packet did not receive only the routing capsule")
+    role_packets = previous_task_context.split("ROLES —", 1)[1]
+    if routing_line in role_packets or full_line not in role_packets:
+        raise AssertionError("task-role packets did not receive only full continuity")
 
     negative_previous = context(
         invoke(hook, state, active_id, "Don't read the last chat; fix only this label")

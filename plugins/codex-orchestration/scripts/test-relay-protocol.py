@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.0 lean continuity protocol."""
+"""Static contracts for the 0.12.1 split-context protocol."""
 
 from __future__ import annotations
 
@@ -97,8 +97,8 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.0":
-        raise AssertionError(f"manifest does not use 0.12.0: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.1":
+        raise AssertionError(f"manifest does not use 0.12.1: {manifest.get('version')!r}")
 
     if sum(map(len, prompts.values())) > 27_000:
         raise AssertionError("agent prompts exceed the 27,000-character lean budget")
@@ -107,8 +107,9 @@ def main() -> int:
     require(
         orchestrator,
         (
-            "taxonomy-only", "latency-critical bounded lookup", "optional LAST_TASK_CONTEXT",
-            "do not turn background details", "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / NONE",
+            "taxonomy-only", "latency-critical bounded lookup", "optional ROUTING_CONTEXT",
+            "do not request or consume LAST_TASK_CONTEXT", "prior transcripts",
+            "Do not turn background details", "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / NONE",
             "BIG_TWEAK: TERRA_MAX / SOL_HIGH / RELEASE_CANDIDATE", "## Classification blocked",
             "## Classification", "- Relationship: <New|Amend|Replace|Cancel>",
             "- Why: <one concrete lower-case clause", "must not use a\ngeneric phrase",
@@ -122,8 +123,10 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.0)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
-            "read_thread", "LAST_TASK_CONTEXT", "capped at 6,000 characters",
+            "Orchestration ON (0.12.1)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
+            "only to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
+            "only to supervisors and implementers", "never to the classifier",
             "missing optional artifact never blocks work", "Starting Terra / Extra High classification now.",
             "fork_turns=1", "fork_turns=none", *HUMAN_ROUTES,
             "CHANGE WORK — Acceptance is the first checkpoint. Spawn the selected supervisor first",
@@ -209,6 +212,14 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.12.0 profiles accepted for the 0.12.1 split-context migration",
+            "e2e6ff81543ba52fb032beab6c3169a2fea9cacc177cb29ef077a88576d41468",
+            "ba553fd5ece225cc3d01c9d16065802bcad97d066f3931b9d2ae2f22eaa2344a",
+            "68def43161e10a599bad5a4e63d12d79178b487ed4f5fb58fe81dd42b0b2c557",
+            "1224f0bbe949d0aa170924fb2d34978d02762d6f6cb02036e3629f645b8da6a5",
+            "c7a70970173bccf55eac14393541a72be027a27e58362213e958acb35e63a69c",
+            "368699b87b35b1704e4b32b9781471183682c18e8ba7d73538bf448551b1e538",
+            "caf2176d6ad6f3aba1f3ed27e3bf4b7b1bfd393fa269149daf25812bdcf24b0f",
             "Exact 0.11.1 profiles accepted for the 0.12.0 lean-context migration",
             "0d7289514349fc3ecf7891f8a77a98c275af6389b2ed9a3df73cfde4a87762de",
             "d225c7ffa7cb27cafc427140b4926d4ccd43132a622a23e97cb9974fa61b1eb1",
@@ -218,7 +229,7 @@ def main() -> int:
             "2b4064414c7b5064584608a4322c7fca06357327ef4eaaf36ce6895a3916c97a",
             "d46cb59fb0eddc68f7deff81e83f1379ecee9d9a561c2cc22a904626aa165cf2",
         ),
-        "0.11.1 migration digests",
+        "profile migration digests",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
@@ -230,7 +241,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.0 lean previous-task and checkpoint protocol")
+    print("PASS: 0.12.1 split previous-task routing and task-role context")
     return 0
 
 

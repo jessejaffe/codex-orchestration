@@ -77,12 +77,19 @@ PREVIOUS_TASK_PATTERNS = (
 PREVIOUS_TASK_PROTOCOL = """PREVIOUS TASK CONTEXT REQUIRED — Before classification, root uses the
 Codex task-history tools (`list_threads`, then `read_thread`; discover them once if needed). Exclude
 the current task and select the newest task from the same project or working directory. If that is
-ambiguous, ask one concise question and stop. Read the final answer and the last relevant user and
-assistant turns. Preserve exact file/artifact paths, links, decisions, constraints, and open work in
-LAST_TASK_CONTEXT, capped at 6,000 characters. Add that exact block to the classifier packet and
-every supervisor/implementer launch. It resolves references; it does not silently add scope.
-Artifacts merely mentioned as background are optional. Only the current request or an explicit
-prior instruction can require one, and a missing optional artifact never blocks work."""
+ambiguous, ask one concise question and stop. Read the task once, then create two bounded payloads:
+
+1. ROUTING_CONTEXT is at most 1,200 characters and contains only Previous objective, Last result,
+Open work, Resolved current referent, and Critical paths. It goes only to the classifier. Do not
+send the prior transcript, detailed evidence, screenshots, tests, or implementation history to the
+classifier.
+2. LAST_TASK_CONTEXT is at most 6,000 characters and preserves the final answer plus the last
+relevant user/assistant turns, exact paths, links, decisions, constraints, and open work. It goes
+only to supervisors and implementers, never to the classifier.
+
+Both payloads resolve references; neither silently adds scope. Artifacts merely mentioned as
+background are optional. Only the current request or an explicit prior instruction can require one,
+and a missing optional artifact never blocks work."""
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -97,7 +104,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.0). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.1). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, supervise, or judge change work.
 
 STATE
@@ -128,6 +135,7 @@ PRIOR_ACTIVE_ACCEPTANCE=<STATE value>
 PRIOR_COMPLETED_RESULT=<STATE value>
 RECENT_CONTEXT_FRESHNESS=<STATE value>
 RECENT_CONTEXT=<STATE value>
+__ROUTING_CONTEXT_PACKET_LINE__
 USER_REQUEST=INHERITED_CURRENT_QUERY
 
 Use `codex_orchestration_terra_orchestrator`, or built-in `default` pinned Terra / Extra High after
@@ -168,6 +176,7 @@ TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 WORKSPACE_DEPENDENCIES=<exact result or NONE>
 CURRENT_ROOT_ROUTE=<STATE value>
+__LAST_TASK_CONTEXT_PACKET_LINE__
 Wait and return its `## Completed` section unchanged.
 
 CHANGE WORK — Acceptance is the first checkpoint. Spawn the selected supervisor first:
@@ -176,6 +185,7 @@ CLASSIFICATION=<exact Markdown>
 TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 CURRENT_ROOT_ROUTE=<STATE value>
+__LAST_TASK_CONTEXT_PACKET_LINE__
 Wait for `## Ready` with Work class, Outcome, Must, Must not, Destinations, Open commitments, and
 Proof. Preserve it as ACCEPTANCE. On `## Scope mismatch` or `## Blocked`, relay one concise issue.
 
@@ -188,6 +198,7 @@ TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 WORKSPACE_DEPENDENCIES=<exact result or NONE>
 CURRENT_ROOT_ROUTE=<STATE value>
+__LAST_TASK_CONTEXT_PACKET_LINE__
 
 RELATIONSHIPS — After Amend, Replace, or Cancel, call `list_agents` once. Cancel interrupts unfinished
 owned roles and stops. Replace interrupts them and starts fresh. For Amend with unchanged lanes, send
@@ -728,9 +739,22 @@ def main() -> int:
         return 0
     bundle_path, bundle_revision = bundle
     context = DISPATCH_CONTEXT.replace("__ROOT_ROUTE__", root_route)
+    previous_task_required = previous_task_context_required(prompt)
     context = context.replace(
         "__PREVIOUS_TASK_PROTOCOL__",
-        PREVIOUS_TASK_PROTOCOL if previous_task_context_required(prompt) else "",
+        PREVIOUS_TASK_PROTOCOL if previous_task_required else "",
+    )
+    context = context.replace(
+        "__ROUTING_CONTEXT_PACKET_LINE__",
+        "ROUTING_CONTEXT=<exact structured capsule created above>"
+        if previous_task_required
+        else "",
+    )
+    context = context.replace(
+        "__LAST_TASK_CONTEXT_PACKET_LINE__",
+        "LAST_TASK_CONTEXT=<exact full continuity block created above>"
+        if previous_task_required
+        else "",
     )
     context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
     context = context.replace("__PRIOR_COMPLETED_RESULT__", prior_completed)

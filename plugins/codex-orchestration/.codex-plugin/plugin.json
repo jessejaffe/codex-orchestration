@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Lean seven-class orchestration with previous-task continuity.",
   "author": {
     "name": "Daniel McAteer",
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Lean orchestration with previous-task continuity",
-    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.12.0 keeps seven outcome-based classes and fixed GPT-5.6 Sol, Terra, and Luna routes while cutting repeated role instructions roughly in half. When a user explicitly asks to read the last chat or continue where they left off, root reads the newest relevant Codex task first and passes bounded exact paths, decisions, constraints, and open work to the taxonomy orchestrator and task roles. Acceptance is constructed before implementation. Small tweaks have no implementer checkpoint and receive acceptance plus final review; big tweaks keep only a release-candidate checkpoint between acceptance and final review. Mentioned artifacts remain optional unless the request explicitly requires them. Mutation work records one GitHub synchronization baseline before the first edit, reuses it throughout the objective, and reconciles again only if a push reports remote movement. Read-only and research work never commit or deploy. Private exact current-task bundles, amendment continuity, model-named children, readable Markdown results, root-only experience observations, and conflict-safe companion-profile installation remain supported.",
+    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.12.1 keeps seven outcome-based classes and fixed GPT-5.6 Sol, Terra, and Luna routes while keeping repeated role instructions lean. When a user explicitly asks to read the last chat or continue where they left off, root reads the newest relevant Codex task once. The Terra taxonomy orchestrator receives only a structured routing capsule capped at 1,200 characters; the fuller previous-task continuity capped at 6,000 characters goes only to the supervisor and implementer. Acceptance is constructed before implementation. Small tweaks have no implementer checkpoint and receive acceptance plus final review; big tweaks keep only a release-candidate checkpoint between acceptance and final review. Mentioned artifacts remain optional unless the request explicitly requires them. Mutation work records one GitHub synchronization baseline before the first edit, reuses it throughout the objective, and reconciles again only if a push reports remote movement. Read-only and research work never commit or deploy. Private exact current-task bundles, amendment continuity, model-named children, readable Markdown results, root-only experience observations, and conflict-safe companion-profile installation remain supported.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [
