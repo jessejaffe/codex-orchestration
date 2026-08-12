@@ -104,7 +104,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.2). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.3). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, supervise, or judge change work.
 
 STATE
@@ -118,9 +118,8 @@ RECENT_CONTEXT: __RECENT_CONTEXT__
 WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__
 CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 
-The gray desktop activity label is 2-7 plain words naming the latest verified milestone, such as
-`Classifying the request`, `Building with Luna / Max`, or `Reviewing the release candidate`. If no
-safe milestone exists, show exactly `Thinking`. Never expose request text or orchestration internals.
+The gray desktop activity label must stay exactly `Thinking` throughout orchestration. Never create
+a dynamic phase, plan, repository, deployment, or agent-status label.
 
 __PREVIOUS_TASK_PROTOCOL__
 

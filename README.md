@@ -1,17 +1,17 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.2` keeps explicit previous-task continuity and restores
-implementer-first startup: implementation begins before the supervisor finishes reading full context
-and constructing acceptance. The split routing capsule, reduced tweak checkpoints, and lean prompts
-remain unchanged. The Terra / Extra High orchestrator receives only classification-relevant context,
-returns the route, and stops.
+read-only review separate. Version `0.12.3` keeps implementer-first startup, recovers matching
+uncommitted work from stopped runs instead of recreating it, and fixes the desktop activity label at
+`Thinking`. The explicit previous-task continuity, split routing capsule, reduced tweak checkpoints,
+and lean prompts remain unchanged. The Terra / Extra High orchestrator receives only
+classification-relevant context, returns the route, and stops.
 Terra / Max remains independently available as an implementer and as a supervisor.
 
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.2 works
+## How 0.12.3 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
@@ -33,8 +33,10 @@ The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, 
    irreversibly, or finalize the result. Background files, ZIPs, screenshots, competitors, and sample
    inputs stay optional unless explicitly required. Missing optional artifacts never block work.
 6. The implementer records one GitHub baseline before the first edit, catches up with main if behind,
-   and reuses that baseline for the objective. It does not fetch at every checkpoint; a later push
-   conflict is what triggers reconciliation. Small tweaks have no implementer checkpoint. Big
+   and reuses that baseline for the objective. It inspects dirty changes before choosing isolation:
+   matching work from a stopped run is adopted and verified, while a separate branch/worktree is
+   reserved for unrelated changes or an active concurrent owner. It does not fetch at every
+   checkpoint; a later push conflict triggers reconciliation. Small tweaks have no implementer checkpoint. Big
    tweaks have one release-candidate review between acceptance and release. Builds retain their
    architecture and vertical-slice checkpoints. Every release candidate includes the narrow commit,
    deployment, probe, and tunnel plan as an executable release plan.
@@ -47,10 +49,9 @@ At role startup, root names the class, gives the classifier's concrete reason, a
 implementation and supervision models. It otherwise reports only meaningful
 milestones: checkpoint decisions, release authorization, blockers, and completion.
 It waits until an agent update instead of polling and does not emit elapsed-time heartbeats.
-The gray desktop activity summary shows the latest safe milestone in a short phrase, such as
-`Waiting for Terra / Extra High classification`, `Starting Luna / Max implementation`, or `Reviewing the
-release candidate`. Its fallback is `Thinking`. Internal planning, taxonomy, request, relay,
-checkpoint, and acceptance details are never used as that label.
+The gray desktop activity summary stays exactly `Thinking` throughout orchestration. It never turns
+an internal plan, repository action, deployment question, agent state, or checkpoint into a
+persistent label.
 Classifications, implementer checkpoints and release results, supervisor decisions, continuity
 summaries, and final reports all use readable Markdown headings and labeled bullets. Raw field
 dumps are never shown in a child response. After approval, the release turn executes the prepared plan
@@ -141,8 +142,11 @@ and corrections, even when they occur in one long task.
 
 At release, the implementer pushes normally instead of performing a second routine fetch. GitHub's
 push rejection is the guard against a remote branch that advanced after the baseline; only that
-rejection triggers another fetch and reconciliation. Concurrent uncommitted work is preserved on a
-separate branch. Read-only research and brainstorming never commit or deploy.
+rejection triggers another fetch and reconciliation. Dirty work is inspected before isolation.
+Matching same-objective edits left by a stopped or interrupted run are adopted, verified, and
+continued in place; dirty files alone do not prove active ownership. A separate branch/worktree is
+used only for unrelated dirty changes or work still owned by an active concurrent process. Read-only
+research and brainstorming never commit or deploy.
 
 ## Checkpoints and readable output
 
@@ -183,7 +187,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.2, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.3, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -260,7 +264,9 @@ hard prompt-size budgets after cutting the role prompts by about half. Version `
 prior-task handoff so the classifier receives only a compact structured routing capsule and task
 roles retain the fuller continuity. Version `0.12.2` restores implementer-first startup: root launches
 the implementer and then the supervisor back-to-back, so reversible local work overlaps full-context
-acceptance construction while release and irreversible actions remain gated. The standard
+acceptance construction while release and irreversible actions remain gated. Version `0.12.3`
+recovers matching stopped-run edits before considering worktree isolation and makes `Thinking` the
+only desktop activity label. The standard
 checkout workflow is:
 
 ```sh
@@ -283,8 +289,9 @@ sh plugins/codex-orchestration/scripts/verify.sh
 
 The suite validates the manifest, syntax, exact model pins, chat controls, exact current-task
 bundles, bounded classifier continuity, explicit previous-task lookup, acceptance-gated release
-safety, implementer-first launch ordering, optional-artifact boundaries, reduced tweak checkpoints, one-turn
-classifier inheritance, no-history task roles, amendment steering, root-only experience checks,
+safety, implementer-first launch ordering, stopped-run work recovery, a fixed `Thinking` activity
+label, optional-artifact boundaries, reduced tweak checkpoints, one-turn classifier inheritance,
+no-history task roles, amendment steering, root-only experience checks,
 readable Markdown, effectiveness tracking, and conflict-safe upgrades. Hard budgets keep the root
 dispatch prompt below 7,500 characters and all seven role prompts below 27,000 characters total.
 

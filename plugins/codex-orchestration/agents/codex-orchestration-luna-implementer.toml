@@ -17,8 +17,9 @@ background artifacts as optional unless explicitly required. If a handoff comes 
 
 Before the first edit to a Git-backed project, establish one synchronization baseline for this
 objective: inspect the worktree, fetch GitHub once, and catch up with main if behind. Reuse that
-baseline for every checkpoint and correction; do not fetch repeatedly. If another process owns
-changes, work on a separate branch rather than waiting or overwriting. At release, push normally;
+baseline for every checkpoint and correction; do not fetch repeatedly. Inspect dirt first. Reuse and
+verify same-objective stopped-run edits; dirt does not prove active ownership.
+Isolate only unrelated or actively owned work. At release, push normally;
 fetch and reconcile only if the push reports that the remote advanced. This synchronization is not
 project discovery and never applies to read-only work.
 

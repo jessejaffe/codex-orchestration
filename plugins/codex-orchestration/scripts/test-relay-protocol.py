@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.2 implementer-first protocol."""
+"""Static contracts for the 0.12.3 recovery protocol."""
 
 from __future__ import annotations
 
@@ -97,8 +97,8 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.2":
-        raise AssertionError(f"manifest does not use 0.12.2: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.3":
+        raise AssertionError(f"manifest does not use 0.12.3: {manifest.get('version')!r}")
 
     if sum(map(len, prompts.values())) > 27_000:
         raise AssertionError("agent prompts exceed the 27,000-character lean budget")
@@ -123,7 +123,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.2)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "Orchestration ON (0.12.3)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
             "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
             "only to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
             "only to supervisors and implementers", "never to the classifier",
@@ -134,6 +134,7 @@ def main() -> int:
             "Emit both `spawn_agent` calls back-to-back", "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
             "Deliver it immediately", "`send_message` if the implementer runs",
             "Small tweak starts immediately",
+            "activity label must stay exactly `Thinking`", "dynamic phase, plan, repository",
             "big tweak has three", "## Root verification needed", "## Continuity", "## Completed",
         ),
         "root coordinator",
@@ -148,6 +149,7 @@ def main() -> int:
             "Small tweak: Luna / Max; Terra / Max; Release candidate",
             "Big tweak: Terra / Max; Sol / High; Root cause → Release candidate",
             "Spawn the selected supervisor first", "Acceptance is the first checkpoint",
+            "latest verified milestone", "Building with Luna / Max",
         ),
         "root coordinator",
     )
@@ -165,6 +167,9 @@ def main() -> int:
                 "ACCEPTANCE=PENDING_SUPERVISOR_INIT", "not a blocker", "reversible local edits",
                 "## Awaiting acceptance",
                 "fetch GitHub once", "push reports",
+                "Inspect dirt first", "same-objective", "stopped-run edits",
+                "dirt does not prove active ownership", "Isolate only",
+                "actively owned work",
                 "## Checkpoint", "**Release plan**", "## Implementation result",
                 "**Acceptance evidence**", "**Release**", "**Remaining**",
             ),
@@ -218,6 +223,13 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.12.2 profiles accepted for the 0.12.3 recovery-policy migration",
+            "9e28f2e3d38aa6300a399d12be19f2ab5e787d3efdd616d38e2653009dfc375b",
+            "0091625c0a072a2a5638b4a8d20ecbe4c2e019d3ce9fba5f1e2a47dac2fe7ef2",
+            "92cd6c7967721fcfdc806809aba07fa0270b6ff1c3c189822efc782388f328eb",
+            "7d3263b72da6fd4f032e1b054f93edd439e93f44d91c604de46ec276b9dded6e",
+            "5afb5cc35dfc8019af35c716a70cca1bf208d2c7116972671f97a64813885d76",
+            "15a433bdc6435bb1dae245967c93ac439ed775624eb723ffe4d647750b037066",
             "Exact 0.12.1 profiles accepted for the 0.12.2 implementer-first migration",
             "4b0f87ceca26a8525524a56e520a2595c5ee95fb8ee216d7f6bd6bba2192471a",
             "Exact 0.12.0 profiles accepted for the 0.12.1 split-context migration",
@@ -249,7 +261,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.2 implementer-first startup with parallel acceptance")
+    print("PASS: 0.12.3 stopped-run recovery and fixed Thinking label")
     return 0
 
 

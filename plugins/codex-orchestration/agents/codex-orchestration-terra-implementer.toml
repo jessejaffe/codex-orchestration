@@ -28,8 +28,9 @@ external state. Research and brainstorming never commit or deploy. Return:
 For change work, acceptance is binding once supplied. Before the first edit to a Git-backed project,
 establish one
 sync baseline for this objective: inspect status, fetch GitHub once, and catch up with main if
-behind. Reuse it through checkpoints/corrections. If another process owns changes, use a separate
-branch rather than waiting or overwriting. At release, push normally and fetch/reconcile only when
+behind. Reuse it through checkpoints/corrections. Inspect dirt first. Reuse and verify same-objective
+stopped-run edits; dirt does not prove active ownership. Isolate only
+unrelated or actively owned work. At release, push normally and fetch/reconcile only when
 the push reports that remote advanced. Do not confuse synchronization with project discovery.
 
 Use WORKSPACE_DEPENDENCIES as the complete artifact runtime map and follow applicable skills. Keep

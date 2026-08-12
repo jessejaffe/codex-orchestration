@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verify the Codex Orchestration 0.12.2 release without network access.
+# Verify the Codex Orchestration 0.12.3 release without network access.
 
 set -eu
 
@@ -18,10 +18,10 @@ done
 
 jq -e . "$manifest" >/dev/null || fail 'plugin manifest is invalid JSON'
 [ "$(jq -r .name "$manifest")" = codex-orchestration ] || fail 'wrong plugin name'
-[ "$(jq -r .version "$manifest")" = 0.12.2 ] || fail 'manifest version must be exactly 0.12.2'
+[ "$(jq -r .version "$manifest")" = 0.12.3 ] || fail 'manifest version must be exactly 0.12.3'
 printf '%s\n' "$(jq -r .version "$manifest")" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' ||
   fail 'manifest must use traditional semantic versioning without a cachebuster'
-pass 'manifest uses traditional version 0.12.2'
+pass 'manifest uses traditional version 0.12.3'
 
 for shell_script in "$script_dir"/*.sh; do
   sh -n "$shell_script" || fail "invalid shell syntax: $shell_script"
@@ -101,10 +101,10 @@ fi
   fail 'customized retired role changed during rejected migration'
 pass 'conflict-safe seven-profile installer behavior'
 
-grep -Fq "requires the traditional release version 0.12.2" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller does not enforce 0.12.2'
-grep -Fq "grep -Eq '^0\\.12\\.2$'" "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller version matcher is not pinned to 0.12.2'
+grep -Fq "requires the traditional release version 0.12.3" "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller does not enforce 0.12.3'
+grep -Fq "grep -Eq '^0\\.12\\.3$'" "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller version matcher is not pinned to 0.12.3'
 for role in terra-orchestrator luna-implementer terra-implementer sol-high-implementer terra-supervisor sol-high-supervisor sol-xhigh-supervisor; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
@@ -142,6 +142,8 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'implementer-first startup' \
     'back-to-back' \
     'reversible local' \
+    'stopped or interrupted run' \
+    'stays exactly `Thinking`' \
     'Missing optional artifacts never block work' \
     'one GitHub baseline' \
     'two gates total' \
@@ -149,15 +151,15 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     '7,500 characters' \
     '27,000 characters total' \
     'research and brainstorming never commit or deploy' \
-    '0.12.2'; do
+    '0.12.3'; do
     grep -Fq "$value" "$repo_readme" || fail "README omits $value"
   done
   if grep -Eq '0\.8\.0\+codex|cachebuster version|seven implementation lanes|numeric routing' "$repo_readme"; then
     fail 'README still teaches the old version or routing scheme'
   fi
-  pass '0.12.2 documentation'
+  pass '0.12.3 documentation'
 else
   pass 'repository documentation is intentionally outside the installed plugin package'
 fi
 
-pass 'Codex Orchestration 0.12.2 release verification complete'
+pass 'Codex Orchestration 0.12.3 release verification complete'

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.2 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.3 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,10 +87,11 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.2)",
+        "Orchestration ON (0.12.3)",
         "FAST PATH",
         "Root may answer directly",
-        "show exactly `Thinking`",
+        "activity label must stay exactly `Thinking`",
+        "dynamic phase, plan, repository, deployment, or agent-status label",
         "Starting Terra / Extra High classification now.",
         "terra_extra_high_orchestrator_<objective_slug>",
         "ORCHESTRATE_CLASSIFY",
@@ -181,6 +182,10 @@ def main() -> int:
         "USER_REQUEST=<exact request and attachment paths>",
         "The classifier always uses none",
         "Root cause → Release candidate",
+        "latest verified milestone",
+        "Building with Luna / Max",
+        "Reviewing the release candidate",
+        "Confirming Hetzner deployment priority",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")

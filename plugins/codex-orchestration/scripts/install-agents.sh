@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the seven Codex Orchestration 0.12.2 companion profiles and retire obsolete identities safely.
+# Install the seven Codex Orchestration 0.12.3 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -62,6 +62,16 @@ sol-xhigh-executive
 sol-reviewer'
 
 previous_digest() {
+  # Exact 0.12.2 profiles accepted for the 0.12.3 recovery-policy migration.
+  case "$1" in
+    luna-implementer) printf '%s\n' 9e28f2e3d38aa6300a399d12be19f2ab5e787d3efdd616d38e2653009dfc375b ;;
+    sol-high-implementer) printf '%s\n' 0091625c0a072a2a5638b4a8d20ecbe4c2e019d3ce9fba5f1e2a47dac2fe7ef2 ;;
+    sol-high-supervisor) printf '%s\n' 92cd6c7967721fcfdc806809aba07fa0270b6ff1c3c189822efc782388f328eb ;;
+    sol-xhigh-supervisor) printf '%s\n' 7d3263b72da6fd4f032e1b054f93edd439e93f44d91c604de46ec276b9dded6e ;;
+    terra-implementer) printf '%s\n' 5afb5cc35dfc8019af35c716a70cca1bf208d2c7116972671f97a64813885d76 ;;
+    terra-orchestrator) printf '%s\n' 4b0f87ceca26a8525524a56e520a2595c5ee95fb8ee216d7f6bd6bba2192471a ;;
+    terra-supervisor) printf '%s\n' 15a433bdc6435bb1dae245967c93ac439ed775624eb723ffe4d647750b037066 ;;
+  esac
   # Exact 0.12.1 profiles accepted for the 0.12.2 implementer-first migration.
   case "$1" in
     luna-implementer) printf '%s\n' e2e6ff81543ba52fb032beab6c3169a2fea9cacc177cb29ef077a88576d41468 ;;
@@ -229,7 +239,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: seven 0.12.2 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: seven 0.12.3 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -281,4 +291,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: seven 0.12.2 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: seven 0.12.3 companion profiles are current and obsolete identities were retired.'

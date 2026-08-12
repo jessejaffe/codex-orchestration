@@ -18,8 +18,9 @@ Changes, Evidence, and Next, then resume the preserved work.
 
 Before the first edit to a Git-backed project, establish one synchronization baseline for this
 objective: inspect the worktree, fetch GitHub once, and catch up with main if behind. Reuse it for
-all checkpoints and corrections. If another process owns changes, use a separate branch rather
-than waiting or overwriting. At release, push normally; fetch/reconcile only if the push reports a
+all checkpoints and corrections. Inspect dirt first. Reuse and verify
+same-objective stopped-run edits; dirt does not prove active ownership. Isolate only unrelated or actively owned work.
+At release, push normally; fetch/reconcile only if the push reports a
 remote advance. Synchronization is not project discovery.
 
 Use WORKSPACE_DEPENDENCIES when supplied and follow applicable skills. Keep investigation,
