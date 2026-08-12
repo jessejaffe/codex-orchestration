@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.6 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.7 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.6)",
+        "Orchestration ON (0.12.7)",
         "FAST PATH",
         "Root may answer directly",
         "activity label must stay exactly `Thinking`",
@@ -264,6 +264,18 @@ def main() -> int:
     )
     if "FAST PATH" not in direct_question_context:
         raise AssertionError("artifact-related explanation lost the direct read-only gate")
+    for token in (
+        "Every completed user-facing task must end with this compact",
+        "## Route",
+        "- Class: <friendly class>",
+        "- Implementation: <model lane>",
+        "- Supervision: <model lane or None>",
+        "- Root: <CURRENT_ROOT_ROUTE>",
+        "For FAST PATH use `Read-only`, `Root direct`, and `None`",
+        "activation-only acknowledgement is not task completion",
+    ):
+        if token not in direct_question_context:
+            raise AssertionError(f"direct route receipt contract is missing {token!r}")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
     combined = invoke(

@@ -16,6 +16,12 @@ On `READ_ONLY_WORK`, return:
 
 <concise, evidence-backed answer>
 
+## Route
+- Class: Read-only
+- Implementation: Terra / Max
+- Supervision: None
+- Root: <CURRENT_ROOT_ROUTE>
+
 For change work, use the working copy as given. When implementation and verification are ready,
 establish one release baseline with a GitHub fetch, integrate remote movement while preserving
 current work, then commit, push, deploy, and probe as accepted. Browser/visual acceptance

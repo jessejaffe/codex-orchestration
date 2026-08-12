@@ -1,15 +1,17 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.6` starts from the working copy left by the previous task
-and moves its one GitHub comparison to the release boundary. The Terra / Extra High orchestrator
-only classifies; root derives the fixed route. Small tweaks use Luna / High implementation and
-Terra / High supervision. The six-field acceptance contract remains unchanged.
+read-only review separate. Version `0.12.7` restores a compact route footer to every completed
+orchestration task, including Root direct answers and routed read-only work. Work starts from the
+working copy left by the previous task and moves its one GitHub comparison to the release boundary.
+The Terra / Extra High orchestrator only classifies; root derives the fixed route. Small tweaks use
+Luna / High implementation and Terra / High supervision. The six-field acceptance contract remains
+unchanged.
 
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.6 works
+## How 0.12.7 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
@@ -19,6 +21,7 @@ The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, 
 3. Root answers a simple explanation or brief brainstorming request directly only when it needs no
    tools, mutation, fresh verification, audit, or substantial research. All other work is classified
    by Terra / Extra High, which only classifies. Root derives models and checkpoints from the class.
+   Every completed direct or routed response ends with the same compact route footer.
 4. For change work, root starts the selected implementer first and the supervisor immediately next.
    The implementer begins while the supervisor constructs acceptance.
 5. Before acceptance, the implementer does not commit or deploy. If it finishes first, it returns
@@ -153,18 +156,20 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.6, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.7, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
 
 ## Final completion receipt
 
-Every accepted change ends with a supervisor-authored Markdown report.
-It describes the outcome, major changes, decisive verification, exact links, release identity,
-remaining commitments, and route. A result can say work is live, deployed, released, or on GitHub
-only when it includes the exact destination and evidence. `Remaining: None` is allowed only when
-every acceptance requirement and open commitment is complete.
+Every completed orchestration task ends with a compact route footer naming its class,
+implementation lane, supervision lane or `None`, and root lane. Root direct answers and routed
+read-only tasks use the same receipt as supervisor-authored change reports. Change reports also
+describe the outcome, major changes, decisive verification, exact links, release identity, and
+remaining commitments. A result can say work is live, deployed, released, or on GitHub only when
+it includes the exact destination and evidence. `Remaining: None` is allowed only when every
+acceptance requirement and open commitment is complete.
 
 ## Install from GitHub
 
@@ -238,7 +243,9 @@ rules for context loading, acceptance joining, route derivation, and changed wor
 removes the negative acceptance field, leaving one positive `Must` list alongside outcome,
 destinations, open commitments, and proof. Version `0.12.6` moves GitHub synchronization from
 startup to the release boundary and gives standard artifacts and small tweaks Luna / High
-implementation with Terra / High supervision. Root-only experience verification remains unchanged.
+implementation with Terra / High supervision. Version `0.12.7` restores the compact route footer
+across Root direct, routed read-only, artifact, tweak, and build completions. Root-only experience
+verification remains unchanged.
 The standard
 checkout workflow is:
 

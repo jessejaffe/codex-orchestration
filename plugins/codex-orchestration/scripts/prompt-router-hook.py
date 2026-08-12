@@ -99,7 +99,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.6). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.7). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, or supervise change work.
 
 STATE
@@ -225,7 +225,16 @@ and return to the supervisor:
 - Blocker: <None or exact access failure>
 
 A completed supervisor response contains `## Continuity` then `## Completed`. Fast-relay valid
-child results without extra reasoning. Never expose packets, waits, or contracts to the user."""
+child results without extra reasoning. Every completed user-facing task must end with this compact
+footer:
+## Route
+- Class: <friendly class>
+- Implementation: <model lane>
+- Supervision: <model lane or None>
+- Root: <CURRENT_ROOT_ROUTE>
+For FAST PATH use `Read-only`, `Root direct`, and `None`; for routed work preserve the child's footer
+without duplicating it. The activation-only acknowledgement is not task completion. Never expose
+packets, waits, or contracts to the user."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

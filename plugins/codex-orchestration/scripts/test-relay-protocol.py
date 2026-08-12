@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.6 lean orchestration protocol."""
+"""Static contracts for the 0.12.7 lean orchestration protocol."""
 
 from __future__ import annotations
 
@@ -97,8 +97,8 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.6":
-        raise AssertionError(f"manifest does not use 0.12.6: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.7":
+        raise AssertionError(f"manifest does not use 0.12.7: {manifest.get('version')!r}")
 
     if sum(map(len, prompts.values())) > 19_000:
         raise AssertionError("agent prompts exceed the 19,000-character lean budget")
@@ -130,7 +130,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.6)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "Orchestration ON (0.12.7)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
             "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
             "Send it to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
             "Send it to supervisors and implementers",
@@ -144,6 +144,10 @@ def main() -> int:
             "Small tweak starts immediately",
             "activity label must stay exactly `Thinking`", "dynamic phase, plan, repository",
             "big tweak has three", "## Root verification needed", "## Continuity", "## Completed",
+            "Every completed user-facing task must end with this compact", "## Route",
+            "- Class: <friendly class>", "- Implementation: <model lane>",
+            "- Supervision: <model lane or None>", "- Root: <CURRENT_ROOT_ROUTE>",
+            "For FAST PATH use `Read-only`, `Root direct`, and `None`",
         ),
         "root coordinator",
     )
@@ -198,7 +202,11 @@ def main() -> int:
     )
     require(
         prompts["codex-orchestration-terra-implementer.toml"],
-        ("`BIG_TWEAK`: `RELEASE_CANDIDATE` only", "On `READ_ONLY_WORK`"),
+        (
+            "`BIG_TWEAK`: `RELEASE_CANDIDATE` only", "On `READ_ONLY_WORK`",
+            "## Route", "- Class: Read-only", "- Implementation: Terra / Max",
+            "- Supervision: None", "- Root: <CURRENT_ROOT_ROUTE>",
+        ),
         "Terra flow",
     )
 
@@ -216,7 +224,9 @@ def main() -> int:
                 "- Work class:", "- Outcome:", "- Must:", "- Destinations:",
                 "- Open commitments:", "- Proof:",
                 "## Corrections required", "## Ready to release", "## Blocked",
-                "## Root verification needed", "## Continuity", "## Completed",
+                "## Root verification needed", "## Continuity", "## Completed", "## Route",
+                "- Class:", "- Implementation:", "- Supervision:",
+                "- Root: <CURRENT_ROOT_ROUTE>",
             ),
             filename,
         )
@@ -246,6 +256,14 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.12.6 profiles accepted for the 0.12.7 compact-route-footer migration",
+            "717470a4b66b5b66830a726f10f9071866c15677e28d1c0bf05eee8ca34806d5",
+            "31bb8821b0e6792d732e22893975333ed4fd4d976dae28c7f8d8e9433e9309fb",
+            "6181d4b59b74c3688c6c5e3c94482c152b52861cd1fbb68c0e003d60fa73f8f5",
+            "4a9a6947e04ae14df2855b3c495bf03311571d20f5125ed50a62fd113c28401d",
+            "effb84eaf8c99d04c9540c96b2a88b1eaedaaf383c78b2b3aa8047c3203c0f72",
+            "aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d",
+            "e4ab97f67fed62023c204dd8f3688b144c07f62ec0ee1ba169c5c791232a2d1b",
             "Exact 0.12.5 profiles accepted for the 0.12.6 release-boundary migration",
             "57455ba593e58d4d0f8196ed8d00fb96437049c6d2156285b0d3b8a59a6f713f",
             "9ec35409998be33a18d98400b239ad708519a02ddb9c23213ad1e150f36b6940",
@@ -300,7 +318,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.6 lean orchestration protocol")
+    print("PASS: 0.12.7 lean orchestration protocol")
     return 0
 
 
