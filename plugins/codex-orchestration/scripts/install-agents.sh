@@ -69,7 +69,7 @@ previous_digest() {
     sol-high-supervisor) printf '%s\n' 3e3aae30c769489c8776467a5b6497f76eacfbdf424a9e0b098b642abd00bfbd ;;
     sol-xhigh-supervisor) printf '%s\n' 12f3d61ec1705cbfdc3ac8e60dd338d7fec7716b055371d632a2ffa6f2e25a24 ;;
     terra-implementer) printf '%s\n' 2a5154885d32df32c87713dba1e7e58ec09f98e6720fd13a2d01b5f2ebd931b2 ;;
-    terra-orchestrator) printf '%s\n' a4b93a9a04494d93a9b8b902888bf123ae0dafa76972124f2e2a3d84b97cc5 ;;
+    terra-orchestrator) printf '%s\n' a4b93a9a04494d93a9b8b902888bf123ae0dafa76972124f2e2e2a3d84b97cc5 ;;
     terra-supervisor) printf '%s\n' b1d57d6e649bef6275a87994587010594dc16344f27ec2979f7964b295964dc4 ;;
   esac
   # Exact 0.10.5 profiles accepted for the 0.11.0 seven-class migration.
