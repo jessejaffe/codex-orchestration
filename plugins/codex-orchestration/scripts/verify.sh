@@ -101,6 +101,34 @@ fi
   fail 'customized retired role changed during rejected migration'
 pass 'conflict-safe seven-profile installer behavior'
 
+previous_target=$temporary/previous-agents
+mkdir -p "$previous_target"
+cp "$agents"/*.toml "$previous_target/"
+python3 - "$previous_target" <<'PY'
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+block = """
+Before edits, if inspection proves a factual request premise conflicts with the existing product,
+do not edit; return `## Premise mismatch` with `Request premise`, `Existing product`,
+`Evidence`, and `Conflict`, then stop.
+"""
+for name in (
+    "codex-orchestration-luna-implementer.toml",
+    "codex-orchestration-terra-implementer.toml",
+    "codex-orchestration-sol-high-implementer.toml",
+):
+    path = root / name
+    source = path.read_text(encoding="utf-8")
+    if source.count(block) != 1:
+        raise SystemExit(f"premise-mismatch block missing from {name}")
+    path.write_text(source.replace(block, "", 1), encoding="utf-8")
+PY
+sh "$script_dir/install-agents.sh" --target-dir "$previous_target" >/dev/null
+sh "$script_dir/install-agents.sh" --target-dir "$previous_target" --check >/dev/null
+pass 'exact 0.12.9 implementers migrate without weakening customization protection'
+
 grep -Fq "requires the traditional release version 0.12.10" "$script_dir/reinstall-plugin.sh" ||
   fail 'reinstaller does not enforce 0.12.10'
 grep -Fq "grep -Eq '^0\\.12\\.10$'" "$script_dir/reinstall-plugin.sh" ||

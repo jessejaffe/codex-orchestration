@@ -62,6 +62,12 @@ sol-xhigh-executive
 sol-reviewer'
 
 previous_digest() {
+  # Exact 0.12.9 implementers accepted for the 0.12.10 premise-mismatch migration.
+  case "$1" in
+    luna-implementer) printf '%s\n' 717470a4b66b5b66830a726f10f9071866c15677e28d1c0bf05eee8ca34806d5 ;;
+    terra-implementer) printf '%s\n' a56634f861ab08894c830af0377e770e74bf6a26735d6d702f9e82e37a55769b ;;
+    sol-high-implementer) printf '%s\n' 31bb8821b0e6792d732e22893975333ed4fd4d976dae28c7f8d8e9433e9309fb ;;
+  esac
   # Exact 0.12.6 profiles accepted for the 0.12.7 compact-route-footer migration.
   case "$1" in
     luna-implementer) printf '%s\n' 717470a4b66b5b66830a726f10f9071866c15677e28d1c0bf05eee8ca34806d5 ;;
