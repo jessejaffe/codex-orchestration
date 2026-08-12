@@ -1,9 +1,11 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.8` groups closely related, low-output inspections when they
-answer one immediate question, while keeping unrelated or noisy checks separate. The compact route
-footer remains on every completed orchestration task. Work starts from the
+read-only review separate. Version `0.12.9` keeps startup quiet after its one chat-scoped activation
+acknowledgement: the child pills show the selected roles, while commentary is reserved for meaningful
+progress, blockers, release, and completion. Closely related, low-output inspections remain grouped
+when they answer one immediate question, while unrelated or noisy checks stay separate. The compact
+route footer remains on every completed orchestration task. Work starts from the
 working copy left by the previous task and moves its one GitHub comparison to the release boundary.
 The Terra / Extra High orchestrator only classifies; root derives the fixed route. Small tweaks use
 Luna / High implementation and Terra / High supervision. The six-field acceptance contract remains
@@ -12,7 +14,7 @@ unchanged.
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.8 works
+## How 0.12.9 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
@@ -37,8 +39,8 @@ The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, 
    supervisor performs final review and writes the readable completion report.
 
 For routed work, every child pill starts with the selected model lane rather than the work class.
-At role startup, root names the class, gives the classifier's concrete reason, and names the dynamic
-implementation and supervision models. It otherwise reports only meaningful
+Root keeps startup quiet: it does not separately announce classification, task class, route
+reasoning, selected models, supervision, or workspace dependency loading. It reports only meaningful
 milestones: checkpoint decisions, release authorization, blockers, and completion.
 It waits until an agent update instead of polling and does not emit elapsed-time heartbeats.
 The gray desktop activity summary stays exactly `Thinking` throughout orchestration. It never turns
@@ -159,7 +161,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.8, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.9, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -250,6 +252,9 @@ implementation with Terra / High supervision. Version `0.12.7` restores the comp
 across Root direct, routed read-only, artifact, tweak, and build completions. Root-only experience
 verification remains unchanged. Version `0.12.8` adds bounded inspection grouping across read-only,
 implementation, and supervision tasks without combining unrelated questions or noisy output.
+Version `0.12.9` removes the classification/route/model startup preamble and generic workspace-loading
+announcement. The chat-scoped ON acknowledgement, child pills, meaningful milestones, and compact
+completion footer remain visible.
 The standard
 checkout workflow is:
 

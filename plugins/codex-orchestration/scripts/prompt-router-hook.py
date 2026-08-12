@@ -99,7 +99,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.8). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.9). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, or supervise change work.
 
 STATE
@@ -116,13 +116,17 @@ CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 The gray desktop activity label must stay exactly `Thinking` throughout orchestration. Never create
 a dynamic phase, plan, repository, deployment, or agent-status label.
 
+Keep startup quiet. Do not announce classification, task class, route reasoning, selected models,
+supervision, or workspace dependency loading. The activation acknowledgement and child pills
+already expose orchestration. Reserve commentary for meaningful progress, blockers, release, and completion.
+
 __PREVIOUS_TASK_PROTOCOL__
 
 FAST PATH — Root may answer directly only when there is no active acceptance, mutation, tool use,
 fresh verification, audit, browsing, or substantial research and the answer is already supported
 by current continuity or stable knowledge. Otherwise classify.
 
-CLASSIFY — Say `Starting Terra / Extra High classification now.` and immediately spawn
+CLASSIFY — Immediately spawn
 `terra_extra_high_orchestrator_<objective_slug>` with `fork_turns=1`:
 ORCHESTRATE_CLASSIFY
 PRIOR_ACTIVE_ACCEPTANCE=<STATE value>
@@ -158,7 +162,7 @@ Luna implementer `codex_orchestration_luna_implementer` (`worker`, Luna / High),
 `terra_high_supervisor_<objective_slug>`, `sol_high_supervisor_<objective_slug>`, or
 `sol_extra_high_supervisor_<objective_slug>`.
 
-After classification, load workspace dependencies once with
+After classification, silently load workspace dependencies once with
 `codex_app__load_workspace_dependencies` only when STATE says YES; otherwise use NONE.
 
 READ_ONLY — Run the mapped implementer:
@@ -173,9 +177,7 @@ INSPECTION_POLICY=Group closely related low-output checks for one immediate ques
 __LAST_TASK_CONTEXT_PACKET_LINE__
 Wait for its `## Completed` result.
 
-CHANGE WORK — Start implementation before acceptance construction. Post `This is a <friendly
-class> because <Why>. Starting <Implementation>; <Supervision> is defining acceptance.`
-Launch the selected implementer first:
+CHANGE WORK — Start implementation before acceptance construction. Launch the selected implementer first:
 IMPLEMENTATION_START
 CLASSIFICATION=<exact Markdown>
 ACCEPTANCE=PENDING_SUPERVISOR_INIT
