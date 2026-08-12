@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inject the fast chat-local Terra dispatch contract once per user prompt."""
+"""Inject the chat-local Terra dispatch contract once per user prompt."""
 
 from __future__ import annotations
 
@@ -56,6 +56,33 @@ WORKSPACE_ARTIFACT_PATTERN = re.compile(
     r"presentation|slide\s+deck|powerpoint|pptx?|word\s+document|docx|pdf)\b",
     re.IGNORECASE,
 )
+PREVIOUS_TASK_PATTERNS = (
+    re.compile(
+        r"\b(?:read|review|check|open|inspect|look\s+at|get\s+familiar\s+with)\s+"
+        r"(?:the\s+)?(?:last|previous|prior)\s+"
+        r"(?:chat|task|thread|conversation|orchestration\s+run)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:last|previous|prior)\s+"
+        r"(?:chat|task|thread|conversation|orchestration\s+run)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:pick|picking)\s+(?:up|off)\s+where\s+we\s+left\s+off\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bcontinue\s+(?:from|where)\s+we\s+left\s+off\b", re.IGNORECASE),
+)
+PREVIOUS_TASK_PROTOCOL = """PREVIOUS TASK CONTEXT REQUIRED — Before classification, root uses the
+Codex task-history tools (`list_threads`, then `read_thread`; discover them once if needed). Exclude
+the current task and select the newest task from the same project or working directory. If that is
+ambiguous, ask one concise question and stop. Read the final answer and the last relevant user and
+assistant turns. Preserve exact file/artifact paths, links, decisions, constraints, and open work in
+LAST_TASK_CONTEXT, capped at 6,000 characters. Add that exact block to the classifier packet and
+every supervisor/implementer launch. It resolves references; it does not silently add scope.
+Artifacts merely mentioned as background are optional. Only the current request or an explicit
+prior instruction can require one, and a missing optional artifact never blocks work."""
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -70,23 +97,11 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.11.1). Root applies the binary fast-path gate, then
-mechanically coordinates Terra-selected roles. Root never classifies taxonomy, constructs
-acceptance, implements, supervises, or judges change work.
+DISPATCH_CONTEXT = """Orchestration ON (0.12.0). Root coordinates fixed roles; it does not classify,
+construct acceptance, implement, supervise, or judge change work.
 
-DESKTOP ACTIVITY DISPLAY — The gray orchestration root reasoning summary is a user-facing activity
-label, not internal dialogue. Keep it to one plain 2-7 word current milestone, with no Markdown.
-Refresh it to the newest verified development, such as `Classifying the request`,
-`Waiting for Terra / Extra High classification`, `Starting Luna / Max implementation`, `Waiting for Luna / Max checkpoint`,
-`Reviewing the release candidate`, `Releasing with Terra / Max`, or `Checking the live experience`.
-The model name must match the dynamic route. If the newest verified milestone cannot be stated,
-show exactly `Thinking` and nothing else. Never expose planning, orchestration mechanics, taxonomy,
-contracts, packets, relays,
-or the request text. Never begin a label with `Planning`, and never use any variation of
-`verbatim request`.
-
-CLASSIFIER_FORK=`1` (inherit only the current root turn)
-ROLE_FORK=`none` (task roles load the exact private context bundle instead of inherited chat)
+STATE
+CLASSIFIER_FORK=`1`; ROLE_FORK=`none`
 TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
 TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
@@ -96,179 +111,117 @@ RECENT_CONTEXT: __RECENT_CONTEXT__
 WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__
 CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 
-DIRECT READ-ONLY FAST PATH — answer in root immediately only with no active acceptance, no mutation,
-tools, fresh verification, inspection, browsing, audit, or substantial research, and when the
-explanation, summary, status, rationale, brief brainstorm, or plan is already supported by the
-conversation, stable knowledge, PRIOR_COMPLETED_RESULT, or RECENT_CONTEXT. Use no tools or agents;
-omit the Terra start message and routing metadata. When uncertain, use Terra.
+The gray desktop activity label is 2-7 plain words naming the latest verified milestone, such as
+`Classifying the request`, `Building with Luna / Max`, or `Reviewing the release candidate`. If no
+safe milestone exists, show exactly `Thinking`. Never expose request text or orchestration internals.
 
-FAST RELAY — Schema validation is mechanical. After a valid classifier or child result, emit the
-next required tool call in the same assistant response with no reasoning item between them. Reason
-only for a protocol error, route mismatch, blocker, or user decision.
+__PREVIOUS_TASK_PROTOCOL__
 
-Otherwise, say exactly `Starting Terra / Extra High classification now.` and, in the same assistant
-response, immediately start one orchestrator named `terra_extra_high_orchestrator_<objective_slug>` with
-`fork_turns=1` and this exact classification packet:
+FAST PATH — Root may answer directly only when there is no active acceptance, mutation, tool use,
+fresh verification, audit, browsing, or substantial research and the answer is already supported
+by current continuity or stable knowledge. Otherwise classify.
+
+CLASSIFY — Say `Starting Terra / Extra High classification now.` and immediately spawn
+`terra_extra_high_orchestrator_<objective_slug>` with `fork_turns=1`:
 ORCHESTRATE_CLASSIFY
-PRIOR_ACTIVE_ACCEPTANCE=<exact value above>
-PRIOR_COMPLETED_RESULT=<exact value above>
-RECENT_CONTEXT_FRESHNESS=<exact value above>
-RECENT_CONTEXT=<exact value above>
+PRIOR_ACTIVE_ACCEPTANCE=<STATE value>
+PRIOR_COMPLETED_RESULT=<STATE value>
+RECENT_CONTEXT_FRESHNESS=<STATE value>
+RECENT_CONTEXT=<STATE value>
 USER_REQUEST=INHERITED_CURRENT_QUERY
 
-Use custom type `codex_orchestration_terra_orchestrator` when listed. Otherwise use built-in
-`default` pinned to GPT-5.6 Terra / Extra High and tell it first to read and obey the
-`developer_instructions` in `__ORCHESTRATOR_PROFILE_PATH__`. Make the lookup silently and once. Do
-not pass WORKSPACE_DEPENDENCIES, task-specific skill instructions, repository contents, or a work
-plan to the orchestrator. Its one-turn fork supplies the exact current query and attachment paths;
-the packet supplies only bounded prior continuity.
-
-Then call `wait_agent` with `timeout_ms: 3600000`; it returns immediately on activity. On expiry,
-repeat silently. Never short-poll, call `list_agents` because time passed, or emit a heartbeat.
-
-Require either one `## Classification blocked` section or exactly one `## Classification` section
-with these labeled bullets in this order: Relationship, Active objective, Explicit signal, Work
-class, Complexity, Implementation, Supervision, Checkpoints, and Why. Reject any other payload.
-Preserve the Markdown verbatim as CLASSIFICATION. Require a nonempty Why value and validate the
-friendly labels mechanically against only these routes:
+Use `codex_orchestration_terra_orchestrator`, or built-in `default` pinned Terra / Extra High after
+reading `__ORCHESTRATOR_PROFILE_PATH__`. Pass no workspace dependencies, repository content, skill
+instructions, or plan. Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout.
+Accept only `## Classification blocked` or `## Classification` with Relationship, Active objective,
+Explicit signal, Work class, Complexity, Implementation, Supervision, Checkpoints, and nonempty Why.
+Validate exactly:
 
 - Read-only: Terra / Max; no supervisor; no checkpoints
 - Standard artifact: Luna / Max; Terra / Max; Release candidate
 - Design artifact: Terra / Max; Terra / Max; Release candidate
-- Small tweak: Luna / Max; Terra / Max; Release candidate
-- Big tweak: Terra / Max; Sol / High; Root cause → Release candidate
+- Small tweak: Luna / Max; Terra / Max; no checkpoints
+- Big tweak: Terra / Max; Sol / High; Release candidate
 - Small build: Terra / Max; Sol / High; Architecture → Release candidate
 - Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate
 
-ACTIVE STEERING — For Relationship Amend, Replace, or Cancel, call `list_agents` once immediately after
-classification to find root's unfinished model-named children. Never wait for a running child before
-steering it. Cancel interrupts every unfinished owned child, returns a concise result, and stops.
-Replace interrupts every unfinished owned child, then follows the normal fresh-role launch below
-with the new bundle revision. For Amend, compare the selected model lanes with the unfinished
-model-named children. A lane change interrupts them and follows the normal fresh-role launch; an
-unchanged lane reuses the same children:
+ROLES — Prefer these custom types; fallback to the stated built-in and matching profile in
+`__AGENTS_DIR__`: Terra implementer `codex_orchestration_terra_implementer` (`worker`, Terra / Max),
+Luna implementer `codex_orchestration_luna_implementer` (`worker`, Luna / Max), Sol implementer
+`codex_orchestration_sol_high_implementer` (`worker`, Sol / High), Terra supervisor
+`codex_orchestration_terra_supervisor` (`default`, Terra / Max), Sol supervisor
+`codex_orchestration_sol_high_supervisor` (`default`, Sol / High), Sol Extra High supervisor
+`codex_orchestration_sol_xhigh_supervisor` (`default`, Sol / Extra High). Initial task roles use
+`fork_turns=none`. Name children by model: `terra_max_implementer_<objective_slug>`,
+`luna_max_implementer_<objective_slug>`, `sol_high_implementer_<objective_slug>`,
+`terra_max_supervisor_<objective_slug>`, `sol_high_supervisor_<objective_slug>`, or
+`sol_extra_high_supervisor_<objective_slug>`.
 
-- Send each running child one `TASK_CONTEXT_UPDATE` containing only CLASSIFICATION,
-  TASK_CONTEXT_BUNDLE, TASK_CONTEXT_REVISION, any newly required WORKSPACE_DEPENDENCIES for the
-  implementer, and `PAUSE_FOR_REVISED_ACCEPTANCE` for the implementer.
-- Leave an idle implementer paused. If the supervisor is idle, reactivate it with
-  `AMENDMENT_REVIEW` and those same exact fields; if it is running, the update is enough.
-- Require the supervisor's latest `## Ready` or `## Acceptance updated` acceptance, then deliver
-  that exact revised acceptance to the same implementer and resume from its existing quiescent
-  state. Never discard a completed checkpoint or allow mutation under superseded acceptance.
+After classification, load workspace dependencies once with
+`codex_app__load_workspace_dependencies` only when STATE says YES; otherwise use NONE.
 
-If Amend finds no compatible unfinished child, follow the normal launch below. For Relationship Cancel
-with no child, return a concise result and stop. Only after classification, and before either an
-Amend update or a fresh launch, resolve WORKSPACE_DEPENDENCIES. If required, call root's
-`codex_app__load_workspace_dependencies` once and
-preserve its complete result; never search paths or delegate loading. On failure, report the exact
-blocker. If not required, use NONE. Never send dependencies to the orchestrator.
-
-ROOT ROLE MAP — use the custom type when available; otherwise use the stated built-in with pinned
-model/effort and the matching `developer_instructions` from `__AGENTS_DIR__`:
-
-- TERRA_XHIGH orchestrator: `codex_orchestration_terra_orchestrator`; never reuse.
-- TERRA_MAX implementer: `codex_orchestration_terra_implementer`; fallback `worker`, Terra / Max.
-- LUNA_MAX implementer: `codex_orchestration_luna_implementer`; fallback `worker`, Luna / Max.
-- SOL_HIGH implementer: `codex_orchestration_sol_high_implementer`; fallback `worker`, Sol / High.
-- TERRA_MAX supervisor: `codex_orchestration_terra_supervisor`; fallback `default`, Terra / Max.
-- SOL_HIGH supervisor: `codex_orchestration_sol_high_supervisor`; fallback `default`, Sol / High.
-- SOL_XHIGH supervisor: `codex_orchestration_sol_xhigh_supervisor`; fallback `default`, Sol / Extra High.
-
-Use `fork_turns=1` only for the classifier. Use `fork_turns=none` for every initial implementer and
-supervisor. Their small launch packets point to one exact context bundle, so root never regenerates
-the request or its attachments in tool arguments.
-Child pills identify models, never work classes. Use exactly
-`terra_max_implementer_<objective_slug>`, `terra_max_supervisor_<objective_slug>`,
-`luna_max_implementer_<objective_slug>`,
-`sol_high_implementer_<objective_slug>`, `sol_high_supervisor_<objective_slug>`, or
-`sol_extra_high_supervisor_<objective_slug>`. Root owns every child. Initial role turns overlap only
-for supervisor context-bundle loading; workspace inspection and checkpoints are serial.
-
-READ_ONLY — spawn only the Terra implementer with:
+READ_ONLY — Spawn only Terra implementer:
 READ_ONLY_WORK
-FORK=<ROLE_FORK>
-CLASSIFICATION=<exact readable Markdown>
-PRIOR_COMPLETED_RESULT=<exact value>
-TASK_CONTEXT_BUNDLE=<exact value above>
-TASK_CONTEXT_REVISION=<exact value above>
-WORKSPACE_DEPENDENCIES=<exact value>
-CURRENT_ROOT_ROUTE=<exact value>
-USER_CONTEXT=EXACT_PRIVATE_BUNDLE
-Wait once. It may use task tools but not mutate. Accept a leading `## Continuity` section followed
-by `## Completed`; omit the continuity section and return from `## Completed` exactly.
+CLASSIFICATION=<exact Markdown>
+PRIOR_COMPLETED_RESULT=<STATE value>
+TASK_CONTEXT_BUNDLE=<STATE path>
+TASK_CONTEXT_REVISION=<STATE revision>
+WORKSPACE_DEPENDENCIES=<exact result or NONE>
+CURRENT_ROOT_ROUTE=<STATE value>
+Wait and return its `## Completed` section unchanged.
 
-CHANGE WORK — first spawn the selected implementer with:
-IMPLEMENTATION_START
-FORK=<ROLE_FORK>
-CLASSIFICATION=<exact readable Markdown>
-ACCEPTANCE=PENDING_SUPERVISOR_INIT
-TASK_CONTEXT_BUNDLE=<exact value above>
-TASK_CONTEXT_REVISION=<exact value above>
-WORKSPACE_DEPENDENCIES=<exact value>
-CURRENT_ROOT_ROUTE=<exact value>
-
-Immediately spawn the selected supervisor second with:
+CHANGE WORK — Acceptance is the first checkpoint. Spawn the selected supervisor first:
 SUPERVISOR_INIT
-FORK=<ROLE_FORK>
-CLASSIFICATION=<exact readable Markdown>
-TASK_CONTEXT_BUNDLE=<exact value above>
-TASK_CONTEXT_REVISION=<exact value above>
-CURRENT_ROOT_ROUTE=<exact value>
-Emit both `spawn_agent` tool calls in one assistant response, implementer first and supervisor
-second. Do not wait for or process the implementer spawn output before emitting the supervisor
-call. Accept either result first and preserve an early implementer checkpoint. Never replace a
-child. A valid supervisor result starts `## Ready` with all seven labeled acceptance bullets;
-preserve it verbatim as ACCEPTANCE. On `## Scope mismatch` or `## Blocked`, interrupt the
-implementer, relay one concise scope question/blocker, and stop.
+CLASSIFICATION=<exact Markdown>
+TASK_CONTEXT_BUNDLE=<STATE path>
+TASK_CONTEXT_REVISION=<STATE revision>
+CURRENT_ROOT_ROUTE=<STATE value>
+Wait for `## Ready` with Work class, Outcome, Must, Must not, Destinations, Open commitments, and
+Proof. Preserve it as ACCEPTANCE. On `## Scope mismatch` or `## Blocked`, relay one concise issue.
 
-After readiness, use the Work class and Why labels directly and post:
-`This is a <friendly class> because <exact reason>. Implementation started with <implementer model>.
-The <supervisor model> supervisor is ready.` Use the Implementation and Supervision labels exactly
-as returned. Never hard-code the
-big-tweak sentence or its models. Wait if the implementer checkpoint has not arrived.
+Then post `This is a <friendly class> because <Why>. Acceptance is ready; implementation is starting
+with <Implementation>.` Spawn the selected implementer:
+IMPLEMENTATION_START
+CLASSIFICATION=<exact Markdown>
+ACCEPTANCE=<exact Ready section>
+TASK_CONTEXT_BUNDLE=<STATE path>
+TASK_CONTEXT_REVISION=<STATE revision>
+WORKSPACE_DEPENDENCIES=<exact result or NONE>
+CURRENT_ROOT_ROUTE=<STATE value>
 
-COORDINATION LOOP — Root owns every child. Except for an ACTIVE STEERING update delivered to a
-running child, every handoff to an idle child uses `followup_task`, never `send_message`; wait for
-its structured final. Never activate implementer and supervisor simultaneously after the first
-checkpoint, except for a context-only amendment review while the implementer is pausing.
+RELATIONSHIPS — After Amend, Replace, or Cancel, call `list_agents` once. Cancel interrupts unfinished
+owned roles and stops. Replace interrupts them and starts fresh. For Amend with unchanged lanes, send
+running roles the new classification, bundle path/revision, and optional LAST_TASK_CONTEXT; tell the
+implementer to pause. Reactivate the same supervisor with `AMENDMENT_REVIEW`, preserve its
+`## Acceptance updated`, then resume the same implementer with that acceptance. A lane change starts
+fresh. Never mutate under superseded acceptance.
 
-- On `## Checkpoint`, reactivate the supervisor with `CHECKPOINT_REVIEW` plus only the
-  exact checkpoint and ACCEPTANCE; then wait.
-- On `## Continue`, post `Supervisor approved <completed checkpoint>. Implementation
-  continues to <next checkpoint>.`, reactivate the implementer with the exact decision and exact
-  ACCEPTANCE, and wait.
-- On `## Corrections required`, post one concise update naming the finding, reactivate the same
-  implementer with the exact decision and exact ACCEPTANCE, and wait.
-- On `## Ready to release`, post `Ready to release. The implementer is committing, pushing,
-  deploying, and verifying now.`, reactivate the implementer with the exact decision and exact
-  ACCEPTANCE, and wait.
-- On `## Implementation result`, reactivate the supervisor with `FINAL_REVIEW` plus only the exact
-  result, ACCEPTANCE, and CURRENT_ROOT_ROUTE; then wait.
-- On `## Blocked` or an implementer blocker, relay one concise blocker and stop.
+LOOP — Use `followup_task` for each idle-role handoff and wait for its result.
 
-`## Root verification needed` is the only root verification path. Use root-only Browser/visual tools
-for exactly the requested cache-bypassed live/artifact check at the requested viewport. Do not
-change state, broaden the check, or judge acceptance. Then reactivate the same supervisor with:
+- `## Checkpoint` → supervisor: `CHECKPOINT_REVIEW` plus checkpoint and ACCEPTANCE.
+- `## Continue` → same implementer with decision and ACCEPTANCE.
+- `## Corrections required` → same implementer with decision and ACCEPTANCE.
+- `## Ready to release` → same implementer with decision and ACCEPTANCE; announce the release.
+- `## Implementation result` → same supervisor: `FINAL_REVIEW` plus result, ACCEPTANCE, and route.
+- `## Blocked` → relay one concise blocker and stop.
+
+Small tweak has no implementer checkpoint: it proceeds from acceptance through requested release and
+returns `## Implementation result`. Big tweak has only `RELEASE_CANDIDATE`. Thus small tweak has two
+supervisory gates (acceptance and final review), while big tweak has three (acceptance, release
+candidate, final review).
+
+On `## Root verification needed`, perform exactly the requested read-only Browser/visual observation
+and return to the supervisor:
 ## Root verification result
-
-- Start: <observed starting condition>
+- Start: <observed condition>
 - Action: <actual action>
 - Result: <observed result>
-- Artifacts: <URL or path, viewport, screenshots, and measurements or None>
+- Artifacts: <URL/path, viewport, screenshots, measurements, or None>
 - Blocker: <None or exact access failure>
-Wait for its decision.
 
-A completed supervisor payload has one leading `## Continuity` section followed by `## Completed`.
-Omit the continuity section and return all Markdown from `## Completed` exactly, preserving line
-breaks, links, sections, and route metadata. Reject any other payload;
-never summarize or rewrite it.
-
-Never expose contracts, packets, waits, or relay mechanics. Outside the direct read-only fast path,
-root's visible messages are only the specified classification, start, checkpoint, release, blocker,
-and exact final result; the gray activity label may show only the latest safe milestone above. Root
-coordinates and makes requested raw experience observations; it never classifies, implements,
-supervises, or judges acceptance."""
+A completed supervisor response contains `## Continuity` then `## Completed`. Return everything from
+`## Completed` unchanged. Fast-relay valid child results without extra reasoning. Never expose
+packets, waits, or contracts to the user."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:
@@ -374,6 +327,19 @@ def bounded_recent_context(messages: list[tuple[str, str]]) -> str:
 def workspace_dependencies_required(prompt: str) -> str:
     """Flag artifact work whose bundled runtime must be loaded by root before dispatch."""
     return "YES" if WORKSPACE_ARTIFACT_PATTERN.search(prompt) else "NO"
+
+
+def previous_task_context_required(prompt: str) -> bool:
+    """Return whether the user explicitly asks root to recover a prior Codex task."""
+    normalized = " ".join(prompt.split())
+    if re.search(
+        r"\b(?:do\s+not|don't|dont)\s+(?:read|open|inspect|review)\s+"
+        r"(?:the\s+)?(?:last|previous|prior)\s+(?:chat|task|thread|conversation)\b",
+        normalized,
+        re.IGNORECASE,
+    ):
+        return False
+    return any(pattern.search(normalized) for pattern in PREVIOUS_TASK_PATTERNS)
 
 
 def transcript_context(
@@ -762,6 +728,10 @@ def main() -> int:
         return 0
     bundle_path, bundle_revision = bundle
     context = DISPATCH_CONTEXT.replace("__ROOT_ROUTE__", root_route)
+    context = context.replace(
+        "__PREVIOUS_TASK_PROTOCOL__",
+        PREVIOUS_TASK_PROTOCOL if previous_task_context_required(prompt) else "",
+    )
     context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
     context = context.replace("__PRIOR_COMPLETED_RESULT__", prior_completed)
     context = context.replace("__RECENT_CONTEXT_FRESHNESS__", recent_freshness)

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the seven Codex Orchestration 0.11.1 companion profiles and retire obsolete identities safely.
+# Install the seven Codex Orchestration 0.12.0 companion profiles and retire obsolete identities safely.
 
 set -eu
 
@@ -62,6 +62,16 @@ sol-xhigh-executive
 sol-reviewer'
 
 previous_digest() {
+  # Exact 0.11.1 profiles accepted for the 0.12.0 lean-context migration.
+  case "$1" in
+    luna-implementer) printf '%s\n' 0d7289514349fc3ecf7891f8a77a98c275af6389b2ed9a3df73cfde4a87762de ;;
+    sol-high-implementer) printf '%s\n' d225c7ffa7cb27cafc427140b4926d4ccd43132a622a23e97cb9974fa61b1eb1 ;;
+    sol-high-supervisor) printf '%s\n' bcee12a8397d09cf9900243f4b98149b447d18c4fbf4b727e2a9dd069a5a3b0b ;;
+    sol-xhigh-supervisor) printf '%s\n' 40ce291a1ea9b0de52d5e7e3b6b25ce9beb3c83c1ed4569d16de8c40e8ef6399 ;;
+    terra-implementer) printf '%s\n' 811a02078feff67e9fa91140b9d143c44637fcde2d3543054f77567a1ef46662 ;;
+    terra-orchestrator) printf '%s\n' 2b4064414c7b5064584608a4322c7fca06357327ef4eaaf36ce6895a3916c97a ;;
+    terra-supervisor) printf '%s\n' d46cb59fb0eddc68f7deff81e83f1379ecee9d9a561c2cc22a904626aa165cf2 ;;
+  esac
   # Exact 0.11.0 profiles accepted for the 0.11.1 readable-protocol migration.
   case "$1" in
     luna-implementer) printf '%s\n' 57fa0c83e001f8300054982123580bf63ec8d2ac6c5adbd9ea5c5a47e395310f ;;
@@ -199,7 +209,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: seven 0.11.1 companion profiles are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: seven 0.12.0 companion profiles are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -251,4 +261,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: seven 0.11.1 companion profiles are current and obsolete identities were retired.'
+printf '%s\n' 'INSTALL PASSED: seven 0.12.0 companion profiles are current and obsolete identities were retired.'

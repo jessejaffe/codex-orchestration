@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.11.1 readable seven-class protocol."""
+"""Static contracts for the 0.12.0 lean continuity protocol."""
 
 from __future__ import annotations
 
+import ast
 import json
 import sys
 import tomllib
@@ -37,29 +38,16 @@ HUMAN_ROUTES = (
     "Read-only: Terra / Max; no supervisor; no checkpoints",
     "Standard artifact: Luna / Max; Terra / Max; Release candidate",
     "Design artifact: Terra / Max; Terra / Max; Release candidate",
-    "Small tweak: Luna / Max; Terra / Max; Release candidate",
-    "Big tweak: Terra / Max; Sol / High; Root cause → Release candidate",
+    "Small tweak: Luna / Max; Terra / Max; no checkpoints",
+    "Big tweak: Terra / Max; Sol / High; Release candidate",
     "Small build: Terra / Max; Sol / High; Architecture → Release candidate",
     "Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate",
 )
 
-MACHINE_OUTPUT_PREFIXES = (
-    "ORCHESTRATION_RELATION:",
-    "ORCHESTRATION_ROUTE:",
-    "ORCHESTRATION_STATUS:",
-    "ORCHESTRATION_ACCEPTANCE:",
-    "ORCHESTRATION_HANDOFF:",
-    "ORCHESTRATION_ACCEPT:",
-    "IMPLEMENTATION_CHECKPOINT:",
-    "IMPLEMENTATION_RESULT:",
-    "SUPERVISOR_READY:",
-    "SUPERVISOR_AMENDED:",
-    "SUPERVISOR_CONTINUE:",
-    "SUPERVISOR_CORRECT:",
-    "SUPERVISOR_READY_TO_RELEASE:",
-    "SUPERVISOR_BLOCKED:",
-    "SUPERVISOR_SCOPE_REJECT:",
-    "ORCHESTRATION_ROOT_VERIFY:",
+MACHINE_PREFIXES = (
+    "ORCHESTRATION_RELATION:", "ORCHESTRATION_ROUTE:", "ORCHESTRATION_ACCEPTANCE:",
+    "IMPLEMENTATION_CHECKPOINT:", "IMPLEMENTATION_RESULT:", "SUPERVISOR_READY:",
+    "SUPERVISOR_CORRECT:", "SUPERVISOR_READY_TO_RELEASE:",
 )
 
 
@@ -75,118 +63,115 @@ def forbid(text: str, values: tuple[str, ...], label: str) -> None:
             raise AssertionError(f"{label} retains forbidden {value!r}")
 
 
+def dispatch_prompt_chars(router: str) -> int:
+    module = ast.parse(router)
+    for node in module.body:
+        if isinstance(node, ast.Assign) and any(
+            getattr(target, "id", None) == "DISPATCH_CONTEXT" for target in node.targets
+        ):
+            return len(ast.literal_eval(node.value))
+    raise AssertionError("DISPATCH_CONTEXT assignment is missing")
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         raise SystemExit("usage: test-relay-protocol.py <plugin-dir>")
     plugin = Path(sys.argv[1])
-    agents = plugin / "agents"
-    paths = {path.name for path in agents.glob("*.toml")}
-    if paths != set(EXPECTED_AGENTS):
-        raise AssertionError(f"agent inventory mismatch: {paths!r}")
+    agents_dir = plugin / "agents"
+    if {path.name for path in agents_dir.glob("*.toml")} != set(EXPECTED_AGENTS):
+        raise AssertionError("agent inventory mismatch")
 
     documents: dict[str, str] = {}
+    prompts: dict[str, str] = {}
     for filename, expected in EXPECTED_AGENTS.items():
-        text = (agents / filename).read_text(encoding="utf-8")
-        documents[filename] = text
+        text = (agents_dir / filename).read_text(encoding="utf-8")
         parsed = tomllib.loads(text)
-        actual = (
-            parsed.get("name"), parsed.get("model"), parsed.get("model_reasoning_effort")
-        )
+        documents[filename] = text
+        prompts[filename] = parsed["developer_instructions"]
+        actual = (parsed.get("name"), parsed.get("model"), parsed.get("model_reasoning_effort"))
         if actual != expected:
             raise AssertionError(f"wrong model pin for {filename}: {actual!r}")
         if "supervisor" in filename or "orchestrator" in filename:
             if parsed.get("sandbox_mode") != "read-only":
                 raise AssertionError(f"read-only role is not sandboxed: {filename}")
+        forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.11.1":
-        raise AssertionError(f"manifest does not use 0.11.1: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.0":
+        raise AssertionError(f"manifest does not use 0.12.0: {manifest.get('version')!r}")
 
-    orchestrator = documents["codex-orchestration-terra-orchestrator.toml"]
+    if sum(map(len, prompts.values())) > 27_000:
+        raise AssertionError("agent prompts exceed the 27,000-character lean budget")
+
+    orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
     require(
         orchestrator,
         (
-            "always GPT-5.6 Terra / Extra High",
-            "latency-critical bounded lookup",
-            "## Classification blocked",
-            "## Classification",
-            "- Relationship: <New|Amend|Replace|Cancel>",
-            "- Work class: <Read-only|Standard artifact|Design artifact|Small tweak|Big tweak|Small build|Big build>",
-            "- Implementation: <Terra / Max|Luna / Max|Sol / High|None>",
-            "- Supervision: <Terra / Max|Sol / High|Sol / Extra High|None>",
-            "- Why: <one concise concrete clause",
-            "do not expose the uppercase lane identifiers",
-            "Do not use a generic phrase such as `substantial behavior\nchange`",
+            "taxonomy-only", "latency-critical bounded lookup", "optional LAST_TASK_CONTEXT",
+            "do not turn background details", "SMALL_TWEAK: LUNA_MAX / TERRA_MAX / NONE",
+            "BIG_TWEAK: TERRA_MAX / SOL_HIGH / RELEASE_CANDIDATE", "## Classification blocked",
+            "## Classification", "- Relationship: <New|Amend|Replace|Cancel>",
+            "- Why: <one concrete lower-case clause", "must not use a\ngeneric phrase",
         ),
-        "Terra / Extra High orchestrator",
+        "orchestrator",
     )
-    forbid(orchestrator, MACHINE_OUTPUT_PREFIXES, "orchestrator output")
 
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
+    if dispatch_prompt_chars(router) > 7_500:
+        raise AssertionError("root dispatch prompt exceeds the 7,500-character lean budget")
     require(
         router,
         (
-            "Orchestration ON (0.11.1)",
-            "show exactly `Thinking` and nothing else",
-            "Starting Terra / Extra High classification now.",
-            "fork_turns=1",
-            "fork_turns=none",
-            "## Classification blocked",
-            "Relationship, Active objective, Explicit signal, Work",
-            *HUMAN_ROUTES,
-            "## Ready",
-            "## Acceptance updated",
-            "CHANGE WORK — first spawn the selected implementer",
-            "Immediately spawn the selected supervisor second",
-            "Emit both `spawn_agent` tool calls in one assistant response",
-            "## Checkpoint",
-            "## Continue",
-            "## Corrections required",
-            "## Ready to release",
-            "## Implementation result",
-            "## Root verification needed",
-            "## Continuity",
-            "## Completed",
-            "markdown_section",
-            "markdown_bullets",
+            "Orchestration ON (0.12.0)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "read_thread", "LAST_TASK_CONTEXT", "capped at 6,000 characters",
+            "missing optional artifact never blocks work", "Starting Terra / Extra High classification now.",
+            "fork_turns=1", "fork_turns=none", *HUMAN_ROUTES,
+            "CHANGE WORK — Acceptance is the first checkpoint. Spawn the selected supervisor first",
+            "Then post `This is a <friendly class>", "Small tweak has no implementer checkpoint",
+            "big tweak has three", "## Root verification needed", "## Continuity", "## Completed",
         ),
-        "root coordinator contract",
+        "root coordinator",
     )
-    implementer_spawn = router.index("CHANGE WORK — first spawn the selected implementer")
-    supervisor_spawn = router.index("Immediately spawn the selected supervisor second")
-    if implementer_spawn >= supervisor_spawn:
-        raise AssertionError("change startup does not spawn the implementer first")
+    supervisor_start = router.index("Spawn the selected supervisor first")
+    implementer_start = router.index("Spawn the selected implementer")
+    if supervisor_start >= implementer_start:
+        raise AssertionError("acceptance is not constructed before implementation")
+    forbid(
+        router,
+        (
+            "Small tweak: Luna / Max; Terra / Max; Release candidate",
+            "Big tweak: Terra / Max; Sol / High; Root cause → Release candidate",
+            "ACCEPTANCE=PENDING_SUPERVISOR_INIT", "Emit both `spawn_agent` tool calls",
+        ),
+        "root coordinator",
+    )
 
     for filename in (
         "codex-orchestration-luna-implementer.toml",
         "codex-orchestration-terra-implementer.toml",
         "codex-orchestration-sol-high-implementer.toml",
     ):
-        document = documents[filename]
+        prompt = prompts[filename]
         require(
-            document,
+            prompt,
             (
-                "TASK_CONTEXT_BUNDLE",
-                "TASK_CONTEXT_REVISION",
-                "## Checkpoint",
-                "- Phase:",
-                "**State**",
-                "**Changes**",
-                "**Evidence**",
-                "**Release plan**",
-                "## Implementation result",
-                "**Outcome**",
-                "**Release**",
-                "**Remaining**",
+                "TASK_CONTEXT_BUNDLE", "TASK_CONTEXT_REVISION", "LAST_TASK_CONTEXT",
+                "fetch GitHub once", "push reports",
+                "## Checkpoint", "**Release plan**", "## Implementation result",
+                "**Acceptance evidence**", "**Release**", "**Remaining**",
             ),
             filename,
         )
-        forbid(document, MACHINE_OUTPUT_PREFIXES, f"{filename} output")
 
     require(
-        documents["codex-orchestration-terra-implementer.toml"],
-        ("On `READ_ONLY_WORK`", "## Continuity", "## Completed"),
-        "Terra read-only output",
+        prompts["codex-orchestration-luna-implementer.toml"],
+        ("`SMALL_TWEAK` has no implementer checkpoint", "commit/push"),
+        "Luna small-tweak flow",
+    )
+    require(
+        prompts["codex-orchestration-terra-implementer.toml"],
+        ("`BIG_TWEAK`: `RELEASE_CANDIDATE` only", "there is no root-cause checkpoint", "On `READ_ONLY_WORK`"),
+        "Terra flow",
     )
 
     for filename in (
@@ -194,59 +179,58 @@ def main() -> int:
         "codex-orchestration-sol-high-supervisor.toml",
         "codex-orchestration-sol-xhigh-supervisor.toml",
     ):
-        document = documents[filename]
+        prompt = prompts[filename]
         require(
-            document,
+            prompt,
             (
-                "TASK_CONTEXT_BUNDLE",
-                "TASK_CONTEXT_REVISION",
-                "## Ready",
-                "- Work class:",
-                "- Outcome:",
-                "- Must:",
-                "- Must not:",
-                "- Destinations:",
-                "- Open commitments:",
-                "- Proof:",
-                "## Acceptance updated",
-                "## Scope mismatch",
-                "## Corrections required",
-                "## Ready to release",
-                "## Blocked",
-                "## Root verification needed",
-                "## Continuity",
-                "## Completed",
+                "TASK_CONTEXT_BUNDLE", "LAST_TASK_CONTEXT", "## Ready",
+                "- Work class:", "- Outcome:", "- Must:", "- Must not:", "- Destinations:",
+                "- Open commitments:", "- Proof:", "## Acceptance updated", "## Scope mismatch",
+                "## Corrections required", "## Ready to release", "## Blocked",
+                "## Root verification needed", "## Continuity", "## Completed",
             ),
             filename,
         )
-        forbid(document, MACHINE_OUTPUT_PREFIXES, f"{filename} output")
+        if "missing optional" not in prompt.lower():
+            raise AssertionError(f"{filename} does not protect optional artifacts")
+
+    require(
+        prompts["codex-orchestration-terra-supervisor.toml"],
+        ("`SMALL_TWEAK`: no implementer checkpoint", "review only `FINAL_REVIEW`"),
+        "Terra supervisor small-tweak flow",
+    )
+    require(
+        prompts["codex-orchestration-sol-high-supervisor.toml"],
+        ("`BIG_TWEAK`: `RELEASE_CANDIDATE` only", "root-cause checkpoint is removed"),
+        "Sol supervisor big-tweak flow",
+    )
 
     installer = (plugin / "scripts" / "install-agents.sh").read_text(encoding="utf-8")
     require(
         installer,
         (
-            "Exact 0.11.0 profiles accepted for the 0.11.1 readable-protocol migration",
-            "57fa0c83e001f8300054982123580bf63ec8d2ac6c5adbd9ea5c5a47e395310f",
-            "3df9d5071bd120ba4ff63f372277f09d38e650c0b914362e5057864ffc2d72a6",
-            "3e3aae30c769489c8776467a5b6497f76eacfbdf424a9e0b098b642abd00bfbd",
-            "12f3d61ec1705cbfdc3ac8e60dd338d7fec7716b055371d632a2ffa6f2e25a24",
-            "2a5154885d32df32c87713dba1e7e58ec09f98e6720fd13a2d01b5f2ebd931b2",
-            "a4b93a9a04494d93a9b8b902888bf123ae0dafa76972124f2e2e2a3d84b97cc5",
-            "b1d57d6e649bef6275a87994587010594dc16344f27ec2979f7964b295964dc4",
+            "Exact 0.11.1 profiles accepted for the 0.12.0 lean-context migration",
+            "0d7289514349fc3ecf7891f8a77a98c275af6389b2ed9a3df73cfde4a87762de",
+            "d225c7ffa7cb27cafc427140b4926d4ccd43132a622a23e97cb9974fa61b1eb1",
+            "bcee12a8397d09cf9900243f4b98149b447d18c4fbf4b727e2a9dd069a5a3b0b",
+            "40ce291a1ea9b0de52d5e7e3b6b25ce9beb3c83c1ed4569d16de8c40e8ef6399",
+            "811a02078feff67e9fa91140b9d143c44637fcde2d3543054f77567a1ef46662",
+            "2b4064414c7b5064584608a4322c7fca06357327ef4eaaf36ce6895a3916c97a",
+            "d46cb59fb0eddc68f7deff81e83f1379ecee9d9a561c2cc22a904626aa165cf2",
         ),
-        "0.11.0 migration digests",
+        "0.11.1 migration digests",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
-    expected_classes = {case["expected"] for case in fixtures["cases"]}
-    all_classes = {
+    classes = {case["expected"] for case in fixtures["cases"]}
+    expected_classes = {
         "READ_ONLY", "STANDARD_ARTIFACT", "DESIGN_ARTIFACT", "SMALL_TWEAK",
         "BIG_TWEAK", "SMALL_BUILD", "BIG_BUILD",
     }
-    if expected_classes != all_classes:
-        raise AssertionError(f"triage fixtures do not cover every class: {expected_classes!r}")
+    if classes != expected_classes:
+        raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.11.1 readable seven-class context and relay protocol")
+    print("PASS: 0.12.0 lean previous-task and checkpoint protocol")
     return 0
 
 

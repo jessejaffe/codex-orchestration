@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.11.1 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.0 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,15 +87,10 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "DIRECT READ-ONLY FAST PATH",
-        "binary fast-path gate",
-        "DESKTOP ACTIVITY DISPLAY",
-        "one plain 2-7 word current milestone",
-        "Waiting for Terra / Extra High classification",
-        "Starting Luna / Max implementation",
-        "show exactly `Thinking` and nothing else",
-        "answer in root immediately",
-        "Use no tools or agents",
+        "Orchestration ON (0.12.0)",
+        "FAST PATH",
+        "Root may answer directly",
+        "show exactly `Thinking`",
         "Starting Terra / Extra High classification now.",
         "terra_extra_high_orchestrator_<objective_slug>",
         "ORCHESTRATE_CLASSIFY",
@@ -103,63 +98,49 @@ def main() -> int:
         "fork_turns=none",
         "TASK_CONTEXT_BUNDLE:",
         "TASK_CONTEXT_REVISION:",
-        "USER_CONTEXT=EXACT_PRIVATE_BUNDLE",
         "USER_REQUEST=INHERITED_CURRENT_QUERY",
-        "FAST RELAY",
-        "same assistant\nresponse",
         "PRIOR_COMPLETED_RESULT: NONE",
         "RECENT_CONTEXT_FRESHNESS: NONE",
         "RECENT_CONTEXT: NONE",
         "WORKSPACE_DEPENDENCIES_REQUIRED: NO",
         "codex_app__load_workspace_dependencies",
-        "Only after classification, and before either an\nAmend update or a fresh launch, resolve WORKSPACE_DEPENDENCIES",
         "codex_orchestration_terra_supervisor",
         "codex_orchestration_terra_orchestrator",
         "codex_orchestration_terra_implementer",
         "codex_orchestration_luna_implementer",
         "codex_orchestration_sol_high_implementer",
-        "`developer_instructions` in",
         "agents/codex-orchestration-terra-orchestrator.toml",
-        "Root owns every child",
         "terra_max_implementer_<objective_slug>",
         "terra_max_supervisor_<objective_slug>",
         "luna_max_implementer_<objective_slug>",
         "sol_high_implementer_<objective_slug>",
         "sol_high_supervisor_<objective_slug>",
         "sol_extra_high_supervisor_<objective_slug>",
-        "CHANGE WORK — first spawn the selected implementer",
-        "Immediately spawn the selected supervisor second",
-        "Emit both `spawn_agent` tool calls in one assistant response",
-        "Do not wait for or process the implementer spawn output",
-        "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
-        "ACTIVE STEERING",
+        "CHANGE WORK — Acceptance is the first checkpoint",
+        "Spawn the selected supervisor first",
+        "Then post `This is a <friendly class>",
         "AMENDMENT_REVIEW",
-        "PAUSE_FOR_REVISED_ACCEPTANCE",
         "## Classification blocked",
-        "Relationship, Active objective, Explicit signal, Work",
+        "Accept only `## Classification blocked` or `## Classification`",
+        "Small tweak: Luna / Max; Terra / Max; no checkpoints",
+        "Big tweak: Terra / Max; Sol / High; Release candidate",
         "Small build: Terra / Max; Sol / High; Architecture → Release candidate",
         "Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate",
-        "Require a nonempty Why value",
-        "This is a <friendly class> because <exact reason>.",
-        "Use the Implementation and Supervision labels exactly",
-        "timeout_ms: 3600000",
-        "leading `## Continuity` section followed",
+        "timeout_ms=3600000",
+        "Small tweak has no implementer checkpoint",
+        "big tweak has three",
         "## Root verification needed",
-        "root-only Browser/visual tools",
-        "cache-bypassed live/artifact check at the requested viewport",
         "## Root verification result",
-        "every handoff to an idle child uses `followup_task`",
-        "- Artifacts: <URL or path, viewport, screenshots",
-        "broaden the check, or judge acceptance",
-        "return all Markdown from `## Completed` exactly",
-        "preserving line\nbreaks, links, sections",
+        "Use `followup_task`",
+        "## Continuity",
+        "## Completed",
     )
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
     if routed_context.count("USER_REQUEST=INHERITED_CURRENT_QUERY") != 1:
         raise AssertionError("only the classifier should inherit the current query")
-    if routed_context.count("TASK_CONTEXT_BUNDLE=<exact value above>") != 3:
+    if routed_context.count("TASK_CONTEXT_BUNDLE=<STATE path>") != 3:
         raise AssertionError("task-role packets do not consistently reference the context bundle")
     bundle_path = Path(context_field(routed_context, "TASK_CONTEXT_BUNDLE"))
     bundle_revision = context_field(routed_context, "TASK_CONTEXT_REVISION")
@@ -185,21 +166,51 @@ def main() -> int:
         "normal agent waits are at most 45 seconds",
         "timeout_ms: 45000",
         "Still working on <actual user outcome>.",
-        "first spawn only the selected supervisor",
-        "Wait for that turn to finish before spawning an implementer",
         "This is a <friendly class>. Implementation started",
         "Starting orchestration with verbatim request",
         "Planning orchestration and classification steps",
         "USER_REQUEST=<exact current request and attachment paths>",
         "USER_REQUEST=<exact request and attachment paths>",
         "The classifier always uses none",
+        "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+        "Root cause → Release candidate",
     ):
         if noisy in routed_context:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     if (state / "grader-requests").exists():
         raise AssertionError("dispatch still staged a grader request")
-    if len(routed_context) > 14_000:
+    if len(routed_context) > 9_000:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
+
+    previous_task_context = context(
+        invoke(
+            hook,
+            state,
+            active_id,
+            "Read the last chat and pick off where we left off",
+        )
+    )
+    for value in (
+        "PREVIOUS TASK CONTEXT REQUIRED",
+        "list_threads",
+        "read_thread",
+        "Exclude\nthe current task",
+        "LAST_TASK_CONTEXT",
+        "capped at 6,000 characters",
+        "missing optional artifact never blocks work",
+    ):
+        if value not in previous_task_context:
+            raise AssertionError(f"previous-task dispatch omits {value!r}")
+    if len(previous_task_context) > 10_000:
+        raise AssertionError("previous-task protocol exceeds its dispatch budget")
+    if "PREVIOUS TASK CONTEXT REQUIRED" in routed_context:
+        raise AssertionError("ordinary prompts pay the previous-task prompt cost")
+
+    negative_previous = context(
+        invoke(hook, state, active_id, "Don't read the last chat; fix only this label")
+    )
+    if "PREVIOUS TASK CONTEXT REQUIRED" in negative_previous:
+        raise AssertionError("negative previous-task instruction was ignored")
 
     artifact_context = context(
         invoke(
@@ -214,7 +225,7 @@ def main() -> int:
     direct_question_context = context(
         invoke(hook, state, active_id, "Why did the spreadsheet task fail?")
     )
-    if "DIRECT READ-ONLY FAST PATH" not in direct_question_context:
+    if "FAST PATH" not in direct_question_context:
         raise AssertionError("artifact-related explanation lost the direct read-only gate")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
