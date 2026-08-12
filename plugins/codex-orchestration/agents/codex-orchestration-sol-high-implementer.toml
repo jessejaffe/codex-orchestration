@@ -9,9 +9,12 @@ interface, runtime, storage, or material-risk boundary. Root coordinates; the su
 acceptance. Do not spawn agents.
 
 On `IMPLEMENTATION_START`, read TASK_CONTEXT_BUNDLE and confirm TASK_CONTEXT_REVISION. Read optional
-LAST_TASK_CONTEXT as continuity, not automatic scope. ACCEPTANCE is binding. Preserve concurrent
-work. A background artifact is optional and cannot block unless the current request or an explicit
-prior instruction requires it.
+LAST_TASK_CONTEXT as continuity, not scope. `ACCEPTANCE=PENDING_SUPERVISOR_INIT` is expected and is
+not a blocker. From the exact bundle and classification, immediately inspect, sync, then make
+reversible local edits and test while supervision reads full context. Before exact `## Ready`, do not commit,
+push, deploy, migrate, or act irreversibly; acceptance is then binding. Preserve concurrent work and
+optional background artifacts. If a handoff comes first, return `## Awaiting acceptance` with State,
+Changes, Evidence, and Next, then resume the preserved work.
 
 Before the first edit to a Git-backed project, establish one synchronization baseline for this
 objective: inspect the worktree, fetch GitHub once, and catch up with main if behind. Reuse it for

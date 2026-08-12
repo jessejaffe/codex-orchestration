@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.12.1 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.12.2 context dispatch."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.12.1)",
+        "Orchestration ON (0.12.2)",
         "FAST PATH",
         "Root may answer directly",
         "show exactly `Thinking`",
@@ -116,9 +116,13 @@ def main() -> int:
         "sol_high_implementer_<objective_slug>",
         "sol_high_supervisor_<objective_slug>",
         "sol_extra_high_supervisor_<objective_slug>",
-        "CHANGE WORK — Acceptance is the first checkpoint",
-        "Spawn the selected supervisor first",
-        "Then post `This is a <friendly class>",
+        "CHANGE WORK — Start implementation before acceptance construction",
+        "spawn the selected implementer first",
+        "Immediately spawn the selected supervisor second",
+        "Emit both `spawn_agent` calls back-to-back",
+        "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+        "Deliver it immediately",
+        "`send_message` if the implementer runs",
         "AMENDMENT_REVIEW",
         "## Classification blocked",
         "Accept only `## Classification blocked` or `## Classification`",
@@ -127,17 +131,21 @@ def main() -> int:
         "Small build: Terra / Max; Sol / High; Architecture → Release candidate",
         "Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate",
         "timeout_ms=3600000",
-        "Small tweak has no implementer checkpoint",
+        "Small tweak starts immediately with no implementer checkpoint",
         "big tweak has three",
         "## Root verification needed",
         "## Root verification result",
-        "Use `followup_task`",
+        "for each idle-role handoff",
         "## Continuity",
         "## Completed",
     )
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
+    implementer_start = routed_context.index("spawn the selected implementer first")
+    supervisor_start = routed_context.index("Immediately spawn the selected supervisor second")
+    if implementer_start >= supervisor_start:
+        raise AssertionError("change work does not launch the implementer before the supervisor")
     if routed_context.count("USER_REQUEST=INHERITED_CURRENT_QUERY") != 1:
         raise AssertionError("only the classifier should inherit the current query")
     if routed_context.count("TASK_CONTEXT_BUNDLE=<STATE path>") != 3:
@@ -172,7 +180,6 @@ def main() -> int:
         "USER_REQUEST=<exact current request and attachment paths>",
         "USER_REQUEST=<exact request and attachment paths>",
         "The classifier always uses none",
-        "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
         "Root cause → Release candidate",
     ):
         if noisy in routed_context:

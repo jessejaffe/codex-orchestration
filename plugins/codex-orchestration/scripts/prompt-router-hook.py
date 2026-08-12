@@ -104,7 +104,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.12.1). Root coordinates fixed roles; it does not classify,
+DISPATCH_CONTEXT = """Orchestration ON (0.12.2). Root coordinates fixed roles; it does not classify,
 construct acceptance, implement, supervise, or judge change work.
 
 STATE
@@ -179,26 +179,30 @@ CURRENT_ROOT_ROUTE=<STATE value>
 __LAST_TASK_CONTEXT_PACKET_LINE__
 Wait and return its `## Completed` section unchanged.
 
-CHANGE WORK — Acceptance is the first checkpoint. Spawn the selected supervisor first:
+CHANGE WORK — Start implementation before acceptance construction. Post `This is a <friendly
+class> because <Why>. Starting <Implementation>; <Supervision> is defining acceptance.`
+Then spawn the selected implementer first:
+IMPLEMENTATION_START
+CLASSIFICATION=<exact Markdown>
+ACCEPTANCE=PENDING_SUPERVISOR_INIT
+TASK_CONTEXT_BUNDLE=<STATE path>
+TASK_CONTEXT_REVISION=<STATE revision>
+WORKSPACE_DEPENDENCIES=<exact result or NONE>
+CURRENT_ROOT_ROUTE=<STATE value>
+__LAST_TASK_CONTEXT_PACKET_LINE__
+
+Immediately spawn the selected supervisor second:
 SUPERVISOR_INIT
 CLASSIFICATION=<exact Markdown>
 TASK_CONTEXT_BUNDLE=<STATE path>
 TASK_CONTEXT_REVISION=<STATE revision>
 CURRENT_ROOT_ROUTE=<STATE value>
 __LAST_TASK_CONTEXT_PACKET_LINE__
-Wait for `## Ready` with Work class, Outcome, Must, Must not, Destinations, Open commitments, and
-Proof. Preserve it as ACCEPTANCE. On `## Scope mismatch` or `## Blocked`, relay one concise issue.
-
-Then post `This is a <friendly class> because <Why>. Acceptance is ready; implementation is starting
-with <Implementation>.` Spawn the selected implementer:
-IMPLEMENTATION_START
-CLASSIFICATION=<exact Markdown>
-ACCEPTANCE=<exact Ready section>
-TASK_CONTEXT_BUNDLE=<STATE path>
-TASK_CONTEXT_REVISION=<STATE revision>
-WORKSPACE_DEPENDENCIES=<exact result or NONE>
-CURRENT_ROOT_ROUTE=<STATE value>
-__LAST_TASK_CONTEXT_PACKET_LINE__
+Emit both `spawn_agent` calls back-to-back in that order; do not wait. Preserve the first result,
+including `## Awaiting acceptance`, `## Checkpoint`, or `## Implementation result`. Preserve a
+supervisor `## Ready` with all seven fields as ACCEPTANCE. Deliver it immediately with
+`send_message` if the implementer runs, or `followup_task` if idle. On `## Scope mismatch` or
+`## Blocked`, interrupt it, preserve local work, relay one issue, and stop.
 
 RELATIONSHIPS — After Amend, Replace, or Cancel, call `list_agents` once. Cancel interrupts unfinished
 owned roles and stops. Replace interrupts them and starts fresh. For Amend with unchanged lanes, send
@@ -207,8 +211,10 @@ implementer to pause. Reactivate the same supervisor with `AMENDMENT_REVIEW`, pr
 `## Acceptance updated`, then resume the same implementer with that acceptance. A lane change starts
 fresh. Never mutate under superseded acceptance.
 
-LOOP — Use `followup_task` for each idle-role handoff and wait for its result.
+LOOP — Use `send_message` only for acceptance/steering to a running implementer; use `followup_task`
+for each idle-role handoff and wait.
 
+- `## Awaiting acceptance` → same implementer with ACCEPTANCE after supervisor readiness.
 - `## Checkpoint` → supervisor: `CHECKPOINT_REVIEW` plus checkpoint and ACCEPTANCE.
 - `## Continue` → same implementer with decision and ACCEPTANCE.
 - `## Corrections required` → same implementer with decision and ACCEPTANCE.
@@ -216,8 +222,8 @@ LOOP — Use `followup_task` for each idle-role handoff and wait for its result.
 - `## Implementation result` → same supervisor: `FINAL_REVIEW` plus result, ACCEPTANCE, and route.
 - `## Blocked` → relay one concise blocker and stop.
 
-Small tweak has no implementer checkpoint: it proceeds from acceptance through requested release and
-returns `## Implementation result`. Big tweak has only `RELEASE_CANDIDATE`. Thus small tweak has two
+Small tweak starts immediately with no implementer checkpoint; after acceptance it may release.
+Big tweak has only `RELEASE_CANDIDATE`. Thus small tweak has two
 supervisory gates (acceptance and final review), while big tweak has three (acceptance, release
 candidate, final review).
 

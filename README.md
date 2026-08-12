@@ -1,16 +1,17 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review separate. Version `0.12.1` keeps explicit previous-task continuity while separating the
-classifier's short routing capsule from the fuller task-role context. Acceptance-first execution,
-reduced tweak checkpoints, and lean prompts remain unchanged. The Terra / Extra High orchestrator
-receives only classification-relevant context, returns the route, and stops.
+read-only review separate. Version `0.12.2` keeps explicit previous-task continuity and restores
+implementer-first startup: implementation begins before the supervisor finishes reading full context
+and constructing acceptance. The split routing capsule, reduced tweak checkpoints, and lean prompts
+remain unchanged. The Terra / Extra High orchestrator receives only classification-relevant context,
+returns the route, and stops.
 Terra / Max remains independently available as an implementer and as a supervisor.
 
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.12.1 works
+## How 0.12.2 works
 
 1. The chat-scoped hook writes a private exact bundle for the current objective and gives root only
    bounded routing continuity. Runtime wrappers are excluded.
@@ -23,14 +24,17 @@ The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, 
 3. Root answers a simple explanation or brief brainstorming request directly only when it needs no
    tools, mutation, fresh verification, audit, or substantial research. All other work is classified
    by Terra / Extra High, which calls no tools and returns only the relationship, route, and reason.
-4. For change work, the read-only supervisor constructs acceptance first. Background files, ZIPs,
-   screenshots, competitors, and sample inputs stay optional unless the current request or an
-   explicit prior instruction requires their use. Missing optional artifacts never block work.
-5. After acceptance, root starts the selected implementer from the exact current bundle, optional
-   previous-task context, and immutable acceptance. The implementer records one GitHub baseline
-   before the first edit, catches up with main if behind, and reuses that baseline for the objective.
-   It does not fetch at every checkpoint; a later push conflict is what triggers reconciliation.
-6. Small tweaks proceed directly from acceptance through requested release to final review. Big
+4. For change work, root starts the selected implementer first, then immediately starts the read-only
+   supervisor without waiting between the two launches. Both receive the exact bundle and optional
+   previous-task context. The implementer begins inspection, synchronization, reversible local edits,
+   and tests while the supervisor reads the full context and constructs acceptance.
+5. The supervisor's acceptance is delivered to the already-running implementer. Until it arrives,
+   the implementer may make reversible local progress but cannot commit, push, deploy, migrate
+   irreversibly, or finalize the result. Background files, ZIPs, screenshots, competitors, and sample
+   inputs stay optional unless explicitly required. Missing optional artifacts never block work.
+6. The implementer records one GitHub baseline before the first edit, catches up with main if behind,
+   and reuses that baseline for the objective. It does not fetch at every checkpoint; a later push
+   conflict is what triggers reconciliation. Small tweaks have no implementer checkpoint. Big
    tweaks have one release-candidate review between acceptance and release. Builds retain their
    architecture and vertical-slice checkpoints. Every release candidate includes the narrow commit,
    deployment, probe, and tunnel plan as an executable release plan.
@@ -39,8 +43,8 @@ The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, 
    the readable completion report, which root returns unchanged.
 
 For routed work, every child pill starts with the selected model lane rather than the work class.
-After supervisor readiness, root names the class, gives the classifier's concrete reason, and names
-the dynamic implementation and supervision models. It otherwise reports only meaningful
+At role startup, root names the class, gives the classifier's concrete reason, and names the dynamic
+implementation and supervision models. It otherwise reports only meaningful
 milestones: checkpoint decisions, release authorization, blockers, and completion.
 It waits until an agent update instead of polling and does not emit elapsed-time heartbeats.
 The gray desktop activity summary shows the latest safe milestone in a short phrase, such as
@@ -78,8 +82,9 @@ flowchart TD
     G -->|"Routed"| O["Terra / Extra High orchestrator classifies"]
     O -->|"Readable classification; stop"| R["Root coordinates selected roles"]
     R -->|"Read-only"| RI["Terra / Max implementer answers"]
-    R -->|"Artifact or code work"| S["Supervisor constructs acceptance"]
-    S --> I["Start selected implementer"]
+    R -->|"Artifact or code work"| I["Start selected implementer first"]
+    R -->|"Immediately second"| S["Supervisor constructs acceptance in parallel"]
+    S -.->|"Acceptance joins running work"| I
     I --> C["Optional implementer checkpoint"]
     C -->|"Continue or correct"| I
     C -->|"Ready"| X["Same implementer releases"]
@@ -117,9 +122,10 @@ that revision to the same running implementer and supervisor. The implementer pa
 the supervisor revises acceptance. Explicit replacement or cancellation interrupts the old roles.
 
 The supervisor—not the orchestrator—defines concrete outcomes, destinations, proof, and open
-commitments during its context-only initial turn. Implementation starts only after that acceptance
-checkpoint, eliminating the former race in which work could begin while acceptance was still being
-constructed. The accepted contract stays immutable through implementation and supervision.
+commitments during its initial turn. The implementer starts first and makes reversible local progress
+while that full-context acceptance is constructed. Acceptance becomes binding when delivered;
+commit, push, deployment, irreversible migration, and completion remain gated by it. The accepted
+contract then stays immutable through implementation and supervision.
 When work completes, the supervisor records a private readable continuity section containing the outcome,
 delivered capabilities, decisive proof, links, revision, open commitments, next work, and
 limitations. A follow-up asking what was just built can use that capsule without rereading the
@@ -140,8 +146,9 @@ separate branch. Read-only research and brainstorming never commit or deploy.
 
 ## Checkpoints and readable output
 
-Acceptance construction is the first supervisory gate for every change. Small tweaks then have no
-implementer checkpoint and go directly to final review, for two gates total. Big tweaks have one
+Acceptance construction remains the first supervisory judgment for every change, but it no longer
+blocks implementation startup. Small tweaks have no implementer checkpoint and go directly to final
+review after acceptance and release, for two gates total. Big tweaks have one
 release-candidate checkpoint before final review, for three gates total. An implementer checkpoint
 uses a `Checkpoint` heading plus state, changes, evidence, release plan, next work, and blockers.
 
@@ -176,7 +183,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.12.1, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.12.2, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -251,7 +258,9 @@ optional-artifact boundaries, one baseline GitHub sync per mutation objective, n
 checkpoint for small tweaks, and only a release-candidate checkpoint for big tweaks. It also adds
 hard prompt-size budgets after cutting the role prompts by about half. Version `0.12.1` splits that
 prior-task handoff so the classifier receives only a compact structured routing capsule and task
-roles retain the fuller continuity. The standard
+roles retain the fuller continuity. Version `0.12.2` restores implementer-first startup: root launches
+the implementer and then the supervisor back-to-back, so reversible local work overlaps full-context
+acceptance construction while release and irreversible actions remain gated. The standard
 checkout workflow is:
 
 ```sh
@@ -273,8 +282,8 @@ sh plugins/codex-orchestration/scripts/verify.sh
 ```
 
 The suite validates the manifest, syntax, exact model pins, chat controls, exact current-task
-bundles, bounded classifier continuity, explicit previous-task lookup, acceptance-before-
-implementation sequencing, optional-artifact boundaries, reduced tweak checkpoints, one-turn
+bundles, bounded classifier continuity, explicit previous-task lookup, acceptance-gated release
+safety, implementer-first launch ordering, optional-artifact boundaries, reduced tweak checkpoints, one-turn
 classifier inheritance, no-history task roles, amendment steering, root-only experience checks,
 readable Markdown, effectiveness tracking, and conflict-safe upgrades. Hard budgets keep the root
 dispatch prompt below 7,500 characters and all seven role prompts below 27,000 characters total.

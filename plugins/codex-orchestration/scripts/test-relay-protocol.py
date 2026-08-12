@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.12.1 split-context protocol."""
+"""Static contracts for the 0.12.2 implementer-first protocol."""
 
 from __future__ import annotations
 
@@ -97,8 +97,8 @@ def main() -> int:
         forbid(text, MACHINE_PREFIXES, filename)
 
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
-    if manifest.get("version") != "0.12.1":
-        raise AssertionError(f"manifest does not use 0.12.1: {manifest.get('version')!r}")
+    if manifest.get("version") != "0.12.2":
+        raise AssertionError(f"manifest does not use 0.12.2: {manifest.get('version')!r}")
 
     if sum(map(len, prompts.values())) > 27_000:
         raise AssertionError("agent prompts exceed the 27,000-character lean budget")
@@ -123,28 +123,31 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.12.1)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
+            "Orchestration ON (0.12.2)", "PREVIOUS TASK CONTEXT REQUIRED", "list_threads",
             "read_thread", "ROUTING_CONTEXT", "at most 1,200 characters",
             "only to the classifier", "LAST_TASK_CONTEXT", "at most 6,000 characters",
             "only to supervisors and implementers", "never to the classifier",
             "missing optional artifact never blocks work", "Starting Terra / Extra High classification now.",
             "fork_turns=1", "fork_turns=none", *HUMAN_ROUTES,
-            "CHANGE WORK — Acceptance is the first checkpoint. Spawn the selected supervisor first",
-            "Then post `This is a <friendly class>", "Small tweak has no implementer checkpoint",
+            "CHANGE WORK — Start implementation before acceptance construction",
+            "spawn the selected implementer first", "Immediately spawn the selected supervisor second",
+            "Emit both `spawn_agent` calls back-to-back", "ACCEPTANCE=PENDING_SUPERVISOR_INIT",
+            "Deliver it immediately", "`send_message` if the implementer runs",
+            "Small tweak starts immediately",
             "big tweak has three", "## Root verification needed", "## Continuity", "## Completed",
         ),
         "root coordinator",
     )
-    supervisor_start = router.index("Spawn the selected supervisor first")
-    implementer_start = router.index("Spawn the selected implementer")
-    if supervisor_start >= implementer_start:
-        raise AssertionError("acceptance is not constructed before implementation")
+    implementer_start = router.index("spawn the selected implementer first")
+    supervisor_start = router.index("Immediately spawn the selected supervisor second")
+    if implementer_start >= supervisor_start:
+        raise AssertionError("the implementer is not launched before the supervisor")
     forbid(
         router,
         (
             "Small tweak: Luna / Max; Terra / Max; Release candidate",
             "Big tweak: Terra / Max; Sol / High; Root cause → Release candidate",
-            "ACCEPTANCE=PENDING_SUPERVISOR_INIT", "Emit both `spawn_agent` tool calls",
+            "Spawn the selected supervisor first", "Acceptance is the first checkpoint",
         ),
         "root coordinator",
     )
@@ -159,6 +162,8 @@ def main() -> int:
             prompt,
             (
                 "TASK_CONTEXT_BUNDLE", "TASK_CONTEXT_REVISION", "LAST_TASK_CONTEXT",
+                "ACCEPTANCE=PENDING_SUPERVISOR_INIT", "not a blocker", "reversible local edits",
+                "## Awaiting acceptance",
                 "fetch GitHub once", "push reports",
                 "## Checkpoint", "**Release plan**", "## Implementation result",
                 "**Acceptance evidence**", "**Release**", "**Remaining**",
@@ -187,6 +192,7 @@ def main() -> int:
             prompt,
             (
                 "TASK_CONTEXT_BUNDLE", "LAST_TASK_CONTEXT", "## Ready",
+                "already working provisionally", "do not wait",
                 "- Work class:", "- Outcome:", "- Must:", "- Must not:", "- Destinations:",
                 "- Open commitments:", "- Proof:", "## Acceptance updated", "## Scope mismatch",
                 "## Corrections required", "## Ready to release", "## Blocked",
@@ -212,6 +218,8 @@ def main() -> int:
     require(
         installer,
         (
+            "Exact 0.12.1 profiles accepted for the 0.12.2 implementer-first migration",
+            "4b0f87ceca26a8525524a56e520a2595c5ee95fb8ee216d7f6bd6bba2192471a",
             "Exact 0.12.0 profiles accepted for the 0.12.1 split-context migration",
             "e2e6ff81543ba52fb032beab6c3169a2fea9cacc177cb29ef077a88576d41468",
             "ba553fd5ece225cc3d01c9d16065802bcad97d066f3931b9d2ae2f22eaa2344a",
@@ -241,7 +249,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.12.1 split previous-task routing and task-role context")
+    print("PASS: 0.12.2 implementer-first startup with parallel acceptance")
     return 0
 
 
