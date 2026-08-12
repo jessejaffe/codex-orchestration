@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.11.0 context dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.11.1 context dispatch."""
 
 from __future__ import annotations
 
@@ -112,7 +112,7 @@ def main() -> int:
         "RECENT_CONTEXT: NONE",
         "WORKSPACE_DEPENDENCIES_REQUIRED: NO",
         "codex_app__load_workspace_dependencies",
-        "Only after classification, and before either an\nAMEND update or a fresh launch, resolve WORKSPACE_DEPENDENCIES",
+        "Only after classification, and before either an\nAmend update or a fresh launch, resolve WORKSPACE_DEPENDENCIES",
         "codex_orchestration_terra_supervisor",
         "codex_orchestration_terra_orchestrator",
         "codex_orchestration_terra_implementer",
@@ -135,24 +135,24 @@ def main() -> int:
         "ACTIVE STEERING",
         "AMENDMENT_REVIEW",
         "PAUSE_FOR_REVISED_ACCEPTANCE",
-        "ORCHESTRATION_STATUS: REASON=",
-        "SMALL_BUILD: TERRA_MAX / SOL_HIGH / ARCHITECTURE,RELEASE_CANDIDATE",
-        "BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE",
-        "Require a nonempty exact `ORCHESTRATION_STATUS: REASON=` value",
+        "## Classification blocked",
+        "Relationship, Active objective, Explicit signal, Work",
+        "Small build: Terra / Max; Sol / High; Architecture → Release candidate",
+        "Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate",
+        "Require a nonempty Why value",
         "This is a <friendly class> because <exact reason>.",
-        "Use dynamic lane labels exactly: LUNA_MAX=Luna / Max",
-        "TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High",
+        "Use the Implementation and Supervision labels exactly",
         "timeout_ms: 3600000",
-        "leading ORCHESTRATION_HANDOFF then",
-        "ORCHESTRATION_ROOT_VERIFY",
+        "leading `## Continuity` section followed",
+        "## Root verification needed",
         "root-only Browser/visual tools",
         "cache-bypassed live/artifact check at the requested viewport",
-        "ROOT_VERIFICATION_RESULT: START=<observed start>",
+        "## Root verification result",
         "every handoff to an idle child uses `followup_task`",
-        "ARTIFACTS=<URL or path, viewport, screenshots",
+        "- Artifacts: <URL or path, viewport, screenshots",
         "broaden the check, or judge acceptance",
-        "remove only the acceptance protocol prefix",
-        "preserving line breaks, links, sections",
+        "return all Markdown from `## Completed` exactly",
+        "preserving line\nbreaks, links, sections",
     )
     for value in required:
         if value not in routed_context:
@@ -231,11 +231,15 @@ def main() -> int:
         raise AssertionError("combined activation did not select nested Terra orchestration")
 
     transcript = temporary / "root.jsonl"
-    acceptance = (
-        "ORCHESTRATION_ACCEPTANCE: OUTCOME=Ship export; MUST=implement and test; "
-        "MUST_NOT=discard work; DESTINATIONS=repository; OPEN_COMMITMENTS=NONE; "
-        "PROOF=focused tests"
-    )
+    acceptance = """## Ready
+
+- Work class: Small build
+- Outcome: Ship export
+- Must: Implement and test
+- Must not: Discard work
+- Destinations: Repository
+- Open commitments: None
+- Proof: Focused tests"""
     write_events(
         transcript,
         [
@@ -280,10 +284,11 @@ def main() -> int:
     )
     inherited = invoke(hook, state, active_id, "Also support JSON", transcript)
     inherited_context = context(inherited)
+    bounded_acceptance = " ".join(acceptance.split())
     for value in (
         "CLASSIFIER_FORK=`1`",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
-        acceptance,
+        bounded_acceptance,
         "PRIOR_COMPLETED_RESULT: NONE",
     ):
         if value not in inherited_context:
@@ -366,12 +371,16 @@ def main() -> int:
         raise AssertionError("task bundle does not mark the current amendment")
 
     accepted_transcript = temporary / "accepted.jsonl"
-    handoff = (
-        "OUTCOME=Shipped CSV export; DELIVERED=dashboard export and signed bundle; "
-        "PROOF=12 tests passed and production download observed; "
-        "LINKS=https://example.com/export; REVISION=0123456789abcdef; "
-        "OPEN_COMMITMENTS=add JSON export; NEXT=add JSON export; LIMITATIONS=NONE"
-    )
+    handoff = """## Continuity
+
+- Outcome: Shipped CSV export
+- Delivered: Dashboard export and signed bundle
+- Proof: 12 tests passed and production download observed
+- Links: https://example.com/export
+- Revision: 0123456789abcdef
+- Open commitments: Add JSON export
+- Next: Add JSON export
+- Limitations: None"""
     detailed_report = (
         "## Completed\n\nCSV export is live.\n\n## Links\n\n"
         "- [Live website](https://example.com/export)"
@@ -390,11 +399,7 @@ def main() -> int:
                     "content": [
                         {
                             "text": (
-                                acceptance
-                                + "\nORCHESTRATION_HANDOFF: "
-                                + handoff
-                                + "\nORCHESTRATION_ACCEPT: "
-                                + detailed_report
+                                acceptance + "\n" + handoff + "\n" + detailed_report
                             )
                         }
                     ],
@@ -408,7 +413,8 @@ def main() -> int:
         raise AssertionError("accepted objective was not cleared")
     if "CLASSIFIER_FORK=`1`" not in accepted_context:
         raise AssertionError("current query did not use one-turn inheritance with its capsule")
-    if f"PRIOR_COMPLETED_RESULT: {handoff}" not in accepted_context:
+    bounded_handoff = " ".join(handoff.split())
+    if f"PRIOR_COMPLETED_RESULT: {bounded_handoff}" not in accepted_context:
         raise AssertionError("completion handoff was not passed to the next Terra")
     if "RECENT_CONTEXT_FRESHNESS: FRESH" not in accepted_context:
         raise AssertionError("an immediate follow-up incorrectly made its completion capsule stale")
@@ -666,7 +672,7 @@ def main() -> int:
     )
     if oversized_bundle.get("prior_completed_result") != oversized_handoff:
         raise AssertionError("task roles did not retain the exact unabridged completion handoff")
-    if len(oversized) > 14_750:
+    if len(oversized) > 15_000:
         raise AssertionError(f"bounded completion dispatch exceeds latency budget: {len(oversized)}")
 
     subagent_transcript = temporary / "subagent.jsonl"

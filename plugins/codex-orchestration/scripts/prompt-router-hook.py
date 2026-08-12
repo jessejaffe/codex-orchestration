@@ -70,7 +70,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.11.0). Root applies the binary fast-path gate, then
+DISPATCH_CONTEXT = """Orchestration ON (0.11.1). Root applies the binary fast-path gate, then
 mechanically coordinates Terra-selected roles. Root never classifies taxonomy, constructs
 acceptance, implements, supervises, or judges change work.
 
@@ -126,24 +126,25 @@ the packet supplies only bounded prior continuity.
 Then call `wait_agent` with `timeout_ms: 3600000`; it returns immediately on activity. On expiry,
 repeat silently. Never short-poll, call `list_agents` because time passed, or emit a heartbeat.
 
-Require either one ORCHESTRATION_BLOCKED line or exactly ORCHESTRATION_RELATION,
-ORCHESTRATION_ROUTE, and ORCHESTRATION_STATUS; reject any other payload. Preserve the three lines
-verbatim as CLASSIFICATION. Require a nonempty exact `ORCHESTRATION_STATUS: REASON=` value and
-validate mechanically against only these lanes:
+Require either one `## Classification blocked` section or exactly one `## Classification` section
+with these labeled bullets in this order: Relationship, Active objective, Explicit signal, Work
+class, Complexity, Implementation, Supervision, Checkpoints, and Why. Reject any other payload.
+Preserve the Markdown verbatim as CLASSIFICATION. Require a nonempty Why value and validate the
+friendly labels mechanically against only these routes:
 
-- READ_ONLY: TERRA_MAX / NONE / NONE
-- STANDARD_ARTIFACT: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
-- DESIGN_ARTIFACT: TERRA_MAX / TERRA_MAX / RELEASE_CANDIDATE
-- SMALL_TWEAK: LUNA_MAX / TERRA_MAX / RELEASE_CANDIDATE
-- BIG_TWEAK: TERRA_MAX / SOL_HIGH / ROOT_CAUSE,RELEASE_CANDIDATE
-- SMALL_BUILD: TERRA_MAX / SOL_HIGH / ARCHITECTURE,RELEASE_CANDIDATE
-- BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
+- Read-only: Terra / Max; no supervisor; no checkpoints
+- Standard artifact: Luna / Max; Terra / Max; Release candidate
+- Design artifact: Terra / Max; Terra / Max; Release candidate
+- Small tweak: Luna / Max; Terra / Max; Release candidate
+- Big tweak: Terra / Max; Sol / High; Root cause → Release candidate
+- Small build: Terra / Max; Sol / High; Architecture → Release candidate
+- Big build: Sol / High; Sol / Extra High; Architecture → Vertical slice → Release candidate
 
-ACTIVE STEERING — For RELATION=AMEND, REPLACE, or CANCEL, call `list_agents` once immediately after
+ACTIVE STEERING — For Relationship Amend, Replace, or Cancel, call `list_agents` once immediately after
 classification to find root's unfinished model-named children. Never wait for a running child before
-steering it. CANCEL interrupts every unfinished owned child, returns a concise result, and stops.
-REPLACE interrupts every unfinished owned child, then follows the normal fresh-role launch below
-with the new bundle revision. For AMEND, compare the selected model lanes with the unfinished
+steering it. Cancel interrupts every unfinished owned child, returns a concise result, and stops.
+Replace interrupts every unfinished owned child, then follows the normal fresh-role launch below
+with the new bundle revision. For Amend, compare the selected model lanes with the unfinished
 model-named children. A lane change interrupts them and follows the normal fresh-role launch; an
 unchanged lane reuses the same children:
 
@@ -152,13 +153,13 @@ unchanged lane reuses the same children:
   implementer, and `PAUSE_FOR_REVISED_ACCEPTANCE` for the implementer.
 - Leave an idle implementer paused. If the supervisor is idle, reactivate it with
   `AMENDMENT_REVIEW` and those same exact fields; if it is running, the update is enough.
-- Require the supervisor's latest `SUPERVISOR_READY` or `SUPERVISOR_AMENDED` acceptance, then deliver
+- Require the supervisor's latest `## Ready` or `## Acceptance updated` acceptance, then deliver
   that exact revised acceptance to the same implementer and resume from its existing quiescent
   state. Never discard a completed checkpoint or allow mutation under superseded acceptance.
 
-If AMEND finds no compatible unfinished child, follow the normal launch below. For RELATION=CANCEL
+If Amend finds no compatible unfinished child, follow the normal launch below. For Relationship Cancel
 with no child, return a concise result and stop. Only after classification, and before either an
-AMEND update or a fresh launch, resolve WORKSPACE_DEPENDENCIES. If required, call root's
+Amend update or a fresh launch, resolve WORKSPACE_DEPENDENCIES. If required, call root's
 `codex_app__load_workspace_dependencies` once and
 preserve its complete result; never search paths or delegate loading. On failure, report the exact
 blocker. If not required, use NONE. Never send dependencies to the orchestrator.
@@ -187,20 +188,20 @@ for supervisor context-bundle loading; workspace inspection and checkpoints are 
 READ_ONLY — spawn only the Terra implementer with:
 READ_ONLY_WORK
 FORK=<ROLE_FORK>
-CLASSIFICATION=<exact three lines>
+CLASSIFICATION=<exact readable Markdown>
 PRIOR_COMPLETED_RESULT=<exact value>
 TASK_CONTEXT_BUNDLE=<exact value above>
 TASK_CONTEXT_REVISION=<exact value above>
 WORKSPACE_DEPENDENCIES=<exact value>
 CURRENT_ROOT_ROUTE=<exact value>
 USER_CONTEXT=EXACT_PRIVATE_BUNDLE
-Wait once. It may use task tools but not mutate. Accept an optional leading ORCHESTRATION_HANDOFF
-then ORCHESTRATION_ACCEPT; remove both protocol pieces and return the remaining payload exactly.
+Wait once. It may use task tools but not mutate. Accept a leading `## Continuity` section followed
+by `## Completed`; omit the continuity section and return from `## Completed` exactly.
 
 CHANGE WORK — first spawn the selected implementer with:
 IMPLEMENTATION_START
 FORK=<ROLE_FORK>
-CLASSIFICATION=<exact three lines>
+CLASSIFICATION=<exact readable Markdown>
 ACCEPTANCE=PENDING_SUPERVISOR_INIT
 TASK_CONTEXT_BUNDLE=<exact value above>
 TASK_CONTEXT_REVISION=<exact value above>
@@ -210,21 +211,21 @@ CURRENT_ROOT_ROUTE=<exact value>
 Immediately spawn the selected supervisor second with:
 SUPERVISOR_INIT
 FORK=<ROLE_FORK>
-CLASSIFICATION=<exact three lines>
+CLASSIFICATION=<exact readable Markdown>
 TASK_CONTEXT_BUNDLE=<exact value above>
 TASK_CONTEXT_REVISION=<exact value above>
 CURRENT_ROOT_ROUTE=<exact value>
 Emit both `spawn_agent` tool calls in one assistant response, implementer first and supervisor
 second. Do not wait for or process the implementer spawn output before emitting the supervisor
 call. Accept either result first and preserve an early implementer checkpoint. Never replace a
-child. A valid supervisor result starts SUPERVISOR_READY with one ORCHESTRATION_ACCEPTANCE line;
-preserve it verbatim as ACCEPTANCE. On SUPERVISOR_SCOPE_REJECT or SUPERVISOR_BLOCKED, interrupt the
+child. A valid supervisor result starts `## Ready` with all seven labeled acceptance bullets;
+preserve it verbatim as ACCEPTANCE. On `## Scope mismatch` or `## Blocked`, interrupt the
 implementer, relay one concise scope question/blocker, and stop.
 
-After readiness, lowercase CLASS, replace its underscore with a space, and post:
+After readiness, use the Work class and Why labels directly and post:
 `This is a <friendly class> because <exact reason>. Implementation started with <implementer model>.
-The <supervisor model> supervisor is ready.` Use dynamic lane labels exactly: LUNA_MAX=Luna / Max,
-TERRA_MAX=Terra / Max, SOL_HIGH=Sol / High, and SOL_XHIGH=Sol / Extra High. Never hard-code the
+The <supervisor model> supervisor is ready.` Use the Implementation and Supervision labels exactly
+as returned. Never hard-code the
 big-tweak sentence or its models. Wait if the implementer checkpoint has not arrived.
 
 COORDINATION LOOP — Root owns every child. Except for an ACTIVE STEERING update delivered to a
@@ -232,29 +233,35 @@ running child, every handoff to an idle child uses `followup_task`, never `send_
 its structured final. Never activate implementer and supervisor simultaneously after the first
 checkpoint, except for a context-only amendment review while the implementer is pausing.
 
-- On `IMPLEMENTATION_CHECKPOINT`, reactivate the supervisor with `CHECKPOINT_REVIEW` plus only the
+- On `## Checkpoint`, reactivate the supervisor with `CHECKPOINT_REVIEW` plus only the
   exact checkpoint and ACCEPTANCE; then wait.
-- On `SUPERVISOR_CONTINUE`, post `Supervisor approved <completed checkpoint>. Implementation
+- On `## Continue`, post `Supervisor approved <completed checkpoint>. Implementation
   continues to <next checkpoint>.`, reactivate the implementer with the exact decision and exact
   ACCEPTANCE, and wait.
-- On `SUPERVISOR_CORRECT`, post one concise update naming the finding, reactivate the same
+- On `## Corrections required`, post one concise update naming the finding, reactivate the same
   implementer with the exact decision and exact ACCEPTANCE, and wait.
-- On `SUPERVISOR_READY_TO_RELEASE`, post `Ready to release. The implementer is committing, pushing,
+- On `## Ready to release`, post `Ready to release. The implementer is committing, pushing,
   deploying, and verifying now.`, reactivate the implementer with the exact decision and exact
   ACCEPTANCE, and wait.
-- On `IMPLEMENTATION_RESULT`, reactivate the supervisor with `FINAL_REVIEW` plus only the exact
+- On `## Implementation result`, reactivate the supervisor with `FINAL_REVIEW` plus only the exact
   result, ACCEPTANCE, and CURRENT_ROOT_ROUTE; then wait.
-- On `SUPERVISOR_BLOCKED` or an implementer blocker, relay one concise blocker and stop.
+- On `## Blocked` or an implementer blocker, relay one concise blocker and stop.
 
-`ORCHESTRATION_ROOT_VERIFY` is the only root verification path. Use root-only Browser/visual tools
+`## Root verification needed` is the only root verification path. Use root-only Browser/visual tools
 for exactly the requested cache-bypassed live/artifact check at the requested viewport. Do not
 change state, broaden the check, or judge acceptance. Then reactivate the same supervisor with:
-ROOT_VERIFICATION_RESULT: START=<observed start>; ACTION=<actual action>; RESULT=<observed result>; ARTIFACTS=<URL or path, viewport, screenshots, and measurements or NONE>; BLOCKER=<NONE or exact access failure>
+## Root verification result
+
+- Start: <observed starting condition>
+- Action: <actual action>
+- Result: <observed result>
+- Artifacts: <URL or path, viewport, screenshots, and measurements or None>
+- Blocker: <None or exact access failure>
 Wait for its decision.
 
-A completed supervisor payload has one leading ORCHESTRATION_HANDOFF then `ORCHESTRATION_ACCEPT: `.
-Omit the handoff, remove only the acceptance protocol prefix, and return all remaining Markdown
-exactly, preserving line breaks, links, sections, and route metadata. Reject any other payload;
+A completed supervisor payload has one leading `## Continuity` section followed by `## Completed`.
+Omit the continuity section and return all Markdown from `## Completed` exactly, preserving line
+breaks, links, sections, and route metadata. Reject any other payload;
 never summarize or rewrite it.
 
 Never expose contracts, packets, waits, or relay mechanics. Outside the direct read-only fast path,
@@ -323,6 +330,34 @@ def strip_injected_user_prefix(message: str) -> str:
 def bounded_single_line(value: str, limit: int) -> str:
     """Collapse trusted continuity text to one bounded packet line."""
     return " ".join(value.split())[:limit]
+
+
+def markdown_section(message: str, heading: str) -> str | None:
+    """Return one exact level-two Markdown section from trusted child output."""
+    lines = message.splitlines()
+    marker = f"## {heading}"
+    try:
+        start = next(index for index, line in enumerate(lines) if line.strip() == marker)
+    except StopIteration:
+        return None
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        if lines[index].strip().startswith("## "):
+            end = index
+            break
+    return "\n".join(lines[start:end]).strip()
+
+
+def markdown_bullets(section: str | None) -> dict[str, str]:
+    """Parse single-line labeled bullets from one trusted Markdown section."""
+    if not section:
+        return {}
+    values: dict[str, str] = {}
+    for line in section.splitlines():
+        match = re.match(r"^- ([^:]+):\s*(.+)$", line.strip())
+        if match:
+            values[match.group(1).strip()] = match.group(2).strip()
+    return values
 
 
 def bounded_recent_context(messages: list[tuple[str, str]]) -> str:
@@ -412,6 +447,48 @@ def transcript_context(
                 turn_id = metadata.get("turn_id")
                 completion_scope = turn_id if isinstance(turn_id, str) else "unscoped"
                 cancelled = False
+                classification = markdown_bullets(
+                    markdown_section(message, "Classification")
+                )
+                if classification.get("Relationship") == "Cancel":
+                    cancelled = True
+
+                readable_acceptance = markdown_section(message, "Acceptance updated")
+                if readable_acceptance is None:
+                    readable_acceptance = markdown_section(message, "Ready")
+                acceptance_fields = markdown_bullets(readable_acceptance)
+                required_acceptance_fields = {
+                    "Work class",
+                    "Outcome",
+                    "Must",
+                    "Must not",
+                    "Destinations",
+                    "Open commitments",
+                    "Proof",
+                }
+                if required_acceptance_fields.issubset(acceptance_fields):
+                    exact_prior_acceptance = readable_acceptance
+                    prior_acceptance = bounded_single_line(
+                        readable_acceptance, MAX_PRIOR_ACCEPTANCE_CHARS
+                    )
+                    prior_completed = None
+                    exact_prior_completed = None
+                    completion_handoffs.pop(completion_scope, None)
+                    exact_completion_handoffs.pop(completion_scope, None)
+
+                readable_completion = markdown_section(message, "Completed")
+                if readable_completion is not None:
+                    continuity = markdown_section(message, "Continuity")
+                    exact_prior_completed = continuity or readable_completion
+                    prior_completed = bounded_single_line(
+                        exact_prior_completed, MAX_PRIOR_COMPLETED_CHARS
+                    )
+                    prior_acceptance = None
+                    exact_prior_acceptance = None
+                    has_completion = True
+                    post_completion_tail = []
+                    task_messages = []
+
                 message_lines = message.splitlines()
                 for index, message_line in enumerate(message_lines):
                     if message_line.startswith(

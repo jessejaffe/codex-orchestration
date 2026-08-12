@@ -33,8 +33,11 @@ fields.
 Treat `continue`, `do that`, `do it`, `do the next step`, `pick up where we left off`, and similar
 phrases as unresolved until the exact agreed action is present in RECENT_CONTEXT or
 PRIOR_ACTIVE_ACCEPTANCE. Never infer the referent from repositories, plans, architecture documents,
-issue lists, or a generic NEXT field. If it is absent or ambiguous, return exactly one
-`ORCHESTRATION_BLOCKED: <one concise scope question>` line and stop.
+issue lists, or a generic NEXT field. If it is absent or ambiguous, return exactly:
+
+## Classification blocked
+
+<One concise scope question in ordinary language.>
 
 Use the existing taxonomy exactly:
 
@@ -72,18 +75,29 @@ build is ambiguous, choose BIG_BUILD. Use only these fixed lanes:
 - SMALL_BUILD: TERRA_MAX / SOL_HIGH / ARCHITECTURE,RELEASE_CANDIDATE
 - BIG_BUILD: SOL_HIGH / SOL_XHIGH / ARCHITECTURE,VERTICAL_SLICE,RELEASE_CANDIDATE
 
-For CANCEL use READ_ONLY/1.0/NONE/NONE/NONE. Otherwise return exactly these three single lines and
-nothing else:
+For CANCEL use Read-only, 1.0 / 10, None, None, and None. Otherwise return exactly this compact,
+human-readable Markdown and nothing else:
 
-ORCHESTRATION_RELATION: RELATION=<NEW|AMEND|REPLACE|CANCEL>; ACTIVE_OBJECTIVE=<resolved active outcome>; EXPLICIT_SIGNAL=<current-query signal or NONE>
-ORCHESTRATION_ROUTE: CLASS=<class>; COMPLEXITY=<1.0-10.0>; IMPLEMENTER=<lane>; SUPERVISOR=<lane>; CHECKPOINTS=<lane>
-ORCHESTRATION_STATUS: REASON=<one concise concrete clause tied to the selected class definition and current request>
+## Classification
 
-Write REASON as a lower-case clause that completes `This is a <friendly class> because <reason>.`
+- Relationship: <New|Amend|Replace|Cancel>
+- Active objective: <resolved active outcome>
+- Explicit signal: <current-query signal or None>
+- Work class: <Read-only|Standard artifact|Design artifact|Small tweak|Big tweak|Small build|Big build>
+- Complexity: <1.0-10.0> / 10
+- Implementation: <Terra / Max|Luna / Max|Sol / High|None>
+- Supervision: <Terra / Max|Sol / High|Sol / Extra High|None>
+- Checkpoints: <None|Release candidate|Root cause → Release candidate|Architecture → Release candidate|Architecture → Vertical slice → Release candidate>
+- Why: <one concise concrete clause tied to the selected class definition and current request>
+
+The friendly labels map to the fixed lanes above; do not expose the uppercase lane identifiers in
+the response. Write Why as a lower-case clause that completes `This is a <work class> because
+<reason>.`
 Name the concrete boundary in the current request: for example, multiple behavior changes, a
 cross-component boundary, one bounded existing behavior, one component-local new capability,
 defining visual treatment, a non-code deliverable, or a boundary-crossing new capability. Do not use a generic phrase such as `substantial behavior
-change`, repeat the class label, name model lanes, or end REASON with punctuation. The
-ACTIVE_OBJECTIVE identifies scope only; it is not an implementation specification. After the three lines, stop.
+change`, repeat the class label, name model lanes, or end Why with punctuation. The active
+objective identifies scope only; it is not an implementation specification. After the Markdown,
+stop.
 Root owns every subsequent spawn, handoff, wait, checkpoint, and relay.
 """

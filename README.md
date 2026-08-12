@@ -1,7 +1,7 @@
 # Codex Orchestration
 
 Codex Orchestration routes Codex work by job type and keeps classification, implementation, and
-read-only review as separate roles. Version `0.11.0` uses an outcome-based taxonomy that separates
+read-only review as separate roles. Version `0.11.1` uses an outcome-based taxonomy that separates
 non-code artifacts from code changes and makes the selected models visible throughout startup. The
 Terra / Extra High orchestrator remains taxonomy-only: it reads the current query plus bounded
 conversational continuity, returns the route to root, and stops.
@@ -10,7 +10,7 @@ Terra / Max remains independently available as an implementer and as a superviso
 The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, `SMALL_TWEAK`,
 `BIG_TWEAK`, `SMALL_BUILD`, and `BIG_BUILD`. Complexity is diagnostic telemetry; it never selects a model.
 
-## How 0.11.0 works
+## How 0.11.1 works
 
 1. The stable chat-scoped hook gives root a binary gate, the current query, the latest bounded
    acceptance or completion capsule, and a short routing window. It also atomically writes a private,
@@ -46,7 +46,7 @@ The seven work classes are `READ_ONLY`, `STANDARD_ARTIFACT`, `DESIGN_ARTIFACT`, 
    replacement or cancellation interrupts them. The implementer pauses mutation until the same
    supervisor has revised acceptance, so an add-on cannot silently lose the original request.
 8. The same supervisor performs final review and writes the readable completion report. Root omits
-   the private continuity capsule and returns the report unchanged. Root never classifies,
+   the private continuity section and returns the report unchanged. Root never classifies,
    implements, supervises, or judges acceptance.
 
 For routed work, every child pill starts with the selected model lane rather than the work class.
@@ -58,9 +58,9 @@ The gray desktop activity summary shows the latest safe milestone in a short phr
 `Waiting for Terra / Extra High classification`, `Starting Luna / Max implementation`, or `Reviewing the
 release candidate`. Its fallback is `Thinking`. Internal planning, taxonomy, request, relay,
 checkpoint, and acceptance details are never used as that label.
-Detailed implementer checkpoints and release results, supervisor decisions, and final reports all
-use readable Markdown headings and bullets. Only the short routing prefix and private continuity
-capsule remain machine-readable. After approval, the release turn executes the prepared plan
+Classifications, implementer checkpoints and release results, supervisor decisions, continuity
+summaries, and final reports all use readable Markdown headings and labeled bullets. Raw field
+dumps are never shown in a child response. After approval, the release turn executes the prepared plan
 directly instead of researching deployment topology or repeating already-passing checks.
 
 ## Work classes and routes
@@ -87,7 +87,7 @@ flowchart TD
     U["Current query"] --> G["Root binary gate"]
     G -->|"Simple read-only"| A["Root answers directly"]
     G -->|"Routed"| O["Terra / Extra High orchestrator classifies"]
-    O -->|"Three taxonomy lines; stop"| R["Root coordinates selected roles"]
+    O -->|"Readable classification; stop"| R["Root coordinates selected roles"]
     R -->|"Read-only"| RI["Terra / Max implementer answers"]
     R -->|"Artifact or code work"| I["Start selected implementer first"]
     I --> S["Immediately load supervisor context"]
@@ -128,16 +128,16 @@ The supervisor—not the orchestrator—defines concrete outcomes, destinations,
 commitments during its context-only initial turn. The implementer may start the first checkpoint
 from the exact request and fixed route, but cannot release before the supervisor is ready. The
 accepted contract then stays immutable through implementation and supervision.
-When work completes, the supervisor records a private one-line capsule containing the outcome,
+When work completes, the supervisor records a private readable continuity section containing the outcome,
 delivered capabilities, decisive proof, links, revision, open commitments, next work, and
 limitations. A follow-up asking what was just built can use that capsule without rereading the
 completed rollout.
 
 ## Checkpoints and readable output
 
-An implementer checkpoint has a compact machine-readable first line followed by Markdown sections
-for state, changes, evidence, next work, and blockers. Supervisor readiness and decisions similarly
-use readable acceptance, findings, required corrections, and evidence sections.
+An implementer checkpoint uses a `Checkpoint` heading, a plain-language phase label, and Markdown
+sections for state, changes, evidence, next work, and blockers. Supervisor readiness and decisions
+similarly use readable acceptance, findings, required corrections, and evidence sections.
 
 The supervisor is strictly read-only. A correction must identify an observed mismatch and give a
 bounded, outcome-focused instruction. Root relays the exact decision to the same implementer. Only
@@ -149,11 +149,11 @@ final probe.
 Frontend files do not automatically require visual review. Ordinary UI work uses the narrowest
 decisive code, test, artifact, runtime, and deployed-revision evidence.
 
-The supervisor prefixes proof with `ROOT_EXPERIENCE:` only when acceptance depends on a user-facing
+The supervisor starts proof with `Root experience check required` only when acceptance depends on a user-facing
 interaction, rendered appearance, explicit visual review, or recovery input/output. Root then
 performs one bounded root-only Browser/visual check against the live URL or rendered artifact,
-cache-bypassed and at the requested viewport. It records the defining `START`, `ACTION`, `RESULT`,
-and artifacts and gives those raw observations back to the supervisor. Root observes but never
+cache-bypassed and at the requested viewport. It records the defining start, action, result, and
+artifacts in labeled bullets and gives those observations back to the supervisor. Root observes but never
 judges acceptance.
 
 ## Controls
@@ -168,7 +168,7 @@ Use `Turn Orchestration off` or `Orchestration off` to disable it. A combined co
 `Turn Orchestration on and add CSV export` activates and routes that prompt. Each new task starts
 with Orchestration off.
 
-After installing 0.11.0, Orchestration can be activated on the next prompt inside an ongoing task.
+After installing 0.11.1, Orchestration can be activated on the next prompt inside an ongoing task.
 Root uses each custom role when available and otherwise a model-pinned built-in `default` or
 `worker` loaded with the corresponding installed profile. Subagents share a parent session ID, so
 the hook checks role metadata and does not recursively orchestrate a child.
@@ -234,7 +234,11 @@ private, versioned, exact context bundle. Initial role launches use small refere
 interruption updates the same roles and acceptance rather than clipping or recopying the original
 request. Version `0.11.0` splits new capabilities into `SMALL_BUILD` and `BIG_BUILD`: contained
 single-capability work uses Terra / Max with Sol / High supervision, while boundary-crossing or
-multi-capability work retains Sol / High with Sol / Extra High supervision. The standard checkout workflow is:
+multi-capability work retains Sol / High with Sol / Extra High supervision. Version `0.11.1`
+removes the remaining raw routing and continuity field dumps from every child response. The
+classifier, implementers, and supervisors now communicate through compact human-readable Markdown,
+while the continuity reader remains backward-compatible with earlier task transcripts. The standard
+checkout workflow is:
 
 ```sh
 sh plugins/codex-orchestration/scripts/verify.sh

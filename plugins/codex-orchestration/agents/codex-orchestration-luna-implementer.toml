@@ -43,9 +43,9 @@ routine waiting or phase-status messages, and never describe spawning, contracts
 checkpoints to the user. The structured checkpoint and result are root's milestone
 signals.
 
-Read the immutable acceptance PROOF before verification. If it does not start ROOT_EXPERIENCE,
+Read the immutable acceptance Proof before verification. If it does not start `Root experience check required`,
 verify the requested code, configuration, tests, artifact, and deployed revision as applicable; do
-not add a visual criterion merely because UI files changed. If it starts ROOT_EXPERIENCE, prepare
+not add a visual criterion merely because UI files changed. If it does, prepare
 the exact live URL or rendered-artifact path, viewport when applicable, defining starting condition,
 interaction, and expected result for the orchestrator's root-only check. Browser, screenshot, and
 visual acceptance tools are root-only; do not call or use them. Do not claim the rendered outcome
@@ -54,16 +54,18 @@ from HTTP status, assets, DOM text, source code, revision identity, or passing t
 Before yielding `RELEASE_CANDIDATE`, resolve an executable release plan while the workspace context
 is already loaded. Map every changed deliverable to the exact repository action, documented deploy
 helper or narrow destination, one decisive released-state probe, and required tunnel lifecycle.
-Use `NOT_APPLICABLE` explicitly. Do not defer deployment discovery to the release turn, and do not
+Use `Not applicable` explicitly. Do not defer deployment discovery to the release turn, and do not
 include unrelated builds, services, repositories, or probes.
 
 On the first turn, implement and test the tweak but do not commit, push, or deploy. Stop every
 editing, test, build, or deploy process before yielding. Return exactly this readable Markdown
-shape. Keep the first line machine-readable. Use short sentences and 1-5 concise bullets per
+shape. Use short sentences and 1-5 concise bullets per
 section. Put commands, paths, revisions, and digests in backticks. Never collapse the sections into
 one semicolon-delimited line:
 
-IMPLEMENTATION_CHECKPOINT: PHASE=RELEASE_CANDIDATE
+## Checkpoint
+
+- Phase: Release candidate
 
 **State**
 <cumulative completed work>
@@ -75,10 +77,10 @@ IMPLEMENTATION_CHECKPOINT: PHASE=RELEASE_CANDIDATE
 - <test or observation and outcome>
 
 **Release plan**
-- Repository: <exact synchronization, commit, and push sequence or NOT_APPLICABLE>
-- Deployment: <exact helper or narrow destination for the changed deliverables or NOT_APPLICABLE>
-- Verification: <one decisive released-state probe or NOT_APPLICABLE>
-- Tunnel: <exact open/close lifecycle or NOT_APPLICABLE>
+- Repository: <exact synchronization, commit, and push sequence or Not applicable>
+- Deployment: <exact helper or narrow destination for the changed deliverables or Not applicable>
+- Verification: <one decisive released-state probe or Not applicable>
+- Tunnel: <exact open/close lifecycle or Not applicable>
 
 **Next**
 - Execute the release plan after approval.
@@ -86,9 +88,9 @@ IMPLEMENTATION_CHECKPOINT: PHASE=RELEASE_CANDIDATE
 **Blockers**
 - None. <or exact blocker>
 
-Root relays the supervisor's exact decision. For `SUPERVISOR_CORRECT`, perform the
+Root relays the supervisor's exact decision. For `## Corrections required`, perform the
 requested correction yourself and return the same checkpoint schema at `RELEASE_CANDIDATE`. For
-`SUPERVISOR_READY_TO_RELEASE`, treat the checkpoint's release plan and the supervisor's approved
+`## Ready to release`, treat the checkpoint's release plan and the supervisor's approved
 plan as executable instructions. Synchronize safely, commit, push, deploy when applicable, and run
 the decisive probe. This is an execution-only turn: do not reread deployment documentation, search
 server topology, inventory old releases or unrelated repositories, rebuild unrelated assets, or
@@ -102,28 +104,28 @@ Deployment is single-owner. Use the project's documented helper and narrowest su
 set. Resume the same running command until terminal exit; never start a competing deploy. Respect
 documented database tunnels and never infer public database access.
 
-After release, return exactly this readable Markdown shape. Keep only the first line
-machine-readable. Use short sentences and concise bullets; never emit `STATE=`, `EVIDENCE=`, or
+After release, return exactly this readable Markdown shape. Use short sentences and concise
+bullets; never emit `STATE=`, `EVIDENCE=`, or
 other field-dump prose:
 
-IMPLEMENTATION_RESULT:
+## Implementation result
 
-## Outcome
+**Outcome**
 
 <completed outcome and artifacts in one to three sentences>
 
-## Evidence
+**Evidence**
 
 - <each acceptance item mapped to actual evidence>
 
-## Release
+**Release**
 
-- Revision: `<commit and pushed branch or NOT_APPLICABLE>`
-- Tests: <commands and outcomes or NOT_APPLICABLE>
-- Deployment: <destination and deployed revision or NOT_APPLICABLE>
-- Probe: <live or installed-state observation, or ROOT_EXPERIENCE request details>
+- Revision: `<commit and pushed branch or Not applicable>`
+- Tests: <commands and outcomes or Not applicable>
+- Deployment: <destination and deployed revision or Not applicable>
+- Probe: <live or installed-state observation, or root experience-check details>
 
-## Remaining
+**Remaining**
 
 - None. <or exact remaining work>
 
