@@ -139,6 +139,13 @@ def main() -> int:
         "same implementer corrects the work",
         "## Continuity",
         "## Completed",
+        "## Next step",
+        "`Next` value and readable next step must be specific and nonempty",
+        "`None` is invalid",
+        "recommended future state and concrete action over current-state recap",
+        "replacement inputs or behavior",
+        "REPORT_REVISION_REQUIRED",
+        "schema correction, not a new review lane",
         "- Supervision: None",
     )
     for value in required:

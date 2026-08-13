@@ -58,7 +58,7 @@ The selected agent receives the exact private task-context bundle and then:
 - runs proportionate verification;
 - commits, pushes, or deploys only when the user request, project instructions, or active
   continuity clearly authorizes that exact destination;
-- writes the continuity capsule and final user-facing result.
+- writes the continuity capsule and a recommendation-led final result with a concrete next step.
 
 A request to implement locally does not itself authorize deployment.
 
@@ -116,6 +116,17 @@ block. Missing optional artifacts never block work.
 
 Completed agents return a compact continuity section before the user-facing answer, so a follow-up
 can recover the prior outcome without flooding the main context.
+
+## Recommendation-led reports
+
+The final report keeps current-state recap short and uses findings to support what should happen.
+For each material weakness, it specifies the target behavior, input, or configuration precisely
+enough to implement. A data or model handoff should identify the exact signals or fields, supported
+values or thresholds, confidence or provenance, and how the receiving system should use them—not
+merely say that it needs “better evidence.”
+
+Every completed report includes a nonempty `## Next step` with one highest-leverage action, why it
+comes next, and the observable success condition. `Next: None` is not a valid completion.
 
 ## Premise mismatches
 

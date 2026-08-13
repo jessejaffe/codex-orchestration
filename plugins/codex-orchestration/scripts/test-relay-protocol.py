@@ -90,8 +90,8 @@ def main() -> int:
     ):
         raise AssertionError(f"manifest does not use the 0.13.0 line: {version!r}")
 
-    if sum(map(len, prompts.values())) > 11_000:
-        raise AssertionError("agent prompts exceed the 11,000-character single-agent budget")
+    if sum(map(len, prompts.values())) > 11_600:
+        raise AssertionError("agent prompts exceed the 11,600-character single-agent budget")
 
     orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -130,6 +130,8 @@ def main() -> int:
             "hand the evidence back to the same implementer with `followup_task`",
             "## Root verification result", "- Start:", "- Action:", "- Result:",
             "same implementer corrects the work", "## Continuity", "## Completed",
+            "## Next step", "`None` is invalid", "recommended future state and concrete action",
+            "replacement inputs or behavior", "REPORT_REVISION_REQUIRED",
             "## Route", "- Supervision: None", "- Root: <CURRENT_ROOT_ROUTE>",
         ),
         "root coordinator",
@@ -169,7 +171,13 @@ def main() -> int:
                 "## Root verification needed", "- Requirement:", "- Check:", "- Targets:",
                 "Stop until root returns `## Root verification result`",
                 "correct the work and request another root check", "## Blocked",
-                "## Continuity", "## Completed", "## Route",
+                "recommendation-led", "keep the current-state recap brief",
+                "target behavior, input, or configuration", "never stop at abstractions",
+                "exact signals or fields", "values or thresholds", "confidence/provenance",
+                "Spend more space on the future state", "action than on status",
+                "- Next: <one concrete highest-leverage action; never None>",
+                "## Continuity", "## Completed", "## Next step", "- Action:", "- Why:",
+                "- Success:", "## Route",
                 "- Implementation: <IMPLEMENTATION_ROUTE>", "- Supervision: None",
                 "- Root: <CURRENT_ROOT_ROUTE>",
             ),
@@ -196,10 +204,13 @@ def main() -> int:
         installer,
         (
             "four Codex Orchestration 0.13.0 profiles",
-            "Exact 0.12.10 profiles accepted for the single-agent migration",
+            "Exact 0.12.10 and initial 0.13.0 profiles accepted for safe in-place migration",
             "f8c6190b3e4375ece24eb02ab9db0983a5f8c4cad47a126059cbc2c62f344194",
             "68179487b09d11667c6a0e69e48cec65348847df7ebb0e501e67ed47de0114a6",
             "86ad93904293ac3bc1613cdb1512274c4524ca19fd9ce1841e5744355207a6f6",
+            "662c7b7010cc87e902f1f2608f74a8bce7bd06df659e3de778fc761d3667fbbe",
+            "930bd325d9d19c93ffbb70497410ff9f0a03c657fde81e04a8ccd3272f206424",
+            "2a8be332df4cd578f599c3f5dac89930f7cd13503393a0f380ee3a4a128492f7",
             "e4ab97f67fed62023c204dd8f3688b144c07f62ec0ee1ba169c5c791232a2d1b",
             "6181d4b59b74c3688c6c5e3c94482c152b52861cd1fbb68c0e003d60fa73f8f5",
             "4a9a6947e04ae14df2855b3c495bf03311571d20f5125ed50a62fd113c28401d",

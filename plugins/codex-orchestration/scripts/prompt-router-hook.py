@@ -186,9 +186,14 @@ and hand the evidence back to the same implementer with `followup_task`:
 - Blocker: <None or exact access failure>
 
 A failed visual check is evidence, not a new review lane: the same implementer corrects the work and
-may request another root check. On `## Blocked`, relay one concise blocker and stop. A completed
-implementer response contains `## Continuity` then `## Completed`. Fast-relay valid child results
-without extra reasoning. Every completed user-facing task must end with this compact
+may request another root check. On `## Blocked`, relay one concise blocker and stop. A valid completed
+implementer response contains `## Continuity`, `## Completed`, and `## Next step`. The continuity
+`Next` value and readable next step must be specific and nonempty; `None` is invalid. The report must
+emphasize the recommended future state and concrete action over current-state recap, and spell out
+the replacement inputs or behavior behind vague findings such as “better evidence.” If this contract
+is missing, use `followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact
+omissions, then relay only the corrected report. This is schema correction, not a new review lane.
+Fast-relay valid child results without extra reasoning. Every completed user-facing task must end with this compact
 footer:
 ## Route
 - Class: <friendly class>

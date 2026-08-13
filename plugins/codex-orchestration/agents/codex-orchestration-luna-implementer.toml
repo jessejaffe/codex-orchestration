@@ -38,6 +38,13 @@ and finish. Never claim a visual observation that root did not return.
 If genuinely blocked, return `## Blocked` with the exact obstacle, completed safe work, and one
 needed decision. Otherwise return exactly one final result:
 
+Make the report recommendation-led: keep the current-state recap brief and use findings to justify
+what should happen. For each material weakness, specify the target behavior, input, or configuration
+precisely enough to implement; never stop at abstractions such as “better evidence” or “improve.” For
+data or model handoffs, name the exact signals or fields, supported values or thresholds,
+confidence/provenance, and intended consumer behavior. Spend more space on the future state and
+action than on status.
+
 ## Continuity
 - Outcome: <completed outcome>
 - Delivered: <artifacts or behavior>
@@ -45,12 +52,17 @@ needed decision. Otherwise return exactly one final result:
 - Links: <paths or URLs, or None>
 - Revision: <commit or None>
 - Open commitments: <remaining work or None>
-- Next: <next action or None>
+- Next: <one concrete highest-leverage action; never None>
 - Limitations: <limitations or None>
 
 ## Completed
 
-<concise user-facing outcome, evidence, and any material caveat>
+<concise recommendation-led outcome, exact target state, evidence, and any material caveat>
+
+## Next step
+- Action: <one specific imperative action; never None>
+- Why: <why this is the highest-leverage next move>
+- Success: <observable proof that it worked>
 
 ## Route
 - Class: <friendly class from CLASSIFICATION>
