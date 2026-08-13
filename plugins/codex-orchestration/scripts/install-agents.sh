@@ -46,13 +46,13 @@ sol-xhigh-supervisor'
 path_exists() { [ -e "$1" ] || [ -L "$1" ]; }
 sha256_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 
-# Exact 0.12.10 and initial 0.13.0 profiles accepted for safe in-place migration.
+# Exact previously shipped profiles accepted for safe in-place migration.
 previous_digest() {
   case "$1" in
     terra-orchestrator) printf '%s\n' aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d ;;
-    luna-implementer) printf '%s\n' f8c6190b3e4375ece24eb02ab9db0983a5f8c4cad47a126059cbc2c62f344194 662c7b7010cc87e902f1f2608f74a8bce7bd06df659e3de778fc761d3667fbbe ;;
-    terra-implementer) printf '%s\n' 68179487b09d11667c6a0e69e48cec65348847df7ebb0e501e67ed47de0114a6 930bd325d9d19c93ffbb70497410ff9f0a03c657fde81e04a8ccd3272f206424 ;;
-    sol-high-implementer) printf '%s\n' 86ad93904293ac3bc1613cdb1512274c4524ca19fd9ce1841e5744355207a6f6 2a8be332df4cd578f599c3f5dac89930f7cd13503393a0f380ee3a4a128492f7 ;;
+    luna-implementer) printf '%s\n' f8c6190b3e4375ece24eb02ab9db0983a5f8c4cad47a126059cbc2c62f344194 662c7b7010cc87e902f1f2608f74a8bce7bd06df659e3de778fc761d3667fbbe 2716b3635a68f8fed0961e69be92c1b18338c6a1897876592fd58a061932e082 ;;
+    terra-implementer) printf '%s\n' 68179487b09d11667c6a0e69e48cec65348847df7ebb0e501e67ed47de0114a6 930bd325d9d19c93ffbb70497410ff9f0a03c657fde81e04a8ccd3272f206424 dbcaf41ebdb469251ca316154d10ae6a8717ea0228c3e580c1e411851ceee8fb ;;
+    sol-high-implementer) printf '%s\n' 86ad93904293ac3bc1613cdb1512274c4524ca19fd9ce1841e5744355207a6f6 2a8be332df4cd578f599c3f5dac89930f7cd13503393a0f380ee3a4a128492f7 171fa0d31db51f032d323b417a063e8ff374709013c9f7751e8cf44f53f77cbc ;;
     *) fail "unknown current role: $1" ;;
   esac
 }

@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.13.0+codex.20260813235138",
+  "version": "0.13.0+codex.20260813235812",
   "description": "Two-stage classification and single-agent execution with previous-task continuity.",
   "author": {
     "name": "Daniel McAteer",
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Classifier-routed single-agent execution",
-    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.13.0 uses two stages only: GPT-5.6 Terra / Extra High classifies the request, then one Luna / High, Terra / Max, or Sol / High agent owns the entire task. There are no supervisors, acceptance gates, implementation checkpoints, or final-review lanes. The selected agent interprets scope, performs the work, verifies it, completes any explicitly authorized release, and writes a recommendation-led final response with an exact target state and concrete next step. When appearance materially matters, root performs the root-only visual observation and hands the evidence back to that same agent, which either corrects the work or finishes. Previous-task continuity, quiet startup, premise-mismatch checks, exact task bundles, and the compact route footer remain.",
+    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.13.0 uses two stages only: GPT-5.6 Terra / Extra High classifies the request, then one Luna / High, Terra / Max, or Sol / High agent owns the entire task. There are no supervisors, acceptance gates, implementation checkpoints, or final-review lanes. The selected agent interprets scope, performs the work, verifies it, completes any explicitly authorized release, and writes a balanced final response with substantive current-state and recommendation sections plus a next step only when one is legitimately warranted. When appearance materially matters, root performs the root-only visual observation and hands the evidence back to that same agent, which either corrects the work or finishes. Previous-task continuity, quiet startup, premise-mismatch checks, exact task bundles, and the compact route footer remain.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

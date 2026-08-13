@@ -58,7 +58,8 @@ The selected agent receives the exact private task-context bundle and then:
 - runs proportionate verification;
 - commits, pushes, or deploys only when the user request, project instructions, or active
   continuity clearly authorizes that exact destination;
-- writes the continuity capsule and a recommendation-led final result with a concrete next step.
+- writes the continuity capsule and a balanced final result covering both current state and
+  recommendations, with a next step only when one is legitimately warranted.
 
 A request to implement locally does not itself authorize deployment.
 
@@ -117,16 +118,19 @@ block. Missing optional artifacts never block work.
 Completed agents return a compact continuity section before the user-facing answer, so a follow-up
 can recover the prior outcome without flooding the main context.
 
-## Recommendation-led reports
+## Balanced reports
 
-The final report keeps current-state recap short and uses findings to support what should happen.
-For each material weakness, it specifies the target behavior, input, or configuration precisely
-enough to implement. A data or model handoff should identify the exact signals or fields, supported
-values or thresholds, confidence or provenance, and how the receiving system should use them—not
-merely say that it needs “better evidence.”
+The final report always gives the current state and recommendations separate, substantive treatment.
+The current-state section explains what exists, what was found, why it matters, and the evidence.
+The recommendations section explains what should happen and why. Neither section is omitted or
+artificially minimized. For each material weakness, the recommendation specifies the target
+behavior, input, or configuration precisely enough to implement. A data or model handoff should
+identify the exact signals or fields, supported values or thresholds, confidence or provenance, and
+how the receiving system should use them—not merely say that it needs “better evidence.”
 
-Every completed report includes a nonempty `## Next step` with one highest-leverage action, why it
-comes next, and the observable success condition. `Next: None` is not a valid completion.
+The next-step section gives an evidence-backed action, rationale, and success condition only when a
+real follow-on action exists. Otherwise it explicitly says no further action is warranted and why.
+The agent never invents work merely to populate that section.
 
 ## Premise mismatches
 
