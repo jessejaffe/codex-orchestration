@@ -219,6 +219,22 @@ def main() -> int:
         "profile installer",
     )
 
+    reinstaller = (plugin / "scripts" / "reinstall-plugin.sh").read_text(encoding="utf-8")
+    require(
+        reinstaller,
+        (
+            "installed plugin reported an unsafe cache alias",
+            "reported cache alias $current differs from $manifest_version",
+            "installed through reported cache alias $current",
+        ),
+        "plugin reinstaller",
+    )
+    forbid(
+        reinstaller,
+        ("installed version $current does not match $manifest_version",),
+        "plugin reinstaller",
+    )
+
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())
     classes = {case["expected"] for case in fixtures["cases"]}
     expected_classes = {

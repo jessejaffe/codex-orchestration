@@ -226,7 +226,7 @@ check_aliases() {
 
 check_current() {
   current=$(installed_version "$current_plugin_id") || fail "Codex Orchestration is not installed"
-  [ "$current" = "$manifest_version" ] || fail "installed version $current does not match $manifest_version"
+  is_version_alias "$current" || fail "installed plugin reported an unsafe cache alias: $current"
   current_cache=$cache_root/$manifest_version
   validate_complete_package "$current_cache"
   for root in "$cache_root" "$legacy_cache_root"; do
@@ -240,6 +240,10 @@ check_current() {
       diff -qr "$current_cache" "$alias" >/dev/null || fail "cache alias differs from $manifest_version: $alias"
     done
   done
+  reported_cache=$cache_root/$current
+  validate_complete_package "$reported_cache"
+  diff -qr "$current_cache" "$reported_cache" >/dev/null ||
+    fail "reported cache alias $current differs from $manifest_version"
   installed_version "$legacy_plugin_id" >/dev/null 2>&1 && fail "legacy plugin identity remains installed: $legacy_plugin_id"
   legacy_config_enabled && fail "legacy plugin enablement remains in $codex_config"
   marketplace_status=0
@@ -249,7 +253,7 @@ check_current() {
     1) ;;
     *) fail "could not verify configured marketplaces" ;;
   esac
-  pass "Codex Orchestration $manifest_version is installed without legacy plugin or marketplace identities"
+  pass "Codex Orchestration $manifest_version is installed through reported cache alias $current without legacy identities"
 }
 
 check_user_hook() {
@@ -343,7 +347,7 @@ install_status=0
 "$codex_bin" plugin add "$current_plugin_id" || install_status=$?
 [ "$install_status" -eq 0 ] || fail "Codex Orchestration install failed with status $install_status; legacy identities were not removed"
 current=$(installed_version "$current_plugin_id") || fail "new plugin was not listed after installation; legacy identities were not removed"
-[ "$current" = "$manifest_version" ] || fail "new installed version is $current, expected $manifest_version; legacy identities were not removed"
+is_version_alias "$current" || fail "new plugin reported an unsafe cache alias: $current; legacy identities were not removed"
 current_cache=$cache_root/$manifest_version
 validate_complete_package "$current_cache"
 

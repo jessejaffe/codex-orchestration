@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.13.0+codex.20260813234900",
+  "version": "0.13.0+codex.20260813235138",
   "description": "Two-stage classification and single-agent execution with previous-task continuity.",
   "author": {
     "name": "Daniel McAteer",
