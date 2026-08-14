@@ -69,7 +69,7 @@ def context_bundle_path(session_id: str, revision: str) -> Path | None:
 def write_context_bundle(
     session_id: str, document: dict[str, Any]
 ) -> tuple[Path, str] | None:
-    """Atomically publish exact root-visible task context with a content revision."""
+    """Atomically publish exact private chat context with a content revision."""
     body = dict(document)
     body["schema_version"] = 1
     body["session_id"] = session_id

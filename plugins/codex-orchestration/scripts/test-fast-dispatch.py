@@ -184,6 +184,13 @@ def main() -> int:
         {"content": "Fix the existing label", "current": True, "role": "user"}
     ]:
         raise AssertionError(f"current request bundle is not exact: {bundle_document!r}")
+    if bundle_document.get("completed_task_outcomes") != []:
+        raise AssertionError("new chat bundle unexpectedly has completed task outcomes")
+    if bundle_document.get("scope") != (
+        "Complete root-visible conversation and exact completed-task outcomes "
+        "accumulated in this chat."
+    ):
+        raise AssertionError("task-context bundle does not declare its full-chat scope")
     if bundle_path.stat().st_mode & 0o077:
         raise AssertionError("task-context bundle is not private")
     for obsolete in (
@@ -535,6 +542,123 @@ follow-up; there are no current limitations.
     )
     if accepted_bundle.get("prior_completed_result") != handoff:
         raise AssertionError("task roles did not retain the exact natural-language completion")
+    if accepted_bundle.get("completed_task_outcomes") != [handoff]:
+        raise AssertionError("task roles did not retain the completed natural-language outcome")
+
+    root_visible_outcome = """Root completed the terminal visual check.
+
+## Route
+- Class: Small build
+- Implementation: Terra / Max
+- Root: GPT-5.6 Sol / High"""
+    root_visible_transcript = temporary / "root-visible-outcome.jsonl"
+    write_events(
+        root_visible_transcript,
+        [
+            {"type": "session_meta", "payload": {}},
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": root_visible_outcome}],
+                },
+            },
+        ],
+    )
+    root_visible_context = context(
+        invoke(hook, state, active_id, "What did root verify?", root_visible_transcript)
+    )
+    root_visible_bundle = json.loads(
+        Path(context_field(root_visible_context, "TASK_CONTEXT_BUNDLE")).read_text(
+            encoding="utf-8"
+        )
+    )
+    if root_visible_bundle.get("completed_task_outcomes") != [root_visible_outcome]:
+        raise AssertionError("private bundle lost a root-visible completed task outcome")
+    if root_visible_bundle.get("prior_completed_result") != root_visible_outcome:
+        raise AssertionError("root-visible completion did not update continuity")
+
+    full_history_transcript = temporary / "full-history-context.jsonl"
+    full_history_events: list[dict[str, object]] = [{"type": "session_meta", "payload": {}}]
+    full_history_messages: list[str] = []
+    full_history_outcomes: list[str] = []
+    for task_number in range(1, 11):
+        request = f"Task {task_number} request carries a durable chat fact."
+        visible_update = f"Task {task_number} visible result carries a durable answer."
+        detail = (
+            "UNBOUNDED_FIRST_OUTCOME_MARKER " + ("first outcome detail " * 1_500)
+            if task_number == 1
+            else f"Outcome detail for task {task_number}."
+        )
+        outcome = (
+            f"Task {task_number} completed. {detail}\n\n"
+            "## Route\n"
+            "- Class: Read-only\n"
+            "- Implementation: Luna / Max\n"
+            "- Root: GPT-5.6 Sol / High"
+        )
+        full_history_messages.extend((request, visible_update))
+        full_history_outcomes.append(outcome)
+        full_history_events.extend(
+            (
+                {
+                    "type": "response_item",
+                    "payload": {
+                        "type": "message",
+                        "role": "user",
+                        "content": [{"type": "input_text", "text": request}],
+                    },
+                },
+                {
+                    "type": "response_item",
+                    "payload": {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [{"type": "output_text", "text": visible_update}],
+                    },
+                },
+                {
+                    "type": "response_item",
+                    "payload": {
+                        "type": "agent_message",
+                        "content": [{"text": outcome}],
+                    },
+                },
+            )
+        )
+    full_history_events.append(
+        {
+            "type": "response_item",
+            "payload": {
+                "type": "agent_message",
+                "content": [
+                    {"text": "## Classification\n\n- Relationship: Cancel"}
+                ],
+            },
+        }
+    )
+    write_events(full_history_transcript, full_history_events)
+    full_history_request = "Answer using the facts from task 1 and task 10."
+    full_history_context = context(
+        invoke(hook, state, active_id, full_history_request, full_history_transcript)
+    )
+    full_history_bundle = json.loads(
+        Path(context_field(full_history_context, "TASK_CONTEXT_BUNDLE")).read_text(
+            encoding="utf-8"
+        )
+    )
+    if [item["content"] for item in full_history_bundle["messages"]] != [
+        *full_history_messages,
+        full_history_request,
+    ]:
+        raise AssertionError("private bundle dropped earlier root-visible chat history")
+    if full_history_bundle.get("completed_task_outcomes") != full_history_outcomes:
+        raise AssertionError("private bundle dropped, reordered, or clipped prior task outcomes")
+    if "UNBOUNDED_FIRST_OUTCOME_MARKER" not in full_history_bundle[
+        "completed_task_outcomes"
+    ][0]:
+        raise AssertionError("private bundle clipped its oversized earlier task outcome")
 
     legacy_transcript = temporary / "legacy-accepted.jsonl"
     legacy_result = "Released the benchmark to GitHub and Hetzner; verification passed."
@@ -821,7 +945,7 @@ follow-up; there are no current limitations.
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded completion context, and completed-rollout elision")
+    print("PASS: chat controls, bounded classifier context, and full private chat context")
     return 0
 
 

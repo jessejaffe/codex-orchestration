@@ -114,7 +114,7 @@ def merge_hook_document(document: object, command: str) -> dict[str, Any]:
             {
                 "type": "command",
                 "command": command,
-                "timeout": 3,
+                "timeout": 15,
             }
         ]
     }

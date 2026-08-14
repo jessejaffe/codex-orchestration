@@ -173,6 +173,9 @@ CURRENT_ROOT_ROUTE=<STATE value>
 IMPLEMENTATION_ROUTE=<friendly selected model lane>
 INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 __LAST_TASK_CONTEXT_PACKET_LINE__
+The bundle is the implementer's complete private context: every root-visible chat message and
+completed-task outcome. Pass its immutable path and revision unchanged; bounded STATE values do not
+replace it.
 Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout. The implementer owns
 scope interpretation, implementation, verification, and authorized release. It owns the final
 report unless it makes the terminal visual handoff below.
@@ -308,6 +311,18 @@ def has_route_footer(message: str) -> bool:
     return ROUTE_FOOTER_PATTERN.search(message.rstrip()) is not None
 
 
+def append_completed_task_outcome(outcomes: list[str], outcome: str | None) -> None:
+    """Keep each exact final outcome once when root relays a child report verbatim."""
+    if not outcome:
+        return
+    exact_outcome = outcome.strip()
+    if not exact_outcome:
+        return
+    if outcomes and exact_outcome == outcomes[-1]:
+        return
+    outcomes.append(exact_outcome)
+
+
 def bounded_recent_context(messages: list[tuple[str, str]]) -> str:
     """Keep the newest bounded conversation messages within the packet budget."""
     fragments = [
@@ -339,8 +354,17 @@ def previous_task_context_required(prompt: str) -> bool:
 
 def transcript_context(
     transcript_value: Any, current_prompt: str
-) -> tuple[str, str, str, str, str, list[dict[str, Any]], dict[str, str | None]]:
-    """Return bounded routing state and exact root-visible active-task messages."""
+) -> tuple[
+    str,
+    str,
+    str,
+    str,
+    str,
+    list[dict[str, Any]],
+    list[str],
+    dict[str, str | None],
+]:
+    """Return bounded routing state plus the complete private chat record."""
     exact_current_prompt = strip_injected_user_prefix(current_prompt).strip()
     if not isinstance(transcript_value, str):
         return (
@@ -350,6 +374,7 @@ def transcript_context(
             "NONE",
             "NONE",
             [{"role": "user", "content": exact_current_prompt, "current": True}],
+            [],
             {"prior_active_acceptance": None, "prior_completed_result": None},
         )
     transcript = Path(transcript_value)
@@ -361,6 +386,7 @@ def transcript_context(
             "NONE",
             "NONE",
             [{"role": "user", "content": exact_current_prompt, "current": True}],
+            [],
             {"prior_active_acceptance": None, "prior_completed_result": None},
         )
     root_route = "unavailable"
@@ -372,7 +398,8 @@ def transcript_context(
     exact_completion_handoffs: dict[str, str] = {}
     conversation_tail: list[tuple[str, str]] = []
     post_completion_tail: list[tuple[str, str]] = []
-    task_messages: list[dict[str, Any]] = []
+    chat_messages: list[dict[str, Any]] = []
+    completed_task_outcomes: list[str] = []
     has_completion = False
     try:
         with transcript.open(encoding="utf-8", errors="replace") as handle:
@@ -395,13 +422,28 @@ def transcript_context(
                 if conversation is not None:
                     conversation_tail.append(conversation)
                     conversation_tail = conversation_tail[-MAX_RECENT_MESSAGES:]
-                    task_messages.append(
+                    chat_messages.append(
                         {"role": conversation[0], "content": conversation[1]}
                     )
                     if has_completion:
                         post_completion_tail.append(conversation)
                         post_completion_tail = post_completion_tail[-MAX_RECENT_MESSAGES:]
+                    if conversation[0] == "assistant" and has_route_footer(
+                        conversation[1]
+                    ):
+                        exact_prior_completed = conversation[1].strip()
+                        prior_completed = bounded_single_line(
+                            exact_prior_completed, MAX_PRIOR_COMPLETED_CHARS
+                        )
+                        prior_acceptance = None
+                        exact_prior_acceptance = None
+                        has_completion = True
+                        post_completion_tail = []
+                        append_completed_task_outcome(
+                            completed_task_outcomes, exact_prior_completed
+                        )
                 message = agent_message_text(event)
+                completed_outcome: str | None = None
                 metadata = (event.get("payload") or {}).get(
                     "internal_chat_message_metadata_passthrough"
                 ) or {}
@@ -445,7 +487,7 @@ def transcript_context(
                     exact_prior_acceptance = None
                     has_completion = True
                     post_completion_tail = []
-                    task_messages = []
+                    completed_outcome = exact_prior_completed
                 else:
                     readable_completion = markdown_section(message, "Completed")
                     if readable_completion is not None:
@@ -458,7 +500,7 @@ def transcript_context(
                         exact_prior_acceptance = None
                         has_completion = True
                         post_completion_tail = []
-                        task_messages = []
+                        completed_outcome = exact_prior_completed
 
                 message_lines = message.splitlines()
                 for index, message_line in enumerate(message_lines):
@@ -503,11 +545,11 @@ def transcript_context(
                         ) or bounded_single_line(accepted_result, MAX_PRIOR_COMPLETED_CHARS)
                         has_completion = True
                         post_completion_tail = []
-                        task_messages = []
+                        completed_outcome = exact_prior_completed
+                append_completed_task_outcome(completed_task_outcomes, completed_outcome)
                 if cancelled:
                     prior_acceptance = None
                     exact_prior_acceptance = None
-                    task_messages = []
     except OSError:
         return (
             "unavailable",
@@ -516,6 +558,7 @@ def transcript_context(
             "NONE",
             "NONE",
             [{"role": "user", "content": exact_current_prompt, "current": True}],
+            [],
             {"prior_active_acceptance": None, "prior_completed_result": None},
         )
     selected_tail = post_completion_tail if prior_completed else conversation_tail
@@ -532,22 +575,23 @@ def transcript_context(
         freshness = "STALE" if any(role == "user" for role, _ in selected_tail) else "FRESH"
     recent_context = bounded_recent_context(selected_tail)
     if not (
-        task_messages
-        and task_messages[-1]["role"] == "user"
-        and task_messages[-1]["content"].strip() == exact_current_prompt
+        chat_messages
+        and chat_messages[-1]["role"] == "user"
+        and chat_messages[-1]["content"].strip() == exact_current_prompt
     ):
-        task_messages.append(
+        chat_messages.append(
             {"role": "user", "content": exact_current_prompt, "current": True}
         )
     else:
-        task_messages[-1]["current"] = True
+        chat_messages[-1]["current"] = True
     return (
         root_route,
         prior_acceptance or "NONE",
         prior_completed or "NONE",
         freshness,
         recent_context,
-        task_messages,
+        chat_messages,
+        completed_task_outcomes,
         {
             "prior_active_acceptance": exact_prior_acceptance,
             "prior_completed_result": exact_prior_completed,
@@ -708,7 +752,8 @@ def main() -> int:
         prior_completed,
         recent_freshness,
         recent_context,
-        task_messages,
+        chat_messages,
+        completed_task_outcomes,
         exact_continuity,
     ) = transcript_context(
         hook_input.get("transcript_path"), prompt
@@ -716,8 +761,12 @@ def main() -> int:
     bundle = write_context_bundle(
         session_id,
         {
-            "scope": "Exact root-visible conversation since the last accepted or cancelled objective.",
-            "messages": task_messages,
+            "scope": (
+                "Complete root-visible conversation and exact completed-task outcomes "
+                "accumulated in this chat."
+            ),
+            "messages": chat_messages,
+            "completed_task_outcomes": completed_task_outcomes,
             "prior_active_acceptance": exact_continuity["prior_active_acceptance"],
             "prior_completed_result": exact_continuity["prior_completed_result"],
         },

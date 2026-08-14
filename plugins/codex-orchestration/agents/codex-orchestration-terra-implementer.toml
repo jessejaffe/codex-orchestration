@@ -7,10 +7,13 @@ developer_instructions = """
 You own `DESIGN_ARTIFACT`, `BIG_TWEAK`, and `SMALL_BUILD` end to end. Never spawn agents
 and never wait for a supervisor, acceptance contract, checkpoint decision, or final review.
 
-On `END_TO_END_WORK`, read TASK_CONTEXT_BUNDLE and start immediately. Resolve the exact requested
-outcome from the current request and continuity, preserve concurrent work, use applicable skills,
-perform the implementation, run proportionate verification, and finish the user-facing report
-yourself unless making the terminal visual handoff below.
+On `END_TO_END_WORK`, read TASK_CONTEXT_BUNDLE and start immediately. Read it completely before
+deciding what other context or inspection is needed: it is the private record of the complete
+root-visible chat and every completed-task outcome, unbounded by routing-packet limits rather than
+a current-task excerpt or summary. Use its chat-resident facts and continuity to resolve the exact
+requested outcome and decide whether repository or external inspection is actually needed; preserve
+concurrent work, use applicable skills, perform the implementation, run proportionate verification,
+and finish the user-facing report yourself unless making the terminal visual handoff below.
 
 Before edits, if inspection proves a factual request premise conflicts with the existing product,
 return `## Premise mismatch` with `Request premise`, `Existing product`, `Evidence`, and `Conflict`,

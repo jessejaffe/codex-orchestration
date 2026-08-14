@@ -135,6 +135,8 @@ def main() -> int:
             "EXECUTE — Spawn exactly one mapped implementer",
             "Never spawn a supervisor, reviewer, grader, or a", "second writer",
             "END_TO_END_WORK", "IMPLEMENTATION_ROUTE=<friendly selected model lane>",
+            "complete private context", "every root-visible chat message",
+            "completed-task outcome", "bounded STATE values do not",
             "scope interpretation, implementation, verification, and authorized release",
             "terminal visual handoff",
             "PREMISE MISMATCH", "## Premise review", "same implementer",
@@ -193,6 +195,9 @@ def main() -> int:
             (
                 "own", "end to end", "Never spawn agents", "END_TO_END_WORK",
                 "read TASK_CONTEXT_BUNDLE and start immediately", "use applicable skills",
+                "Read it completely before", "complete\nroot-visible chat",
+                "completed-task outcome", "unbounded by routing-packet limits",
+                "repository or external inspection is actually needed",
                 "proportionate", "verification", "finish the user-facing",
                 "## Premise mismatch", "## Premise review", "working copy as given",
                 "A request to implement locally does not itself authorize",
@@ -247,6 +252,9 @@ def main() -> int:
         (
             "four Codex Orchestration 0.9.0 profiles",
             "Exact previously shipped profiles accepted for safe in-place migration",
+            "a1891e5c56abf70c510ab8c6ec10e83f901e7558c16c35bb275fd78a66fdf34f",
+            "c03d3973435c9b8b68c3800bd7a10f2864e0cdd967bc20fe3b8d67c44137ba44",
+            "dcf42638109aca350f4bafc206da6e9554750c17234e5a7904ccc7f327c6816b",
             "f8c6190b3e4375ece24eb02ab9db0983a5f8c4cad47a126059cbc2c62f344194",
             "68179487b09d11667c6a0e69e48cec65348847df7ebb0e501e67ed47de0114a6",
             "86ad93904293ac3bc1613cdb1512274c4524ca19fd9ce1841e5744355207a6f6",
@@ -301,6 +309,15 @@ def main() -> int:
         reinstaller,
         ("installed version $current does not match $manifest_version",),
         "plugin reinstaller",
+    )
+
+    hook_installer = (plugin / "scripts" / "install-user-hook.py").read_text(
+        encoding="utf-8"
+    )
+    require(
+        hook_installer,
+        ('"timeout": 15',),
+        "full-context user hook installer",
     )
 
     fixtures = json.loads((plugin / "scripts" / "triage-cases.json").read_text())

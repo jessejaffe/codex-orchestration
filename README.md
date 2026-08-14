@@ -55,8 +55,10 @@ score is diagnostic telemetry; users do not need to interpret it or select a rou
 
 The routed implementer receives the exact private task-context bundle and then:
 
-- resolves the requested outcome and constraints;
-- inspects the real project state;
+- reads the complete chat record and prior task outcomes before deciding what other context is
+  needed;
+- resolves the requested outcome and constraints, including chat-resident facts;
+- inspects the real project state only when the current task needs it;
 - uses applicable skills;
 - performs the full read-only, artifact, tweak, or build task;
 - runs proportionate verification;
@@ -96,8 +98,10 @@ that work account rather than replacing it.
 
 ## Classification and context
 
-The chat-scoped hook writes an immutable, private task-context bundle. Terra / Extra High receives
-only bounded routing context and returns:
+The chat-scoped hook writes an immutable, private task-context bundle. It contains the complete
+root-visible conversation for the chat plus every exact completed-task outcome, in chronological
+order and without a routing-packet character limit. Terra / Extra High receives only bounded routing
+context and returns:
 
 ```text
 ## Classification
@@ -108,12 +112,15 @@ only bounded routing context and returns:
 - Why: ...
 ```
 
-When the user explicitly asks to continue a previous task, root reads it once. The classifier gets a
-1,200-character routing capsule and the selected implementer gets a 6,000-character continuity
-block. Missing optional artifacts never block work.
+When the user explicitly asks to continue a different previous Codex task outside this chat, root
+reads it once. The classifier gets a 1,200-character routing capsule and the selected implementer
+gets a 6,000-character continuity block. Those cross-task capsules do not limit the complete
+private bundle for the current chat. Missing optional artifacts never block work.
 
-Completed agents report in natural language. The hook retains the final report as bounded completion
-context so a follow-up can recover the prior outcome without flooding the main context. Each report still ends with a compact route footer naming the work class, selected implementation lane, and root route.
+Completed agents report in natural language. The classifier's small state packet retains only the
+latest bounded completion context, but the selected implementer receives the full private bundle—not
+a summary—so a follow-up can use facts and exact outcomes from earlier tasks without unnecessary
+repository inspection. Each report still ends with a compact route footer naming the work class, selected implementation lane, and root route.
 
 ## Reports
 
