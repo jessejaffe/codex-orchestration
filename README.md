@@ -1,14 +1,13 @@
 # Codex Orchestration
 
-Codex Orchestration `0.13.0` is a two-stage experiment:
+Codex Orchestration `0.13.0` uses a two-stage workflow:
 
 1. GPT-5.6 Terra / Extra High classifies the request.
 2. One selected agent owns the task end to end.
 
-The prior multi-role orchestration system remains preserved on `main`. This branch removes
-supervisors, acceptance construction, implementation checkpoints, and final-review loops so the
-single selected agent can interpret scope, work, verify, release when authorized, and report the
-result without serial coordination overhead.
+This normal workflow removes supervisors, acceptance construction, implementation checkpoints, and
+final-review loops so the single selected agent can interpret scope, work, verify, release when
+authorized, and report the result without serial coordination overhead.
 
 ## Workflow
 
@@ -16,8 +15,8 @@ result without serial coordination overhead.
 flowchart LR
     U["User request"] --> C["Terra / Extra High classifies"]
     C --> R{"Work class"}
-    R -->|"Standard artifact or small tweak"| L["Luna / Max owns task"]
-    R -->|"Read-only, design artifact, big tweak, or small build"| T["Terra / Max owns task"]
+    R -->|"Read-only, standard artifact, or small tweak"| L["Luna / Max owns task"]
+    R -->|"Design artifact, big tweak, or small build"| T["Terra / Max owns task"]
     R -->|"Big build"| S["Sol / High owns task"]
     L --> D["Completed result"]
     T --> D
@@ -34,7 +33,7 @@ There is exactly one task agent after classification. It never spawns another ag
 
 | Work class | Definition | End-to-end agent |
 |---|---|---|
-| `READ_ONLY` | Research, diagnosis, review, explanation, or status without mutation | Terra / Max |
+| `READ_ONLY` | Research, diagnosis, review, explanation, or status without mutation | Luna / Max |
 | `STANDARD_ARTIFACT` | Content- or data-led spreadsheet, document, PDF, or presentation work | Luna / Max |
 | `DESIGN_ARTIFACT` | A non-code artifact whose composition, brand, or exact look defines success | Terra / Max |
 | `SMALL_TWEAK` | One bounded existing behavior with predictable blast radius | Luna / Max |
@@ -148,18 +147,6 @@ Orchestration off
 The desktop activity label stays exactly `Thinking`. Startup remains quiet after the activation
 acknowledgement; child pills show the classifier and selected agent.
 
-## Route receipt
-
-Every completed task ends with:
-
-```text
-## Route
-- Class: <friendly class>
-- Implementation: <Luna / Max|Terra / Max|Sol / High>
-- Supervision: None
-- Root: <root model and effort>
-```
-
 ## Install and verify
 
 Install the four companion profiles:
@@ -205,7 +192,6 @@ plugins/codex-orchestration/
 
 ## Design boundary
 
-This branch is intentionally not a general multi-writer system. Parallel exploration, supervision,
-and review are outside its execution path. Its evaluation question is narrower: does one strong
-classifier plus one accountable end-to-end agent provide a faster and more trustworthy user
-experience than the preserved multi-agent design on `main`?
+This normal workflow is intentionally not a general multi-writer system. Parallel exploration,
+supervision, and review are outside its execution path. One strong classifier routes each task to
+one accountable end-to-end agent for a faster, more trustworthy user experience.

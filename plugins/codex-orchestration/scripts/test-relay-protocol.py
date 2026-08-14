@@ -27,7 +27,7 @@ EXPECTED_AGENTS = {
 }
 
 HUMAN_ROUTES = (
-    "Read-only: Terra / Max",
+    "Read-only: Luna / Max",
     "Standard artifact: Luna / Max",
     "Design artifact: Terra / Max",
     "Small tweak: Luna / Max",
@@ -93,6 +93,17 @@ def main() -> int:
     if sum(map(len, prompts.values())) > 15_000:
         raise AssertionError("agent prompts exceed the 15,000-character single-agent budget")
 
+    require(
+        prompts["codex-orchestration-luna-implementer.toml"],
+        ("You own `READ_ONLY`", "`STANDARD_ARTIFACT`", "`SMALL_TWEAK`", "never mutates"),
+        "Luna implementer route ownership",
+    )
+    forbid(
+        prompts["codex-orchestration-terra-implementer.toml"],
+        ("You own `READ_ONLY`",),
+        "Terra implementer route ownership",
+    )
+
     orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
     require(
         orchestrator,
@@ -141,7 +152,6 @@ def main() -> int:
             "preserve the completed work and decisive evidence",
             "A next step is valid only when supported by", "Reject a bare",
             "`None` or invented follow-on work", "REPORT_REVISION_REQUIRED",
-            "## Route", "- Supervision: None", "- Root: <CURRENT_ROOT_ROUTE>",
         ),
         "root coordinator",
     )
@@ -161,6 +171,7 @@ def main() -> int:
             "`None` is invalid", "recommended future state and concrete action over current-state recap",
             "luna_high_implementer_<objective_slug>", "## Root verification result",
             "ROOT_VERIFICATION_RECOVERY_REQUIRED", "### Recommendations",
+            "## Route", "- Supervision: None", "route footer",
         ),
         "root coordinator",
     )
@@ -197,9 +208,7 @@ def main() -> int:
                 "- Next: <one legitimate evidence-backed action, or None — reason",
                 "## Continuity", "## Completed", "### Current state",
                 "### Next step", "Use `Action`, `Why`, and `Success` only when",
-                "None — <why no further action is warranted>", "Never invent work", "## Route",
-                "- Implementation: <IMPLEMENTATION_ROUTE>", "- Supervision: None",
-                "- Root: <CURRENT_ROOT_ROUTE>",
+                "None — <why no further action is warranted>", "Never invent work",
             ),
             filename,
         )
@@ -211,7 +220,7 @@ def main() -> int:
                 "recommendation-led", "keep the current-state recap brief", "never None",
                 "Spend more space on the future state", "Stop until root returns",
                 "request another root check", "Alternatives exhausted",
-                "### Recommendations",
+                "### Recommendations", "## Route", "- Supervision: None",
             ),
             filename,
         )
@@ -219,7 +228,7 @@ def main() -> int:
     terra = prompts["codex-orchestration-terra-implementer.toml"]
     require(
         terra,
-        ("`READ_ONLY`", "`DESIGN_ARTIFACT`", "`BIG_TWEAK`", "`SMALL_BUILD`", "never mutates"),
+        ("`DESIGN_ARTIFACT`", "`BIG_TWEAK`", "`SMALL_BUILD`"),
         "Terra end-to-end lane",
     )
 
@@ -252,6 +261,11 @@ def main() -> int:
             "4a9a6947e04ae14df2855b3c495bf03311571d20f5125ed50a62fd113c28401d",
             "08aa1335248a15ee305e30edb35662b28d95d31b266a67351acfa696ced1e3ec",
             "b21cd346b39eb94f4119bf180fc1b3354a9f3259f469fe22b43233fee1433177",
+            "c0da09a763a31e77d4b9390e524eb61ead0b730a5024c9c322761a9b39f056a2",
+            "66a549c67e7f81f0d0e6db89ec85af7d1a47253b376e255344c603459ec0ea7c",
+            "2574ab7e01874599ed4b05940d7b9a0898e0fb21564a5ac8ce3961a6ebcbaaf3",
+            "45e2549938493020446261a960b12d800d0244b794d10bb280fda0041720ed5f",
+            "f980e92ded78673ecb3052af93492d0cc5bf295dbcf0e27aa3df41a05ebbd852",
             "6f4a5eb3d93109728ea2cf4bc955da0f3eee58422e8baa15b8c4d98354529064",
             "Preflight every target", "refusing $state retired role",
         ),

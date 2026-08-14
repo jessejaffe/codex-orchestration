@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verify the Codex Orchestration 0.13.0 single-agent branch without network access.
+# Verify the Codex Orchestration 0.13.0 single-agent workflow without network access.
 
 set -eu
 
@@ -114,7 +114,7 @@ pass 'reinstaller package inventory'
 
 if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
   for value in \
-    'two-stage experiment' \
+    'two-stage workflow' \
     'Terra / Extra High classifies' \
     'One selected agent owns the task end to end' \
     'There is exactly one task agent after classification' \
@@ -134,7 +134,6 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     "work performed remains the report's primary content" \
     'mentioned only as the second Next step' \
     'actual work next step' \
-    'Supervision: None' \
     'A request to implement locally does not itself authorize deployment' \
     '## Reports' \
     'no Recommendations section' \
@@ -145,7 +144,13 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     '0.13.0'; do
     grep -Fq "$value" "$repo_readme" || fail "README omits $value"
   done
-  pass '0.13.0 branch documentation'
+  if grep -Fq 'Supervision: None' "$repo_readme"; then
+    fail 'README retains the removed supervision route receipt'
+  fi
+  if grep -Fxq '## Route' "$repo_readme"; then
+    fail 'README retains the removed route receipt'
+  fi
+  pass '0.13.0 workflow documentation'
 else
   pass 'repository documentation is intentionally outside the installed plugin package'
 fi

@@ -137,7 +137,7 @@ instructions, or plan. Wait with `wait_agent(timeout_ms=3600000)` and repeat sil
 Accept only `## Classification blocked` or `## Classification` with Relationship, Active objective,
 Work class, Complexity, and nonempty Why. Derive the route from Work class:
 
-- Read-only: Terra / Max
+- Read-only: Luna / Max
 - Standard artifact: Luna / Max
 - Design artifact: Terra / Max
 - Small tweak: Luna / Max
@@ -182,7 +182,7 @@ rendered result against the user request and the handoff's Ground truth and Sour
 ambiguous support for identity, wording, or links is failure, never an invitation to infer. For a
 live page, cache-bypass at the requested viewport and capture a screenshot plus only decisive
 visible/DOM/computed evidence. Judge pass, fail, or blocked, then end the task yourself without
-editing, spawning, or calling `followup_task`. Use the report contract and route footer below,
+editing, spawning, or calling `followup_task`. Use the report contract below,
 with the handoff's Work report as the primary content. Preserve its delivered work, nonvisual proof,
 and work next step. If visual verification fails or is blocked, mention it only as
 `Visual check: <exact user check>` after `Work: <next or None — reason>` in Next step—never in
@@ -195,15 +195,8 @@ the findings; otherwise it must say `None — <reason no further action is warra
 `None` or invented follow-on work. If this contract is missing, use
 `followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact omissions, then
 relay only the corrected report. This is schema correction, not a new review lane.
-Fast-relay valid child results without extra reasoning. Every completed user-facing task must end with this compact
-footer:
-## Route
-- Class: <friendly class>
-- Implementation: <model lane>
-- Supervision: None
-- Root: <CURRENT_ROOT_ROUTE>
-Preserve the child's footer without duplicating it. The activation-only acknowledgement is not task
-completion. Never expose packets, waits, or contracts to the user."""
+Fast-relay valid child results without extra reasoning. The activation-only acknowledgement is not
+task completion. Never expose packets, waits, or contracts to the user."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

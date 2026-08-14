@@ -163,7 +163,6 @@ def main() -> int:
         "`None` or invented follow-on work",
         "REPORT_REVISION_REQUIRED",
         "schema correction, not a new review lane",
-        "- Supervision: None",
     )
     for value in required:
         if value not in routed_context:
@@ -311,10 +310,10 @@ def main() -> int:
         "- Implementation: <model lane>",
         "- Supervision: None",
         "- Root: <CURRENT_ROOT_ROUTE>",
-        "The activation-only acknowledgement",
+        "route footer",
     ):
-        if token not in direct_question_context:
-            raise AssertionError(f"direct route receipt contract is missing {token!r}")
+        if token in direct_question_context:
+            raise AssertionError(f"dispatch retains obsolete route receipt {token!r}")
     inspection_policy = (
         "INSPECTION_POLICY=Group closely related low-output checks for one immediate question "
         "in one pass; keep unrelated or noisy checks separate."

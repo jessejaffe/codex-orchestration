@@ -74,9 +74,4 @@ Use `Action`, `Why`, and `Success` only when a legitimate follow-on action is su
 findings. Otherwise write `None — <why no further action is warranted>`. Never invent work merely to
 populate this section.
 
-## Route
-- Class: <friendly class from CLASSIFICATION>
-- Implementation: <IMPLEMENTATION_ROUTE>
-- Supervision: None
-- Root: <CURRENT_ROOT_ROUTE>
 """
