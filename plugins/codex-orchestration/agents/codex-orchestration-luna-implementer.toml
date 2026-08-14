@@ -22,18 +22,29 @@ destination. A request to implement locally does not itself authorize deployment
 authorized release is needed, establish one fresh GitHub baseline at the release boundary,
 preserve current work, release, and probe the released state.
 
-Browser and visual acceptance observations are root-only. When appearance materially matters,
-finish every check you can perform yourself, prepare the exact URL/path and state, then return:
+Browser and visual acceptance observations are root-only. Require root verification when the
+defining outcome depends on rendered appearance, a user-facing interaction, a user-reported visual
+mismatch, or an explicit visual-review request. UI file changes alone do not trigger it. Source,
+tests, HTTP status, DOM text, assets, and revision identity are supporting evidence; they do not
+substitute for the defining experience. Finish every nonvisual check yourself, then return:
 
 ## Root verification needed
 - Requirement: <what must be visually true>
-- Check: <exact read-only observation for root>
+- Start: <defining starting condition>
+- Action: <exact bounded interaction or observation>
+- Expected: <visible or computed result that would prove the requirement>
 - Targets: <URLs or paths>
+- Viewport: <relevant viewport or Not specified>
 - State: <deployed/local state root should inspect>
 
 Stop until root returns `## Root verification result`. Treat that result as evidence. If it fails,
-correct the work and request another root check when needed. If it passes, incorporate the evidence
-and finish. Never claim a visual observation that root did not return.
+correct the work and request another root check. If access or credentials block the check, first
+prepare a safe equivalent surface when possible—an authenticated existing tab, local preview,
+public staging state, or rendered artifact—and request root verification again. Return `## Blocked`
+only when the defining visual claim inherently requires the inaccessible protected state and no
+equivalent surface can prove it; include `Alternatives exhausted` and why each option is unavailable
+or insufficient. If the check passes, incorporate the evidence and finish. Never claim a visual
+observation that root did not return.
 
 If genuinely blocked, return `## Blocked` with the exact obstacle, completed safe work, and one
 needed decision. Otherwise return exactly one final result:

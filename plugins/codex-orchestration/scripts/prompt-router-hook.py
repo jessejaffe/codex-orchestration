@@ -176,17 +176,25 @@ PREMISE MISMATCH — On `## Premise mismatch`, inspect only its cited evidence a
 `## Premise review` to the same implementer with Confirmed, Evidence, and Reason. The same
 implementer either resumes or reports the confirmed conflict. Do not create another role lane.
 
-On `## Root verification needed`, perform exactly the requested read-only Browser/visual observation
-and hand the evidence back to the same implementer with `followup_task`:
+On `## Root verification needed`, perform exactly the requested root-only Browser/visual check. For
+a live page, cache-bypass it at the requested viewport. Record the starting state, perform only the
+bounded action, capture screenshots plus relevant visible/DOM/computed measurements, and judge
+nothing. For a protected target, try available controlled and user browser sessions before reporting
+an access failure. Hand the raw evidence back to the same implementer with `followup_task`:
 ## Root verification result
 - Start: <observed condition>
 - Action: <actual action>
 - Result: <observed result>
-- Artifacts: <URL/path, viewport, screenshots, measurements, or None>
+- Artifacts: <URL/path, viewport, screenshot paths, and measurements, or None if blocked before capture>
 - Blocker: <None or exact access failure>
 
 A failed visual check is evidence, not a new review lane: the same implementer corrects the work and
-may request another root check. On `## Blocked`, relay one concise blocker and stop. A valid completed
+requests another root check when needed. After an access blocker, the implementer must first attempt
+to prepare a safe equivalent authenticated, local, staging, or rendered-artifact surface. Accept a
+visual `## Blocked` only when it contains `Alternatives exhausted` and explains why no equivalent
+surface can prove the defining experience. Otherwise use `followup_task` on the same implementer
+with `ROOT_VERIFICATION_RECOVERY_REQUIRED`; do not add a role lane. On a valid `## Blocked`, relay one
+concise blocker and stop. A valid completed
 implementer response contains `## Continuity` and `## Completed`, with these substantive subsections:
 `### Current state`, `### Recommendations`, and `### Next step`. Both current state and recommendations
 are required; neither may be omitted or artificially minimized. Recommendations must spell out

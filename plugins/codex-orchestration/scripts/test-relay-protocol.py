@@ -90,8 +90,8 @@ def main() -> int:
     ):
         raise AssertionError(f"manifest does not use the 0.13.0 line: {version!r}")
 
-    if sum(map(len, prompts.values())) > 13_200:
-        raise AssertionError("agent prompts exceed the 13,200-character single-agent budget")
+    if sum(map(len, prompts.values())) > 16_000:
+        raise AssertionError("agent prompts exceed the 16,000-character single-agent budget")
 
     orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -126,10 +126,14 @@ def main() -> int:
             "END_TO_END_WORK", "IMPLEMENTATION_ROUTE=<friendly selected model lane>",
             "scope interpretation, implementation, verification, authorized release, and the final report",
             "PREMISE MISMATCH", "## Premise review", "same implementer",
-            "## Root verification needed", "perform exactly the requested read-only Browser/visual observation",
-            "hand the evidence back to the same implementer with `followup_task`",
+            "## Root verification needed", "root-only Browser/visual check", "cache-bypass",
+            "capture screenshots plus relevant visible/DOM/computed measurements",
+            "available controlled and user browser sessions",
+            "Hand the raw evidence back to the same implementer with `followup_task`",
             "## Root verification result", "- Start:", "- Action:", "- Result:",
-            "same implementer corrects the work", "## Continuity", "## Completed",
+            "same implementer corrects the work", "safe equivalent authenticated, local, staging, or rendered-artifact surface",
+            "Alternatives exhausted", "ROOT_VERIFICATION_RECOVERY_REQUIRED", "do not add a role lane",
+            "## Continuity", "## Completed",
             "### Current state", "### Recommendations", "### Next step",
             "Both current state and recommendations", "replacement inputs or behavior",
             "valid only when supported by the findings", "Reject a bare `None`",
@@ -171,9 +175,16 @@ def main() -> int:
                 "## Premise mismatch", "## Premise review", "working copy as given",
                 "A request to implement locally does not itself authorize",
                 "Browser and visual acceptance observations are root-only",
-                "## Root verification needed", "- Requirement:", "- Check:", "- Targets:",
+                "defining outcome depends on rendered appearance", "user-facing interaction",
+                "user-reported visual", "mismatch", "explicit visual-review request",
+                "UI file changes alone do not trigger it", "supporting evidence",
+                "substitute for the defining experience",
+                "## Root verification needed", "- Requirement:", "- Start:", "- Action:",
+                "- Expected:", "- Targets:", "- Viewport:",
                 "Stop until root returns `## Root verification result`",
-                "correct the work and request another root check", "## Blocked",
+                "correct the work and request another root check", "authenticated existing tab",
+                "local preview", "public staging state", "rendered artifact",
+                "inaccessible protected state", "Alternatives exhausted", "## Blocked",
                 "balanced and complete", "separate", "substantive treatment",
                 "neither may be omitted", "artificially minimized",
                 "what exists, what was found, why it matters", "what should happen and why",
@@ -216,6 +227,9 @@ def main() -> int:
             "f8c6190b3e4375ece24eb02ab9db0983a5f8c4cad47a126059cbc2c62f344194",
             "68179487b09d11667c6a0e69e48cec65348847df7ebb0e501e67ed47de0114a6",
             "86ad93904293ac3bc1613cdb1512274c4524ca19fd9ce1841e5744355207a6f6",
+            "3bbb7c2464542eb135640782b52c9d213486bc351d60b8fe0c40ef21a1368e5c",
+            "830aebc3d5c40da3aae60b20e6f760b29fe32c68d67fdd7db3d5ae9d49ff9bfa",
+            "6ee395bb2287fd8fe8276e87f2ba7429a8eac67a771561ad71f30f5ed787a6cb",
             "662c7b7010cc87e902f1f2608f74a8bce7bd06df659e3de778fc761d3667fbbe",
             "930bd325d9d19c93ffbb70497410ff9f0a03c657fde81e04a8ccd3272f206424",
             "2a8be332df4cd578f599c3f5dac89930f7cd13503393a0f380ee3a4a128492f7",

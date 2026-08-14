@@ -126,6 +126,10 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'SMALL_BUILD' \
     'BIG_BUILD' \
     'Root-only visual evidence' \
+    'defining outcome depends on rendered appearance' \
+    'cache-bypassed page at the relevant viewport' \
+    'screenshots plus relevant visible, DOM, or computed measurements' \
+    'alternatives exhausted' \
     'evidence back' \
     'Root does not judge' \
     'Supervision: None' \

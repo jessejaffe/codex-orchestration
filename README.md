@@ -70,19 +70,27 @@ is genuinely required.
 ## Root-only visual evidence
 
 Visual observation is the one deliberate root-to-agent handoff retained from the previous system.
-When appearance materially matters, the selected agent prepares the exact local or live state and
-returns:
+It is required when the defining outcome depends on rendered appearance, a user-facing interaction,
+a user-reported visual mismatch, or an explicit visual-review request. Merely changing UI files does
+not trigger it. Source, tests, HTTP status, DOM text, assets, and revision identity may support the
+check, but cannot substitute for the defining experience. The selected agent prepares the exact
+local or live state and returns:
 
 ```text
 ## Root verification needed
 - Requirement: ...
-- Check: ...
+- Start: ...
+- Action: ...
+- Expected: ...
 - Targets: ...
+- Viewport: ...
 - State: ...
 ```
 
-Root performs only the requested read-only browser or visual observation and sends the evidence back
-to that same agent:
+Root performs only the requested read-only browser or visual observation. For live pages it uses a
+cache-bypassed page at the relevant viewport, records the starting state and bounded interaction,
+and captures screenshots plus relevant visible, DOM, or computed measurements. It sends the raw
+evidence back to that same agent without judging acceptance:
 
 ```text
 ## Root verification result
@@ -93,9 +101,13 @@ to that same agent:
 - Blocker: None
 ```
 
-The same agent evaluates the evidence. If the check fails, it corrects the work and may request
-another observation. If it passes, it incorporates the evidence and finishes. Root does not judge
-acceptance and no reviewer lane is created.
+The same agent evaluates the evidence. If the check fails, it corrects the work and requests another
+observation. If credentials or access block the check, it first prepares a safe equivalent surface
+when possible—an authenticated existing tab, local preview, public staging state, or rendered
+artifact—and requests root verification again. It may report a blocker only after identifying the
+alternatives exhausted and why none can prove the defining experience. If the check passes, it
+incorporates the evidence and finishes. Root does not judge acceptance and no reviewer lane is
+created.
 
 ## Classification and continuity
 
