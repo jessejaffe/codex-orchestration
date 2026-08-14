@@ -85,6 +85,8 @@ merely because UI files changed. The selected agent prepares an accessible targe
 Root checks once, validates the rendered result against the request and cited ground truth, and ends
 the task with the standard report whether the result passes, fails, or is blocked. It never guesses
 an ambiguous identity, description, or link, and never hands the check back for another agent cycle.
+The work performed remains the report's primary content; a visual failure is one short limitation,
+mentioned only as the second Next step after the actual work next step or its `None —` reason.
 
 ## Classification and continuity
 

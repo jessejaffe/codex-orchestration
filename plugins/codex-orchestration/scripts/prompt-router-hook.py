@@ -183,7 +183,10 @@ ambiguous support for identity, wording, or links is failure, never an invitatio
 live page, cache-bypass at the requested viewport and capture a screenshot plus only decisive
 visible/DOM/computed evidence. Judge pass, fail, or blocked, then end the task yourself without
 editing, spawning, or calling `followup_task`. Use the report contract and route footer below,
-stating the verdict, evidence, exact recommendation, and legitimate next step or `None — <reason>`.
+with the handoff's Work report as the primary content. Preserve its delivered work, nonvisual proof,
+recommendation, and work next step. If visual verification fails or is blocked, mention it only as
+`Visual check: <exact user check>` after `Work: <next or None — reason>` in Next step—never in
+Continuity, Current state, or Recommendations. Never replace the work recap with the visual issue.
 
 Every terminal response contains `## Continuity` and `## Completed`, with these substantive subsections:
 `### Current state`, `### Recommendations`, and `### Next step`. Both current state and recommendations

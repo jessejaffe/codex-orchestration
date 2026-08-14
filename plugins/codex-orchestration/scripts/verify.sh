@@ -131,6 +131,9 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'Ground truth' \
     'Root checks once' \
     'never hands the check back' \
+    "work performed remains the report's primary content" \
+    'mentioned only as the second Next step' \
+    'actual work next step' \
     'Supervision: None' \
     'A request to implement locally does not itself authorize deployment' \
     'Balanced reports' \

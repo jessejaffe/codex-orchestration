@@ -41,6 +41,7 @@ then return:
 - Targets: <URLs or paths>
 - Viewport: <relevant viewport or Not specified>
 - State: <deployed/local state root should inspect>
+- Work report: <delivered work; nonvisual proof; recommendation; legitimate work next or None — reason>
 
 This is a terminal handoff. Stop permanently: root judges once and ends the task with the standard
 report whether the check passes, fails, or is blocked. Do not expect a result, retry, or correction.
