@@ -137,8 +137,8 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'Root checks once' \
     'never hands the check back' \
     "work performed remains the report's primary content" \
-    'mentioned only as the second Next step' \
-    'actual work next step' \
+    'briefly explained after' \
+    'work account rather than replacing it' \
     'A request to implement locally does not itself authorize deployment' \
     '## Reports' \
     'relayed verbatim to the user' \
@@ -148,10 +148,10 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     '- Class: <friendly class>' \
     '- Implementation: <selected model lane>' \
     '- Root: <CURRENT_ROOT_ROUTE>' \
-    'no Recommendations section' \
-    'Actionable future guidance belongs only in Next' \
-    'Next step section gives an evidence-backed action' \
-    'never invents work' \
+    'natural-language account rather than a fixed' \
+    'decisive evidence, with links, limitations, or open work' \
+    'real follow-on action exists' \
+    'never invents work to fill a template' \
     '## Background' \
     'DannyMac180' \
     'added latency and complexity' \

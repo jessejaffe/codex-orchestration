@@ -62,8 +62,8 @@ The routed implementer receives the exact private task-context bundle and then:
 - runs proportionate verification;
 - commits, pushes, or deploys only when the user request, project instructions, or active
   continuity clearly authorizes that exact destination;
-- writes the continuity capsule and a complete final result covering current state, with a next
-  step only when one is legitimately warranted.
+- writes a natural-language result that explains what happened, what it did or found, the outcome,
+  and decisive evidence, with a next step only when one is genuinely useful.
 
 A request to implement locally does not itself authorize deployment.
 
@@ -91,10 +91,10 @@ changed. The routed implementer prepares an accessible target and returns:
 Root checks once, validates the rendered result against the request and cited ground truth, and ends
 the task with the standard report whether the result passes, fails, or is blocked. It never guesses
 an ambiguous identity, description, or link, and never hands the check back for another agent cycle.
-The work performed remains the report's primary content; a visual failure is one short limitation,
-mentioned only as the second Next step after the actual work next step or its `None —` reason.
+The work performed remains the report's primary content; a visual failure is briefly explained after
+that work account rather than replacing it.
 
-## Classification and continuity
+## Classification and context
 
 The chat-scoped hook writes an immutable, private task-context bundle. Terra / Extra High receives
 only bounded routing context and returns:
@@ -112,17 +112,15 @@ When the user explicitly asks to continue a previous task, root reads it once. T
 1,200-character routing capsule and the selected implementer gets a 6,000-character continuity
 block. Missing optional artifacts never block work.
 
-Completed agents return a compact continuity section before the user-facing answer, so a follow-up
-can recover the prior outcome without flooding the main context. Each completed report also ends
-with a compact route footer naming the work class, selected implementation lane, and root route.
+Completed agents report in natural language. The hook retains the final report as bounded completion
+context so a follow-up can recover the prior outcome without flooding the main context. Each report still ends with a compact route footer naming the work class, selected implementation lane, and root route.
 
 ## Reports
 
 Except for a root-only visual handoff, the final report is the selected agent's completed report,
 relayed verbatim to the user. Root does not summarize, condense, or add a second completion response.
-The report keeps the continuity section, followed by substantive Current state and Next step sections.
-It has no Recommendations section. Current state explains what exists, what was done or found, why
-it matters, and the supporting evidence. Actionable future guidance belongs only in Next step.
+It is a natural-language account rather than a fixed Continuity, Completed, Current state, and Next
+step template. The account explains what happened, what was done or found, the outcome, and decisive evidence, with links, limitations, or open work when relevant.
 
 Every completed report finishes with this compact route receipt:
 
@@ -133,9 +131,8 @@ Every completed report finishes with this compact route receipt:
 - Root: <CURRENT_ROOT_ROUTE>
 ```
 
-The Next step section gives an evidence-backed action, rationale, and success condition only when a
-real follow-on action exists. Otherwise it explicitly says no further action is warranted and why.
-The agent never invents work merely to populate that section.
+When a real follow-on action exists, the report recommends it in the flow of the account. Otherwise
+it says plainly that no further action is warranted; the agent never invents work to fill a template.
 
 ## Premise mismatches
 

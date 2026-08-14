@@ -56,6 +56,12 @@ WORKSPACE_ARTIFACT_PATTERN = re.compile(
     r"presentation|slide\s+deck|powerpoint|pptx?|word\s+document|docx|pdf)\b",
     re.IGNORECASE,
 )
+ROUTE_FOOTER_PATTERN = re.compile(
+    r"(?:\A|\n)## Route[ \t]*\r?\n"
+    r"- Class: [^\r\n]+\r?\n"
+    r"- Implementation: [^\r\n]+\r?\n"
+    r"- Root: [^\r\n]+\Z"
+)
 PREVIOUS_TASK_PATTERNS = (
     re.compile(
         r"\b(?:read|review|check|open|inspect|look\s+at|get\s+familiar\s+with)\s+"
@@ -184,23 +190,22 @@ live page, cache-bypass at the requested viewport and capture a screenshot plus 
 visible/DOM/computed evidence. Judge pass, fail, or blocked, then end the task yourself without
 editing, spawning, or calling `followup_task`. Use the report contract below,
 with the handoff's Work report as the primary content. Preserve its delivered work, nonvisual proof,
-and work next step. If visual verification fails or is blocked, mention it only as
-`Visual check: <exact user check>` after `Work: <next or None — reason>` in Next step—never in
-Continuity or Current state. Never replace the work recap with the visual issue.
+and any useful next step. If visual verification fails or is blocked, explain it briefly after the
+work account; never replace the work recap with the visual issue.
 
-Every terminal response contains `## Continuity` and `## Completed`, with substantive
-`### Current state` and `### Next step` subsections and no Recommendations section. Current state
-must preserve the completed work and decisive evidence. A next step is valid only when supported by
-the findings; otherwise it must say `None — <reason no further action is warranted>`. Reject a bare
-`None` or invented follow-on work. If this contract is missing, use
-`followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact omissions, then
-relay only the corrected report. This is schema correction, not a new review lane.
+Every terminal response is a natural-language report, not a prescribed schema. It must make clear
+what happened, what work was done or found, the outcome, and decisive evidence. Include relevant
+links, limitations, or open work, and recommend a next step only when it is genuinely useful. For a
+visual result, include the pass, fail, or blocked outcome in the same account. Do not require fixed
+section headings or a field list. If the report lacks that substantive account or the route footer,
+use `followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact omission,
+then relay only the corrected report. This is schema correction, not a new review lane.
 Every completed user-facing task ends with this compact route footer:
 ## Route
 - Class: <friendly class>
 - Implementation: <IMPLEMENTATION_ROUTE>
 - Root: <CURRENT_ROOT_ROUTE>
-Never include supervision. The selected implementer supplies it after `### Next step`; root uses the
+Never include supervision. The selected implementer places the footer after its report; root uses the
 same footer for a terminal visual result. Treat its absence as a missing required report field.
 RELAY — A valid nonvisual child report is the user-facing final response. Return it verbatim as the entire final answer.
 Preserve its Markdown, wording, detail, order, and links. Do not summarize, condense, paraphrase, introduce, assess, or append to it.
@@ -296,6 +301,11 @@ def markdown_bullets(section: str | None) -> dict[str, str]:
         if match:
             values[match.group(1).strip()] = match.group(2).strip()
     return values
+
+
+def has_route_footer(message: str) -> bool:
+    """Return whether trusted final output ends in the required route receipt."""
+    return ROUTE_FOOTER_PATTERN.search(message.rstrip()) is not None
 
 
 def bounded_recent_context(messages: list[tuple[str, str]]) -> str:
@@ -426,10 +436,8 @@ def transcript_context(
                     completion_handoffs.pop(completion_scope, None)
                     exact_completion_handoffs.pop(completion_scope, None)
 
-                readable_completion = markdown_section(message, "Completed")
-                if readable_completion is not None:
-                    continuity = markdown_section(message, "Continuity")
-                    exact_prior_completed = continuity or readable_completion
+                if has_route_footer(message):
+                    exact_prior_completed = message.strip()
                     prior_completed = bounded_single_line(
                         exact_prior_completed, MAX_PRIOR_COMPLETED_CHARS
                     )
@@ -438,6 +446,19 @@ def transcript_context(
                     has_completion = True
                     post_completion_tail = []
                     task_messages = []
+                else:
+                    readable_completion = markdown_section(message, "Completed")
+                    if readable_completion is not None:
+                        continuity = markdown_section(message, "Continuity")
+                        exact_prior_completed = continuity or readable_completion
+                        prior_completed = bounded_single_line(
+                            exact_prior_completed, MAX_PRIOR_COMPLETED_CHARS
+                        )
+                        prior_acceptance = None
+                        exact_prior_acceptance = None
+                        has_completion = True
+                        post_completion_tail = []
+                        task_messages = []
 
                 message_lines = message.splitlines()
                 for index, message_line in enumerate(message_lines):

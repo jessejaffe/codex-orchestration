@@ -48,6 +48,13 @@ sha256_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 
 # Exact previously shipped profiles accepted for safe in-place migration.
 previous_digest() {
+  # The prior revision used the structured completion template.
+  case "$1" in
+    luna-implementer) printf '%s\n' 622ba29ad12b5f0f3a785c41b9717235eb1be5f65021a9fa72a27664e3ae295a ;;
+    terra-implementer) printf '%s\n' ab37dca70b29da614b3415bed1ce08fa674eac22eae6f6525fb5eb94926ea09e ;;
+    sol-high-implementer) printf '%s\n' 284e79829e13f2128898d82377f815b36f14bea95ee7c9b0c03b6b8fca08b5d5 ;;
+    *) ;;
+  esac
   # The immediately previous revision omitted the route receipt.
   case "$1" in
     luna-implementer) printf '%s\n' ab612956e9cb73aa1494fb086d345be5a14ffb1de301b5fb55c540f0e37d886d ;;

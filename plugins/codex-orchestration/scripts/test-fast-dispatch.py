@@ -144,23 +144,15 @@ def main() -> int:
         "editing, spawning, or calling `followup_task`",
         "Work report as the primary content",
         "Preserve its delivered work, nonvisual proof",
-        "mention it only as",
-        "Work: <next or None — reason>",
-        "Visual check: <exact user check>",
-        "never in",
-        "Continuity or Current state",
-        "Never replace the work recap",
-        "Every terminal response",
-        "## Continuity",
-        "## Completed",
-        "### Current state",
-        "### Next step",
-        "no Recommendations section",
-        "preserve the completed work and decisive evidence",
-        "A next step is valid only when supported by",
-        "None — <reason no further action",
-        "Reject a bare",
-        "`None` or invented follow-on work",
+        "work account; never replace the work recap",
+        "natural-language report",
+        "not a prescribed schema",
+        "what happened, what work was done or found",
+        "outcome, and decisive evidence",
+        "links, limitations, or open work",
+        "next step only when it is genuinely useful",
+        "Do not require fixed",
+        "section headings or a field list",
         "REPORT_REVISION_REQUIRED",
         "schema correction, not a new review lane",
         "Every completed user-facing task ends with this compact route footer",
@@ -491,20 +483,15 @@ def main() -> int:
         raise AssertionError("task bundle does not mark the current amendment")
 
     accepted_transcript = temporary / "accepted.jsonl"
-    handoff = """## Continuity
+    handoff = """I shipped the CSV export for the dashboard and signed the production bundle.
+The focused suite passed all 12 checks, and I confirmed a production download at
+https://example.com/export. The change is at 0123456789abcdef. JSON export remains a useful
+follow-up; there are no current limitations.
 
-- Outcome: Shipped CSV export
-- Delivered: Dashboard export and signed bundle
-- Proof: 12 tests passed and production download observed
-- Links: https://example.com/export
-- Revision: 0123456789abcdef
-- Open commitments: Add JSON export
-- Next: Add JSON export
-- Limitations: None"""
-    detailed_report = (
-        "## Completed\n\nCSV export is live.\n\n## Links\n\n"
-        "- [Live website](https://example.com/export)"
-    )
+## Route
+- Class: Small build
+- Implementation: Terra / Max
+- Root: GPT-5.6 Sol / High"""
     write_events(
         accepted_transcript,
         [
@@ -516,13 +503,14 @@ def main() -> int:
                 "type": "response_item",
                 "payload": {
                     "type": "agent_message",
-                    "content": [
-                        {
-                            "text": (
-                                acceptance + "\n" + handoff + "\n" + detailed_report
-                            )
-                        }
-                    ],
+                    "content": [{"text": acceptance}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
+                    "content": [{"text": handoff}],
                 },
             },
         ],
@@ -538,8 +526,15 @@ def main() -> int:
         raise AssertionError("completion handoff was not passed to the next Terra")
     if "RECENT_CONTEXT_FRESHNESS: FRESH" not in accepted_context:
         raise AssertionError("an immediate follow-up incorrectly made its completion capsule stale")
-    if "CSV export is live" in accepted_context:
-        raise AssertionError("detailed report replaced the preferred bounded handoff")
+    if "I shipped the CSV export for the dashboard" not in accepted_context:
+        raise AssertionError("natural-language completion was not retained for the next task")
+    accepted_bundle = json.loads(
+        Path(context_field(accepted_context, "TASK_CONTEXT_BUNDLE")).read_text(
+            encoding="utf-8"
+        )
+    )
+    if accepted_bundle.get("prior_completed_result") != handoff:
+        raise AssertionError("task roles did not retain the exact natural-language completion")
 
     legacy_transcript = temporary / "legacy-accepted.jsonl"
     legacy_result = "Released the benchmark to GitHub and Hetzner; verification passed."
@@ -826,7 +821,7 @@ def main() -> int:
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded continuity, and completed-rollout elision")
+    print("PASS: chat controls, bounded completion context, and completed-rollout elision")
     return 0
 
 

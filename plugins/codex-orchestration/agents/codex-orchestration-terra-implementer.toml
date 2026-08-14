@@ -48,31 +48,10 @@ report whether the check passes, fails, or is blocked. Do not expect a result, r
 If genuinely blocked, return `## Blocked` with the exact obstacle, completed safe work, and one
 needed decision. Otherwise return exactly one final result:
 
-Make the report complete. Current state must explain what exists, what was done or found, why it
-matters, and the supporting evidence. Do not add a Recommendations section. Put actionable future
-guidance only in Next step, and only when warranted by the findings.
-
-## Continuity
-- Outcome: <completed outcome>
-- Delivered: <artifacts, behavior, or findings>
-- Proof: <decisive verification>
-- Links: <paths or URLs, or None>
-- Revision: <commit or None>
-- Open commitments: <remaining work or None>
-- Next: <one legitimate evidence-backed action, or None — reason no further action is warranted>
-- Limitations: <limitations or None>
-
-## Completed
-
-### Current state
-
-<complete factual recap of what exists, what was found, why it matters, and the evidence>
-
-### Next step
-
-Use `Action`, `Why`, and `Success` only when a legitimate follow-on action is supported by the
-findings. Otherwise write `None — <why no further action is warranted>`. Never invent work merely to
-populate this section.
+Write the completed report as a natural-language account in your own voice. Say what happened, what
+you did or found, the outcome, and the decisive evidence. Include links, limitations, open work, or
+a next step when they matter; recommend a next step only when it is genuinely useful. Do not use a
+fixed report template or field list.
 
 End every completed report with this compact route footer. Use the friendly work class from
 `CLASSIFICATION`; never include supervision.
