@@ -45,6 +45,17 @@ MAX_PRIOR_COMPLETED_CHARS = 2_048
 MAX_RECENT_CONTEXT_CHARS = 3_072
 MAX_RECENT_MESSAGE_CHARS = 1_024
 MAX_RECENT_MESSAGES = 8
+MAX_COMPLETED_TASK_OUTCOMES = 20
+CONTEXT_BUNDLE_SCOPE = (
+    "Concise whole-chat representation: chronological user requests and substantive "
+    "root-visible assistant facts, plus canonical outcomes for the 20 most recent "
+    "completed tasks."
+)
+TRANSIENT_ASSISTANT_MESSAGES = {
+    "starting the task",
+    "working on it",
+    "thinking",
+}
 INJECTED_USER_PREFIXES = (
     "<recommended_plugins>",
     "# AGENTS.md instructions for ",
@@ -173,8 +184,8 @@ CURRENT_ROOT_ROUTE=<STATE value>
 IMPLEMENTATION_ROUTE=<friendly selected model lane>
 INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 __LAST_TASK_CONTEXT_PACKET_LINE__
-The bundle is the implementer's complete private context: every root-visible chat message and
-completed-task outcome. Pass its immutable path and revision unchanged; bounded STATE values do not
+The bundle is complete private context: concise whole-chat context—user requests, assistant facts,
+and 20 newest canonical task outcomes. Pass its path/revision unchanged; bounded STATE values do not
 replace it.
 Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout. The implementer owns
 scope interpretation, implementation, verification, and authorized release. It owns the final
@@ -278,6 +289,90 @@ def bounded_single_line(value: str, limit: int) -> str:
     return " ".join(value.split())[:limit]
 
 
+def unwrap_final_answer(value: str) -> str:
+    """Drop an internal child-to-root transport envelope from a final report."""
+    lines = value.strip().splitlines()
+    if not lines or lines[0].strip() != "Message Type: FINAL_ANSWER":
+        return value.strip()
+    for index, line in enumerate(lines[1:], start=1):
+        if line.strip() == "Payload:" and index + 1 < len(lines):
+            return "\n".join(lines[index + 1 :]).strip()
+    return value.strip()
+
+
+def strip_route_footer(value: str) -> str:
+    """Remove the repeated routing receipt from a stored historical outcome."""
+    match = ROUTE_FOOTER_PATTERN.search(value.rstrip())
+    return value[: match.start()].rstrip() if match is not None else value.strip()
+
+
+def collapse_repeated_content(value: str) -> str:
+    """Replace pathological repeated filler without dropping the distinct wording."""
+    value = re.sub(
+        r"(?P<char>[^\n])(?P=char){63,}",
+        lambda match: f"{match.group('char')}×{len(match.group())}",
+        value,
+    )
+    repeated_phrase = re.compile(
+        r"(?P<unit>\b(?:[\w/-]+[ \t]+){1,5}[\w/-]+\b)"
+        r"(?P<repeats>(?:[ \t]+(?P=unit)){2,})"
+    )
+
+    def replace_phrase(match: re.Match[str]) -> str:
+        unit = match.group("unit")
+        return f"{unit} [repeated {match.group(0).count(unit)}×]"
+
+    return repeated_phrase.sub(replace_phrase, value)
+
+
+def deduplicate_paragraphs(value: str) -> str:
+    """Keep one copy of each exact paragraph in a report-like value."""
+    paragraphs = re.split(r"\n[ \t]*\n", value.strip())
+    retained: list[str] = []
+    seen: set[str] = set()
+    for paragraph in paragraphs:
+        normalized = paragraph.strip()
+        if normalized and normalized not in seen:
+            retained.append(normalized)
+            seen.add(normalized)
+    return "\n\n".join(retained)
+
+
+def without_leading_heading(section: str) -> str:
+    """Remove a report-only heading while retaining its meaningful contents."""
+    lines = section.splitlines()
+    if lines and lines[0].strip().startswith("## "):
+        lines = lines[1:]
+    return "\n".join(lines).strip()
+
+
+def canonical_task_outcome(value: str) -> str:
+    """Build a compact, faithful outcome record from a final report or handoff."""
+    canonical = strip_route_footer(unwrap_final_answer(value))
+    continuity = markdown_section(canonical, "Continuity")
+    if continuity is not None and markdown_section(canonical, "Completed") is not None:
+        canonical = without_leading_heading(continuity)
+    canonical = deduplicate_paragraphs(canonical)
+    canonical = collapse_repeated_content(canonical)
+    return canonical.strip()
+
+
+def completed_report_outcome(message: str) -> str | None:
+    """Return the canonical outcome encoded by a terminal report, if present."""
+    if has_route_footer(message):
+        return canonical_task_outcome(message)
+    completed = markdown_section(message, "Completed")
+    if completed is None:
+        return None
+    return canonical_task_outcome(markdown_section(message, "Continuity") or completed)
+
+
+def is_transient_assistant_message(message: str) -> bool:
+    """Exclude status-only root commentary that conveys no durable chat fact."""
+    normalized = bounded_single_line(message, 256).casefold().rstrip(".!")
+    return normalized in TRANSIENT_ASSISTANT_MESSAGES
+
+
 def markdown_section(message: str, heading: str) -> str | None:
     """Return one exact level-two Markdown section from trusted child output."""
     lines = message.splitlines()
@@ -312,15 +407,16 @@ def has_route_footer(message: str) -> bool:
 
 
 def append_completed_task_outcome(outcomes: list[str], outcome: str | None) -> None:
-    """Keep each exact final outcome once when root relays a child report verbatim."""
+    """Keep one canonical outcome per task, retaining the newest bounded history."""
     if not outcome:
         return
-    exact_outcome = outcome.strip()
-    if not exact_outcome:
+    canonical_outcome = canonical_task_outcome(outcome)
+    if not canonical_outcome:
         return
-    if outcomes and exact_outcome == outcomes[-1]:
+    if outcomes and canonical_outcome == outcomes[-1]:
         return
-    outcomes.append(exact_outcome)
+    outcomes.append(canonical_outcome)
+    del outcomes[:-MAX_COMPLETED_TASK_OUTCOMES]
 
 
 def bounded_recent_context(messages: list[tuple[str, str]]) -> str:
@@ -364,7 +460,7 @@ def transcript_context(
     list[str],
     dict[str, str | None],
 ]:
-    """Return bounded routing state plus the complete private chat record."""
+    """Return bounded routing state plus a concise private whole-chat record."""
     exact_current_prompt = strip_injected_user_prefix(current_prompt).strip()
     if not isinstance(transcript_value, str):
         return (
@@ -422,16 +518,16 @@ def transcript_context(
                 if conversation is not None:
                     conversation_tail.append(conversation)
                     conversation_tail = conversation_tail[-MAX_RECENT_MESSAGES:]
-                    chat_messages.append(
-                        {"role": conversation[0], "content": conversation[1]}
-                    )
                     if has_completion:
                         post_completion_tail.append(conversation)
                         post_completion_tail = post_completion_tail[-MAX_RECENT_MESSAGES:]
-                    if conversation[0] == "assistant" and has_route_footer(
-                        conversation[1]
-                    ):
-                        exact_prior_completed = conversation[1].strip()
+                    root_visible_outcome = (
+                        completed_report_outcome(conversation[1])
+                        if conversation[0] == "assistant"
+                        else None
+                    )
+                    if root_visible_outcome is not None:
+                        exact_prior_completed = root_visible_outcome
                         prior_completed = bounded_single_line(
                             exact_prior_completed, MAX_PRIOR_COMPLETED_CHARS
                         )
@@ -441,6 +537,13 @@ def transcript_context(
                         post_completion_tail = []
                         append_completed_task_outcome(
                             completed_task_outcomes, exact_prior_completed
+                        )
+                    elif not (
+                        conversation[0] == "assistant"
+                        and is_transient_assistant_message(conversation[1])
+                    ):
+                        chat_messages.append(
+                            {"role": conversation[0], "content": conversation[1]}
                         )
                 message = agent_message_text(event)
                 completed_outcome: str | None = None
@@ -478,8 +581,9 @@ def transcript_context(
                     completion_handoffs.pop(completion_scope, None)
                     exact_completion_handoffs.pop(completion_scope, None)
 
-                if has_route_footer(message):
-                    exact_prior_completed = message.strip()
+                completed_outcome = completed_report_outcome(message)
+                if completed_outcome is not None:
+                    exact_prior_completed = completed_outcome
                     prior_completed = bounded_single_line(
                         exact_prior_completed, MAX_PRIOR_COMPLETED_CHARS
                     )
@@ -488,19 +592,6 @@ def transcript_context(
                     has_completion = True
                     post_completion_tail = []
                     completed_outcome = exact_prior_completed
-                else:
-                    readable_completion = markdown_section(message, "Completed")
-                    if readable_completion is not None:
-                        continuity = markdown_section(message, "Continuity")
-                        exact_prior_completed = continuity or readable_completion
-                        prior_completed = bounded_single_line(
-                            exact_prior_completed, MAX_PRIOR_COMPLETED_CHARS
-                        )
-                        prior_acceptance = None
-                        exact_prior_acceptance = None
-                        has_completion = True
-                        post_completion_tail = []
-                        completed_outcome = exact_prior_completed
 
                 message_lines = message.splitlines()
                 for index, message_line in enumerate(message_lines):
@@ -521,21 +612,23 @@ def transcript_context(
                         completion_handoffs.pop(completion_scope, None)
                         exact_completion_handoffs.pop(completion_scope, None)
                     elif message_line.startswith("ORCHESTRATION_HANDOFF: "):
+                        exact_handoff = canonical_task_outcome(
+                            message_line.removeprefix("ORCHESTRATION_HANDOFF: ")
+                        )
                         completion_handoff = bounded_single_line(
-                            message_line.removeprefix("ORCHESTRATION_HANDOFF: "),
-                            MAX_PRIOR_COMPLETED_CHARS,
+                            exact_handoff, MAX_PRIOR_COMPLETED_CHARS
                         )
                         completion_handoffs[completion_scope] = completion_handoff
-                        exact_completion_handoffs[
-                            completion_scope
-                        ] = message_line.removeprefix("ORCHESTRATION_HANDOFF: ")
+                        exact_completion_handoffs[completion_scope] = exact_handoff
                         prior_completed = completion_handoff
-                        exact_prior_completed = exact_completion_handoffs[completion_scope]
+                        exact_prior_completed = exact_handoff
                     elif message_line.startswith("ORCHESTRATION_ACCEPT:"):
                         prior_acceptance = None
                         exact_prior_acceptance = None
-                        accepted_result = "\n".join(message_lines[index:]).removeprefix(
-                            "ORCHESTRATION_ACCEPT:"
+                        accepted_result = canonical_task_outcome(
+                            "\n".join(message_lines[index:]).removeprefix(
+                                "ORCHESTRATION_ACCEPT:"
+                            )
                         )
                         exact_prior_completed = exact_completion_handoffs.get(
                             completion_scope
@@ -761,10 +854,7 @@ def main() -> int:
     bundle = write_context_bundle(
         session_id,
         {
-            "scope": (
-                "Complete root-visible conversation and exact completed-task outcomes "
-                "accumulated in this chat."
-            ),
+            "scope": CONTEXT_BUNDLE_SCOPE,
             "messages": chat_messages,
             "completed_task_outcomes": completed_task_outcomes,
             "prior_active_acceptance": exact_continuity["prior_active_acceptance"],

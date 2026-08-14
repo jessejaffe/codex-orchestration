@@ -55,8 +55,8 @@ score is diagnostic telemetry; users do not need to interpret it or select a rou
 
 The routed implementer receives the exact private task-context bundle and then:
 
-- reads the complete chat record and prior task outcomes before deciding what other context is
-  needed;
+- reads the complete concise whole-chat record and the 20 newest prior task outcomes before
+  deciding what other context is needed;
 - resolves the requested outcome and constraints, including chat-resident facts;
 - inspects the real project state only when the current task needs it;
 - uses applicable skills;
@@ -98,10 +98,12 @@ that work account rather than replacing it.
 
 ## Classification and context
 
-The chat-scoped hook writes an immutable, private task-context bundle. It contains the complete
-root-visible conversation for the chat plus every exact completed-task outcome, in chronological
-order and without a routing-packet character limit. Terra / Extra High receives only bounded routing
-context and returns:
+The chat-scoped hook writes an immutable, private task-context bundle. It is a concise whole-chat
+representation: every user request and substantive root-visible assistant fact in chronological
+order, plus canonical outcomes for the 20 newest completed tasks. It deterministically removes
+internal transport envelopes, duplicate relays, generic route footers, status-only commentary, and
+pathological repeated filler without relying on a model-written summary. Terra / Extra High receives
+only bounded routing context and returns:
 
 ```text
 ## Classification
@@ -114,13 +116,13 @@ context and returns:
 
 When the user explicitly asks to continue a different previous Codex task outside this chat, root
 reads it once. The classifier gets a 1,200-character routing capsule and the selected implementer
-gets a 6,000-character continuity block. Those cross-task capsules do not limit the complete
-private bundle for the current chat. Missing optional artifacts never block work.
+gets a 6,000-character continuity block. Those cross-task capsules do not limit the concise
+whole-chat bundle for the current chat. Missing optional artifacts never block work.
 
 Completed agents report in natural language. The classifier's small state packet retains only the
-latest bounded completion context, but the selected implementer receives the full private bundle—not
-a summary—so a follow-up can use facts and exact outcomes from earlier tasks without unnecessary
-repository inspection. Each report still ends with a compact route footer naming the work class, selected implementation lane, and root route.
+latest bounded completion context, while the selected implementer receives the complete canonical
+bundle—not a current-task excerpt—so a follow-up can use durable chat facts and recent task outcomes
+without unnecessary repository inspection. Each report still ends with a compact route footer naming the work class, selected implementation lane, and root route.
 
 ## Reports
 

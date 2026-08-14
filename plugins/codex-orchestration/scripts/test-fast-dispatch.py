@@ -186,11 +186,14 @@ def main() -> int:
         raise AssertionError(f"current request bundle is not exact: {bundle_document!r}")
     if bundle_document.get("completed_task_outcomes") != []:
         raise AssertionError("new chat bundle unexpectedly has completed task outcomes")
+    if bundle_document.get("schema_version") != 2:
+        raise AssertionError("task-context bundle did not publish the concise schema")
     if bundle_document.get("scope") != (
-        "Complete root-visible conversation and exact completed-task outcomes "
-        "accumulated in this chat."
+        "Concise whole-chat representation: chronological user requests and substantive "
+        "root-visible assistant facts, plus canonical outcomes for the 20 most recent "
+        "completed tasks."
     ):
-        raise AssertionError("task-context bundle does not declare its full-chat scope")
+        raise AssertionError("task-context bundle does not declare its concise whole-chat scope")
     if bundle_path.stat().st_mode & 0o077:
         raise AssertionError("task-context bundle is not private")
     for obsolete in (
@@ -482,8 +485,8 @@ def main() -> int:
         )
     )
     exact_contents = [item["content"] for item in interruption_bundle["messages"]]
-    if exact_contents != [exact_original.strip(), "Starting the task.", exact_add_on]:
-        raise AssertionError("early interruption did not preserve the unabridged original request")
+    if exact_contents != [exact_original.strip(), exact_add_on]:
+        raise AssertionError("private bundle retained transient progress instead of chat facts")
     if "MUST_KEEP_THIS_MIDDLE_CONSTRAINT" not in exact_contents[0]:
         raise AssertionError("middle constraints were clipped from the private task bundle")
     if interruption_bundle["messages"][-1].get("current") is not True:
@@ -517,7 +520,31 @@ follow-up; there are no current limitations.
                 "type": "response_item",
                 "payload": {
                     "type": "agent_message",
+                    "content": [
+                        {
+                            "text": (
+                                "Message Type: FINAL_ANSWER\n"
+                                "Task name: /root/example\n"
+                                "Payload:\n"
+                                + handoff
+                            )
+                        }
+                    ],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "agent_message",
                     "content": [{"text": handoff}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": handoff}],
                 },
             },
         ],
@@ -528,7 +555,8 @@ follow-up; there are no current limitations.
         raise AssertionError("accepted objective was not cleared")
     if "CLASSIFIER_FORK=`1`" not in accepted_context:
         raise AssertionError("current query did not use one-turn inheritance with its capsule")
-    bounded_handoff = " ".join(handoff.split())
+    canonical_handoff = handoff.rsplit("\n\n## Route", 1)[0]
+    bounded_handoff = " ".join(canonical_handoff.split())
     if f"PRIOR_COMPLETED_RESULT: {bounded_handoff}" not in accepted_context:
         raise AssertionError("completion handoff was not passed to the next Terra")
     if "RECENT_CONTEXT_FRESHNESS: FRESH" not in accepted_context:
@@ -540,10 +568,10 @@ follow-up; there are no current limitations.
             encoding="utf-8"
         )
     )
-    if accepted_bundle.get("prior_completed_result") != handoff:
-        raise AssertionError("task roles did not retain the exact natural-language completion")
-    if accepted_bundle.get("completed_task_outcomes") != [handoff]:
-        raise AssertionError("task roles did not retain the completed natural-language outcome")
+    if accepted_bundle.get("prior_completed_result") != canonical_handoff:
+        raise AssertionError("task roles did not retain the canonical natural-language completion")
+    if accepted_bundle.get("completed_task_outcomes") != [canonical_handoff]:
+        raise AssertionError("task roles did not deduplicate the relayed completed outcome")
 
     root_visible_outcome = """Root completed the terminal visual check.
 
@@ -574,21 +602,22 @@ follow-up; there are no current limitations.
             encoding="utf-8"
         )
     )
-    if root_visible_bundle.get("completed_task_outcomes") != [root_visible_outcome]:
+    canonical_root_visible_outcome = root_visible_outcome.rsplit("\n\n## Route", 1)[0]
+    if root_visible_bundle.get("completed_task_outcomes") != [canonical_root_visible_outcome]:
         raise AssertionError("private bundle lost a root-visible completed task outcome")
-    if root_visible_bundle.get("prior_completed_result") != root_visible_outcome:
+    if root_visible_bundle.get("prior_completed_result") != canonical_root_visible_outcome:
         raise AssertionError("root-visible completion did not update continuity")
 
     full_history_transcript = temporary / "full-history-context.jsonl"
     full_history_events: list[dict[str, object]] = [{"type": "session_meta", "payload": {}}]
     full_history_messages: list[str] = []
     full_history_outcomes: list[str] = []
-    for task_number in range(1, 11):
+    for task_number in range(1, 22):
         request = f"Task {task_number} request carries a durable chat fact."
         visible_update = f"Task {task_number} visible result carries a durable answer."
         detail = (
             "UNBOUNDED_FIRST_OUTCOME_MARKER " + ("first outcome detail " * 1_500)
-            if task_number == 1
+            if task_number == 2
             else f"Outcome detail for task {task_number}."
         )
         outcome = (
@@ -625,6 +654,14 @@ follow-up; there are no current limitations.
                         "content": [{"text": outcome}],
                     },
                 },
+                {
+                    "type": "response_item",
+                    "payload": {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [{"type": "output_text", "text": outcome}],
+                    },
+                },
             )
         )
     full_history_events.append(
@@ -653,12 +690,21 @@ follow-up; there are no current limitations.
         full_history_request,
     ]:
         raise AssertionError("private bundle dropped earlier root-visible chat history")
-    if full_history_bundle.get("completed_task_outcomes") != full_history_outcomes:
-        raise AssertionError("private bundle dropped, reordered, or clipped prior task outcomes")
-    if "UNBOUNDED_FIRST_OUTCOME_MARKER" not in full_history_bundle[
-        "completed_task_outcomes"
-    ][0]:
-        raise AssertionError("private bundle clipped its oversized earlier task outcome")
+    retained_outcomes = full_history_bundle.get("completed_task_outcomes")
+    if not isinstance(retained_outcomes, list) or len(retained_outcomes) != 20:
+        raise AssertionError("private bundle did not retain exactly the newest 20 task outcomes")
+    if any("Task 1 completed." in outcome for outcome in retained_outcomes):
+        raise AssertionError("private bundle retained an outcome older than its 20-task window")
+    for task_number, outcome in zip(range(2, 22), retained_outcomes):
+        if not outcome.startswith(f"Task {task_number} completed."):
+            raise AssertionError("private bundle reordered canonical task outcomes")
+        if "## Route" in outcome:
+            raise AssertionError("private bundle retained repeated route-footer boilerplate")
+    verbose_outcome = retained_outcomes[0]
+    if "UNBOUNDED_FIRST_OUTCOME_MARKER" not in verbose_outcome:
+        raise AssertionError("private bundle lost a durable outcome fact while compacting")
+    if "[repeated " not in verbose_outcome or len(verbose_outcome) >= len(full_history_outcomes[1]) // 8:
+        raise AssertionError("private bundle did not compact pathological repeated outcome filler")
 
     legacy_transcript = temporary / "legacy-accepted.jsonl"
     legacy_result = "Released the benchmark to GitHub and Hetzner; verification passed."
@@ -904,13 +950,14 @@ follow-up; there are no current limitations.
         line for line in oversized.splitlines() if line.startswith("PRIOR_COMPLETED_RESULT: ")
     )
     completed_value = completed_line.removeprefix("PRIOR_COMPLETED_RESULT: ")
-    if completed_value != oversized_handoff[:2_048]:
-        raise AssertionError("classifier completion handoff was not bounded to 2,048 characters")
+    canonical_oversized_handoff = "OUTCOME=x×5000"
+    if completed_value != canonical_oversized_handoff:
+        raise AssertionError("classifier completion handoff was not canonically compacted")
     oversized_bundle = json.loads(
         Path(context_field(oversized, "TASK_CONTEXT_BUNDLE")).read_text(encoding="utf-8")
     )
-    if oversized_bundle.get("prior_completed_result") != oversized_handoff:
-        raise AssertionError("task roles did not retain the exact unabridged completion handoff")
+    if oversized_bundle.get("prior_completed_result") != canonical_oversized_handoff:
+        raise AssertionError("task roles did not retain the canonical compact completion handoff")
     if len(oversized) > 15_000:
         raise AssertionError(f"bounded completion dispatch exceeds latency budget: {len(oversized)}")
 
@@ -945,7 +992,7 @@ follow-up; there are no current limitations.
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded classifier context, and full private chat context")
+    print("PASS: chat controls, bounded classifier context, and concise private whole-chat context")
     return 0
 
 

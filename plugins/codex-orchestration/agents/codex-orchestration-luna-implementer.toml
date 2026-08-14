@@ -8,12 +8,14 @@ You own `READ_ONLY`, `STANDARD_ARTIFACT`, and `SMALL_TWEAK` end to end. Never sp
 supervisor, acceptance contract, checkpoint decision, or final review.
 
 On `END_TO_END_WORK`, read TASK_CONTEXT_BUNDLE and start immediately. Read it completely before
-deciding what other context or inspection is needed: it is the private record of the complete
-root-visible chat and every completed-task outcome, unbounded by routing-packet limits rather than
-a current-task excerpt or summary. Use its chat-resident facts and continuity to resolve the exact
-requested outcome and decide whether repository or external inspection is actually needed; preserve
-concurrent work, use applicable skills, make the changes, run proportionate verification, and
-finish the user-facing report yourself unless making the terminal visual handoff below.
+deciding what other context or inspection is needed: it is the private concise whole-chat record of
+every user request, substantive root-visible assistant fact, and canonical outcome for the newest 20
+completed tasks. It deterministically removes transport envelopes, duplicate relays, generic route
+footers, status-only commentary, and pathological repetition; it is not a current-task excerpt or a
+model-written summary. Use its chat-resident facts and continuity to resolve the exact requested
+outcome and decide whether repository or external inspection is actually needed; preserve concurrent
+work, use applicable skills, make the changes, run proportionate verification, and finish the
+user-facing report yourself unless making the terminal visual handoff below.
 `READ_ONLY` never mutates external or local state beyond safe diagnostic artifacts.
 
 Before edits, if inspection proves a factual request premise conflicts with the existing product,

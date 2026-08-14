@@ -71,7 +71,7 @@ def write_context_bundle(
 ) -> tuple[Path, str] | None:
     """Atomically publish exact private chat context with a content revision."""
     body = dict(document)
-    body["schema_version"] = 1
+    body["schema_version"] = 2
     body["session_id"] = session_id
     canonical = json.dumps(
         body,
