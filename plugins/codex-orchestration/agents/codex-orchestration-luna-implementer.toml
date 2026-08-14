@@ -75,4 +75,12 @@ Use `Action`, `Why`, and `Success` only when a legitimate follow-on action is su
 findings. Otherwise write `None — <why no further action is warranted>`. Never invent work merely to
 populate this section.
 
+End every completed report with this compact route footer. Use the friendly work class from
+`CLASSIFICATION`; never include supervision.
+
+## Route
+- Class: <friendly class>
+- Implementation: <IMPLEMENTATION_ROUTE>
+- Root: <CURRENT_ROOT_ROUTE>
+
 """

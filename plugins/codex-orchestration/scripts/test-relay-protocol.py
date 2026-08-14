@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.13.0 classifier-to-single-agent protocol."""
+"""Static contracts for the 0.9.0 classifier-to-single-agent protocol."""
 
 from __future__ import annotations
 
@@ -86,9 +86,9 @@ def main() -> int:
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
     version = manifest.get("version")
     if not isinstance(version, str) or not re.fullmatch(
-        r"0\.13\.0(?:\+codex\.[0-9A-Za-z._-]+)?", version
+        r"0\.9\.0", version
     ):
-        raise AssertionError(f"manifest does not use the 0.13.0 line: {version!r}")
+        raise AssertionError(f"manifest does not use official version 0.9.0: {version!r}")
 
     if sum(map(len, prompts.values())) > 15_000:
         raise AssertionError("agent prompts exceed the 15,000-character single-agent budget")
@@ -127,7 +127,7 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.13.0)", "exactly two stages",
+            "Orchestration ON (0.9.0)", "exactly two stages",
             "one selected implementer owns the task end to end",
             "PREVIOUS TASK CONTEXT REQUIRED", "list_threads", "read_thread",
             "Send it to the classifier", "Send it to the selected implementer",
@@ -152,6 +152,14 @@ def main() -> int:
             "preserve the completed work and decisive evidence",
             "A next step is valid only when supported by", "Reject a bare",
             "`None` or invented follow-on work", "REPORT_REVISION_REQUIRED",
+            "Every completed user-facing task ends with this compact route footer",
+            "## Route", "- Class: <friendly class>",
+            "- Implementation: <IMPLEMENTATION_ROUTE>", "- Root: <CURRENT_ROOT_ROUTE>",
+            "Never include supervision", "Treat its absence as a missing required report field",
+            "RELAY — A valid nonvisual child report is the user-facing final response",
+            "Return it verbatim as the entire final answer",
+            "Do not summarize, condense, paraphrase, introduce, assess, or append to it",
+            "Do not perform an extra completion turn or tool call",
         ),
         "root coordinator",
     )
@@ -171,7 +179,8 @@ def main() -> int:
             "`None` is invalid", "recommended future state and concrete action over current-state recap",
             "luna_high_implementer_<objective_slug>", "## Root verification result",
             "ROOT_VERIFICATION_RECOVERY_REQUIRED", "### Recommendations",
-            "## Route", "- Supervision: None", "route footer",
+            "- Supervision:",
+            "Fast-relay valid child results without extra reasoning",
         ),
         "root coordinator",
     )
@@ -209,6 +218,10 @@ def main() -> int:
                 "## Continuity", "## Completed", "### Current state",
                 "### Next step", "Use `Action`, `Why`, and `Success` only when",
                 "None — <why no further action is warranted>", "Never invent work",
+                "End every completed report with this compact route footer",
+                "## Route", "- Class: <friendly class>",
+                "- Implementation: <IMPLEMENTATION_ROUTE>", "- Root: <CURRENT_ROOT_ROUTE>",
+                "never include supervision",
             ),
             filename,
         )
@@ -220,7 +233,7 @@ def main() -> int:
                 "recommendation-led", "keep the current-state recap brief", "never None",
                 "Spend more space on the future state", "Stop until root returns",
                 "request another root check", "Alternatives exhausted",
-                "### Recommendations", "## Route", "- Supervision: None",
+                "### Recommendations", "- Supervision:",
             ),
             filename,
         )
@@ -236,7 +249,7 @@ def main() -> int:
     require(
         installer,
         (
-            "four Codex Orchestration 0.13.0 profiles",
+            "four Codex Orchestration 0.9.0 profiles",
             "Exact previously shipped profiles accepted for safe in-place migration",
             "f8c6190b3e4375ece24eb02ab9db0983a5f8c4cad47a126059cbc2c62f344194",
             "68179487b09d11667c6a0e69e48cec65348847df7ebb0e501e67ed47de0114a6",
@@ -264,8 +277,11 @@ def main() -> int:
             "c0da09a763a31e77d4b9390e524eb61ead0b730a5024c9c322761a9b39f056a2",
             "66a549c67e7f81f0d0e6db89ec85af7d1a47253b376e255344c603459ec0ea7c",
             "2574ab7e01874599ed4b05940d7b9a0898e0fb21564a5ac8ce3961a6ebcbaaf3",
+            "ab612956e9cb73aa1494fb086d345be5a14ffb1de301b5fb55c540f0e37d886d",
             "45e2549938493020446261a960b12d800d0244b794d10bb280fda0041720ed5f",
+            "a117ad6643923035f7eebcbdc9b7d3350d5eb2d89c1d284c2e93af4b243d55fc",
             "f980e92ded78673ecb3052af93492d0cc5bf295dbcf0e27aa3df41a05ebbd852",
+            "84b9be0a605cb684d716db6f4e2f6b8986e8e1e93b86496ea187816a920ad3ce",
             "6f4a5eb3d93109728ea2cf4bc955da0f3eee58422e8baa15b8c4d98354529064",
             "Preflight every target", "refusing $state retired role",
         ),
@@ -297,7 +313,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.13.0 classifier-to-single-agent protocol")
+    print("PASS: 0.9.0 classifier-to-single-agent protocol")
     return 0
 
 

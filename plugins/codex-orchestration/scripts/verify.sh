@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verify the Codex Orchestration 0.13.0 single-agent workflow without network access.
+# Verify the official Codex Orchestration 0.9.0 single-agent workflow without network access.
 
 set -eu
 
@@ -19,9 +19,9 @@ done
 jq -e . "$manifest" >/dev/null || fail 'plugin manifest is invalid JSON'
 [ "$(jq -r .name "$manifest")" = codex-orchestration ] || fail 'wrong plugin name'
 manifest_version=$(jq -r .version "$manifest")
-printf '%s\n' "$manifest_version" | grep -Eq '^0\.13\.0(\+codex\.[0-9A-Za-z._-]+)?$' ||
-  fail "manifest version is not on the 0.13.0 development line: $manifest_version"
-pass "manifest uses the 0.13.0 development line ($manifest_version)"
+[ "$manifest_version" = '0.9.0' ] ||
+  fail "manifest version is not official version 0.9.0: $manifest_version"
+pass "manifest uses official version 0.9.0"
 
 for shell_script in "$script_dir"/*.sh; do
   sh -n "$shell_script" || fail "invalid shell syntax: $shell_script"
@@ -101,8 +101,8 @@ fi
   fail 'customized former supervisor changed during rejected migration'
 pass 'conflict-safe four-profile installer behavior'
 
-grep -Fq 'requires the 0.13.0 development line' "$script_dir/reinstall-plugin.sh" ||
-  fail 'reinstaller does not enforce the 0.13.0 development line'
+grep -Fq 'requires official version 0.9.0' "$script_dir/reinstall-plugin.sh" ||
+  fail 'reinstaller does not enforce official version 0.9.0'
 for role in terra-orchestrator luna-implementer terra-implementer sol-high-implementer; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
@@ -136,23 +136,27 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'actual work next step' \
     'A request to implement locally does not itself authorize deployment' \
     '## Reports' \
+    'relayed verbatim to the user' \
+    'Root does not summarize, condense, or add a second completion response' \
+    'compact route footer naming the work class, selected implementation lane, and root route' \
+    'Every completed report finishes with this receipt' \
+    '- Class: <friendly class>' \
+    '- Implementation: <selected model lane>' \
+    '- Root: <CURRENT_ROOT_ROUTE>' \
     'no Recommendations section' \
     'Actionable future guidance belongs only in Next' \
     'Next step section gives an evidence-backed action' \
     'never invents work' \
     'four companion profiles' \
-    '0.13.0'; do
-    grep -Fq "$value" "$repo_readme" || fail "README omits $value"
+    '0.9.0'; do
+    grep -Fq -e "$value" "$repo_readme" || fail "README omits $value"
   done
-  if grep -Fq 'Supervision: None' "$repo_readme"; then
-    fail 'README retains the removed supervision route receipt'
+  if grep -Fq -e '- Supervision:' "$repo_readme"; then
+    fail 'README retains supervision in the route receipt'
   fi
-  if grep -Fxq '## Route' "$repo_readme"; then
-    fail 'README retains the removed route receipt'
-  fi
-  pass '0.13.0 workflow documentation'
+  pass '0.9.0 workflow documentation'
 else
   pass 'repository documentation is intentionally outside the installed plugin package'
 fi
 
-pass 'Codex Orchestration 0.13.0 single-agent verification complete'
+pass 'Codex Orchestration 0.9.0 single-agent verification complete'

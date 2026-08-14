@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the four Codex Orchestration 0.13.0 profiles and retire the former supervisors safely.
+# Install the four Codex Orchestration 0.9.0 profiles and retire the former supervisors safely.
 
 set -eu
 
@@ -48,7 +48,14 @@ sha256_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 
 # Exact previously shipped profiles accepted for safe in-place migration.
 previous_digest() {
-  # The immediately previous revision still emitted the route receipt.
+  # The immediately previous revision omitted the route receipt.
+  case "$1" in
+    luna-implementer) printf '%s\n' ab612956e9cb73aa1494fb086d345be5a14ffb1de301b5fb55c540f0e37d886d ;;
+    terra-implementer) printf '%s\n' a117ad6643923035f7eebcbdc9b7d3350d5eb2d89c1d284c2e93af4b243d55fc ;;
+    sol-high-implementer) printf '%s\n' 84b9be0a605cb684d716db6f4e2f6b8986e8e1e93b86496ea187816a920ad3ce ;;
+    *) ;;
+  esac
+  # The revision before that still emitted the four-field route receipt.
   case "$1" in
     luna-implementer) printf '%s\n' 2574ab7e01874599ed4b05940d7b9a0898e0fb21564a5ac8ce3961a6ebcbaaf3 ;;
     terra-implementer) printf '%s\n' 45e2549938493020446261a960b12d800d0244b794d10bb280fda0041720ed5f ;;
@@ -113,7 +120,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: four 0.13.0 profiles are current and former supervisors are absent.'
+  printf '%s\n' 'CHECK PASSED: four 0.9.0 profiles are current and former supervisors are absent.'
   exit 0
 fi
 
@@ -159,4 +166,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: four 0.13.0 profiles are current and former supervisors were retired.'
+printf '%s\n' 'INSTALL PASSED: four 0.9.0 profiles are current and former supervisors were retired.'

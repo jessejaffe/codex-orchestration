@@ -1,6 +1,6 @@
 {
   "name": "codex-orchestration",
-  "version": "0.13.0+codex.20260814030912",
+  "version": "0.9.0",
   "description": "Two-stage classification and single-agent execution with previous-task continuity.",
   "author": {
     "name": "Daniel McAteer",
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Codex Orchestration",
     "shortDescription": "Classifier-routed single-agent execution",
-    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.13.0 uses two stages only: GPT-5.6 Terra / Extra High classifies the request, then one Luna / Max, Terra / Max, or Sol / High agent owns the work. There are no supervisors, implementation checkpoints, or review loops. The selected agent interprets scope, performs the work, verifies it, completes any explicitly authorized release, and writes a complete final response with continuity, substantive current state, and a legitimate next step when one exists; there is no Recommendations section. For experience-dependent outcomes, root performs one terminal visual check; the work summary remains primary, while a failed visual check appears only as a second Next step after the work next step. Previous-task continuity, quiet startup, premise-mismatch checks, and exact task bundles remain.",
+    "longDescription": "Activate Codex Orchestration with Turn Orchestration on, Use Orchestration, or Use Orchestration for this chat. Version 0.9.0 uses two stages only: GPT-5.6 Terra / Extra High classifies the request, then one Luna / Max, Terra / Max, or Sol / High agent owns the work. There are no supervisors, implementation checkpoints, or review loops. The selected agent interprets scope, performs the work, verifies it, completes any explicitly authorized release, and writes a complete final response with continuity, substantive current state, a legitimate next step when one exists, and a class, implementation, and root-route footer; there is no Recommendations or supervision section. Nonvisual results are relayed verbatim from the selected agent, without a root condensation pass. For experience-dependent outcomes, root performs one terminal visual check; the work summary remains primary, while a failed visual check appears only as a second Next step after the work next step. Previous-task continuity, quiet startup, premise-mismatch checks, and exact task bundles remain.",
     "developerName": "Daniel McAteer",
     "category": "Productivity",
     "capabilities": [

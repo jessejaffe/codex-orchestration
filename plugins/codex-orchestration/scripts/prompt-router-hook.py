@@ -99,7 +99,7 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.13.0). Root coordinates exactly two stages: Terra / Extra
+DISPATCH_CONTEXT = """Orchestration ON (0.9.0). Root coordinates exactly two stages: Terra / Extra
 High classifies, then one selected implementer owns the task end to end. Root does not classify,
 implement, or supervise; it only performs the terminal visual check below when requested.
 
@@ -195,8 +195,18 @@ the findings; otherwise it must say `None — <reason no further action is warra
 `None` or invented follow-on work. If this contract is missing, use
 `followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact omissions, then
 relay only the corrected report. This is schema correction, not a new review lane.
-Fast-relay valid child results without extra reasoning. The activation-only acknowledgement is not
-task completion. Never expose packets, waits, or contracts to the user."""
+Every completed user-facing task ends with this compact route footer:
+## Route
+- Class: <friendly class>
+- Implementation: <IMPLEMENTATION_ROUTE>
+- Root: <CURRENT_ROOT_ROUTE>
+Never include supervision. The selected implementer supplies it after `### Next step`; root uses the
+same footer for a terminal visual result. Treat its absence as a missing required report field.
+RELAY — A valid nonvisual child report is the user-facing final response. Return it verbatim as the entire final answer.
+Preserve its Markdown, wording, detail, order, and links. Do not summarize, condense, paraphrase, introduce, assess, or append to it.
+Do not perform an extra completion turn or tool call. Only request `REPORT_REVISION_REQUIRED` for a
+missing required report field, then relay the corrected report verbatim. The activation-only
+acknowledgement is not task completion. Never expose packets, waits, or contracts to the user."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:

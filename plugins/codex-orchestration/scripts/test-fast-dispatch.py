@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermetic tests for chat-scoped activation and 0.13.0 single-agent dispatch."""
+"""Hermetic tests for chat-scoped activation and 0.9.0 single-agent dispatch."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
-        "Orchestration ON (0.13.0)",
+        "Orchestration ON (0.9.0)",
         "exactly two stages",
         "one selected implementer owns the task end to end",
         "desktop activity label exactly `Thinking`",
@@ -163,6 +163,16 @@ def main() -> int:
         "`None` or invented follow-on work",
         "REPORT_REVISION_REQUIRED",
         "schema correction, not a new review lane",
+        "Every completed user-facing task ends with this compact route footer",
+        "## Route",
+        "- Class: <friendly class>",
+        "- Implementation: <IMPLEMENTATION_ROUTE>",
+        "- Root: <CURRENT_ROOT_ROUTE>",
+        "Never include supervision",
+        "RELAY — A valid nonvisual child report is the user-facing final response",
+        "Return it verbatim as the entire final answer",
+        "Do not summarize, condense, paraphrase, introduce, assess, or append to it",
+        "Do not perform an extra completion turn or tool call",
     )
     for value in required:
         if value not in routed_context:
@@ -198,6 +208,7 @@ def main() -> int:
         "## Root verification result",
         "ROOT_VERIFICATION_RECOVERY_REQUIRED",
         "### Recommendations",
+        "Fast-relay valid child results without extra reasoning",
     ):
         if obsolete in routed_context:
             raise AssertionError(f"dispatch retains obsolete headless path: {obsolete!r}")
@@ -305,15 +316,21 @@ def main() -> int:
         raise AssertionError("read-only work skipped the classifier")
     for token in (
         "Every completed user-facing task must end with this compact",
-        "## Route",
-        "- Class: <friendly class>",
-        "- Implementation: <model lane>",
-        "- Supervision: None",
-        "- Root: <CURRENT_ROOT_ROUTE>",
-        "route footer",
     ):
         if token in direct_question_context:
             raise AssertionError(f"dispatch retains obsolete route receipt {token!r}")
+    for token in (
+        "Every completed user-facing task ends with this compact route footer",
+        "## Route",
+        "- Class: <friendly class>",
+        "- Implementation: <IMPLEMENTATION_ROUTE>",
+        "- Root: <CURRENT_ROOT_ROUTE>",
+        "Never include supervision",
+    ):
+        if token not in direct_question_context:
+            raise AssertionError(f"dispatch omits route receipt {token!r}")
+    if "- Supervision:" in direct_question_context:
+        raise AssertionError("dispatch retains supervision in the route receipt")
     inspection_policy = (
         "INSPECTION_POLICY=Group closely related low-output checks for one immediate question "
         "in one pass; keep unrelated or noisy checks separate."

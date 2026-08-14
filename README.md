@@ -1,13 +1,19 @@
 # Codex Orchestration
 
-Codex Orchestration `0.13.0` uses a two-stage workflow:
+Codex Orchestration `0.9.0` uses a two-stage workflow:
 
 1. GPT-5.6 Terra / Extra High classifies the request.
 2. One selected agent owns the task end to end.
 
 This normal workflow removes supervisors, acceptance construction, implementation checkpoints, and
 final-review loops so the single selected agent can interpret scope, work, verify, release when
-authorized, and report the result without serial coordination overhead.
+authorized, and report the result without serial coordination overhead. For nonvisual work, its
+completed report is relayed to the user verbatim rather than condensed by root.
+
+The default `main` branch is intentionally the stripped-down public distribution: repository
+guidance, public documentation and license, the marketplace descriptor, and the installable plugin
+package. It excludes synchronized chat or project material, user-specific runtime state, local
+caches, credentials, and unrelated development artifacts.
 
 ## Workflow
 
@@ -107,14 +113,25 @@ When the user explicitly asks to continue a previous task, root reads it once. T
 block. Missing optional artifacts never block work.
 
 Completed agents return a compact continuity section before the user-facing answer, so a follow-up
-can recover the prior outcome without flooding the main context.
+can recover the prior outcome without flooding the main context. Each completed report also ends
+with a compact route footer naming the work class, selected implementation lane, and root route.
 
 ## Reports
 
-The final report keeps the continuity section, followed by substantive Current state and Next step
-sections. It has no Recommendations section. Current state explains what exists, what was done or
-found, why it matters, and the supporting evidence. Actionable future guidance belongs only in Next
-step.
+Except for a root-only visual handoff, the final report is the selected agent's completed report,
+relayed verbatim to the user. Root does not summarize, condense, or add a second completion response.
+The report keeps the continuity section, followed by substantive Current state and Next step sections.
+It has no Recommendations section. Current state explains what exists, what was done or found, why
+it matters, and the supporting evidence. Actionable future guidance belongs only in Next step.
+
+Every completed report finishes with this receipt; it deliberately has no supervision field:
+
+```text
+## Route
+- Class: <friendly class>
+- Implementation: <selected model lane>
+- Root: <CURRENT_ROOT_ROUTE>
+```
 
 The Next step section gives an evidence-backed action, rationale, and success condition only when a
 real follow-on action exists. Otherwise it explicitly says no further action is warranted and why.
