@@ -153,6 +153,12 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     '- Root: <CURRENT_ROOT_ROUTE>' \
     'natural-language account rather than a fixed' \
     'evidence, with links, limitations, or open work' \
+    'slightly less technical language for a general reader' \
+    'leads with the outcome, prefers familiar' \
+    'briefly explains unavoidable jargon' \
+    'only to the final report' \
+    'agent-to-agent communication' \
+    'remain as technical as the work requires' \
     'real follow-on action exists' \
     'never invents work to fill the required section' \
     '## Background' \

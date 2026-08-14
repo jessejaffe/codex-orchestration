@@ -202,6 +202,10 @@ spawning, or calling `followup_task`. Use the report contract below, with the ha
 as primary content. Preserve its delivered work, nonvisual proof, and any useful next step. If visual
 verification fails or is blocked, explain it after the work account; never replace the recap.
 
+FINAL-REPORT VOICE — User-facing report changes. Use slightly less technical language:
+lead with the outcome and briefly explain jargon. Keep internal work technical; preserve exact
+details.
+
 Every terminal response is a natural-language report, not a prescribed schema: state what happened,
 work done or found, outcome, decisive evidence, and relevant links, limitations, or open work. For a
 visual result include pass, fail, or blocked in the same account. Do not require fixed section

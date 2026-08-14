@@ -48,6 +48,13 @@ sha256_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 
 # Exact previously shipped profiles accepted for safe in-place migration.
 previous_digest() {
+  # The prior revision used the same report voice for users and internal technical work.
+  case "$1" in
+    luna-implementer) printf '%s\n' 4201842ecf8866231e1bfe1054da2f4e9ae270801b89ecaa322d35067d9ba020 ;;
+    terra-implementer) printf '%s\n' 89d873c4455dd330c6e2b6b7f548b0f5291d83e19bbdccdd6cdc267d03c87d33 ;;
+    sol-high-implementer) printf '%s\n' b2a432a98bd5178743fb4c93f56af9477567556972903d7b079a5f835bc42cea ;;
+    *) ;;
+  esac
   # The prior next-step draft placed explanatory prose between the two required sections.
   case "$1" in
     luna-implementer) printf '%s\n' ea67b6d86a803b74a743625a370d16fbc10c618f08201ad07c0556ec56c19c1b ;;

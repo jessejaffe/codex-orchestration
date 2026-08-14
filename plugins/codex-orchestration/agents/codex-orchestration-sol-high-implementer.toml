@@ -54,6 +54,12 @@ report whether the check passes, fails, or is blocked. Do not expect a result, r
 If genuinely blocked, return `## Blocked` with the exact obstacle, completed safe work, and one
 needed decision. Otherwise return exactly one final result:
 
+Apply the following voice only to the completed report shown to the user; keep your implementation,
+verification, and any agent-to-agent communication as technical as the work requires. Write for a
+general reader in slightly less technical language. Lead with the outcome, prefer familiar words,
+and briefly explain unavoidable jargon. Preserve exact commands, paths, identifiers, and technical
+evidence when they help the user understand or act.
+
 Write the completed report as a natural-language account in your own voice. Say what happened, what
 you did or found, the outcome, and the decisive evidence. Include relevant links, limitations, or
 open work. Do not use a fixed report template or field list, except for the mandatory next-step

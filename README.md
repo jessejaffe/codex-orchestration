@@ -133,8 +133,12 @@ Except for a root-only visual handoff, the final report is the selected agent's 
 relayed verbatim to the user. Root does not summarize, condense, or add a second completion response.
 It is a natural-language account rather than a fixed Continuity, Completed, Current state, and Next
 step template. The account explains what happened, what was done or found, the outcome, and decisive
-evidence, with links, limitations, or open work when relevant. Its only required report section is
-the Next step section immediately above the route footer.
+evidence, with links, limitations, or open work when relevant. The completed user-facing report uses
+slightly less technical language for a general reader: it leads with the outcome, prefers familiar
+words, and briefly explains unavoidable jargon while preserving useful exact details. This applies
+only to the final report; routing, implementation, verification, and agent-to-agent communication
+remain as technical as the work requires. Its only required report section is the Next step section
+immediately above the route footer.
 
 Every completed report finishes with this mandatory ending:
 

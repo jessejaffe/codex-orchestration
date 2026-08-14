@@ -146,6 +146,14 @@ def main() -> int:
         "as primary content",
         "Preserve its delivered work, nonvisual proof",
         "after the work account; never replace the recap.",
+        "FINAL-REPORT VOICE",
+        "User-facing report changes",
+        "slightly less technical language",
+        "lead with the outcome",
+        "briefly explain jargon",
+        "Keep internal work technical",
+        "preserve exact",
+        "details",
         "natural-language report",
         "not a prescribed schema",
         "state what happened,",
@@ -334,6 +342,9 @@ def main() -> int:
         "- Implementation: <IMPLEMENTATION_ROUTE>",
         "- Root: <CURRENT_ROOT_ROUTE>",
         "Never include supervision",
+        "FINAL-REPORT VOICE",
+        "slightly less technical language",
+        "briefly explain jargon",
     ):
         if token not in direct_question_context:
             raise AssertionError(f"dispatch omits route receipt {token!r}")
