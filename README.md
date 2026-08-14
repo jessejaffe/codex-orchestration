@@ -1,14 +1,14 @@
 # Codex Orchestration
 
-Codex Orchestration `0.9.0` uses a two-stage workflow:
+Codex Orchestration `0.9.0` is an automated, complexity-aware model router for Codex. GPT-5.6
+Terra / Extra High evaluates each request's scope and complexity, assigns a work class, and routes
+the task to the lightest model lane suited to it. Users get one workflow without having to choose a
+different model for every request.
 
-1. GPT-5.6 Terra / Extra High classifies the request.
-2. One selected agent owns the task end to end.
-
-This normal workflow removes supervisors, acceptance construction, implementation checkpoints, and
-final-review loops so the single selected agent can interpret scope, work, verify, release when
-authorized, and report the result without serial coordination overhead. For nonvisual work, its
-completed report is relayed to the user verbatim rather than condensed by root.
+One routed implementer takes the task through implementation, nonvisual verification, and reporting.
+When rendered appearance or interaction is part of success, root performs one terminal visual
+verification after implementation; for nonvisual work, the implementer's completed report is the
+user-facing result.
 
 The default `main` branch is intentionally the stripped-down public distribution: repository
 guidance, public documentation and license, the marketplace descriptor, and the installable plugin
@@ -19,11 +19,11 @@ caches, credentials, and unrelated development artifacts.
 
 ```mermaid
 flowchart LR
-    U["User request"] --> C["Terra / Extra High classifies"]
+    U["User request"] --> C["Terra / Extra High evaluates scope + complexity"]
     C --> R{"Work class"}
-    R -->|"Read-only, standard artifact, or small tweak"| L["Luna / Max owns task"]
-    R -->|"Design artifact, big tweak, or small build"| T["Terra / Max owns task"]
-    R -->|"Big build"| S["Sol / High owns task"]
+    R -->|"Read-only, standard artifact, or small tweak"| L["Luna / Max implements"]
+    R -->|"Design artifact, big tweak, or small build"| T["Terra / Max implements"]
+    R -->|"Big build"| S["Sol / High implements"]
     L --> D["Completed result"]
     T --> D
     S --> D
@@ -33,11 +33,11 @@ flowchart LR
     V --> D
 ```
 
-There is exactly one task agent after classification. It never spawns another agent.
+After classification, execution stays with one routed implementer.
 
 ## Routes
 
-| Work class | Definition | End-to-end agent |
+| Work class | Definition | Implementation lane |
 |---|---|---|
 | `READ_ONLY` | Research, diagnosis, review, explanation, or status without mutation | Luna / Max |
 | `STANDARD_ARTIFACT` | Content- or data-led spreadsheet, document, PDF, or presentation work | Luna / Max |
@@ -47,12 +47,13 @@ There is exactly one task agent after classification. It never spawns another ag
 | `SMALL_BUILD` | One bounded new capability without a new interface, runtime, or storage boundary | Terra / Max |
 | `BIG_BUILD` | Multiple new capabilities, a boundary-crossing capability, or material risk | Sol / High |
 
-Complexity remains diagnostic telemetry. Root derives the fixed agent route from the classified work
-class.
+The router is automated rather than a manual model picker: Terra uses the request's complexity and
+scope to assign a work class, and that class determines the fixed model lane. The numeric complexity
+score is diagnostic telemetry; users do not need to interpret it or select a route themselves.
 
-## What the selected agent owns
+## What happens after routing
 
-The selected agent receives the exact private task-context bundle and then:
+The routed implementer receives the exact private task-context bundle and then:
 
 - resolves the requested outcome and constraints;
 - inspects the real project state;
@@ -66,15 +67,14 @@ The selected agent receives the exact private task-context bundle and then:
 
 A request to implement locally does not itself authorize deployment.
 
-The agent does not wait for acceptance, stop at architecture or release-candidate checkpoints, or
-send its work through a supervisor. User questions and blockers still stop the task when a decision
-is genuinely required.
+User questions and genuine blockers still stop the task when a decision is required. Keeping one
+classifier and one routed implementer makes execution predictable and low-latency.
 
-## Root-only visual evidence
+## Visual verification
 
-Visual validation is the only terminal handoff. It is required when the defining outcome depends on
-rendered appearance, user interaction, a reported visual mismatch, or explicit visual review—not
-merely because UI files changed. The selected agent prepares an accessible target and returns:
+Root verification is required when the defining outcome depends on rendered appearance, user
+interaction, a reported visual mismatch, or explicit visual review—not merely because UI files
+changed. The routed implementer prepares an accessible target and returns:
 
 ```text
 ## Root verification needed
@@ -124,7 +124,7 @@ The report keeps the continuity section, followed by substantive Current state a
 It has no Recommendations section. Current state explains what exists, what was done or found, why
 it matters, and the supporting evidence. Actionable future guidance belongs only in Next step.
 
-Every completed report finishes with this receipt; it deliberately has no supervision field:
+Every completed report finishes with this compact route receipt:
 
 ```text
 ## Route
@@ -184,8 +184,8 @@ Install or refresh the plugin from the configured local marketplace:
 plugins/codex-orchestration/scripts/reinstall-plugin.sh
 ```
 
-The installer preflights all four active profiles, migrates exact shipped profiles, retires exact
-shipped supervisor identities, and refuses to overwrite customized agent files.
+The installer preflights all four active profiles, migrates exact shipped profiles, and refuses to
+overwrite customized agent files.
 
 ## Repository layout
 
@@ -207,8 +207,9 @@ plugins/codex-orchestration/
     verify.sh
 ```
 
-## Design boundary
+## Background
 
-This normal workflow is intentionally not a general multi-writer system. Parallel exploration,
-supervision, and review are outside its execution path. One strong classifier routes each task to
-one accountable end-to-end agent for a faster, more trustworthy user experience.
+Codex Orchestration was originally contributed by DannyMac180. We tested more heavily coordinated
+multi-agent approaches and kept this distribution focused on automated routing to one implementer
+because extra coordination added latency and complexity; at the time of writing, sub-agent handoffs
+are not reliable enough to make them part of the default workflow.

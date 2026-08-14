@@ -114,10 +114,15 @@ pass 'reinstaller package inventory'
 
 if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
   for value in \
-    'two-stage workflow' \
-    'Terra / Extra High classifies' \
-    'One selected agent owns the task end to end' \
-    'There is exactly one task agent after classification' \
+    'automated, complexity-aware model router' \
+    'Terra / Extra High evaluates each request' \
+    'lightest model lane suited' \
+    'without having to choose a' \
+    'One routed implementer takes the task through implementation' \
+    'terminal visual' \
+    'user-facing result' \
+    'Terra / Extra High evaluates scope + complexity' \
+    'After classification, execution stays with one routed implementer' \
     'READ_ONLY' \
     'STANDARD_ARTIFACT' \
     'DESIGN_ARTIFACT' \
@@ -125,9 +130,9 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'BIG_TWEAK' \
     'SMALL_BUILD' \
     'BIG_BUILD' \
-    'Root-only visual evidence' \
+    '## Visual verification' \
+    'Root verification is required' \
     'defining outcome depends on' \
-    'terminal handoff' \
     'Ground truth' \
     'Root checks once' \
     'never hands the check back' \
@@ -139,7 +144,7 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'relayed verbatim to the user' \
     'Root does not summarize, condense, or add a second completion response' \
     'compact route footer naming the work class, selected implementation lane, and root route' \
-    'Every completed report finishes with this receipt' \
+    'Every completed report finishes with this compact route receipt' \
     '- Class: <friendly class>' \
     '- Implementation: <selected model lane>' \
     '- Root: <CURRENT_ROOT_ROUTE>' \
@@ -147,6 +152,10 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'Actionable future guidance belongs only in Next' \
     'Next step section gives an evidence-backed action' \
     'never invents work' \
+    '## Background' \
+    'DannyMac180' \
+    'added latency and complexity' \
+    'sub-agent handoffs' \
     'four companion profiles' \
     '0.9.0'; do
     grep -Fq -e "$value" "$repo_readme" || fail "README omits $value"
