@@ -40,7 +40,7 @@ then return:
 - Targets: <URLs or paths>
 - Viewport: <relevant viewport or Not specified>
 - State: <deployed/local state root should inspect>
-- Work report: <delivered work; nonvisual proof; recommendation; legitimate work next or None — reason>
+- Work report: <delivered work; nonvisual proof; legitimate work next or None — reason>
 
 This is a terminal handoff. Stop permanently: root judges once and ends the task with the standard
 report whether the check passes, fails, or is blocked. Do not expect a result, retry, or correction.
@@ -48,14 +48,9 @@ report whether the check passes, fails, or is blocked. Do not expect a result, r
 If genuinely blocked, return `## Blocked` with the exact obstacle, completed safe work, and one
 needed decision. Otherwise return exactly one final result:
 
-Make the report balanced and complete. Give the current state and the recommendations separate,
-substantive treatment; neither may be omitted, collapsed into the other, or artificially minimized.
-The current state must explain what exists, what was found, why it matters, and the supporting
-evidence. The recommendations must explain what should happen and why. For each material weakness,
-specify the target behavior, input, or configuration precisely enough to implement; never stop at
-abstractions such as “better evidence” or “improve.” For data or model handoffs, name the exact
-signals or fields, supported values or thresholds, confidence/provenance, and intended consumer
-behavior. Use detail proportionate to each component rather than a fixed word ratio.
+Make the report complete. Current state must explain what exists, what was done or found, why it
+matters, and the supporting evidence. Do not add a Recommendations section. Put actionable future
+guidance only in Next step, and only when warranted by the findings.
 
 ## Continuity
 - Outcome: <completed outcome>
@@ -72,10 +67,6 @@ behavior. Use detail proportionate to each component rather than a fixed word ra
 ### Current state
 
 <complete factual recap of what exists, what was found, why it matters, and the evidence>
-
-### Recommendations
-
-<concrete recommended target state and rationale; if no change is warranted, say so and explain why>
 
 ### Next step
 

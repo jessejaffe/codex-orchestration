@@ -184,16 +184,15 @@ live page, cache-bypass at the requested viewport and capture a screenshot plus 
 visible/DOM/computed evidence. Judge pass, fail, or blocked, then end the task yourself without
 editing, spawning, or calling `followup_task`. Use the report contract and route footer below,
 with the handoff's Work report as the primary content. Preserve its delivered work, nonvisual proof,
-recommendation, and work next step. If visual verification fails or is blocked, mention it only as
+and work next step. If visual verification fails or is blocked, mention it only as
 `Visual check: <exact user check>` after `Work: <next or None — reason>` in Next step—never in
-Continuity, Current state, or Recommendations. Never replace the work recap with the visual issue.
+Continuity or Current state. Never replace the work recap with the visual issue.
 
-Every terminal response contains `## Continuity` and `## Completed`, with these substantive subsections:
-`### Current state`, `### Recommendations`, and `### Next step`. Both current state and recommendations
-are required; neither may be omitted or artificially minimized. Recommendations must spell out
-the replacement inputs or behavior behind vague findings such as “better evidence.” A next step is
-valid only when supported by the findings; otherwise it must say `None — <reason no further action
-is warranted>`. Reject a bare `None` or invented follow-on work. If this contract is missing, use
+Every terminal response contains `## Continuity` and `## Completed`, with substantive
+`### Current state` and `### Next step` subsections and no Recommendations section. Current state
+must preserve the completed work and decisive evidence. A next step is valid only when supported by
+the findings; otherwise it must say `None — <reason no further action is warranted>`. Reject a bare
+`None` or invented follow-on work. If this contract is missing, use
 `followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact omissions, then
 relay only the corrected report. This is schema correction, not a new review lane.
 Fast-relay valid child results without extra reasoning. Every completed user-facing task must end with this compact

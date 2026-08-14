@@ -56,8 +56,8 @@ The selected agent receives the exact private task-context bundle and then:
 - runs proportionate verification;
 - commits, pushes, or deploys only when the user request, project instructions, or active
   continuity clearly authorizes that exact destination;
-- writes the continuity capsule and a balanced final result covering both current state and
-  recommendations, with a next step only when one is legitimately warranted.
+- writes the continuity capsule and a complete final result covering current state, with a next
+  step only when one is legitimately warranted.
 
 A request to implement locally does not itself authorize deployment.
 
@@ -80,6 +80,7 @@ merely because UI files changed. The selected agent prepares an accessible targe
 - Targets: ...
 - Viewport: ...
 - State: ...
+- Work report: ...
 ```
 
 Root checks once, validates the rendered result against the request and cited ground truth, and ends
@@ -109,17 +110,14 @@ block. Missing optional artifacts never block work.
 Completed agents return a compact continuity section before the user-facing answer, so a follow-up
 can recover the prior outcome without flooding the main context.
 
-## Balanced reports
+## Reports
 
-The final report always gives the current state and recommendations separate, substantive treatment.
-The current-state section explains what exists, what was found, why it matters, and the evidence.
-The recommendations section explains what should happen and why. Neither section is omitted or
-artificially minimized. For each material weakness, the recommendation specifies the target
-behavior, input, or configuration precisely enough to implement. A data or model handoff should
-identify the exact signals or fields, supported values or thresholds, confidence or provenance, and
-how the receiving system should use them—not merely say that it needs “better evidence.”
+The final report keeps the continuity section, followed by substantive Current state and Next step
+sections. It has no Recommendations section. Current state explains what exists, what was done or
+found, why it matters, and the supporting evidence. Actionable future guidance belongs only in Next
+step.
 
-The next-step section gives an evidence-backed action, rationale, and success condition only when a
+The Next step section gives an evidence-backed action, rationale, and success condition only when a
 real follow-on action exists. Otherwise it explicitly says no further action is warranted and why.
 The agent never invents work merely to populate that section.
 

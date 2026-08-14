@@ -136,9 +136,10 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'actual work next step' \
     'Supervision: None' \
     'A request to implement locally does not itself authorize deployment' \
-    'Balanced reports' \
-    'current state and recommendations separate, substantive treatment' \
-    'next-step section gives an evidence-backed action' \
+    '## Reports' \
+    'no Recommendations section' \
+    'Actionable future guidance belongs only in Next' \
+    'Next step section gives an evidence-backed action' \
     'never invents work' \
     'four companion profiles' \
     '0.13.0'; do
