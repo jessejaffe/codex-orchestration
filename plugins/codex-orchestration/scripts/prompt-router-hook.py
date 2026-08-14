@@ -101,7 +101,7 @@ EFFORT_LABELS = {
 
 DISPATCH_CONTEXT = """Orchestration ON (0.13.0). Root coordinates exactly two stages: Terra / Extra
 High classifies, then one selected implementer owns the task end to end. Root does not classify,
-implement, supervise, or add review gates.
+implement, or supervise; it only performs the terminal visual check below when requested.
 
 STATE
 CLASSIFIER_FORK=`1`; ROLE_FORK=`none`
@@ -138,18 +138,18 @@ Accept only `## Classification blocked` or `## Classification` with Relationship
 Work class, Complexity, and nonempty Why. Derive the route from Work class:
 
 - Read-only: Terra / Max
-- Standard artifact: Luna / High
+- Standard artifact: Luna / Max
 - Design artifact: Terra / Max
-- Small tweak: Luna / High
+- Small tweak: Luna / Max
 - Big tweak: Terra / Max
 - Small build: Terra / Max
 - Big build: Sol / High
 
 ROLE — Prefer the selected custom type; fallback to built-in `worker` pinned to the stated model and
 matching profile in `__AGENTS_DIR__`: Terra `codex_orchestration_terra_implementer` (Terra / Max),
-Luna `codex_orchestration_luna_implementer` (Luna / High), or Sol
+Luna `codex_orchestration_luna_implementer` (Luna / Max), or Sol
 `codex_orchestration_sol_high_implementer` (Sol / High). Use `fork_turns=none`. Name the only task
-child `terra_max_implementer_<objective_slug>`, `luna_high_implementer_<objective_slug>`, or
+child `terra_max_implementer_<objective_slug>`, `luna_max_implementer_<objective_slug>`, or
 `sol_high_implementer_<objective_slug>`.
 
 After classification, silently load workspace dependencies once with
@@ -168,7 +168,8 @@ IMPLEMENTATION_ROUTE=<friendly selected model lane>
 INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 __LAST_TASK_CONTEXT_PACKET_LINE__
 Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout. The implementer owns
-scope interpretation, implementation, verification, authorized release, and the final report.
+scope interpretation, implementation, verification, and authorized release. It owns the final
+report unless it makes the terminal visual handoff below.
 
 If the user changes or cancels current work, stop or redirect obsolete work.
 
@@ -176,26 +177,15 @@ PREMISE MISMATCH — On `## Premise mismatch`, inspect only its cited evidence a
 `## Premise review` to the same implementer with Confirmed, Evidence, and Reason. The same
 implementer either resumes or reports the confirmed conflict. Do not create another role lane.
 
-On `## Root verification needed`, perform exactly the requested root-only Browser/visual check. For
-a live page, cache-bypass it at the requested viewport. Record the starting state, perform only the
-bounded action, capture screenshots plus relevant visible/DOM/computed measurements, and judge
-nothing. For a protected target, try available controlled and user browser sessions before reporting
-an access failure. Hand the raw evidence back to the same implementer with `followup_task`:
-## Root verification result
-- Start: <observed condition>
-- Action: <actual action>
-- Result: <observed result>
-- Artifacts: <URL/path, viewport, screenshot paths, and measurements, or None if blocked before capture>
-- Blocker: <None or exact access failure>
+On `## Root verification needed`, do one terminal root-only Browser/visual check. Validate the
+rendered result against the user request and the handoff's Ground truth and Source; missing or
+ambiguous support for identity, wording, or links is failure, never an invitation to infer. For a
+live page, cache-bypass at the requested viewport and capture a screenshot plus only decisive
+visible/DOM/computed evidence. Judge pass, fail, or blocked, then end the task yourself without
+editing, spawning, or calling `followup_task`. Use the report contract and route footer below,
+stating the verdict, evidence, exact recommendation, and legitimate next step or `None — <reason>`.
 
-A failed visual check is evidence, not a new review lane: the same implementer corrects the work and
-requests another root check when needed. After an access blocker, the implementer must first attempt
-to prepare a safe equivalent authenticated, local, staging, or rendered-artifact surface. Accept a
-visual `## Blocked` only when it contains `Alternatives exhausted` and explains why no equivalent
-surface can prove the defining experience. Otherwise use `followup_task` on the same implementer
-with `ROOT_VERIFICATION_RECOVERY_REQUIRED`; do not add a role lane. On a valid `## Blocked`, relay one
-concise blocker and stop. A valid completed
-implementer response contains `## Continuity` and `## Completed`, with these substantive subsections:
+Every terminal response contains `## Continuity` and `## Completed`, with these substantive subsections:
 `### Current state`, `### Recommendations`, and `### Next step`. Both current state and recommendations
 are required; neither may be omitted or artificially minimized. Recommendations must spell out
 the replacement inputs or behavior behind vague findings such as “better evidence.” A next step is

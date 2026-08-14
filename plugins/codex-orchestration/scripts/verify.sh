@@ -43,7 +43,7 @@ import tomllib
 
 expected = {
     "codex-orchestration-terra-orchestrator.toml": ("gpt-5.6-terra", "xhigh"),
-    "codex-orchestration-luna-implementer.toml": ("gpt-5.6-luna", "high"),
+    "codex-orchestration-luna-implementer.toml": ("gpt-5.6-luna", "max"),
     "codex-orchestration-terra-implementer.toml": ("gpt-5.6-terra", "max"),
     "codex-orchestration-sol-high-implementer.toml": ("gpt-5.6-sol", "high"),
 }
@@ -126,12 +126,11 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'SMALL_BUILD' \
     'BIG_BUILD' \
     'Root-only visual evidence' \
-    'defining outcome depends on rendered appearance' \
-    'cache-bypassed page at the relevant viewport' \
-    'screenshots plus relevant visible, DOM, or computed measurements' \
-    'alternatives exhausted' \
-    'evidence back' \
-    'Root does not judge' \
+    'defining outcome depends on' \
+    'terminal handoff' \
+    'Ground truth' \
+    'Root checks once' \
+    'never hands the check back' \
     'Supervision: None' \
     'A request to implement locally does not itself authorize deployment' \
     'Balanced reports' \

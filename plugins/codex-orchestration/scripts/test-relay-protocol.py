@@ -16,7 +16,7 @@ EXPECTED_AGENTS = {
         "codex_orchestration_terra_orchestrator", "gpt-5.6-terra", "xhigh"
     ),
     "codex-orchestration-luna-implementer.toml": (
-        "codex_orchestration_luna_implementer", "gpt-5.6-luna", "high"
+        "codex_orchestration_luna_implementer", "gpt-5.6-luna", "max"
     ),
     "codex-orchestration-terra-implementer.toml": (
         "codex_orchestration_terra_implementer", "gpt-5.6-terra", "max"
@@ -28,9 +28,9 @@ EXPECTED_AGENTS = {
 
 HUMAN_ROUTES = (
     "Read-only: Terra / Max",
-    "Standard artifact: Luna / High",
+    "Standard artifact: Luna / Max",
     "Design artifact: Terra / Max",
-    "Small tweak: Luna / High",
+    "Small tweak: Luna / Max",
     "Big tweak: Terra / Max",
     "Small build: Terra / Max",
     "Big build: Sol / High",
@@ -90,8 +90,8 @@ def main() -> int:
     ):
         raise AssertionError(f"manifest does not use the 0.13.0 line: {version!r}")
 
-    if sum(map(len, prompts.values())) > 16_000:
-        raise AssertionError("agent prompts exceed the 16,000-character single-agent budget")
+    if sum(map(len, prompts.values())) > 15_000:
+        raise AssertionError("agent prompts exceed the 15,000-character single-agent budget")
 
     orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
     require(
@@ -124,15 +124,13 @@ def main() -> int:
             "EXECUTE — Spawn exactly one mapped implementer",
             "Never spawn a supervisor, reviewer, grader, or a", "second writer",
             "END_TO_END_WORK", "IMPLEMENTATION_ROUTE=<friendly selected model lane>",
-            "scope interpretation, implementation, verification, authorized release, and the final report",
+            "scope interpretation, implementation, verification, and authorized release",
+            "terminal visual handoff",
             "PREMISE MISMATCH", "## Premise review", "same implementer",
-            "## Root verification needed", "root-only Browser/visual check", "cache-bypass",
-            "capture screenshots plus relevant visible/DOM/computed measurements",
-            "available controlled and user browser sessions",
-            "Hand the raw evidence back to the same implementer with `followup_task`",
-            "## Root verification result", "- Start:", "- Action:", "- Result:",
-            "same implementer corrects the work", "safe equivalent authenticated, local, staging, or rendered-artifact surface",
-            "Alternatives exhausted", "ROOT_VERIFICATION_RECOVERY_REQUIRED", "do not add a role lane",
+            "## Root verification needed", "terminal root-only Browser/visual check", "cache-bypass",
+            "Ground truth and Source", "ambiguous support",
+            "capture a screenshot", "Judge pass, fail, or blocked",
+            "editing, spawning, or calling `followup_task`", "Every terminal response",
             "## Continuity", "## Completed",
             "### Current state", "### Recommendations", "### Next step",
             "Both current state and recommendations", "replacement inputs or behavior",
@@ -156,6 +154,8 @@ def main() -> int:
             "codex_orchestration_sol_xhigh_supervisor", "IMPLEMENTATION_CHECKPOINT",
             "SUPERVISOR_READY", "FINAL_REVIEW", "Awaiting acceptance",
             "`None` is invalid", "recommended future state and concrete action over current-state recap",
+            "luna_high_implementer_<objective_slug>", "## Root verification result",
+            "ROOT_VERIFICATION_RECOVERY_REQUIRED",
         ),
         "root coordinator",
     )
@@ -175,16 +175,15 @@ def main() -> int:
                 "## Premise mismatch", "## Premise review", "working copy as given",
                 "A request to implement locally does not itself authorize",
                 "Browser and visual acceptance observations are root-only",
-                "defining outcome depends on rendered appearance", "user-facing interaction",
-                "user-reported visual", "mismatch", "explicit visual-review request",
-                "UI file changes alone do not trigger it", "supporting evidence",
-                "substitute for the defining experience",
-                "## Root verification needed", "- Requirement:", "- Start:", "- Action:",
-                "- Expected:", "- Targets:", "- Viewport:",
-                "Stop until root returns `## Root verification result`",
-                "correct the work and request another root check", "authenticated existing tab",
-                "local preview", "public staging state", "rendered artifact",
-                "inaccessible protected state", "Alternatives exhausted", "## Blocked",
+                "Never infer a named product", "identity, purpose, wording, or canonical link",
+                "one authoritative in-scope source", "rather than guess",
+                "defining outcome", "rendered appearance", "user interaction",
+                "reported visual mismatch", "not merely because UI files changed",
+                "prepare an accessible target", "## Root verification needed",
+                "- Requirement:", "- Ground truth:", "- Source:", "- Check:",
+                "- Targets:", "- Viewport:", "This is a terminal handoff",
+                "Stop permanently", "passes, fails, or is blocked",
+                "Do not expect a result, retry, or correction", "## Blocked",
                 "balanced and complete", "separate", "substantive treatment",
                 "neither may be omitted", "artificially minimized",
                 "what exists, what was found, why it matters", "what should happen and why",
@@ -206,7 +205,8 @@ def main() -> int:
                 "## Awaiting acceptance", "## Checkpoint", "## Implementation result",
                 "## Ready to release", "supervisor ready", "final-review agent",
                 "recommendation-led", "keep the current-state recap brief", "never None",
-                "Spend more space on the future state",
+                "Spend more space on the future state", "Stop until root returns",
+                "request another root check", "Alternatives exhausted",
             ),
             filename,
         )
@@ -230,6 +230,9 @@ def main() -> int:
             "3bbb7c2464542eb135640782b52c9d213486bc351d60b8fe0c40ef21a1368e5c",
             "830aebc3d5c40da3aae60b20e6f760b29fe32c68d67fdd7db3d5ae9d49ff9bfa",
             "6ee395bb2287fd8fe8276e87f2ba7429a8eac67a771561ad71f30f5ed787a6cb",
+            "82f9358fa7ed1d6ab7f9c297dccc721c626191879d1ec73ee5038dd8888afdce",
+            "c61310125d3af082ffc6fcb9712fc0c07f630c9e08a3a582e727cfdf612c6d31",
+            "b42701c0431ba0018f1e22ea7923d0c04b550e4232aa1221d8a9f067d45b8ef9",
             "662c7b7010cc87e902f1f2608f74a8bce7bd06df659e3de778fc761d3667fbbe",
             "930bd325d9d19c93ffbb70497410ff9f0a03c657fde81e04a8ccd3272f206424",
             "2a8be332df4cd578f599c3f5dac89930f7cd13503393a0f380ee3a4a128492f7",

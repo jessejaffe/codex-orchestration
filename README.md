@@ -16,18 +16,16 @@ result without serial coordination overhead.
 flowchart LR
     U["User request"] --> C["Terra / Extra High classifies"]
     C --> R{"Work class"}
-    R -->|"Standard artifact or small tweak"| L["Luna / High owns task"]
+    R -->|"Standard artifact or small tweak"| L["Luna / Max owns task"]
     R -->|"Read-only, design artifact, big tweak, or small build"| T["Terra / Max owns task"]
     R -->|"Big build"| S["Sol / High owns task"]
     L --> D["Completed result"]
     T --> D
     S --> D
-    L -. "visual evidence request" .-> V["Root observes"]
-    T -. "visual evidence request" .-> V
-    S -. "visual evidence request" .-> V
-    V -. "evidence to same agent" .-> L
-    V -. "evidence to same agent" .-> T
-    V -. "evidence to same agent" .-> S
+    L -. "terminal visual check" .-> V["Root validates and reports"]
+    T -. "terminal visual check" .-> V
+    S -. "terminal visual check" .-> V
+    V --> D
 ```
 
 There is exactly one task agent after classification. It never spawns another agent.
@@ -37,9 +35,9 @@ There is exactly one task agent after classification. It never spawns another ag
 | Work class | Definition | End-to-end agent |
 |---|---|---|
 | `READ_ONLY` | Research, diagnosis, review, explanation, or status without mutation | Terra / Max |
-| `STANDARD_ARTIFACT` | Content- or data-led spreadsheet, document, PDF, or presentation work | Luna / High |
+| `STANDARD_ARTIFACT` | Content- or data-led spreadsheet, document, PDF, or presentation work | Luna / Max |
 | `DESIGN_ARTIFACT` | A non-code artifact whose composition, brand, or exact look defines success | Terra / Max |
-| `SMALL_TWEAK` | One bounded existing behavior with predictable blast radius | Luna / High |
+| `SMALL_TWEAK` | One bounded existing behavior with predictable blast radius | Luna / Max |
 | `BIG_TWEAK` | Multiple existing behavior changes, a boundary crossing, or material operational risk | Terra / Max |
 | `SMALL_BUILD` | One bounded new capability without a new interface, runtime, or storage boundary | Terra / Max |
 | `BIG_BUILD` | Multiple new capabilities, a boundary-crossing capability, or material risk | Sol / High |
@@ -69,45 +67,24 @@ is genuinely required.
 
 ## Root-only visual evidence
 
-Visual observation is the one deliberate root-to-agent handoff retained from the previous system.
-It is required when the defining outcome depends on rendered appearance, a user-facing interaction,
-a user-reported visual mismatch, or an explicit visual-review request. Merely changing UI files does
-not trigger it. Source, tests, HTTP status, DOM text, assets, and revision identity may support the
-check, but cannot substitute for the defining experience. The selected agent prepares the exact
-local or live state and returns:
+Visual validation is the only terminal handoff. It is required when the defining outcome depends on
+rendered appearance, user interaction, a reported visual mismatch, or explicit visual review—not
+merely because UI files changed. The selected agent prepares an accessible target and returns:
 
 ```text
 ## Root verification needed
 - Requirement: ...
-- Start: ...
-- Action: ...
-- Expected: ...
+- Ground truth: ...
+- Source: ...
+- Check: ...
 - Targets: ...
 - Viewport: ...
 - State: ...
 ```
 
-Root performs only the requested read-only browser or visual observation. For live pages it uses a
-cache-bypassed page at the relevant viewport, records the starting state and bounded interaction,
-and captures screenshots plus relevant visible, DOM, or computed measurements. It sends the raw
-evidence back to that same agent without judging acceptance:
-
-```text
-## Root verification result
-- Start: ...
-- Action: ...
-- Result: ...
-- Artifacts: ...
-- Blocker: None
-```
-
-The same agent evaluates the evidence. If the check fails, it corrects the work and requests another
-observation. If credentials or access block the check, it first prepares a safe equivalent surface
-when possible—an authenticated existing tab, local preview, public staging state, or rendered
-artifact—and requests root verification again. It may report a blocker only after identifying the
-alternatives exhausted and why none can prove the defining experience. If the check passes, it
-incorporates the evidence and finishes. Root does not judge acceptance and no reviewer lane is
-created.
+Root checks once, validates the rendered result against the request and cited ground truth, and ends
+the task with the standard report whether the result passes, fails, or is blocked. It never guesses
+an ambiguous identity, description, or link, and never hands the check back for another agent cycle.
 
 ## Classification and continuity
 
@@ -178,7 +155,7 @@ Every completed task ends with:
 ```text
 ## Route
 - Class: <friendly class>
-- Implementation: <Luna / High|Terra / Max|Sol / High>
+- Implementation: <Luna / Max|Terra / Max|Sol / High>
 - Supervision: None
 - Root: <root model and effort>
 ```
