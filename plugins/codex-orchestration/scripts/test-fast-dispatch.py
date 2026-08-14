@@ -88,7 +88,7 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "Orchestration ON (0.9.0)",
-        "exactly two stages",
+        "Exactly two stages",
         "one selected implementer owns the task end to end",
         "desktop activity label exactly `Thinking`",
         "never create a dynamic status label",
@@ -138,24 +138,28 @@ def main() -> int:
         "terminal root-only Browser/visual check",
         "cache-bypass",
         "Ground truth and Source",
-        "ambiguous support",
+        "Missing or ambiguous identity",
         "capture a screenshot",
         "Judge pass, fail, or blocked",
-        "editing, spawning, or calling `followup_task`",
-        "Work report as the primary content",
+        "end without editing,",
+        "calling `followup_task`",
+        "as primary content",
         "Preserve its delivered work, nonvisual proof",
-        "work account; never replace the work recap",
+        "after the work account; never replace the recap.",
         "natural-language report",
         "not a prescribed schema",
-        "what happened, what work was done or found",
-        "outcome, and decisive evidence",
+        "state what happened,",
+        "work done or found, outcome, decisive evidence",
         "links, limitations, or open work",
-        "next step only when it is genuinely useful",
-        "Do not require fixed",
-        "section headings or a field list",
+        "mandatory `## Next step` section",
+        "nonempty Next step immediately above the route footer",
+        "`None — no next step is needed.`",
+        "Do not require fixed section",
         "REPORT_REVISION_REQUIRED",
         "schema correction, not a new review lane",
-        "Every completed user-facing task ends with this compact route footer",
+        "Every completed user-facing task ends with this mandatory next-step section",
+        "## Next step",
+        "<one legitimate follow-on action, or None — no next step is needed.>",
         "## Route",
         "- Class: <friendly class>",
         "- Implementation: <IMPLEMENTATION_ROUTE>",
@@ -322,7 +326,9 @@ def main() -> int:
         if token in direct_question_context:
             raise AssertionError(f"dispatch retains obsolete route receipt {token!r}")
     for token in (
-        "Every completed user-facing task ends with this compact route footer",
+        "Every completed user-facing task ends with this mandatory next-step section",
+        "## Next step",
+        "<one legitimate follow-on action, or None — no next step is needed.>",
         "## Route",
         "- Class: <friendly class>",
         "- Implementation: <IMPLEMENTATION_ROUTE>",
@@ -498,6 +504,9 @@ The focused suite passed all 12 checks, and I confirmed a production download at
 https://example.com/export. The change is at 0123456789abcdef. JSON export remains a useful
 follow-up; there are no current limitations.
 
+## Next step
+Add JSON export after the CSV release has been adopted.
+
 ## Route
 - Class: Small build
 - Implementation: Terra / Max
@@ -575,6 +584,9 @@ follow-up; there are no current limitations.
 
     root_visible_outcome = """Root completed the terminal visual check.
 
+## Next step
+None — no next step is needed.
+
 ## Route
 - Class: Small build
 - Implementation: Terra / Max
@@ -622,6 +634,8 @@ follow-up; there are no current limitations.
         )
         outcome = (
             f"Task {task_number} completed. {detail}\n\n"
+            "## Next step\n"
+            "None — no next step is needed.\n\n"
             "## Route\n"
             "- Class: Read-only\n"
             "- Implementation: Luna / Max\n"
@@ -700,6 +714,8 @@ follow-up; there are no current limitations.
             raise AssertionError("private bundle reordered canonical task outcomes")
         if "## Route" in outcome:
             raise AssertionError("private bundle retained repeated route-footer boilerplate")
+        if "## Next step\nNone — no next step is needed." not in outcome:
+            raise AssertionError("private bundle lost the required next-step outcome section")
     verbose_outcome = retained_outcomes[0]
     if "UNBOUNDED_FIRST_OUTCOME_MARKER" not in verbose_outcome:
         raise AssertionError("private bundle lost a durable outcome fact while compacting")

@@ -143,15 +143,18 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     '## Reports' \
     'relayed verbatim to the user' \
     'Root does not summarize, condense, or add a second completion response' \
-    'compact route footer naming the work class, selected implementation lane, and root route' \
-    'Every completed report finishes with this compact route receipt' \
+    'compact route footer naming the work class, selected implementation lane, and root' \
+    'Each report ends with a mandatory Next step section' \
+    'Every completed report finishes with this mandatory ending' \
+    '## Next step' \
+    'None — no next step is needed.' \
     '- Class: <friendly class>' \
     '- Implementation: <selected model lane>' \
     '- Root: <CURRENT_ROOT_ROUTE>' \
     'natural-language account rather than a fixed' \
-    'decisive evidence, with links, limitations, or open work' \
+    'evidence, with links, limitations, or open work' \
     'real follow-on action exists' \
-    'never invents work to fill a template' \
+    'never invents work to fill the required section' \
     '## Background' \
     'DannyMac180' \
     'added latency and complexity' \

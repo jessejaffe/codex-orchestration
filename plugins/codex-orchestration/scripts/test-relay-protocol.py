@@ -124,10 +124,20 @@ def main() -> int:
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
     if dispatch_prompt_chars(router) > 6_500:
         raise AssertionError("root dispatch prompt exceeds the 6,500-character budget")
+    required_report_ending = (
+        "## Next step\n"
+        "<one legitimate follow-on action, or None — no next step is needed.>\n\n"
+        "## Route\n"
+        "- Class: <friendly class>\n"
+        "- Implementation: <IMPLEMENTATION_ROUTE>\n"
+        "- Root: <CURRENT_ROOT_ROUTE>"
+    )
+    if required_report_ending not in router:
+        raise AssertionError("root coordinator does not place Next step immediately above Route")
     require(
         router,
         (
-            "Orchestration ON (0.9.0)", "exactly two stages",
+            "Orchestration ON (0.9.0)", "Exactly two stages",
             "one selected implementer owns the task end to end",
             "PREVIOUS TASK CONTEXT REQUIRED", "list_threads", "read_thread",
             "Send it to the classifier", "Send it to the selected implementer",
@@ -141,19 +151,22 @@ def main() -> int:
             "terminal visual handoff",
             "PREMISE MISMATCH", "## Premise review", "same implementer",
             "## Root verification needed", "terminal root-only Browser/visual check", "cache-bypass",
-            "Ground truth and Source", "ambiguous support",
-            "capture a screenshot", "Judge pass, fail, or blocked",
-            "editing, spawning, or calling `followup_task`",
-            "Work report as the primary content", "Preserve its delivered work, nonvisual proof",
-            "work account; never replace the work recap",
+            "Ground truth and Source", "Missing or ambiguous identity",
+            "capture a screenshot", "Judge pass, fail, or blocked", "end without editing,",
+            "calling `followup_task`", "as primary content",
+            "Preserve its delivered work, nonvisual proof",
+            "after the work account; never replace the recap.",
             "natural-language report", "not a prescribed schema",
-            "what happened, what work was done or found", "outcome, and decisive evidence",
-            "links, limitations, or open work", "next step only when it is genuinely useful",
-            "Do not require fixed", "section headings or a field list", "REPORT_REVISION_REQUIRED",
-            "Every completed user-facing task ends with this compact route footer",
+            "state what happened,", "work done or found, outcome, decisive evidence",
+            "links, limitations, or open work", "mandatory `## Next step` section",
+            "nonempty Next step immediately above the route footer",
+            "`None — no next step is needed.`", "Do not require fixed section",
+            "REPORT_REVISION_REQUIRED",
+            "Every completed user-facing task ends with this mandatory next-step section",
+            "## Next step", "<one legitimate follow-on action, or None — no next step is needed.>",
             "## Route", "- Class: <friendly class>",
             "- Implementation: <IMPLEMENTATION_ROUTE>", "- Root: <CURRENT_ROOT_ROUTE>",
-            "Never include supervision", "Treat its absence as a missing required report field",
+            "Never include supervision", "Treat any missing part as a report omission",
             "RELAY — A valid nonvisual child report is the user-facing final response",
             "Return it verbatim as the entire final answer",
             "Do not summarize, condense, paraphrase, introduce, assess, or append to it",
@@ -190,6 +203,8 @@ def main() -> int:
         "codex-orchestration-sol-high-implementer.toml",
     ):
         prompt = prompts[filename]
+        if required_report_ending not in prompt:
+            raise AssertionError(f"{filename} does not place Next step immediately above Route")
         require(
             prompt,
             (
@@ -216,10 +231,12 @@ def main() -> int:
                 "Do not expect a result, retry, or correction", "## Blocked",
                 "Write the completed report as a natural-language account",
                 "what happened, what", "you did or found, the outcome",
-                "decisive evidence", "links, limitations, open work",
-                "recommend a next step only when it is genuinely useful",
+                "decisive evidence", "relevant links, limitations, or",
+                "`None — no next step is needed.`",
                 "fixed report template or field list",
-                "End every completed report with this compact route footer",
+                "## Next step",
+                "<one legitimate follow-on action, or None — no next step is needed.>",
+                "mandatory section immediately above the compact route footer",
                 "## Route", "- Class: <friendly class>",
                 "- Implementation: <IMPLEMENTATION_ROUTE>", "- Root: <CURRENT_ROOT_ROUTE>",
                 "never include supervision",
@@ -256,6 +273,12 @@ def main() -> int:
             "8abff60952e6d0610d55f966de1096a77170919a3bf8400e6186435af4df7ec7",
             "4bdce27f9a1e6a4d911812663944c21377a141587867256bd99f8e759913be03",
             "c892d3514b27293255b27f1e0729167c129fbecc8e3ba7db22697dc8d83d8c9c",
+            "347b7a5816d1679902b6a83ab6aa3d3e55fe66ff643cde6bda4839ab5b0c7a04",
+            "4a4835084db7ce7a6c803a932f04786c67cb895627d5a466311e61805e67efe4",
+            "3796eabec1cc51c72ee0cb0baafd1471518c4ef65349e874015f250511d6aa56",
+            "ea67b6d86a803b74a743625a370d16fbc10c618f08201ad07c0556ec56c19c1b",
+            "a9c73e0eb4849f9cf1c1e42bb2d648d8940b0a25cf89a1b478f6afba789663ad",
+            "40f71d7605dbd7d377675e2f4e6c0dd6a20ed6d264ddab7d847296a088248a3d",
             "a1891e5c56abf70c510ab8c6ec10e83f901e7558c16c35bb275fd78a66fdf34f",
             "c03d3973435c9b8b68c3800bd7a10f2864e0cdd967bc20fe3b8d67c44137ba44",
             "dcf42638109aca350f4bafc206da6e9554750c17234e5a7904ccc7f327c6816b",

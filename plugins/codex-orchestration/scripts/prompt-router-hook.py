@@ -116,9 +116,9 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.9.0). Root coordinates exactly two stages: Terra / Extra
-High classifies, then one selected implementer owns the task end to end. Root does not classify,
-implement, or supervise; it only performs the terminal visual check below when requested.
+DISPATCH_CONTEXT = """Orchestration ON (0.9.0). Exactly two stages: Terra / Extra High classifies;
+one selected implementer owns the task end to end. Root only performs the requested terminal visual
+check.
 
 STATE
 CLASSIFIER_FORK=`1`; ROLE_FORK=`none`
@@ -132,9 +132,7 @@ WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__
 CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 
 Keep the desktop activity label exactly `Thinking`; never create a dynamic status label.
-
-Keep startup quiet. Do not announce classification, route, models, supervision, or dependency
-loading. Child pills suffice; comment only on meaningful progress, blockers, release, and completion.
+Keep startup quiet: child pills suffice; comment only on meaningful progress, blockers, release, and completion.
 
 __PREVIOUS_TASK_PROTOCOL__
 
@@ -149,8 +147,8 @@ __ROUTING_CONTEXT_PACKET_LINE__
 USER_REQUEST=INHERITED_CURRENT_QUERY
 
 Use `codex_orchestration_terra_orchestrator`, or built-in `default` pinned Terra / Extra High after
-reading `__ORCHESTRATOR_PROFILE_PATH__`. Pass no workspace dependencies, repository content, skill
-instructions, or plan. Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout.
+reading `__ORCHESTRATOR_PROFILE_PATH__`. Pass no dependencies, repository content, skills, or plan.
+Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout.
 Accept only `## Classification blocked` or `## Classification` with Relationship, Active objective,
 Work class, Complexity, and nonempty Why. Derive the route from Work class:
 
@@ -162,15 +160,14 @@ Work class, Complexity, and nonempty Why. Derive the route from Work class:
 - Small build: Terra / Max
 - Big build: Sol / High
 
-ROLE — Prefer the selected custom type; fallback to built-in `worker` pinned to the stated model and
-matching profile in `__AGENTS_DIR__`: Terra `codex_orchestration_terra_implementer` (Terra / Max),
-Luna `codex_orchestration_luna_implementer` (Luna / Max), or Sol
-`codex_orchestration_sol_high_implementer` (Sol / High). Use `fork_turns=none`. Name the only task
-child `terra_max_implementer_<objective_slug>`, `luna_max_implementer_<objective_slug>`, or
-`sol_high_implementer_<objective_slug>`.
+ROLE — Prefer the selected custom type; otherwise use built-in `worker` pinned to its model and
+matching `__AGENTS_DIR__` profile: Terra `codex_orchestration_terra_implementer` (Terra / Max), Luna
+`codex_orchestration_luna_implementer` (Luna / Max), or Sol `codex_orchestration_sol_high_implementer`
+(Sol / High). Use `fork_turns=none`; name the only child `terra_max_implementer_<objective_slug>`,
+`luna_max_implementer_<objective_slug>`, or `sol_high_implementer_<objective_slug>`.
 
-After classification, silently load workspace dependencies once with
-`codex_app__load_workspace_dependencies` only when STATE says YES; otherwise use NONE.
+After classification, silently load `codex_app__load_workspace_dependencies` once only when STATE
+says YES; otherwise use NONE.
 
 EXECUTE — Spawn exactly one mapped implementer. Never spawn a supervisor, reviewer, grader, or a
 second writer. Send:
@@ -194,33 +191,36 @@ report unless it makes the terminal visual handoff below.
 If the user changes or cancels current work, stop or redirect obsolete work.
 
 PREMISE MISMATCH — On `## Premise mismatch`, inspect only its cited evidence and return a concise
-`## Premise review` to the same implementer with Confirmed, Evidence, and Reason. The same
-implementer either resumes or reports the confirmed conflict. Do not create another role lane.
+`## Premise review` (Confirmed, Evidence, Reason) to the same implementer. It resumes or reports the
+confirmed conflict. Do not create another role lane.
 
-On `## Root verification needed`, do one terminal root-only Browser/visual check. Validate the
-rendered result against the user request and the handoff's Ground truth and Source; missing or
-ambiguous support for identity, wording, or links is failure, never an invitation to infer. For a
-live page, cache-bypass at the requested viewport and capture a screenshot plus only decisive
-visible/DOM/computed evidence. Judge pass, fail, or blocked, then end the task yourself without
-editing, spawning, or calling `followup_task`. Use the report contract below,
-with the handoff's Work report as the primary content. Preserve its delivered work, nonvisual proof,
-and any useful next step. If visual verification fails or is blocked, explain it briefly after the
-work account; never replace the work recap with the visual issue.
+On `## Root verification needed`, do one terminal root-only Browser/visual check against the request
+and handoff's Ground truth and Source. Missing or ambiguous identity, wording, or links fails; do
+not infer. For a live page, cache-bypass at the requested viewport and capture a screenshot plus
+decisive visible/DOM/computed evidence. Judge pass, fail, or blocked; then end without editing,
+spawning, or calling `followup_task`. Use the report contract below, with the handoff's Work report
+as primary content. Preserve its delivered work, nonvisual proof, and any useful next step. If visual
+verification fails or is blocked, explain it after the work account; never replace the recap.
 
-Every terminal response is a natural-language report, not a prescribed schema. It must make clear
-what happened, what work was done or found, the outcome, and decisive evidence. Include relevant
-links, limitations, or open work, and recommend a next step only when it is genuinely useful. For a
-visual result, include the pass, fail, or blocked outcome in the same account. Do not require fixed
-section headings or a field list. If the report lacks that substantive account or the route footer,
-use `followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact omission,
-then relay only the corrected report. This is schema correction, not a new review lane.
-Every completed user-facing task ends with this compact route footer:
+Every terminal response is a natural-language report, not a prescribed schema: state what happened,
+work done or found, outcome, decisive evidence, and relevant links, limitations, or open work. For a
+visual result include pass, fail, or blocked in the same account. Do not require fixed section
+headings or a field list, except for the mandatory `## Next step` section. If the report lacks a
+substantive account, nonempty Next step immediately above the route footer, or the footer, use
+`followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact omission, then
+relay only the correction. This is schema correction, not a new review lane.
+Every completed user-facing task ends with this mandatory next-step section immediately above its
+compact route footer. State one legitimate follow-on action; when none is warranted, write exactly
+`None — no next step is needed.`:
+## Next step
+<one legitimate follow-on action, or None — no next step is needed.>
+
 ## Route
 - Class: <friendly class>
 - Implementation: <IMPLEMENTATION_ROUTE>
 - Root: <CURRENT_ROOT_ROUTE>
-Never include supervision. The selected implementer places the footer after its report; root uses the
-same footer for a terminal visual result. Treat its absence as a missing required report field.
+Never include supervision. The selected implementer places this ending after its report; root uses it
+for a terminal visual result. Treat any missing part as a report omission.
 RELAY — A valid nonvisual child report is the user-facing final response. Return it verbatim as the entire final answer.
 Preserve its Markdown, wording, detail, order, and links. Do not summarize, condense, paraphrase, introduce, assess, or append to it.
 Do not perform an extra completion turn or tool call. Only request `REPORT_REVISION_REQUIRED` for a

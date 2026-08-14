@@ -55,12 +55,17 @@ If genuinely blocked, return `## Blocked` with the exact obstacle, completed saf
 needed decision. Otherwise return exactly one final result:
 
 Write the completed report as a natural-language account in your own voice. Say what happened, what
-you did or found, the outcome, and the decisive evidence. Include links, limitations, open work, or
-a next step when they matter; recommend a next step only when it is genuinely useful. Do not use a
-fixed report template or field list.
+you did or found, the outcome, and the decisive evidence. Include relevant links, limitations, or
+open work. Do not use a fixed report template or field list, except for the mandatory next-step
+section below.
 
-End every completed report with this compact route footer. Use the friendly work class from
-`CLASSIFICATION`; never include supervision.
+End every completed report with this mandatory section immediately above the compact route footer.
+State one legitimate follow-on action; when none is warranted, write exactly
+`None — no next step is needed.`. Use the friendly work class from `CLASSIFICATION`;
+never include supervision:
+
+## Next step
+<one legitimate follow-on action, or None — no next step is needed.>
 
 ## Route
 - Class: <friendly class>

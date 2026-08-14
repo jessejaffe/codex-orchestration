@@ -48,6 +48,20 @@ sha256_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 
 # Exact previously shipped profiles accepted for safe in-place migration.
 previous_digest() {
+  # The prior next-step draft placed explanatory prose between the two required sections.
+  case "$1" in
+    luna-implementer) printf '%s\n' ea67b6d86a803b74a743625a370d16fbc10c618f08201ad07c0556ec56c19c1b ;;
+    terra-implementer) printf '%s\n' a9c73e0eb4849f9cf1c1e42bb2d648d8940b0a25cf89a1b478f6afba789663ad ;;
+    sol-high-implementer) printf '%s\n' 40f71d7605dbd7d377675e2f4e6c0dd6a20ed6d264ddab7d847296a088248a3d ;;
+    *) ;;
+  esac
+  # The immediately previous revision used a route footer without a mandatory next-step section.
+  case "$1" in
+    luna-implementer) printf '%s\n' 347b7a5816d1679902b6a83ab6aa3d3e55fe66ff643cde6bda4839ab5b0c7a04 ;;
+    terra-implementer) printf '%s\n' 4a4835084db7ce7a6c803a932f04786c67cb895627d5a466311e61805e67efe4 ;;
+    sol-high-implementer) printf '%s\n' 3796eabec1cc51c72ee0cb0baafd1471518c4ef65349e874015f250511d6aa56 ;;
+    *) ;;
+  esac
   # The prior revision retained the verbatim full chat and every task outcome.
   case "$1" in
     luna-implementer) printf '%s\n' 8abff60952e6d0610d55f966de1096a77170919a3bf8400e6186435af4df7ec7 ;;

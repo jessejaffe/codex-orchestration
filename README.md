@@ -65,7 +65,8 @@ The routed implementer receives the exact private task-context bundle and then:
 - commits, pushes, or deploys only when the user request, project instructions, or active
   continuity clearly authorizes that exact destination;
 - writes a natural-language result that explains what happened, what it did or found, the outcome,
-  and decisive evidence, with a next step only when one is genuinely useful.
+  and decisive evidence, then names one real follow-on action or explicitly says that no next step
+  is needed.
 
 A request to implement locally does not itself authorize deployment.
 
@@ -122,26 +123,33 @@ whole-chat bundle for the current chat. Missing optional artifacts never block w
 Completed agents report in natural language. The classifier's small state packet retains only the
 latest bounded completion context, while the selected implementer receives the complete canonical
 bundle—not a current-task excerpt—so a follow-up can use durable chat facts and recent task outcomes
-without unnecessary repository inspection. Each report still ends with a compact route footer naming the work class, selected implementation lane, and root route.
+without unnecessary repository inspection. Each report ends with a mandatory Next step section,
+followed by a compact route footer naming the work class, selected implementation lane, and root
+route.
 
 ## Reports
 
 Except for a root-only visual handoff, the final report is the selected agent's completed report,
 relayed verbatim to the user. Root does not summarize, condense, or add a second completion response.
 It is a natural-language account rather than a fixed Continuity, Completed, Current state, and Next
-step template. The account explains what happened, what was done or found, the outcome, and decisive evidence, with links, limitations, or open work when relevant.
+step template. The account explains what happened, what was done or found, the outcome, and decisive
+evidence, with links, limitations, or open work when relevant. Its only required report section is
+the Next step section immediately above the route footer.
 
-Every completed report finishes with this compact route receipt:
+Every completed report finishes with this mandatory ending:
 
 ```text
+## Next step
+<one legitimate follow-on action, or None — no next step is needed.>
+
 ## Route
 - Class: <friendly class>
 - Implementation: <selected model lane>
 - Root: <CURRENT_ROOT_ROUTE>
 ```
 
-When a real follow-on action exists, the report recommends it in the flow of the account. Otherwise
-it says plainly that no further action is warranted; the agent never invents work to fill a template.
+When a real follow-on action exists, the Next step section names it. Otherwise it says exactly
+`None — no next step is needed.`; the agent never invents work to fill the required section.
 
 ## Premise mismatches
 
