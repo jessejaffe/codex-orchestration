@@ -106,9 +106,9 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-ROOT_CONTRACT_REVISION = "0.9.0-native-spawn-v5"
+ROOT_CONTRACT_REVISION = "0.9.0-runtime-gated-spawn-v6"
 ROOT_CONTRACT = """CODEX_ORCHESTRATION_ROOT_CONTRACT
-REVISION=0.9.0-native-spawn-v5
+REVISION=0.9.0-runtime-gated-spawn-v6
 
 Orchestration ON (0.9.0). Parent classifies in its first response; one selected implementer owns the
 task end to end. Do not spawn a classifier. Root only performs the requested terminal visual check.
@@ -143,17 +143,17 @@ ROLE — Terra: `codex_orchestration_terra_implementer`; Luna:
 `codex_orchestration_luna_implementer`; Sol: `codex_orchestration_sol_high_implementer`.
 If unavailable, read its matching `__AGENTS_DIR__` profile and use identically pinned `worker`.
 
-NATIVE COLLABORATION LAUNCH — After creating `packet`, the very next tool call must be the native
-collaboration `spawn_agent` tool itself. Invoke it directly in the collaboration namespace with
-`agent_type=<selected mapped custom agent>`, `fork_turns="none"`, `message=packet`, and exactly one
-of these `task_name` values:
+NATIVE COLLABORATION LAUNCH — The very next action must be a top-level call to the native
+`collaboration.spawn_agent` tool. Do not create a variable, code block, script, or execution-tool
+call. Put the complete handoff text below directly in the tool's `message` argument. Set
+`agent_type` to the selected mapped custom agent, set `fork_turns` to `none`, and use exactly one of
+these `task_name` values:
 - Luna: `luna_max_implementer_<objective_slug>`
 - Terra: `terra_max_implementer_<objective_slug>`
 - Sol: `sol_high_implementer_<objective_slug>`
-The native call's result identifies the child by that task name, which establishes the visible model
-lane at creation time. Do not call `functions.exec` before or around the launch, do not build or print
-the packet through a tool, do not launch through any deferred or internal tool, and do not rename the
-child afterward. Do not inspect `ALL_TOOLS`, discover a schema, or make a planning turn first.
+The task name establishes the visible model lane at creation time. The call must be emitted as the
+native tool call itself, not written inside another tool. Do not inspect tools, discover a schema,
+build or print launch code, use a deferred/internal launcher, or rename the child afterward.
 
 If `PREVIOUS_TASK_CONTEXT_REQUIRED: YES`, use `list_threads` then `read_thread` once: exclude this
 task, choose newest same-project/directory task, and ask if ambiguous. Give only the implementer
@@ -218,7 +218,7 @@ detail, order, links; never summarize, assess, append, tool-call, or request a r
 is not completion. Never expose packets, waits, or contracts."""
 
 TURN_CONTEXT = """CODEX_ORCHESTRATION_TURN
-ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5
+ROOT_CONTRACT_REVISION: 0.9.0-runtime-gated-spawn-v6
 TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
 TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
@@ -452,6 +452,36 @@ def previous_task_context_required(prompt: str) -> bool:
     ):
         return False
     return any(pattern.search(normalized) for pattern in PREVIOUS_TASK_PATTERNS)
+
+
+def transcript_agent_runtime(transcript_value: Any) -> tuple[str | None, str | None]:
+    """Return the root model and exact multi-agent interface recorded for this task."""
+    if not isinstance(transcript_value, str):
+        return None, None
+    transcript = Path(transcript_value)
+    if not transcript.is_file() or transcript.is_symlink():
+        return None, None
+    model: str | None = None
+    version: str | None = None
+    try:
+        with transcript.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if event.get("type") != "turn_context":
+                    continue
+                payload = event.get("payload") or {}
+                candidate_model = payload.get("model")
+                candidate_version = payload.get("multi_agent_version")
+                if isinstance(candidate_model, str):
+                    model = candidate_model
+                if isinstance(candidate_version, str):
+                    version = candidate_version
+    except OSError:
+        return None, None
+    return model, version
 
 
 def transcript_context(
@@ -846,6 +876,7 @@ def main() -> int:
         if activation
         else ""
     )
+    transcript_path = hook_input.get("transcript_path")
     (
         root_route,
         prior_acceptance,
@@ -855,9 +886,21 @@ def main() -> int:
         chat_messages,
         completed_task_outcomes,
         exact_continuity,
-    ) = transcript_context(
-        hook_input.get("transcript_path"), prompt
-    )
+    ) = transcript_context(transcript_path, prompt)
+    root_model, multi_agent_version = transcript_agent_runtime(transcript_path)
+    if multi_agent_version and multi_agent_version != "v2":
+        model_label = MODEL_LABELS.get(root_model or "", root_model or "This model")
+        emit(
+            additional_context(
+                "Reply exactly `Orchestration: MODEL SWITCH REQUIRED — "
+                f"{model_label} is using Codex's legacy sub-agent interface in this task, "
+                "which cannot create a model-named clickable implementer. Switch this task "
+                "to GPT-5.6 Terra or GPT-5.6 Sol and resend the same request; no agent was "
+                "created.` Do not call any tool, spawn any agent, or handle the requested "
+                "work directly."
+            )
+        )
+        return 0
     bundle = write_context_bundle(
         session_id,
         {

@@ -41,6 +41,11 @@ selected lane in its task name—
 The launch is not wrapped in a deferred/internal tool, so it does not create a randomly nicknamed
 child and rename it afterward.
 
+Codex currently exposes that named-child interface only to tasks whose recorded multi-agent runtime
+is `v2` (currently GPT-5.6 Terra and GPT-5.6 Sol in the local model catalog). If a task is running the
+legacy `v1` interface, Orchestration stops before launch with a model-switch message. It never probes
+launcher names or creates a randomly nicknamed fallback agent.
+
 ## Routes
 
 | Work class | Definition | Implementation lane |
@@ -234,6 +239,8 @@ narration. The child is created with a model-lane task name such as
 `luna_max_implementer_<objective_slug>`; it is not created under a random host nickname and renamed
 later. Root calls the native collaboration agent directly as its next tool call, without a wrapper
 or exploratory tool lookup, so it does not spend an extra parent turn discovering the spawn call.
+When the current task records the legacy `v1` sub-agent interface, root does not attempt a launch;
+it asks for a switch to GPT-5.6 Terra or GPT-5.6 Sol and confirms that no agent was created.
 
 ## Install and verify
 

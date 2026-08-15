@@ -79,6 +79,43 @@ def main() -> int:
     if inactive != {"continue": True}:
         raise AssertionError(f"inactive prompt was not a no-op: {inactive!r}")
 
+    legacy_runtime = temporary / "legacy-runtime.jsonl"
+    write_events(
+        legacy_runtime,
+        [
+            {
+                "type": "turn_context",
+                "payload": {
+                    "model": "gpt-5.6-luna",
+                    "effort": "xhigh",
+                    "multi_agent_version": "v1",
+                },
+            }
+        ],
+    )
+    legacy_id = "12121212-1212-1212-1212-121212121212"
+    legacy = context(
+        invoke(
+            hook,
+            state,
+            legacy_id,
+            "Turn orchestration on: Fix the existing label",
+            legacy_runtime,
+        )
+    )
+    for value in (
+        "Orchestration: MODEL SWITCH REQUIRED",
+        "GPT-5.6 Luna",
+        "legacy sub-agent interface",
+        "Switch this task to GPT-5.6 Terra or GPT-5.6 Sol",
+        "no agent was created",
+        "Do not call any tool, spawn any agent",
+    ):
+        if value not in legacy:
+            raise AssertionError(f"legacy runtime guard omitted {value!r}")
+    if "CODEX_ORCHESTRATION_ROOT_CONTRACT" in legacy:
+        raise AssertionError("legacy runtime received the launch contract")
+
     active_id = "22222222-2222-2222-2222-222222222222"
     activation = invoke(hook, state, active_id, "Turn orchestration on")
     if context(activation) != "Reply exactly `Orchestration: ON for this chat` and do not spawn.":
@@ -88,7 +125,7 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "CODEX_ORCHESTRATION_ROOT_CONTRACT",
-        "REVISION=0.9.0-native-spawn-v5",
+        "REVISION=0.9.0-runtime-gated-spawn-v6",
         "Orchestration ON (0.9.0)",
         "Parent classifies in its first response",
         "Do not spawn a classifier",
@@ -112,22 +149,20 @@ def main() -> int:
         "- Complexity: <1.0-10.0 / 10>",
         "- Why: <brief reason>",
         "NATIVE COLLABORATION LAUNCH",
-        "very next tool call must be the native",
-        "collaboration `spawn_agent` tool itself",
-        "directly in the collaboration namespace",
-        "agent_type=<selected mapped custom agent>",
-        "fork_turns=\"none\"",
-        "message=packet",
+        "very next action must be a top-level call",
+        "`collaboration.spawn_agent` tool",
+        "Do not create a variable, code block, script, or execution-tool",
+        "complete handoff text below directly in the tool's `message` argument",
+        "`agent_type` to the selected mapped custom agent",
+        "`fork_turns` to `none`",
         "luna_max_implementer_<objective_slug>",
         "terra_max_implementer_<objective_slug>",
         "sol_high_implementer_<objective_slug>",
-        "result identifies the child by that task name",
-        "visible model\nlane at creation time",
-        "Do not call `functions.exec` before or around the launch",
-        "do not build or print\nthe packet through a tool",
-        "do not launch through any deferred or internal tool",
-        "do not rename the\nchild afterward",
-        "`ALL_TOOLS`",
+        "task name establishes the visible model lane at creation time",
+        "native tool call itself, not written inside another tool",
+        "Do not inspect tools, discover a schema",
+        "use a deferred/internal launcher",
+        "rename the child afterward",
         "TASK_CONTEXT_BUNDLE:",
         "TASK_CONTEXT_REVISION:",
         "CURRENT_USER_REQUEST=INHERITED_CURRENT_QUERY",
@@ -217,7 +252,7 @@ def main() -> int:
     if routed_context.count("TASK_CONTEXT_BUNDLE=<TURN path>") != 1:
         raise AssertionError("the only implementer packet does not reference the context bundle once")
     state_document = json.loads((state / f"{active_id}.json").read_text(encoding="utf-8"))
-    if state_document.get("contract_revision") != "0.9.0-native-spawn-v5":
+    if state_document.get("contract_revision") != "0.9.0-runtime-gated-spawn-v6":
         raise AssertionError("first routed turn did not persist the root contract revision")
     bundle_path = Path(context_field(routed_context, "TASK_CONTEXT_BUNDLE"))
     bundle_revision = context_field(routed_context, "TASK_CONTEXT_REVISION")
@@ -264,6 +299,9 @@ def main() -> int:
         "fork_turns=none",
         "multi_agent_v1__spawn_agent",
         "set_thread_title",
+        "message=packet",
+        "After creating `packet`",
+        "const packet",
         "fork_context: false",
     ):
         if obsolete in routed_context:
@@ -448,7 +486,7 @@ def main() -> int:
     inherited_context = context(inherited)
     bounded_acceptance = " ".join(acceptance.split())
     for value in (
-        "ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5",
+        "ROOT_CONTRACT_REVISION: 0.9.0-runtime-gated-spawn-v6",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         bounded_acceptance,
         "PRIOR_COMPLETED_RESULT: NONE",
@@ -596,7 +634,7 @@ Add JSON export after the CSV release has been adopted.
     accepted_context = context(accepted)
     if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in accepted_context:
         raise AssertionError("accepted objective was not cleared")
-    if "ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5" not in accepted_context:
+    if "ROOT_CONTRACT_REVISION: 0.9.0-runtime-gated-spawn-v6" not in accepted_context:
         raise AssertionError("current query did not use the compact routed turn")
     canonical_handoff = handoff.rsplit("\n\n## Route", 1)[0]
     bounded_handoff = " ".join(canonical_handoff.split())
@@ -781,7 +819,7 @@ None — no next step is needed.
         ],
     )
     legacy = context(invoke(hook, state, active_id, "Summarize that", legacy_transcript))
-    if "ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5" not in legacy:
+    if "ROOT_CONTRACT_REVISION: 0.9.0-runtime-gated-spawn-v6" not in legacy:
         raise AssertionError("legacy follow-up did not use the compact routed turn")
     if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
         raise AssertionError("legacy completion did not fall back to its accepted result")
@@ -857,7 +895,7 @@ None — no next step is needed.
         invoke(hook, state, active_id, current_request, stale_context_transcript)
     )
     for value in (
-        "ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5",
+        "ROOT_CONTRACT_REVISION: 0.9.0-runtime-gated-spawn-v6",
         "RECENT_CONTEXT_FRESHNESS: STALE",
         agreed_scope,
         f"PRIOR_COMPLETED_RESULT: {stale_capsule}",
