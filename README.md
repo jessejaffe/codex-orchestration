@@ -34,9 +34,10 @@ flowchart LR
 ```
 
 Parent classification and implementer dispatch happen in one response. Execution then stays with
-one routed implementer. The desktop child task is retitled to the exact selected lane—`GPT-5.6 Luna /
-Max`, `GPT-5.6 Terra / Max`, or `GPT-5.6 Sol / High`—so the model is visible from the main task.
-Any temporary human nickname supplied by the host is not an agent identity.
+one routed implementer. The desktop child is created with the selected lane in its task name—
+`luna_max_implementer_<objective_slug>`, `terra_max_implementer_<objective_slug>`, or
+`sol_high_implementer_<objective_slug>`—so the model is visible from the main task immediately.
+The plugin does not create a randomly nicknamed child and rename it afterward.
 
 ## Routes
 
@@ -227,9 +228,10 @@ Orchestration off
 
 The desktop activity label stays exactly `Thinking`. For activation plus work, root says only
 `Orchestration: ON for this chat` before launching; an already-active task launches without startup
-narration. The selected child task is immediately titled with its exact model and reasoning lane.
-The router launches through the desktop subagent API directly, without an exploratory tool lookup,
-so it does not spend an extra parent turn discovering the spawn call.
+narration. The child is created with a model-lane task name such as
+`luna_max_implementer_<objective_slug>`; it is not created under a random host nickname and renamed
+later. Root calls the named collaboration agent directly, without an exploratory tool lookup, so it
+does not spend an extra parent turn discovering the spawn call.
 
 ## Install and verify
 

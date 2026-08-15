@@ -131,8 +131,8 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'user-facing result' \
     'Parent evaluates scope + complexity' \
     'Parent classification and implementer dispatch happen in one response' \
-    'desktop child task is retitled to the exact selected lane' \
-    'temporary human nickname supplied by the host is not an agent identity' \
+    'desktop child is created with the selected lane in its task name' \
+    'does not create a randomly nicknamed child and rename it afterward' \
     'READ_ONLY' \
     'STANDARD_ARTIFACT' \
     'DESIGN_ARTIFACT' \
