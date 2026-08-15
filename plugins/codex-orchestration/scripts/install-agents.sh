@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the four Codex Orchestration 0.9.0 profiles and retire the former supervisors safely.
+# Install the three Codex Orchestration 0.9.0 implementers and retire obsolete roles safely.
 
 set -eu
 
@@ -35,11 +35,11 @@ if [ -z "$target_dir" ]; then
 fi
 case "$target_dir" in /*) ;; *) fail "target directory must be absolute: $target_dir" ;; esac
 
-current_roles='terra-orchestrator
-luna-implementer
+current_roles='luna-implementer
 terra-implementer
 sol-high-implementer'
-retired_roles='terra-supervisor
+retired_roles='terra-orchestrator
+terra-supervisor
 sol-high-supervisor
 sol-xhigh-supervisor'
 
@@ -119,7 +119,6 @@ previous_digest() {
     *) ;;
   esac
   case "$1" in
-    terra-orchestrator) printf '%s\n' aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d ;;
     luna-implementer) printf '%s\n' f8c6190b3e4375ece24eb02ab9db0983a5f8c4cad47a126059cbc2c62f344194 662c7b7010cc87e902f1f2608f74a8bce7bd06df659e3de778fc761d3667fbbe 2716b3635a68f8fed0961e69be92c1b18338c6a1897876592fd58a061932e082 3bbb7c2464542eb135640782b52c9d213486bc351d60b8fe0c40ef21a1368e5c 82f9358fa7ed1d6ab7f9c297dccc721c626191879d1ec73ee5038dd8888afdce 89234fa1bcb7f3fe98e909cdf2775b61293a91174d04b6801169f2defd0204a2 08aa1335248a15ee305e30edb35662b28d95d31b266a67351acfa696ced1e3ec c0da09a763a31e77d4b9390e524eb61ead0b730a5024c9c322761a9b39f056a2 ;;
     terra-implementer) printf '%s\n' 68179487b09d11667c6a0e69e48cec65348847df7ebb0e501e67ed47de0114a6 930bd325d9d19c93ffbb70497410ff9f0a03c657fde81e04a8ccd3272f206424 dbcaf41ebdb469251ca316154d10ae6a8717ea0228c3e580c1e411851ceee8fb 830aebc3d5c40da3aae60b20e6f760b29fe32c68d67fdd7db3d5ae9d49ff9bfa c61310125d3af082ffc6fcb9712fc0c07f630c9e08a3a582e727cfdf612c6d31 f01797baa0997b63c0ad9b70a29e1d07cdd5e8056b9520b711fc8482e180edd3 b21cd346b39eb94f4119bf180fc1b3354a9f3259f469fe22b43233fee1433177 66a549c67e7f81f0d0e6db89ec85af7d1a47253b376e255344c603459ec0ea7c ;;
     sol-high-implementer) printf '%s\n' 86ad93904293ac3bc1613cdb1512274c4524ca19fd9ce1841e5744355207a6f6 2a8be332df4cd578f599c3f5dac89930f7cd13503393a0f380ee3a4a128492f7 171fa0d31db51f032d323b417a063e8ff374709013c9f7751e8cf44f53f77cbc 6ee395bb2287fd8fe8276e87f2ba7429a8eac67a771561ad71f30f5ed787a6cb b42701c0431ba0018f1e22ea7923d0c04b550e4232aa1221d8a9f067d45b8ef9 153a8603fd959e951471a81cec4c7dbda293d6793d98e4c5d03a89b9f3abf744 6f4a5eb3d93109728ea2cf4bc955da0f3eee58422e8baa15b8c4d98354529064 ;;
@@ -129,6 +128,7 @@ previous_digest() {
 
 retired_digest() {
   case "$1" in
+    terra-orchestrator) printf '%s\n' aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d ;;
     terra-supervisor) printf '%s\n' e4ab97f67fed62023c204dd8f3688b144c07f62ec0ee1ba169c5c791232a2d1b ;;
     sol-high-supervisor) printf '%s\n' 6181d4b59b74c3688c6c5e3c94482c152b52861cd1fbb68c0e003d60fa73f8f5 ;;
     sol-xhigh-supervisor) printf '%s\n' 4a9a6947e04ae14df2855b3c495bf03311571d20f5125ed50a62fd113c28401d ;;
@@ -176,7 +176,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: four 0.9.0 profiles are current and former supervisors are absent.'
+  printf '%s\n' 'CHECK PASSED: three 0.9.0 implementers are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -218,8 +218,8 @@ for role in $retired_roles; do
   [ "$(classify_retired "$role")" = retired ] || continue
   destination=$target_dir/codex-orchestration-$role.toml
   rm "$destination" || fail "could not retire $destination"
-  printf '%s\n' "RETIRED: exact former supervisor $destination"
+  printf '%s\n' "RETIRED: exact obsolete role $destination"
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: four 0.9.0 profiles are current and former supervisors were retired.'
+printf '%s\n' 'INSTALL PASSED: three 0.9.0 implementers are current and obsolete roles were retired.'

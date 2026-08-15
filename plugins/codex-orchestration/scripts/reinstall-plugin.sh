@@ -94,7 +94,6 @@ required_package_files() {
 agents/codex-orchestration-luna-implementer.toml
 agents/codex-orchestration-terra-implementer.toml
 agents/codex-orchestration-sol-high-implementer.toml
-agents/codex-orchestration-terra-orchestrator.toml
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
 scripts/install-agents.sh
@@ -351,10 +350,10 @@ is_version_alias "$current" || fail "new plugin reported an unsafe cache alias: 
 current_cache=$cache_root/$manifest_version
 validate_complete_package "$current_cache"
 
-# A complete, conflict-free four-profile install is a prerequisite for retiring either
-# legacy configured identity. The companion installer preflights every current profile
-# and former supervisor, proves all four current files, and only then removes exact
-# obsolete files. Customized profiles therefore stop this migration without being
+# A complete, conflict-free three-implementer install is a prerequisite for retiring either
+# legacy configured identity. The companion installer preflights every current implementer
+# and obsolete role, proves all three current files, and only then removes exact obsolete
+# files. Customized profiles therefore stop this migration without being
 # overwritten and before plugin or marketplace removal.
 sh "$current_cache/scripts/install-agents.sh"
 sh "$current_cache/scripts/install-agents.sh" --check

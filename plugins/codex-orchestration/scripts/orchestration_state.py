@@ -132,7 +132,9 @@ def read_state(session_id: str) -> dict[str, Any]:
     return value
 
 
-def write_state(session_id: str, *, active: bool) -> bool:
+def write_state(
+    session_id: str, *, active: bool, contract_revision: str | None = None
+) -> bool:
     path = state_path(session_id)
     if path is None:
         return False
@@ -141,8 +143,11 @@ def write_state(session_id: str, *, active: bool) -> bool:
             prefix=f".{path.name}.", dir=path.parent
         )
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            document = {"active": active, "session_id": session_id}
+            if active and contract_revision:
+                document["contract_revision"] = contract_revision
             json.dump(
-                {"active": active, "session_id": session_id},
+                document,
                 handle,
                 separators=(",", ":"),
                 sort_keys=True,

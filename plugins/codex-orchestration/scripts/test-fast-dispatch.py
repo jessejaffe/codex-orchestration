@@ -87,35 +87,37 @@ def main() -> int:
     routed = invoke(hook, state, active_id, "Fix the existing label")
     routed_context = context(routed)
     required = (
+        "CODEX_ORCHESTRATION_ROOT_CONTRACT",
+        "REVISION=0.9.0-parent-first-v1",
         "Orchestration ON (0.9.0)",
-        "Exactly two stages",
-        "one selected implementer owns the task end to end",
+        "Parent classifies in its first response",
+        "Do not spawn a classifier",
+        "ROUTE_AND_EXECUTE",
+        "classify internally from the current request and TURN",
+        "immediately spawn exactly one mapped implementer",
+        "Do not emit a separate classification",
+        "or add a classification wait",
         "desktop activity label exactly `Thinking`",
         "never create a dynamic status label",
         "Keep startup quiet",
         "comment only on meaningful progress, blockers, release, and completion",
-        "terra_extra_high_orchestrator_<objective_slug>",
-        "ORCHESTRATE_CLASSIFY",
-        "fork_turns=1",
         "fork_turns=none",
         "TASK_CONTEXT_BUNDLE:",
         "TASK_CONTEXT_REVISION:",
-        "USER_REQUEST=INHERITED_CURRENT_QUERY",
+        "CURRENT_USER_REQUEST=INHERITED_CURRENT_QUERY",
         "PRIOR_COMPLETED_RESULT: NONE",
         "RECENT_CONTEXT_FRESHNESS: NONE",
         "RECENT_CONTEXT: NONE",
+        "PREVIOUS_TASK_CONTEXT_REQUIRED: NO",
         "WORKSPACE_DEPENDENCIES_REQUIRED: NO",
         "codex_app__load_workspace_dependencies",
-        "codex_orchestration_terra_orchestrator",
         "codex_orchestration_terra_implementer",
         "codex_orchestration_luna_implementer",
         "codex_orchestration_sol_high_implementer",
-        "agents/codex-orchestration-terra-orchestrator.toml",
         "terra_max_implementer_<objective_slug>",
         "luna_max_implementer_<objective_slug>",
         "sol_high_implementer_<objective_slug>",
-        "EXECUTE — Spawn exactly one mapped implementer",
-        "Never spawn a supervisor, reviewer, grader, or a",
+        "Never spawn a supervisor, reviewer, grader, classifier, or a",
         "second writer",
         "END_TO_END_WORK",
         "IMPLEMENTATION_ROUTE=<friendly selected model lane>",
@@ -127,8 +129,8 @@ def main() -> int:
         "inspect only its cited evidence",
         "same implementer",
         "Do not create another role lane",
-        "## Classification blocked",
-        "Accept only `## Classification blocked` or `## Classification`",
+        "## Classification",
+        "- Relationship: <New|Amend|Replace|Cancel>",
         "Small tweak: Luna / Max",
         "Big tweak: Terra / Max",
         "Small build: Terra / Max",
@@ -155,16 +157,18 @@ def main() -> int:
         "preserve exact",
         "details",
         "natural-language report",
-        "not a prescribed schema",
         "state what happened,",
-        "work done or found, outcome, decisive evidence",
+        "work done or found",
+        "outcome, decisive evidence",
         "links, limitations, or open work",
         "mandatory `## Next step` section",
-        "nonempty Next step immediately above the route footer",
+        "nonempty Next step",
+        "immediately above the route footer",
         "`None — no next step is needed.`",
         "Do not require fixed section",
-        "REPORT_REVISION_REQUIRED",
-        "schema correction, not a new review lane",
+        "Never call the implementer",
+        "locally append or correct only",
+        "never request a child rewrite",
         "Every completed user-facing task ends with this mandatory next-step section",
         "## Next step",
         "<one legitimate follow-on action, or None — no next step is needed.>",
@@ -181,10 +185,13 @@ def main() -> int:
     for value in required:
         if value not in routed_context:
             raise AssertionError(f"dispatch contract omits {value!r}")
-    if routed_context.count("USER_REQUEST=INHERITED_CURRENT_QUERY") != 1:
-        raise AssertionError("only the classifier should inherit the current query")
-    if routed_context.count("TASK_CONTEXT_BUNDLE=<STATE path>") != 1:
+    if routed_context.count("CURRENT_USER_REQUEST=INHERITED_CURRENT_QUERY") != 1:
+        raise AssertionError("the root turn should inherit the current query once")
+    if routed_context.count("TASK_CONTEXT_BUNDLE=<TURN path>") != 1:
         raise AssertionError("the only implementer packet does not reference the context bundle once")
+    state_document = json.loads((state / f"{active_id}.json").read_text(encoding="utf-8"))
+    if state_document.get("contract_revision") != "0.9.0-parent-first-v1":
+        raise AssertionError("first routed turn did not persist the root contract revision")
     bundle_path = Path(context_field(routed_context, "TASK_CONTEXT_BUNDLE"))
     bundle_revision = context_field(routed_context, "TASK_CONTEXT_REVISION")
     bundle_document = json.loads(bundle_path.read_text(encoding="utf-8"))
@@ -223,6 +230,10 @@ def main() -> int:
         "ROOT_VERIFICATION_RECOVERY_REQUIRED",
         "### Recommendations",
         "Fast-relay valid child results without extra reasoning",
+        "codex_orchestration_terra_orchestrator",
+        "ORCHESTRATE_CLASSIFY",
+        "REPORT_REVISION_REQUIRED",
+        "fork_turns=1",
     ):
         if obsolete in routed_context:
             raise AssertionError(f"dispatch retains obsolete headless path: {obsolete!r}")
@@ -256,14 +267,8 @@ def main() -> int:
             raise AssertionError(f"dispatch retains noisy parent copy: {noisy!r}")
     if (state / "grader-requests").exists():
         raise AssertionError("dispatch still staged a grader request")
-    if len(routed_context) > 7_500:
+    if len(routed_context) > 8_000:
         raise AssertionError(f"dispatch contract regressed above the latency budget: {len(routed_context)}")
-    for capsule_line in (
-        "ROUTING_CONTEXT=<exact structured capsule created above>",
-        "LAST_TASK_CONTEXT=<exact full continuity block created above>",
-    ):
-        if capsule_line in routed_context:
-            raise AssertionError("ordinary prompts received previous-task payload fields")
 
     previous_task_context = context(
         invoke(
@@ -273,44 +278,27 @@ def main() -> int:
             "Read the last chat and pick off where we left off",
         )
     )
+    if "PREVIOUS_TASK_CONTEXT_REQUIRED: YES" not in previous_task_context:
+        raise AssertionError("previous-task request did not set the compact turn flag")
+    if "CODEX_ORCHESTRATION_ROOT_CONTRACT" in previous_task_context:
+        raise AssertionError("invariant root contract was repeated on a later turn")
+    if len(previous_task_context) > 2_000:
+        raise AssertionError("compact previous-task turn exceeded its latency budget")
     for value in (
-        "PREVIOUS TASK CONTEXT REQUIRED",
         "list_threads",
         "read_thread",
-        "Exclude\nthe current task",
-        "ROUTING_CONTEXT",
-        "at most 1,200 characters",
-        "Send it to the classifier",
-        "LAST_TASK_CONTEXT",
-        "at most 6,000 characters",
-        "Send it to the selected implementer",
+        "Exclude the current task",
+        "LAST_TASK_CONTEXT of at most 6,000 characters",
+        "Send that only to the selected implementer",
         "missing optional artifact never blocks work",
     ):
-        if value not in previous_task_context:
-            raise AssertionError(f"previous-task dispatch omits {value!r}")
-    if len(previous_task_context) > 10_000:
-        raise AssertionError("previous-task protocol exceeds its dispatch budget")
-    if "PREVIOUS TASK CONTEXT REQUIRED" in routed_context:
-        raise AssertionError("ordinary prompts pay the previous-task prompt cost")
-    routing_line = "ROUTING_CONTEXT=<exact structured capsule created above>"
-    full_line = "LAST_TASK_CONTEXT=<exact full continuity block created above>"
-    if previous_task_context.count(routing_line) != 1:
-        raise AssertionError("routing capsule is not isolated to one classifier packet")
-    if previous_task_context.count(full_line) != 1:
-        raise AssertionError("full continuity is not isolated to the selected implementer packet")
-    classifier_packet = previous_task_context.split("ORCHESTRATE_CLASSIFY", 1)[1].split(
-        "ROLE —", 1
-    )[0]
-    if routing_line not in classifier_packet or full_line in classifier_packet:
-        raise AssertionError("classifier packet did not receive only the routing capsule")
-    role_packets = previous_task_context.split("ROLE —", 1)[1]
-    if routing_line in role_packets or full_line not in role_packets:
-        raise AssertionError("task-role packets did not receive only full continuity")
+        if value not in routed_context:
+            raise AssertionError(f"invariant previous-task protocol omits {value!r}")
 
     negative_previous = context(
         invoke(hook, state, active_id, "Don't read the last chat; fix only this label")
     )
-    if "PREVIOUS TASK CONTEXT REQUIRED" in negative_previous:
+    if "PREVIOUS_TASK_CONTEXT_REQUIRED: NO" not in negative_previous:
         raise AssertionError("negative previous-task instruction was ignored")
 
     artifact_context = context(
@@ -326,8 +314,10 @@ def main() -> int:
     direct_question_context = context(
         invoke(hook, state, active_id, "Why did the spreadsheet task fail?")
     )
-    if "ORCHESTRATE_CLASSIFY" not in direct_question_context:
-        raise AssertionError("read-only work skipped the classifier")
+    if "CODEX_ORCHESTRATION_ROOT_CONTRACT" in direct_question_context:
+        raise AssertionError("routine turn repeated the invariant root contract")
+    if "CODEX_ORCHESTRATION_TURN" not in direct_question_context:
+        raise AssertionError("routine read-only work omitted its compact turn packet")
     for token in (
         "Every completed user-facing task must end with this compact",
     ):
@@ -346,15 +336,15 @@ def main() -> int:
         "slightly less technical language",
         "briefly explain jargon",
     ):
-        if token not in direct_question_context:
-            raise AssertionError(f"dispatch omits route receipt {token!r}")
+        if token not in routed_context:
+            raise AssertionError(f"root contract omits route receipt {token!r}")
     if "- Supervision:" in direct_question_context:
         raise AssertionError("dispatch retains supervision in the route receipt")
     inspection_policy = (
         "INSPECTION_POLICY=Group closely related low-output checks for one immediate question "
         "in one pass; keep unrelated or noisy checks separate."
     )
-    if direct_question_context.count(inspection_policy) != 1:
+    if routed_context.count(inspection_policy) != 1:
         raise AssertionError("inspection grouping policy is not isolated to the implementer packet")
 
     combined_id = "33333333-3333-3333-3333-333333333333"
@@ -367,8 +357,8 @@ def main() -> int:
     combined_context = context(combined)
     if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
         raise AssertionError("combined activation does not acknowledge ON")
-    if "ORCHESTRATE_CLASSIFY" not in combined_context:
-        raise AssertionError("combined activation did not select nested Terra orchestration")
+    if "ROUTE_AND_EXECUTE" not in combined_context:
+        raise AssertionError("combined activation did not install parent-first routing")
 
     transcript = temporary / "root.jsonl"
     acceptance = """## Ready
@@ -425,7 +415,7 @@ def main() -> int:
     inherited_context = context(inherited)
     bounded_acceptance = " ".join(acceptance.split())
     for value in (
-        "CLASSIFIER_FORK=`1`",
+        "ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         bounded_acceptance,
         "PRIOR_COMPLETED_RESULT: NONE",
@@ -443,7 +433,7 @@ def main() -> int:
             "__TASK_CONTEXT_BUNDLE__",
             "__TASK_CONTEXT_REVISION__",
             "__WORKSPACE_DEPENDENCIES_REQUIRED__",
-            "__ORCHESTRATOR_PROFILE_PATH__",
+            "__PREVIOUS_TASK_CONTEXT_REQUIRED__",
             "__AGENTS_DIR__",
         )
     ):
@@ -573,8 +563,8 @@ Add JSON export after the CSV release has been adopted.
     accepted_context = context(accepted)
     if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in accepted_context:
         raise AssertionError("accepted objective was not cleared")
-    if "CLASSIFIER_FORK=`1`" not in accepted_context:
-        raise AssertionError("current query did not use one-turn inheritance with its capsule")
+    if "ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1" not in accepted_context:
+        raise AssertionError("current query did not use the compact routed turn")
     canonical_handoff = handoff.rsplit("\n\n## Route", 1)[0]
     bounded_handoff = " ".join(canonical_handoff.split())
     if f"PRIOR_COMPLETED_RESULT: {bounded_handoff}" not in accepted_context:
@@ -758,8 +748,8 @@ None — no next step is needed.
         ],
     )
     legacy = context(invoke(hook, state, active_id, "Summarize that", legacy_transcript))
-    if "CLASSIFIER_FORK=`1`" not in legacy:
-        raise AssertionError("legacy follow-up did not use one-turn inheritance")
+    if "ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1" not in legacy:
+        raise AssertionError("legacy follow-up did not use the compact routed turn")
     if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
         raise AssertionError("legacy completion did not fall back to its accepted result")
 
@@ -834,7 +824,7 @@ None — no next step is needed.
         invoke(hook, state, active_id, current_request, stale_context_transcript)
     )
     for value in (
-        "CLASSIFIER_FORK=`1`",
+        "ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1",
         "RECENT_CONTEXT_FRESHNESS: STALE",
         agreed_scope,
         f"PRIOR_COMPLETED_RESULT: {stale_capsule}",
@@ -979,7 +969,7 @@ None — no next step is needed.
     completed_value = completed_line.removeprefix("PRIOR_COMPLETED_RESULT: ")
     canonical_oversized_handoff = "OUTCOME=x×5000"
     if completed_value != canonical_oversized_handoff:
-        raise AssertionError("classifier completion handoff was not canonically compacted")
+        raise AssertionError("completion handoff was not canonically compacted")
     oversized_bundle = json.loads(
         Path(context_field(oversized, "TASK_CONTEXT_BUNDLE")).read_text(encoding="utf-8")
     )
@@ -1019,7 +1009,14 @@ None — no next step is needed.
     if invoke(hook, state, active_id, "Another prompt") != {"continue": True}:
         raise AssertionError("OFF state did not persist")
 
-    print("PASS: chat controls, bounded classifier context, and concise private whole-chat context")
+    reactivation = invoke(hook, state, active_id, "Turn orchestration on")
+    if context(reactivation) != "Reply exactly `Orchestration: ON for this chat` and do not spawn.":
+        raise AssertionError("reactivation-only response changed")
+    reactivated_work = context(invoke(hook, state, active_id, "Explain the label again"))
+    if "CODEX_ORCHESTRATION_ROOT_CONTRACT" not in reactivated_work:
+        raise AssertionError("reactivation did not reinstall the invariant root contract")
+
+    print("PASS: chat controls, one-time root contract, and concise private whole-chat context")
     return 0
 
 

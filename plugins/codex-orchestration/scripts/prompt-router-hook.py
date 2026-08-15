@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inject the chat-local Terra dispatch contract once per user prompt."""
+"""Inject one chat-local root contract plus a compact per-turn routing packet."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from typing import Any
 
 from orchestration_state import (
     is_active,
+    read_state,
     transcript_role,
     write_context_bundle,
     write_state,
@@ -91,17 +92,6 @@ PREVIOUS_TASK_PATTERNS = (
     ),
     re.compile(r"\bcontinue\s+(?:from|where)\s+we\s+left\s+off\b", re.IGNORECASE),
 )
-PREVIOUS_TASK_PROTOCOL = """PREVIOUS TASK CONTEXT REQUIRED — Before classification, root uses the
-Codex task-history tools (`list_threads`, then `read_thread`; discover them once if needed). Exclude
-the current task and select the newest task from the same project or working directory. If that is
-ambiguous, ask one concise question and stop. Read the task once, then create two payloads:
-
-1. ROUTING_CONTEXT is at most 1,200 characters: Previous objective, Last result, Open work,
-Resolved current referent, and Critical paths. Send it to the classifier.
-2. LAST_TASK_CONTEXT is at most 6,000 characters: the final answer, last relevant turns, exact
-paths, links, decisions, constraints, and open work. Send it to the selected implementer.
-
-A missing optional artifact never blocks work."""
 MODEL_LABELS = {
     "gpt-5.6-sol": "GPT-5.6 Sol",
     "gpt-5.6-terra": "GPT-5.6 Terra",
@@ -116,41 +106,27 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-DISPATCH_CONTEXT = """Orchestration ON (0.9.0). Exactly two stages: Terra / Extra High classifies;
-one selected implementer owns the task end to end. Root only performs the requested terminal visual
-check.
+ROOT_CONTRACT_REVISION = "0.9.0-parent-first-v1"
+ROOT_CONTRACT = """CODEX_ORCHESTRATION_ROOT_CONTRACT
+REVISION=0.9.0-parent-first-v1
 
-STATE
-CLASSIFIER_FORK=`1`; ROLE_FORK=`none`
-TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
-TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
-PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
-PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__
-RECENT_CONTEXT_FRESHNESS: __RECENT_CONTEXT_FRESHNESS__
-RECENT_CONTEXT: __RECENT_CONTEXT__
-WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__
-CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
+Orchestration ON (0.9.0). Parent classifies in its first response; one selected implementer owns the
+task end to end. Do not spawn a classifier. Root only performs the requested terminal visual check.
 
 Keep the desktop activity label exactly `Thinking`; never create a dynamic status label.
 Keep startup quiet: child pills suffice; comment only on meaningful progress, blockers, release, and completion.
 
-__PREVIOUS_TASK_PROTOCOL__
+ROUTE_AND_EXECUTE — classify internally from the current request and TURN, then
+immediately spawn exactly one mapped implementer. Do not emit a separate classification message
+or add a classification wait. Create this exact internal packet:
+## Classification
+- Relationship: <New|Amend|Replace|Cancel>
+- Active objective: <concise objective>
+- Work class: <friendly class>
+- Complexity: <1.0-10.0 / 10>
+- Why: <brief reason>
 
-CLASSIFY — Immediately spawn
-`terra_extra_high_orchestrator_<objective_slug>` with `fork_turns=1`:
-ORCHESTRATE_CLASSIFY
-PRIOR_ACTIVE_ACCEPTANCE=<STATE value>
-PRIOR_COMPLETED_RESULT=<STATE value>
-RECENT_CONTEXT_FRESHNESS=<STATE value>
-RECENT_CONTEXT=<STATE value>
-__ROUTING_CONTEXT_PACKET_LINE__
-USER_REQUEST=INHERITED_CURRENT_QUERY
-
-Use `codex_orchestration_terra_orchestrator`, or built-in `default` pinned Terra / Extra High after
-reading `__ORCHESTRATOR_PROFILE_PATH__`. Pass no dependencies, repository content, skills, or plan.
-Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout.
-Accept only `## Classification blocked` or `## Classification` with Relationship, Active objective,
-Work class, Complexity, and nonempty Why. Derive the route from Work class:
+If essential information is missing, ask one concise user question and stop. Map Work class:
 
 - Read-only: Luna / Max
 - Standard artifact: Luna / Max
@@ -160,30 +136,35 @@ Work class, Complexity, and nonempty Why. Derive the route from Work class:
 - Small build: Terra / Max
 - Big build: Sol / High
 
-ROLE — Prefer the selected custom type; otherwise use built-in `worker` pinned to its model and
-matching `__AGENTS_DIR__` profile: Terra `codex_orchestration_terra_implementer` (Terra / Max), Luna
-`codex_orchestration_luna_implementer` (Luna / Max), or Sol `codex_orchestration_sol_high_implementer`
-(Sol / High). Use `fork_turns=none`; name the only child `terra_max_implementer_<objective_slug>`,
+ROLE — Use Terra `codex_orchestration_terra_implementer` (Terra / Max), Luna
+`codex_orchestration_luna_implementer` (Luna / Max), or Sol
+`codex_orchestration_sol_high_implementer` (Sol / High); otherwise read its matching
+`__AGENTS_DIR__` profile and use built-in `worker` pinned identically. Use `fork_turns=none`; name the child `terra_max_implementer_<objective_slug>`,
 `luna_max_implementer_<objective_slug>`, or `sol_high_implementer_<objective_slug>`.
 
-After classification, silently load `codex_app__load_workspace_dependencies` once only when STATE
-says YES; otherwise use NONE.
+When TURN says `PREVIOUS_TASK_CONTEXT_REQUIRED: YES`, use Codex task-history tools (`list_threads`,
+then `read_thread`). Exclude the current task and select the newest from the same project or working
+directory. If ambiguous, ask one concise question and stop. Read it once and create LAST_TASK_CONTEXT of at most 6,000 characters:
+the final answer, last relevant turns, exact paths, links, decisions, constraints, and open work.
+Send that only to the selected implementer. A missing optional artifact never blocks work.
 
-EXECUTE — Spawn exactly one mapped implementer. Never spawn a supervisor, reviewer, grader, or a
+Silently load `codex_app__load_workspace_dependencies` once only when TURN says YES; otherwise use
+NONE.
+
+Spawn exactly one mapped implementer. Never spawn a supervisor, reviewer, grader, classifier, or a
 second writer. Send:
 END_TO_END_WORK
 CLASSIFICATION=<exact Markdown>
-PRIOR_COMPLETED_RESULT=<STATE value>
-TASK_CONTEXT_BUNDLE=<STATE path>
-TASK_CONTEXT_REVISION=<STATE revision>
+PRIOR_COMPLETED_RESULT=<TURN value>
+TASK_CONTEXT_BUNDLE=<TURN path>
+TASK_CONTEXT_REVISION=<TURN revision>
 WORKSPACE_DEPENDENCIES=<exact result or NONE>
-CURRENT_ROOT_ROUTE=<STATE value>
+CURRENT_ROOT_ROUTE=<TURN value>
 IMPLEMENTATION_ROUTE=<friendly selected model lane>
 INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
-__LAST_TASK_CONTEXT_PACKET_LINE__
-The bundle is complete private context: concise whole-chat context—user requests, assistant facts,
-and 20 newest canonical task outcomes. Pass its path/revision unchanged; bounded STATE values do not
-replace it.
+LAST_TASK_CONTEXT=<exact full continuity block created above, only when TURN requires it>
+The bundle is complete private concise whole-chat context: user requests, assistant facts, and 20
+newest canonical task outcomes. Pass its path/revision unchanged; TURN values do not replace it.
 Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout. The implementer owns
 scope interpretation, implementation, verification, and authorized release. It owns the final
 report unless it makes the terminal visual handoff below.
@@ -206,13 +187,15 @@ FINAL-REPORT VOICE — User-facing report changes. Use slightly less technical l
 lead with the outcome and briefly explain jargon. Keep internal work technical; preserve exact
 details.
 
-Every terminal response is a natural-language report, not a prescribed schema: state what happened,
-work done or found, outcome, decisive evidence, and relevant links, limitations, or open work. For a
+Every terminal response is a natural-language report: state what happened, work done or found,
+outcome, decisive evidence, and relevant links, limitations, or open work. For a
 visual result include pass, fail, or blocked in the same account. Do not require fixed section
-headings or a field list, except for the mandatory `## Next step` section. If the report lacks a
-substantive account, nonempty Next step immediately above the route footer, or the footer, use
-`followup_task` on the same implementer with `REPORT_REVISION_REQUIRED` and the exact omission, then
-relay only the correction. This is schema correction, not a new review lane.
+headings or a field list, except for the mandatory `## Next step` section. Never call the implementer
+again merely to correct report structure. If the report lacks a substantive account, preserve its
+body and locally add only the smallest missing outcome sentence. If it lacks a nonempty Next step
+immediately above the route footer, or the footer is missing or malformed, preserve the report body
+verbatim and locally append or correct only the required ending from the internal CLASSIFICATION and
+current TURN route.
 Every completed user-facing task ends with this mandatory next-step section immediately above its
 compact route footer. State one legitimate follow-on action; when none is warranted, write exactly
 `None — no next step is needed.`:
@@ -227,9 +210,26 @@ Never include supervision. The selected implementer places this ending after its
 for a terminal visual result. Treat any missing part as a report omission.
 RELAY — A valid nonvisual child report is the user-facing final response. Return it verbatim as the entire final answer.
 Preserve its Markdown, wording, detail, order, and links. Do not summarize, condense, paraphrase, introduce, assess, or append to it.
-Do not perform an extra completion turn or tool call. Only request `REPORT_REVISION_REQUIRED` for a
-missing required report field, then relay the corrected report verbatim. The activation-only
-acknowledgement is not task completion. Never expose packets, waits, or contracts to the user."""
+Do not perform an extra completion turn or tool call. For an invalid report, perform only the local
+minimal repair defined above in the same final response; never request a child rewrite. The
+activation-only acknowledgement is not task completion. Never expose packets, waits, or contracts
+to the user."""
+
+TURN_CONTEXT = """CODEX_ORCHESTRATION_TURN
+ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1
+TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
+TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
+PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
+PRIOR_COMPLETED_RESULT: __PRIOR_COMPLETED_RESULT__
+RECENT_CONTEXT_FRESHNESS: __RECENT_CONTEXT_FRESHNESS__
+RECENT_CONTEXT: __RECENT_CONTEXT__
+PREVIOUS_TASK_CONTEXT_REQUIRED: __PREVIOUS_TASK_CONTEXT_REQUIRED__
+WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__
+CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
+CURRENT_USER_REQUEST=INHERITED_CURRENT_QUERY
+
+Apply the invariant Codex Orchestration root contract already installed in this chat. Classify and
+launch exactly one implementer in this response."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:
@@ -874,40 +874,41 @@ def main() -> int:
         )
         return 0
     bundle_path, bundle_revision = bundle
-    context = DISPATCH_CONTEXT.replace("__ROOT_ROUTE__", root_route)
-    previous_task_required = previous_task_context_required(prompt)
-    context = context.replace(
-        "__PREVIOUS_TASK_PROTOCOL__",
-        PREVIOUS_TASK_PROTOCOL if previous_task_required else "",
+    turn_context = TURN_CONTEXT.replace("__ROOT_ROUTE__", root_route)
+    turn_context = turn_context.replace(
+        "__PREVIOUS_TASK_CONTEXT_REQUIRED__",
+        "YES" if previous_task_context_required(prompt) else "NO",
     )
-    context = context.replace(
-        "__ROUTING_CONTEXT_PACKET_LINE__",
-        "ROUTING_CONTEXT=<exact structured capsule created above>"
-        if previous_task_required
-        else "",
-    )
-    context = context.replace(
-        "__LAST_TASK_CONTEXT_PACKET_LINE__",
-        "LAST_TASK_CONTEXT=<exact full continuity block created above>"
-        if previous_task_required
-        else "",
-    )
-    context = context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
-    context = context.replace("__PRIOR_COMPLETED_RESULT__", prior_completed)
-    context = context.replace("__RECENT_CONTEXT_FRESHNESS__", recent_freshness)
-    context = context.replace("__RECENT_CONTEXT__", recent_context)
-    context = context.replace("__TASK_CONTEXT_BUNDLE__", str(bundle_path))
-    context = context.replace("__TASK_CONTEXT_REVISION__", bundle_revision)
-    context = context.replace(
+    turn_context = turn_context.replace("__PRIOR_ACTIVE_ACCEPTANCE__", prior_acceptance)
+    turn_context = turn_context.replace("__PRIOR_COMPLETED_RESULT__", prior_completed)
+    turn_context = turn_context.replace("__RECENT_CONTEXT_FRESHNESS__", recent_freshness)
+    turn_context = turn_context.replace("__RECENT_CONTEXT__", recent_context)
+    turn_context = turn_context.replace("__TASK_CONTEXT_BUNDLE__", str(bundle_path))
+    turn_context = turn_context.replace("__TASK_CONTEXT_REVISION__", bundle_revision)
+    turn_context = turn_context.replace(
         "__WORKSPACE_DEPENDENCIES_REQUIRED__",
         workspace_dependencies_required(prompt),
     )
     codex_home = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
     agents_dir = codex_home / "agents"
-    orchestrator_profile = agents_dir / "codex-orchestration-terra-orchestrator.toml"
-    context = context.replace("__ORCHESTRATOR_PROFILE_PATH__", str(orchestrator_profile))
-    context = context.replace("__AGENTS_DIR__", str(agents_dir))
-    emit(additional_context(prefix + context))
+    state = read_state(session_id)
+    contract_installed = state.get("contract_revision") == ROOT_CONTRACT_REVISION
+    contract = ""
+    if not contract_installed:
+        contract = ROOT_CONTRACT.replace("__AGENTS_DIR__", str(agents_dir)) + "\n\n"
+        if not write_state(
+            session_id,
+            active=True,
+            contract_revision=ROOT_CONTRACT_REVISION,
+        ):
+            emit(
+                additional_context(
+                    "Reply exactly `Orchestration: ERROR; could not save the root "
+                    "contract state`. Do not spawn."
+                )
+            )
+            return 0
+    emit(additional_context(prefix + contract + turn_context))
     return 0
 
 

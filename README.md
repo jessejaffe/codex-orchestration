@@ -1,9 +1,10 @@
 # Codex Orchestration
 
-Codex Orchestration `0.9.0` is an automated, complexity-aware model router for Codex. GPT-5.6
-Terra / Extra High evaluates each request's scope and complexity, assigns a work class, and routes
-the task to the lightest model lane suited to it. Users get one workflow without having to choose a
-different model for every request.
+Codex Orchestration `0.9.0` is an automated, complexity-aware model router for Codex. The parent
+evaluates each request's scope and complexity in its first response, assigns a work
+class, and immediately routes the task to the lightest model lane suited to it. Users get one
+workflow without having to choose a different model for every request or pay for a separate
+classifier turn.
 
 One routed implementer takes the task through implementation, nonvisual verification, and reporting.
 When rendered appearance or interaction is part of success, root performs one terminal visual
@@ -19,8 +20,7 @@ caches, credentials, and unrelated development artifacts.
 
 ```mermaid
 flowchart LR
-    U["User request"] --> C["Terra / Extra High evaluates scope + complexity"]
-    C --> R{"Work class"}
+    U["User request"] --> R{"Parent evaluates scope + complexity"}
     R -->|"Read-only, standard artifact, or small tweak"| L["Luna / Max implements"]
     R -->|"Design artifact, big tweak, or small build"| T["Terra / Max implements"]
     R -->|"Big build"| S["Sol / High implements"]
@@ -33,7 +33,8 @@ flowchart LR
     V --> D
 ```
 
-After classification, execution stays with one routed implementer.
+Parent classification and implementer dispatch happen in one response. Execution then stays with
+one routed implementer.
 
 ## Routes
 
@@ -47,9 +48,10 @@ After classification, execution stays with one routed implementer.
 | `SMALL_BUILD` | One bounded new capability without a new interface, runtime, or storage boundary | Terra / Max |
 | `BIG_BUILD` | Multiple new capabilities, a boundary-crossing capability, or material risk | Sol / High |
 
-The router is automated rather than a manual model picker: Terra uses the request's complexity and
-scope to assign a work class, and that class determines the fixed model lane. The numeric complexity
-score is diagnostic telemetry; users do not need to interpret it or select a route themselves.
+The router is automated rather than a manual model picker: the parent uses the request's complexity
+and scope to assign a work class, and that class determines the fixed model lane. The numeric
+complexity score is diagnostic telemetry; users do not need to interpret it or select a route
+themselves.
 
 ## What happens after routing
 
@@ -76,8 +78,9 @@ The routed implementer receives the exact private task-context bundle and then:
 
 A request to implement locally does not itself authorize deployment.
 
-User questions and genuine blockers still stop the task when a decision is required. Keeping one
-classifier and one routed implementer makes execution predictable and low-latency.
+User questions and genuine blockers still stop the task when a decision is required. Routing in the
+parent's first response and keeping one routed implementer makes execution predictable and removes
+the classifier spawn and wait cycle.
 
 ## Deployment discipline
 
@@ -133,8 +136,13 @@ The chat-scoped hook writes an immutable, private task-context bundle. It is a c
 representation: every user request and substantive root-visible assistant fact in chronological
 order, plus canonical outcomes for the 20 newest completed tasks. It deterministically removes
 internal transport envelopes, duplicate relays, generic route footers, status-only commentary, and
-pathological repeated filler without relying on a model-written summary. Terra / Extra High receives
-only bounded routing context and returns:
+pathological repeated filler without relying on a model-written summary. The hook installs the
+invariant root routing contract only on the first work turn after activation; later prompts receive
+only a compact turn packet containing the current bundle path, continuity state, dependency flag,
+previous-task flag, and root route.
+
+The parent creates this internal classification and sends it directly to the selected implementer
+in the same response:
 
 ```text
 ## Classification
@@ -146,16 +154,17 @@ only bounded routing context and returns:
 ```
 
 When the user explicitly asks to continue a different previous Codex task outside this chat, root
-reads it once. The classifier gets a 1,200-character routing capsule and the selected implementer
-gets a 6,000-character continuity block. Those cross-task capsules do not limit the concise
-whole-chat bundle for the current chat. Missing optional artifacts never block work.
+reads it once and sends the selected implementer a continuity block of at most 6,000 characters.
+That cross-task block does not limit the concise whole-chat bundle for the current chat. Missing
+optional artifacts never block work.
 
-Completed agents report in natural language. The classifier's small state packet retains only the
-latest bounded completion context, while the selected implementer receives the complete canonical
+Completed agents report in natural language. The compact turn packet retains only the latest
+bounded completion context, while the selected implementer receives the complete canonical
 bundle—not a current-task excerpt—so a follow-up can use durable chat facts and recent task outcomes
 without unnecessary repository inspection. Each report ends with a mandatory Next step section,
 followed by a compact route footer naming the work class, selected implementation lane, and root
-route.
+route. If an implementer omits that ending or makes it malformed, root repairs only the missing
+structure in its existing final response instead of starting a report-correction agent turn.
 
 ## Reports
 
@@ -210,11 +219,11 @@ Orchestration off
 ```
 
 The desktop activity label stays exactly `Thinking`. Startup remains quiet after the activation
-acknowledgement; child pills show the classifier and selected agent.
+acknowledgement; the child pill shows the selected agent.
 
 ## Install and verify
 
-Install the four companion profiles:
+Install the three companion implementer profiles:
 
 ```sh
 plugins/codex-orchestration/scripts/install-agents.sh
@@ -232,8 +241,8 @@ Install or refresh the plugin from the configured local marketplace:
 plugins/codex-orchestration/scripts/reinstall-plugin.sh
 ```
 
-The installer preflights all four active profiles, migrates exact shipped profiles, and refuses to
-overwrite customized agent files.
+The installer preflights all three active profiles, migrates exact shipped profiles, safely retires
+the former stock classifier, and refuses to overwrite or delete customized agent files.
 
 ## Repository layout
 
@@ -242,7 +251,6 @@ overwrite customized agent files.
 plugins/codex-orchestration/
   .codex-plugin/plugin.json
   agents/
-    codex-orchestration-terra-orchestrator.toml
     codex-orchestration-luna-implementer.toml
     codex-orchestration-terra-implementer.toml
     codex-orchestration-sol-high-implementer.toml
@@ -260,4 +268,5 @@ plugins/codex-orchestration/
 Codex Orchestration was originally contributed by DannyMac180. We tested more heavily coordinated
 multi-agent approaches and kept this distribution focused on automated routing to one implementer
 because extra coordination added latency and complexity; at the time of writing, sub-agent handoffs
-are not reliable enough to make them part of the default workflow.
+are not reliable enough to make them part of the default workflow. Parent-first routing also avoids
+a dedicated classifier handoff while preserving the same work-class map.

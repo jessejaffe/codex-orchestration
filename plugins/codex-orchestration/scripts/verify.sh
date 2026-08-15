@@ -42,7 +42,6 @@ import sys
 import tomllib
 
 expected = {
-    "codex-orchestration-terra-orchestrator.toml": ("gpt-5.6-terra", "xhigh"),
     "codex-orchestration-luna-implementer.toml": ("gpt-5.6-luna", "max"),
     "codex-orchestration-terra-implementer.toml": ("gpt-5.6-terra", "max"),
     "codex-orchestration-sol-high-implementer.toml": ("gpt-5.6-sol", "high"),
@@ -57,12 +56,10 @@ for name, pin in expected.items():
         raise SystemExit(f"wrong model pin: {name}")
     if not document.get("developer_instructions"):
         raise SystemExit(f"missing developer instructions: {name}")
-    if "orchestrator" in name and document.get("sandbox_mode") != "read-only":
-        raise SystemExit("classifier is not read-only")
     if "implementer" in name and "sandbox_mode" in document:
         raise SystemExit(f"end-to-end agent is unexpectedly read-only: {name}")
 PY
-pass 'exact four-profile inventory and model pins'
+pass 'exact three-implementer inventory and model pins'
 
 tmp_base=${TMPDIR:-/tmp}
 case "$tmp_base" in /*) ;; *) tmp_base=/tmp ;; esac
@@ -80,8 +77,8 @@ pass 'dispatch, relay, and effectiveness fixtures'
 target=$temporary/agents
 sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null
 sh "$script_dir/install-agents.sh" --target-dir "$target" --check >/dev/null
-[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 4 ] ||
-  fail 'agent installer did not produce exactly four profiles'
+[ "$(find "$target" -maxdepth 1 -type f -name 'codex-orchestration-*.toml' | wc -l | tr -d ' ')" = 3 ] ||
+  fail 'agent installer did not produce exactly three implementers'
 
 printf '%s\n' '# user customization' >> "$target/codex-orchestration-luna-implementer.toml"
 custom_digest=$(shasum -a 256 "$target/codex-orchestration-luna-implementer.toml" | awk '{print $1}')
@@ -99,14 +96,25 @@ if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; th
 fi
 [ "$(shasum -a 256 "$target/codex-orchestration-terra-supervisor.toml" | awk '{print $1}')" = "$retired_digest" ] ||
   fail 'customized former supervisor changed during rejected migration'
-pass 'conflict-safe four-profile installer behavior'
+cp "$agents/codex-orchestration-luna-implementer.toml" "$target/codex-orchestration-terra-orchestrator.toml"
+retired_digest=$(shasum -a 256 "$target/codex-orchestration-terra-orchestrator.toml" | awk '{print $1}')
+if sh "$script_dir/install-agents.sh" --target-dir "$target" >/dev/null 2>&1; then
+  fail 'agent installer deleted an unrecognized former classifier'
+fi
+[ "$(shasum -a 256 "$target/codex-orchestration-terra-orchestrator.toml" | awk '{print $1}')" = "$retired_digest" ] ||
+  fail 'customized former classifier changed during rejected migration'
+rm "$target/codex-orchestration-terra-orchestrator.toml"
+pass 'conflict-safe three-implementer installer behavior'
 
 grep -Fq 'requires official version 0.9.0' "$script_dir/reinstall-plugin.sh" ||
   fail 'reinstaller does not enforce official version 0.9.0'
-for role in terra-orchestrator luna-implementer terra-implementer sol-high-implementer; do
+for role in luna-implementer terra-implementer sol-high-implementer; do
   grep -Fq "agents/codex-orchestration-$role.toml" "$script_dir/reinstall-plugin.sh" ||
     fail "reinstaller package inventory omits $role"
 done
+if grep -Fq 'agents/codex-orchestration-terra-orchestrator.toml' "$script_dir/reinstall-plugin.sh"; then
+  fail 'reinstaller package inventory retains classifier profile'
+fi
 if grep -Eq 'agents/codex-orchestration-(terra|sol-high|sol-xhigh)-supervisor\.toml' "$script_dir/reinstall-plugin.sh"; then
   fail 'reinstaller package inventory retains supervisor profiles'
 fi
@@ -115,14 +123,14 @@ pass 'reinstaller package inventory'
 if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
   for value in \
     'automated, complexity-aware model router' \
-    'Terra / Extra High evaluates each request' \
+    'evaluates each request' \
     'lightest model lane suited' \
     'without having to choose a' \
     'One routed implementer takes the task through implementation' \
     'terminal visual' \
     'user-facing result' \
-    'Terra / Extra High evaluates scope + complexity' \
-    'After classification, execution stays with one routed implementer' \
+    'Parent evaluates scope + complexity' \
+    'Parent classification and implementer dispatch happen in one response' \
     'READ_ONLY' \
     'STANDARD_ARTIFACT' \
     'DESIGN_ARTIFACT' \
@@ -183,7 +191,7 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'DannyMac180' \
     'added latency and complexity' \
     'sub-agent handoffs' \
-    'four companion profiles' \
+    'three companion implementer profiles' \
     '0.9.0'; do
     grep -Fq -e "$value" "$repo_readme" || fail "README omits $value"
   done

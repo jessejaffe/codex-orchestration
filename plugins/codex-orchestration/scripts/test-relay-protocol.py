@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.9.0 classifier-to-single-agent protocol."""
+"""Static contracts for the 0.9.0 parent-routed single-agent protocol."""
 
 from __future__ import annotations
 
@@ -12,9 +12,6 @@ from pathlib import Path
 
 
 EXPECTED_AGENTS = {
-    "codex-orchestration-terra-orchestrator.toml": (
-        "codex_orchestration_terra_orchestrator", "gpt-5.6-terra", "xhigh"
-    ),
     "codex-orchestration-luna-implementer.toml": (
         "codex_orchestration_luna_implementer", "gpt-5.6-luna", "max"
     ),
@@ -49,14 +46,14 @@ def forbid(text: str, values: tuple[str, ...], label: str) -> None:
             raise AssertionError(f"{label} retains forbidden {value!r}")
 
 
-def dispatch_prompt_chars(router: str) -> int:
+def root_contract_chars(router: str) -> int:
     module = ast.parse(router)
     for node in module.body:
         if isinstance(node, ast.Assign) and any(
-            getattr(target, "id", None) == "DISPATCH_CONTEXT" for target in node.targets
+            getattr(target, "id", None) == "ROOT_CONTRACT" for target in node.targets
         ):
             return len(ast.literal_eval(node.value))
-    raise AssertionError("DISPATCH_CONTEXT assignment is missing")
+    raise AssertionError("ROOT_CONTRACT assignment is missing")
 
 
 def main() -> int:
@@ -78,8 +75,6 @@ def main() -> int:
         if not isinstance(prompt, str) or not prompt.strip():
             raise AssertionError(f"missing developer instructions: {filename}")
         prompts[filename] = prompt
-        if "orchestrator" in filename and parsed.get("sandbox_mode") != "read-only":
-            raise AssertionError("the classifier must remain read-only")
         if "implementer" in filename and "sandbox_mode" in parsed:
             raise AssertionError(f"end-to-end agent is unexpectedly read-only: {filename}")
 
@@ -104,26 +99,9 @@ def main() -> int:
         "Terra implementer route ownership",
     )
 
-    orchestrator = prompts["codex-orchestration-terra-orchestrator.toml"]
-    require(
-        orchestrator,
-        (
-            "only classify", "Use only the current request and bounded routing context",
-            "## Classification blocked", "## Classification",
-            "- Relationship: <New|Amend|Replace|Cancel>", "- Work class:",
-            "- Complexity:", "- Why: <brief reason>",
-        ),
-        "orchestrator",
-    )
-    forbid(
-        orchestrator,
-        ("- Implementation:", "- Supervision:", "- Checkpoints:", "call tools"),
-        "orchestrator",
-    )
-
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
-    if dispatch_prompt_chars(router) > 6_500:
-        raise AssertionError("root dispatch prompt exceeds the 6,500-character budget")
+    if root_contract_chars(router) > 6_500:
+        raise AssertionError("invariant root contract exceeds the 6,500-character budget")
     required_report_ending = (
         "## Next step\n"
         "<one legitimate follow-on action, or None — no next step is needed.>\n\n"
@@ -137,16 +115,19 @@ def main() -> int:
     require(
         router,
         (
-            "Orchestration ON (0.9.0)", "Exactly two stages",
-            "one selected implementer owns the task end to end",
-            "PREVIOUS TASK CONTEXT REQUIRED", "list_threads", "read_thread",
-            "Send it to the classifier", "Send it to the selected implementer",
-            "Keep startup quiet", "fork_turns=1", "fork_turns=none", *HUMAN_ROUTES,
-            "EXECUTE — Spawn exactly one mapped implementer",
-            "Never spawn a supervisor, reviewer, grader, or a", "second writer",
+            "CODEX_ORCHESTRATION_ROOT_CONTRACT", "0.9.0-parent-first-v1",
+            "Orchestration ON (0.9.0)", "Parent classifies in its first response",
+            "Do not spawn a classifier", "ROUTE_AND_EXECUTE",
+            "classify internally from the current request and TURN",
+            "immediately spawn exactly one mapped implementer",
+            "Do not emit a separate classification", "or add a classification wait",
+            "list_threads", "read_thread", "LAST_TASK_CONTEXT of at most 6,000 characters",
+            "Send that only to the selected implementer",
+            "Keep startup quiet", "fork_turns=none", *HUMAN_ROUTES,
+            "Never spawn a supervisor, reviewer, grader, classifier, or a", "second writer",
             "END_TO_END_WORK", "IMPLEMENTATION_ROUTE=<friendly selected model lane>",
-            "complete private context", "concise whole-chat context", "user requests",
-            "20 newest canonical task outcomes", "bounded STATE values do not",
+            "complete private concise whole-chat context", "user requests",
+            "newest canonical task outcomes", "TURN values do not",
             "scope interpretation, implementation, verification, and authorized release",
             "terminal visual handoff",
             "PREMISE MISMATCH", "## Premise review", "same implementer",
@@ -160,12 +141,11 @@ def main() -> int:
             "slightly less technical language", "lead with the outcome",
             "briefly explain jargon", "Keep internal work technical",
             "preserve exact", "details",
-            "natural-language report", "not a prescribed schema",
-            "state what happened,", "work done or found, outcome, decisive evidence",
+            "natural-language report",
+            "state what happened,", "work done or found", "outcome, decisive evidence",
             "links, limitations, or open work", "mandatory `## Next step` section",
-            "nonempty Next step immediately above the route footer",
+            "locally append or correct only", "never request a child rewrite",
             "`None — no next step is needed.`", "Do not require fixed section",
-            "REPORT_REVISION_REQUIRED",
             "Every completed user-facing task ends with this mandatory next-step section",
             "## Next step", "<one legitimate follow-on action, or None — no next step is needed.>",
             "## Route", "- Class: <friendly class>",
@@ -175,6 +155,8 @@ def main() -> int:
             "Return it verbatim as the entire final answer",
             "Do not summarize, condense, paraphrase, introduce, assess, or append to it",
             "Do not perform an extra completion turn or tool call",
+            "CODEX_ORCHESTRATION_TURN", "PREVIOUS_TASK_CONTEXT_REQUIRED:",
+            "CURRENT_USER_REQUEST=INHERITED_CURRENT_QUERY",
         ),
         "root coordinator",
     )
@@ -197,6 +179,8 @@ def main() -> int:
             "- Supervision:",
             "Fast-relay valid child results without extra reasoning",
             "## Continuity", "## Completed", "### Current state", "### Next step",
+            "ORCHESTRATE_CLASSIFY", "REPORT_REVISION_REQUIRED",
+            "codex_orchestration_terra_orchestrator", "fork_turns=1",
         ),
         "root coordinator",
     )
@@ -298,8 +282,9 @@ def main() -> int:
     require(
         installer,
         (
-            "four Codex Orchestration 0.9.0 profiles",
+            "three Codex Orchestration 0.9.0 implementers",
             "Exact previously shipped profiles accepted for safe in-place migration",
+            "aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d",
             "8abff60952e6d0610d55f966de1096a77170919a3bf8400e6186435af4df7ec7",
             "4bdce27f9a1e6a4d911812663944c21377a141587867256bd99f8e759913be03",
             "c892d3514b27293255b27f1e0729167c129fbecc8e3ba7db22697dc8d83d8c9c",
@@ -389,7 +374,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.9.0 classifier-to-single-agent protocol")
+    print("PASS: 0.9.0 parent-routed single-agent protocol")
     return 0
 
 
