@@ -88,7 +88,7 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "CODEX_ORCHESTRATION_ROOT_CONTRACT",
-        "REVISION=0.9.0-parent-first-v1",
+        "REVISION=0.9.0-direct-launch-v2",
         "Orchestration ON (0.9.0)",
         "Parent classifies in its first response",
         "Do not spawn a classifier",
@@ -98,10 +98,20 @@ def main() -> int:
         "Do not emit a separate classification",
         "or add a classification wait",
         "desktop activity label exactly `Thinking`",
-        "never create a dynamic status label",
+        "no dynamic status",
         "Keep startup quiet",
-        "comment only on meaningful progress, blockers, release, and completion",
-        "fork_turns=none",
+        "Comment only on meaningful progress, blockers, release, and completion",
+        "DIRECT DESKTOP LAUNCH",
+        "tools.multi_agent_v1__spawn_agent",
+        "fork_context: false",
+        "tools.codex_app__set_thread_title",
+        "threadId: launch.agent_id",
+        "GPT-5.6 Luna / Max",
+        "GPT-5.6 Terra / Max",
+        "GPT-5.6 Sol / High",
+        "host-generated temporary label",
+        "Do not first inspect",
+        "`ALL_TOOLS`",
         "TASK_CONTEXT_BUNDLE:",
         "TASK_CONTEXT_REVISION:",
         "CURRENT_USER_REQUEST=INHERITED_CURRENT_QUERY",
@@ -114,9 +124,6 @@ def main() -> int:
         "codex_orchestration_terra_implementer",
         "codex_orchestration_luna_implementer",
         "codex_orchestration_sol_high_implementer",
-        "terra_max_implementer_<objective_slug>",
-        "luna_max_implementer_<objective_slug>",
-        "sol_high_implementer_<objective_slug>",
         "Never spawn a supervisor, reviewer, grader, classifier, or a",
         "second writer",
         "END_TO_END_WORK",
@@ -126,9 +133,9 @@ def main() -> int:
         "terminal visual handoff",
         "stop or redirect obsolete work",
         "PREMISE MISMATCH",
-        "inspect only its cited evidence",
+        "Inspect only cited evidence",
         "same implementer",
-        "Do not create another role lane",
+        "Do not create another role.",
         "## Classification",
         "- Relationship: <New|Amend|Replace|Cancel>",
         "Small tweak: Luna / Max",
@@ -139,15 +146,15 @@ def main() -> int:
         "## Root verification needed",
         "terminal root-only Browser/visual check",
         "cache-bypass",
-        "Ground truth and Source",
-        "Missing or ambiguous identity",
-        "capture a screenshot",
+        "Ground\ntruth and Source",
+        "Missing/ambiguous identity",
+        "capture screenshot",
         "Judge pass, fail, or blocked",
         "end without editing,",
-        "calling `followup_task`",
-        "as primary content",
-        "Preserve its delivered work, nonvisual proof",
-        "after the work account; never replace the recap.",
+        "`followup_task`",
+        "primary content",
+        "preserving delivered work/proof",
+        "after the work account; never replace it.",
         "FINAL-REPORT VOICE",
         "User-facing report changes",
         "slightly less technical language",
@@ -157,18 +164,16 @@ def main() -> int:
         "preserve exact",
         "details",
         "natural-language report",
-        "state what happened,",
-        "work done or found",
-        "outcome, decisive evidence",
-        "links, limitations, or open work",
-        "mandatory `## Next step` section",
-        "nonempty Next step",
-        "immediately above the route footer",
+        "what happened, work done/found",
+        "outcome,\ndecisive evidence",
+        "links, limits, or open work",
+        "except `## Next step`",
+        "immediately above its",
         "`None — no next step is needed.`",
-        "Do not require fixed section",
+        "No fixed headings or field list",
         "Never call the implementer",
-        "locally append or correct only",
-        "never request a child rewrite",
+        "locally add only",
+        "request a rewrite",
         "Every completed user-facing task ends with this mandatory next-step section",
         "## Next step",
         "<one legitimate follow-on action, or None — no next step is needed.>",
@@ -177,10 +182,8 @@ def main() -> int:
         "- Implementation: <IMPLEMENTATION_ROUTE>",
         "- Root: <CURRENT_ROOT_ROUTE>",
         "Never include supervision",
-        "RELAY — A valid nonvisual child report is the user-facing final response",
-        "Return it verbatim as the entire final answer",
-        "Do not summarize, condense, paraphrase, introduce, assess, or append to it",
-        "Do not perform an extra completion turn or tool call",
+        "RELAY valid nonvisual reports verbatim",
+        "never summarize, assess, append, tool-call, or request a rewrite",
     )
     for value in required:
         if value not in routed_context:
@@ -190,7 +193,7 @@ def main() -> int:
     if routed_context.count("TASK_CONTEXT_BUNDLE=<TURN path>") != 1:
         raise AssertionError("the only implementer packet does not reference the context bundle once")
     state_document = json.loads((state / f"{active_id}.json").read_text(encoding="utf-8"))
-    if state_document.get("contract_revision") != "0.9.0-parent-first-v1":
+    if state_document.get("contract_revision") != "0.9.0-direct-launch-v2":
         raise AssertionError("first routed turn did not persist the root contract revision")
     bundle_path = Path(context_field(routed_context, "TASK_CONTEXT_BUNDLE"))
     bundle_revision = context_field(routed_context, "TASK_CONTEXT_REVISION")
@@ -234,6 +237,10 @@ def main() -> int:
         "ORCHESTRATE_CLASSIFY",
         "REPORT_REVISION_REQUIRED",
         "fork_turns=1",
+        "fork_turns=none",
+        "terra_max_implementer_<objective_slug>",
+        "luna_max_implementer_<objective_slug>",
+        "sol_high_implementer_<objective_slug>",
     ):
         if obsolete in routed_context:
             raise AssertionError(f"dispatch retains obsolete headless path: {obsolete!r}")
@@ -287,10 +294,9 @@ def main() -> int:
     for value in (
         "list_threads",
         "read_thread",
-        "Exclude the current task",
-        "LAST_TASK_CONTEXT of at most 6,000 characters",
-        "Send that only to the selected implementer",
-        "missing optional artifact never blocks work",
+        "exclude this",
+        "`LAST_TASK_CONTEXT` (max 6,000 characters",
+        "Give only the implementer",
     ):
         if value not in routed_context:
             raise AssertionError(f"invariant previous-task protocol omits {value!r}")
@@ -415,7 +421,7 @@ def main() -> int:
     inherited_context = context(inherited)
     bounded_acceptance = " ".join(acceptance.split())
     for value in (
-        "ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1",
+        "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         bounded_acceptance,
         "PRIOR_COMPLETED_RESULT: NONE",
@@ -563,7 +569,7 @@ Add JSON export after the CSV release has been adopted.
     accepted_context = context(accepted)
     if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in accepted_context:
         raise AssertionError("accepted objective was not cleared")
-    if "ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1" not in accepted_context:
+    if "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2" not in accepted_context:
         raise AssertionError("current query did not use the compact routed turn")
     canonical_handoff = handoff.rsplit("\n\n## Route", 1)[0]
     bounded_handoff = " ".join(canonical_handoff.split())
@@ -748,7 +754,7 @@ None — no next step is needed.
         ],
     )
     legacy = context(invoke(hook, state, active_id, "Summarize that", legacy_transcript))
-    if "ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1" not in legacy:
+    if "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2" not in legacy:
         raise AssertionError("legacy follow-up did not use the compact routed turn")
     if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
         raise AssertionError("legacy completion did not fall back to its accepted result")
@@ -824,7 +830,7 @@ None — no next step is needed.
         invoke(hook, state, active_id, current_request, stale_context_transcript)
     )
     for value in (
-        "ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1",
+        "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2",
         "RECENT_CONTEXT_FRESHNESS: STALE",
         agreed_scope,
         f"PRIOR_COMPLETED_RESULT: {stale_capsule}",

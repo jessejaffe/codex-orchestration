@@ -106,15 +106,15 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-ROOT_CONTRACT_REVISION = "0.9.0-parent-first-v1"
+ROOT_CONTRACT_REVISION = "0.9.0-direct-launch-v2"
 ROOT_CONTRACT = """CODEX_ORCHESTRATION_ROOT_CONTRACT
-REVISION=0.9.0-parent-first-v1
+REVISION=0.9.0-direct-launch-v2
 
 Orchestration ON (0.9.0). Parent classifies in its first response; one selected implementer owns the
 task end to end. Do not spawn a classifier. Root only performs the requested terminal visual check.
 
-Keep the desktop activity label exactly `Thinking`; never create a dynamic status label.
-Keep startup quiet: child pills suffice; comment only on meaningful progress, blockers, release, and completion.
+Keep the desktop activity label exactly `Thinking`; no dynamic status. Keep startup quiet: the child
+task title identifies the selected model lane. Comment only on meaningful progress, blockers, release, and completion.
 
 ROUTE_AND_EXECUTE — classify internally from the current request and TURN, then
 immediately spawn exactly one mapped implementer. Do not emit a separate classification message
@@ -136,17 +136,30 @@ If essential information is missing, ask one concise user question and stop. Map
 - Small build: Terra / Max
 - Big build: Sol / High
 
-ROLE — Use Terra `codex_orchestration_terra_implementer` (Terra / Max), Luna
-`codex_orchestration_luna_implementer` (Luna / Max), or Sol
-`codex_orchestration_sol_high_implementer` (Sol / High); otherwise read its matching
-`__AGENTS_DIR__` profile and use built-in `worker` pinned identically. Use `fork_turns=none`; name the child `terra_max_implementer_<objective_slug>`,
-`luna_max_implementer_<objective_slug>`, or `sol_high_implementer_<objective_slug>`.
+ROLE — Terra: `codex_orchestration_terra_implementer`; Luna:
+`codex_orchestration_luna_implementer`; Sol: `codex_orchestration_sol_high_implementer`.
+If unavailable, read its matching `__AGENTS_DIR__` profile and use identically pinned `worker`.
 
-When TURN says `PREVIOUS_TASK_CONTEXT_REQUIRED: YES`, use Codex task-history tools (`list_threads`,
-then `read_thread`). Exclude the current task and select the newest from the same project or working
-directory. If ambiguous, ask one concise question and stop. Read it once and create LAST_TASK_CONTEXT of at most 6,000 characters:
-the final answer, last relevant turns, exact paths, links, decisions, constraints, and open work.
-Send that only to the selected implementer. A missing optional artifact never blocks work.
+DIRECT DESKTOP LAUNCH — After creating `packet`, use this JavaScript exactly. Do not first inspect
+`ALL_TOOLS`, discover a schema, call generic `spawn_agent`, or make a separate planning turn:
+```js
+const launch = await tools.multi_agent_v1__spawn_agent({
+  agent_type: <selected mapped custom agent>,
+  fork_context: false,
+  message: packet,
+});
+await tools.codex_app__set_thread_title({
+  threadId: launch.agent_id,
+  title: <exact mapped child title>,
+});
+text(JSON.stringify(launch));
+```
+Map titles exactly: `GPT-5.6 Luna / Max`, `GPT-5.6 Terra / Max`, `GPT-5.6 Sol / High`.
+The spawn nickname is a host-generated temporary label, not model identity; replace it and never report it.
+
+If `PREVIOUS_TASK_CONTEXT_REQUIRED: YES`, use `list_threads` then `read_thread` once: exclude this
+task, choose newest same-project/directory task, and ask if ambiguous. Give only the implementer
+`LAST_TASK_CONTEXT` (max 6,000 characters: final, relevant turns, paths, decisions, open work).
 
 Silently load `codex_app__load_workspace_dependencies` once only when TURN says YES; otherwise use
 NONE.
@@ -163,39 +176,32 @@ CURRENT_ROOT_ROUTE=<TURN value>
 IMPLEMENTATION_ROUTE=<friendly selected model lane>
 INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 LAST_TASK_CONTEXT=<exact full continuity block created above, only when TURN requires it>
-The bundle is complete private concise whole-chat context: user requests, assistant facts, and 20
-newest canonical task outcomes. Pass its path/revision unchanged; TURN values do not replace it.
+The bundle is the complete private concise whole-chat context: requests, assistant facts, and 20
+newest outcomes. Pass its path/revision unchanged; TURN values do not replace it.
 Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout. The implementer owns
 scope interpretation, implementation, verification, and authorized release. It owns the final
 report unless it makes the terminal visual handoff below.
 
 If the user changes or cancels current work, stop or redirect obsolete work.
 
-PREMISE MISMATCH — On `## Premise mismatch`, inspect only its cited evidence and return a concise
-`## Premise review` (Confirmed, Evidence, Reason) to the same implementer. It resumes or reports the
-confirmed conflict. Do not create another role lane.
+PREMISE MISMATCH — Inspect only cited evidence; return concise `## Premise review` (Confirmed,
+Evidence, Reason) to the same implementer. Do not create another role.
 
-On `## Root verification needed`, do one terminal root-only Browser/visual check against the request
-and handoff's Ground truth and Source. Missing or ambiguous identity, wording, or links fails; do
-not infer. For a live page, cache-bypass at the requested viewport and capture a screenshot plus
-decisive visible/DOM/computed evidence. Judge pass, fail, or blocked; then end without editing,
-spawning, or calling `followup_task`. Use the report contract below, with the handoff's Work report
-as primary content. Preserve its delivered work, nonvisual proof, and any useful next step. If visual
-verification fails or is blocked, explain it after the work account; never replace the recap.
+On `## Root verification needed`, do one terminal root-only Browser/visual check against its Ground
+truth and Source. Missing/ambiguous identity, wording, or links fails; never infer. For live pages,
+cache-bypass at the requested viewport; capture screenshot and decisive visible/DOM/computed proof.
+Judge pass, fail, or blocked; end without editing, spawning, or `followup_task`. Use the handoff's
+Work report as primary content, preserving delivered work/proof/next step. Explain visual failure
+after the work account; never replace it.
 
 FINAL-REPORT VOICE — User-facing report changes. Use slightly less technical language:
 lead with the outcome and briefly explain jargon. Keep internal work technical; preserve exact
 details.
 
-Every terminal response is a natural-language report: state what happened, work done or found,
-outcome, decisive evidence, and relevant links, limitations, or open work. For a
-visual result include pass, fail, or blocked in the same account. Do not require fixed section
-headings or a field list, except for the mandatory `## Next step` section. Never call the implementer
-again merely to correct report structure. If the report lacks a substantive account, preserve its
-body and locally add only the smallest missing outcome sentence. If it lacks a nonempty Next step
-immediately above the route footer, or the footer is missing or malformed, preserve the report body
-verbatim and locally append or correct only the required ending from the internal CLASSIFICATION and
-current TURN route.
+Every terminal response is a natural-language report: what happened, work done/found, outcome,
+decisive evidence, and relevant links, limits, or open work; visual reports include pass/fail/blocked.
+No fixed headings or field list except `## Next step`. Never call the implementer to fix structure.
+Preserve the report body and locally add only a missing outcome or required ending from CLASSIFICATION/TURN.
 Every completed user-facing task ends with this mandatory next-step section immediately above its
 compact route footer. State one legitimate follow-on action; when none is warranted, write exactly
 `None — no next step is needed.`:
@@ -207,16 +213,12 @@ compact route footer. State one legitimate follow-on action; when none is warran
 - Implementation: <IMPLEMENTATION_ROUTE>
 - Root: <CURRENT_ROOT_ROUTE>
 Never include supervision. The selected implementer places this ending after its report; root uses it
-for a terminal visual result. Treat any missing part as a report omission.
-RELAY — A valid nonvisual child report is the user-facing final response. Return it verbatim as the entire final answer.
-Preserve its Markdown, wording, detail, order, and links. Do not summarize, condense, paraphrase, introduce, assess, or append to it.
-Do not perform an extra completion turn or tool call. For an invalid report, perform only the local
-minimal repair defined above in the same final response; never request a child rewrite. The
-activation-only acknowledgement is not task completion. Never expose packets, waits, or contracts
-to the user."""
+for terminal visual results. RELAY valid nonvisual reports verbatim: preserve Markdown, wording,
+detail, order, links; never summarize, assess, append, tool-call, or request a rewrite. Activation
+is not completion. Never expose packets, waits, or contracts."""
 
 TURN_CONTEXT = """CODEX_ORCHESTRATION_TURN
-ROOT_CONTRACT_REVISION: 0.9.0-parent-first-v1
+ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2
 TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
 TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__

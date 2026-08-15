@@ -34,7 +34,9 @@ flowchart LR
 ```
 
 Parent classification and implementer dispatch happen in one response. Execution then stays with
-one routed implementer.
+one routed implementer. The desktop child task is retitled to the exact selected lane—`GPT-5.6 Luna /
+Max`, `GPT-5.6 Terra / Max`, or `GPT-5.6 Sol / High`—so the model is visible from the main task.
+Any temporary human nickname supplied by the host is not an agent identity.
 
 ## Routes
 
@@ -219,7 +221,9 @@ Orchestration off
 ```
 
 The desktop activity label stays exactly `Thinking`. Startup remains quiet after the activation
-acknowledgement; the child pill shows the selected agent.
+acknowledgement; the selected child task is immediately titled with its exact model and reasoning
+lane. The router launches through the desktop subagent API directly, without an exploratory tool
+lookup, so it does not spend an extra parent turn discovering the spawn call.
 
 ## Install and verify
 
