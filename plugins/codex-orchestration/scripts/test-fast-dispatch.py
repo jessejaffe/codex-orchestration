@@ -88,7 +88,7 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "CODEX_ORCHESTRATION_ROOT_CONTRACT",
-        "REVISION=0.9.0-named-launch-v4",
+        "REVISION=0.9.0-native-spawn-v5",
         "Orchestration ON (0.9.0)",
         "Parent classifies in its first response",
         "Do not spawn a classifier",
@@ -111,18 +111,22 @@ def main() -> int:
         "- Work class: <friendly class>",
         "- Complexity: <1.0-10.0 / 10>",
         "- Why: <brief reason>",
-        "DIRECT NAMED LAUNCH",
-        "collaboration `spawn_agent`",
+        "NATIVE COLLABORATION LAUNCH",
+        "very next tool call must be the native",
+        "collaboration `spawn_agent` tool itself",
+        "directly in the collaboration namespace",
         "agent_type=<selected mapped custom agent>",
         "fork_turns=\"none\"",
         "message=packet",
         "luna_max_implementer_<objective_slug>",
         "terra_max_implementer_<objective_slug>",
         "sol_high_implementer_<objective_slug>",
-        "visible model lane at creation time",
-        "Never wrap launch in `exec`",
-        "create a host-nicknamed child",
-        "call `set_thread_title`",
+        "result identifies the child by that task name",
+        "visible model\nlane at creation time",
+        "Do not call `functions.exec` before or around the launch",
+        "do not build or print\nthe packet through a tool",
+        "do not launch through any deferred or internal tool",
+        "do not rename the\nchild afterward",
         "`ALL_TOOLS`",
         "TASK_CONTEXT_BUNDLE:",
         "TASK_CONTEXT_REVISION:",
@@ -213,7 +217,7 @@ def main() -> int:
     if routed_context.count("TASK_CONTEXT_BUNDLE=<TURN path>") != 1:
         raise AssertionError("the only implementer packet does not reference the context bundle once")
     state_document = json.loads((state / f"{active_id}.json").read_text(encoding="utf-8"))
-    if state_document.get("contract_revision") != "0.9.0-named-launch-v4":
+    if state_document.get("contract_revision") != "0.9.0-native-spawn-v5":
         raise AssertionError("first routed turn did not persist the root contract revision")
     bundle_path = Path(context_field(routed_context, "TASK_CONTEXT_BUNDLE"))
     bundle_revision = context_field(routed_context, "TASK_CONTEXT_REVISION")
@@ -258,8 +262,8 @@ def main() -> int:
         "REPORT_REVISION_REQUIRED",
         "fork_turns=1",
         "fork_turns=none",
-        "tools.multi_agent_v1__spawn_agent",
-        "tools.codex_app__set_thread_title",
+        "multi_agent_v1__spawn_agent",
+        "set_thread_title",
         "fork_context: false",
     ):
         if obsolete in routed_context:
@@ -444,7 +448,7 @@ def main() -> int:
     inherited_context = context(inherited)
     bounded_acceptance = " ".join(acceptance.split())
     for value in (
-        "ROOT_CONTRACT_REVISION: 0.9.0-named-launch-v4",
+        "ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         bounded_acceptance,
         "PRIOR_COMPLETED_RESULT: NONE",
@@ -592,7 +596,7 @@ Add JSON export after the CSV release has been adopted.
     accepted_context = context(accepted)
     if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in accepted_context:
         raise AssertionError("accepted objective was not cleared")
-    if "ROOT_CONTRACT_REVISION: 0.9.0-named-launch-v4" not in accepted_context:
+    if "ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5" not in accepted_context:
         raise AssertionError("current query did not use the compact routed turn")
     canonical_handoff = handoff.rsplit("\n\n## Route", 1)[0]
     bounded_handoff = " ".join(canonical_handoff.split())
@@ -777,7 +781,7 @@ None — no next step is needed.
         ],
     )
     legacy = context(invoke(hook, state, active_id, "Summarize that", legacy_transcript))
-    if "ROOT_CONTRACT_REVISION: 0.9.0-named-launch-v4" not in legacy:
+    if "ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5" not in legacy:
         raise AssertionError("legacy follow-up did not use the compact routed turn")
     if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
         raise AssertionError("legacy completion did not fall back to its accepted result")
@@ -853,7 +857,7 @@ None — no next step is needed.
         invoke(hook, state, active_id, current_request, stale_context_transcript)
     )
     for value in (
-        "ROOT_CONTRACT_REVISION: 0.9.0-named-launch-v4",
+        "ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5",
         "RECENT_CONTEXT_FRESHNESS: STALE",
         agreed_scope,
         f"PRIOR_COMPLETED_RESULT: {stale_capsule}",

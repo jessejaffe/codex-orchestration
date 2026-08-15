@@ -106,9 +106,9 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-ROOT_CONTRACT_REVISION = "0.9.0-named-launch-v4"
+ROOT_CONTRACT_REVISION = "0.9.0-native-spawn-v5"
 ROOT_CONTRACT = """CODEX_ORCHESTRATION_ROOT_CONTRACT
-REVISION=0.9.0-named-launch-v4
+REVISION=0.9.0-native-spawn-v5
 
 Orchestration ON (0.9.0). Parent classifies in its first response; one selected implementer owns the
 task end to end. Do not spawn a classifier. Root only performs the requested terminal visual check.
@@ -143,15 +143,17 @@ ROLE — Terra: `codex_orchestration_terra_implementer`; Luna:
 `codex_orchestration_luna_implementer`; Sol: `codex_orchestration_sol_high_implementer`.
 If unavailable, read its matching `__AGENTS_DIR__` profile and use identically pinned `worker`.
 
-DIRECT NAMED LAUNCH — After creating `packet`, immediately call the collaboration `spawn_agent`
-tool directly with `agent_type=<selected mapped custom agent>`, `fork_turns="none"`,
-`message=packet`, and exactly one of these `task_name` values:
+NATIVE COLLABORATION LAUNCH — After creating `packet`, the very next tool call must be the native
+collaboration `spawn_agent` tool itself. Invoke it directly in the collaboration namespace with
+`agent_type=<selected mapped custom agent>`, `fork_turns="none"`, `message=packet`, and exactly one
+of these `task_name` values:
 - Luna: `luna_max_implementer_<objective_slug>`
 - Terra: `terra_max_implementer_<objective_slug>`
 - Sol: `sol_high_implementer_<objective_slug>`
-The task name establishes the visible model lane at creation time. Never wrap launch in `exec`, use
-`multi_agent_v1__spawn_agent`, create a host-nicknamed child, or call `set_thread_title`. Do not
-inspect `ALL_TOOLS`, discover a schema, or make a separate planning turn first.
+The native call's result identifies the child by that task name, which establishes the visible model
+lane at creation time. Do not call `functions.exec` before or around the launch, do not build or print
+the packet through a tool, do not launch through any deferred or internal tool, and do not rename the
+child afterward. Do not inspect `ALL_TOOLS`, discover a schema, or make a planning turn first.
 
 If `PREVIOUS_TASK_CONTEXT_REQUIRED: YES`, use `list_threads` then `read_thread` once: exclude this
 task, choose newest same-project/directory task, and ask if ambiguous. Give only the implementer
@@ -216,7 +218,7 @@ detail, order, links; never summarize, assess, append, tool-call, or request a r
 is not completion. Never expose packets, waits, or contracts."""
 
 TURN_CONTEXT = """CODEX_ORCHESTRATION_TURN
-ROOT_CONTRACT_REVISION: 0.9.0-named-launch-v4
+ROOT_CONTRACT_REVISION: 0.9.0-native-spawn-v5
 TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
 TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
@@ -840,7 +842,7 @@ def main() -> int:
         return 0
     prefix = (
         "Reply in commentary exactly `Orchestration: ON for this chat`, with no other "
-        "pre-launch text, then immediately execute the direct named launch.\n"
+        "pre-launch text, then immediately execute the native collaboration launch.\n"
         if activation
         else ""
     )

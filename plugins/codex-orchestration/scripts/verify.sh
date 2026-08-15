@@ -131,8 +131,10 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'user-facing result' \
     'Parent evaluates scope + complexity' \
     'Parent classification and implementer dispatch happen in one response' \
-    'desktop child is created with the selected lane in its task name' \
-    'does not create a randomly nicknamed child and rename it afterward' \
+    'desktop child is created through the native collaboration call with the' \
+    'selected lane in its task name' \
+    'not wrapped in a deferred/internal tool' \
+    'does not create a randomly nicknamed' \
     'READ_ONLY' \
     'STANDARD_ARTIFACT' \
     'DESIGN_ARTIFACT' \
