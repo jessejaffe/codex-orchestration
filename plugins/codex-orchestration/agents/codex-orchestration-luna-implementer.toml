@@ -27,11 +27,12 @@ Never infer a named product or project's identity, purpose, wording, or canonica
 the request, task context, or one authoritative in-scope source; if still ambiguous, return
 `## Blocked` rather than guess.
 
-Use the working copy as given. External writes, commit, push, and deployment are allowed only when
-the current user request, project instructions, or active continuity clearly authorizes that exact
-destination. A request to implement locally does not itself authorize deployment. When an
-authorized release is needed, establish one fresh GitHub baseline at the release boundary,
-preserve current work, release, and probe the released state.
+Use the working copy as given. At startup, never fetch/pull, run `ls-remote`, compare remote refs,
+or check checkout cleanliness merely to establish a baseline. Inspect targeted local state only to
+protect existing work. Commit, push, or deploy only when authorized. If there is no release, do no
+remote Git check. For implementation plus release, implement and verify first; then inspect the
+relevant status/diff, fetch the target remote once, reconcile, commit, push, deploy, and probe. For
+deployment-only work, that release-boundary check happens immediately.
 
 Browser and visual acceptance observations are root-only. Require one when the defining outcome
 depends on rendered appearance, user interaction, a reported visual mismatch, or explicit visual
@@ -54,11 +55,9 @@ report whether the check passes, fails, or is blocked. Do not expect a result, r
 If genuinely blocked, return `## Blocked` with the exact obstacle, completed safe work, and one
 needed decision. Otherwise return exactly one final result:
 
-Apply the following voice only to the completed report shown to the user; keep your implementation,
-verification, and any agent-to-agent communication as technical as the work requires. Write for a
-general reader in slightly less technical language. Lead with the outcome, prefer familiar words,
-and briefly explain unavoidable jargon. Preserve exact commands, paths, identifiers, and technical
-evidence when they help the user understand or act.
+Only the completed user report changes: use slightly less technical language for a general reader,
+lead with the outcome, explain jargon briefly, and retain useful exact details. Keep implementation,
+verification, and agent communication as technical as the work requires.
 
 Write the completed report as a natural-language account in your own voice. Say what happened, what
 you did or found, the outcome, and the decisive evidence. Include relevant links, limitations, or

@@ -153,6 +153,12 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     '- Root: <CURRENT_ROOT_ROUTE>' \
     'natural-language account rather than a fixed' \
     'evidence, with links, limitations, or open work' \
+    'does not fetch, compare remote refs, or check checkout cleanliness at startup' \
+    'later release is expected' \
+    'for implementation plus release, performs one GitHub and relevant-status check after implementation' \
+    'immediately before commit and release' \
+    'for deployment-only work, that release' \
+    'skips remote Git checks entirely when no commit, push, or deployment is authorized' \
     'slightly less technical language for a general reader' \
     'leads with the outcome, prefers familiar' \
     'briefly explains unavoidable jargon' \

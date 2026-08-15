@@ -62,6 +62,12 @@ The routed implementer receives the exact private task-context bundle and then:
 - uses applicable skills;
 - performs the full read-only, artifact, tweak, or build task;
 - runs proportionate verification;
+- does not fetch, compare remote refs, or check checkout cleanliness at startup merely because a
+  later release is expected;
+- for implementation plus release, performs one GitHub and relevant-status check after implementation
+  and verification, immediately before commit and release; for deployment-only work, that release
+  phase starts immediately;
+- skips remote Git checks entirely when no commit, push, or deployment is authorized;
 - commits, pushes, or deploys only when the user request, project instructions, or active
   continuity clearly authorizes that exact destination;
 - writes a natural-language result that explains what happened, what it did or found, the outcome,
