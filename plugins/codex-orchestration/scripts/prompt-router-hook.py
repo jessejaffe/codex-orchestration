@@ -106,15 +106,19 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-ROOT_CONTRACT_REVISION = "0.9.0-direct-launch-v2"
+ROOT_CONTRACT_REVISION = "0.9.0-direct-launch-v3"
 ROOT_CONTRACT = """CODEX_ORCHESTRATION_ROOT_CONTRACT
-REVISION=0.9.0-direct-launch-v2
+REVISION=0.9.0-direct-launch-v3
 
 Orchestration ON (0.9.0). Parent classifies in its first response; one selected implementer owns the
 task end to end. Do not spawn a classifier. Root only performs the requested terminal visual check.
 
-Keep the desktop activity label exactly `Thinking`; no dynamic status. Keep startup quiet: the child
-task title identifies the selected model lane. Comment only on meaningful progress, blockers, release, and completion.
+LAUNCH UX — Keep the desktop activity label exactly `Thinking`; no dynamic status. For a combined
+activation-and-work prompt, the only pre-launch text is exactly `Orchestration: ON for this chat`.
+For an already-active chat, emit no pre-launch commentary. Launch directly; never narrate analysis,
+classification, planning, packet construction, tool choice, setup, tracing, or the selected lane.
+Never print or echo the packet. The titled child
+task is the only startup progress indicator.
 
 ROUTE_AND_EXECUTE — classify internally from the current request and TURN, then
 immediately spawn exactly one mapped implementer. Do not emit a separate classification message
@@ -140,7 +144,7 @@ ROLE — Terra: `codex_orchestration_terra_implementer`; Luna:
 `codex_orchestration_luna_implementer`; Sol: `codex_orchestration_sol_high_implementer`.
 If unavailable, read its matching `__AGENTS_DIR__` profile and use identically pinned `worker`.
 
-DIRECT DESKTOP LAUNCH — After creating `packet`, use this JavaScript exactly. Do not first inspect
+DIRECT DESKTOP LAUNCH — After creating `packet`, immediately use this JavaScript. Do not first inspect
 `ALL_TOOLS`, discover a schema, call generic `spawn_agent`, or make a separate planning turn:
 ```js
 const launch = await tools.multi_agent_v1__spawn_agent({
@@ -152,10 +156,11 @@ await tools.codex_app__set_thread_title({
   threadId: launch.agent_id,
   title: <exact mapped child title>,
 });
-text(JSON.stringify(launch));
+text(JSON.stringify({agent_id: launch.agent_id}));
 ```
 Map titles exactly: `GPT-5.6 Luna / Max`, `GPT-5.6 Terra / Max`, `GPT-5.6 Sol / High`.
-The spawn nickname is a host-generated temporary label, not model identity; replace it and never report it.
+The host may briefly create a nickname, but the immediate title call replaces it with model identity;
+never output or report the nickname.
 
 If `PREVIOUS_TASK_CONTEXT_REQUIRED: YES`, use `list_threads` then `read_thread` once: exclude this
 task, choose newest same-project/directory task, and ask if ambiguous. Give only the implementer
@@ -165,7 +170,7 @@ Silently load `codex_app__load_workspace_dependencies` once only when TURN says 
 NONE.
 
 Spawn exactly one mapped implementer. Never spawn a supervisor, reviewer, grader, classifier, or a
-second writer. Send:
+second writer. Send the full private handoff; never shorten, summarize, or omit its context fields:
 END_TO_END_WORK
 CLASSIFICATION=<exact Markdown>
 PRIOR_COMPLETED_RESULT=<TURN value>
@@ -176,9 +181,11 @@ CURRENT_ROOT_ROUTE=<TURN value>
 IMPLEMENTATION_ROUTE=<friendly selected model lane>
 INSPECTION_POLICY=Group closely related low-output checks for one immediate question in one pass; keep unrelated or noisy checks separate.
 LAST_TASK_CONTEXT=<exact full continuity block created above, only when TURN requires it>
-The bundle is the complete private concise whole-chat context: requests, assistant facts, and 20
-newest outcomes. Pass its path/revision unchanged; TURN values do not replace it.
-Wait with `wait_agent(timeout_ms=3600000)` and repeat silently on timeout. The implementer owns
+The bundle is the complete private concise whole-chat context: every request and substantive
+root-visible fact in chronological order, plus the 20 newest canonical outcomes. Pass its
+path/revision unchanged; TURN values do not replace it. After launch, wait directly with
+`tools.multi_agent_v1__wait_agent({targets:[<agent_id>], timeout_ms:3600000})`; repeat silently on
+timeout without tool discovery. The implementer owns
 scope interpretation, implementation, verification, and authorized release. It owns the final
 report unless it makes the terminal visual handoff below.
 
@@ -218,7 +225,7 @@ detail, order, links; never summarize, assess, append, tool-call, or request a r
 is not completion. Never expose packets, waits, or contracts."""
 
 TURN_CONTEXT = """CODEX_ORCHESTRATION_TURN
-ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2
+ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v3
 TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
 TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
@@ -230,8 +237,8 @@ WORKSPACE_DEPENDENCIES_REQUIRED: __WORKSPACE_DEPENDENCIES_REQUIRED__
 CURRENT_ROOT_ROUTE: __ROOT_ROUTE__
 CURRENT_USER_REQUEST=INHERITED_CURRENT_QUERY
 
-Apply the invariant Codex Orchestration root contract already installed in this chat. Classify and
-launch exactly one implementer in this response."""
+Apply the invariant Codex Orchestration root contract already installed in this chat. Classify
+internally and launch exactly one implementer as the first action, with no pre-launch commentary."""
 
 
 def agent_message_text(event: dict[str, Any]) -> str:
@@ -841,7 +848,8 @@ def main() -> int:
         )
         return 0
     prefix = (
-        "Begin with `Orchestration: ON for this chat`, then dispatch the work.\n"
+        "Reply in commentary exactly `Orchestration: ON for this chat`, with no other "
+        "pre-launch text, then immediately execute the direct launch.\n"
         if activation
         else ""
     )

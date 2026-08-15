@@ -88,28 +88,40 @@ def main() -> int:
     routed_context = context(routed)
     required = (
         "CODEX_ORCHESTRATION_ROOT_CONTRACT",
-        "REVISION=0.9.0-direct-launch-v2",
+        "REVISION=0.9.0-direct-launch-v3",
         "Orchestration ON (0.9.0)",
         "Parent classifies in its first response",
         "Do not spawn a classifier",
         "ROUTE_AND_EXECUTE",
         "classify internally from the current request and TURN",
         "immediately spawn exactly one mapped implementer",
-        "Do not emit a separate classification",
-        "or add a classification wait",
+        "Do not emit a separate classification message",
+        "classification wait",
         "desktop activity label exactly `Thinking`",
         "no dynamic status",
-        "Keep startup quiet",
-        "Comment only on meaningful progress, blockers, release, and completion",
+        "LAUNCH UX",
+        "only pre-launch text is exactly `Orchestration: ON for this chat`",
+        "emit no pre-launch commentary",
+        "never narrate analysis",
+        "classification, planning, packet construction",
+        "The titled child",
+        "task is the only startup progress indicator",
+        "## Classification",
+        "- Relationship: <New|Amend|Replace|Cancel>",
+        "- Active objective: <concise objective>",
+        "- Work class: <friendly class>",
+        "- Complexity: <1.0-10.0 / 10>",
+        "- Why: <brief reason>",
         "DIRECT DESKTOP LAUNCH",
         "tools.multi_agent_v1__spawn_agent",
         "fork_context: false",
         "tools.codex_app__set_thread_title",
         "threadId: launch.agent_id",
+        "text(JSON.stringify({agent_id: launch.agent_id}))",
         "GPT-5.6 Luna / Max",
         "GPT-5.6 Terra / Max",
         "GPT-5.6 Sol / High",
-        "host-generated temporary label",
+        "immediate title call replaces it with model identity",
         "Do not first inspect",
         "`ALL_TOOLS`",
         "TASK_CONTEXT_BUNDLE:",
@@ -127,7 +139,17 @@ def main() -> int:
         "Never spawn a supervisor, reviewer, grader, classifier, or a",
         "second writer",
         "END_TO_END_WORK",
+        "CLASSIFICATION=<exact Markdown>",
+        "PRIOR_COMPLETED_RESULT=<TURN value>",
+        "TASK_CONTEXT_BUNDLE=<TURN path>",
+        "TASK_CONTEXT_REVISION=<TURN revision>",
+        "WORKSPACE_DEPENDENCIES=<exact result or NONE>",
         "IMPLEMENTATION_ROUTE=<friendly selected model lane>",
+        "LAST_TASK_CONTEXT=<exact full continuity block created above, only when TURN requires it>",
+        "Send the full private handoff; never shorten, summarize, or omit its context fields",
+        "every request and substantive",
+        "root-visible fact in chronological order",
+        "TURN values do not replace it",
         "The implementer owns",
         "scope interpretation, implementation, verification, and authorized release",
         "terminal visual handoff",
@@ -136,13 +158,11 @@ def main() -> int:
         "Inspect only cited evidence",
         "same implementer",
         "Do not create another role.",
-        "## Classification",
-        "- Relationship: <New|Amend|Replace|Cancel>",
         "Small tweak: Luna / Max",
         "Big tweak: Terra / Max",
         "Small build: Terra / Max",
         "Big build: Sol / High",
-        "timeout_ms=3600000",
+        "timeout_ms:3600000",
         "## Root verification needed",
         "terminal root-only Browser/visual check",
         "cache-bypass",
@@ -193,7 +213,7 @@ def main() -> int:
     if routed_context.count("TASK_CONTEXT_BUNDLE=<TURN path>") != 1:
         raise AssertionError("the only implementer packet does not reference the context bundle once")
     state_document = json.loads((state / f"{active_id}.json").read_text(encoding="utf-8"))
-    if state_document.get("contract_revision") != "0.9.0-direct-launch-v2":
+    if state_document.get("contract_revision") != "0.9.0-direct-launch-v3":
         raise AssertionError("first routed turn did not persist the root contract revision")
     bundle_path = Path(context_field(routed_context, "TASK_CONTEXT_BUNDLE"))
     bundle_revision = context_field(routed_context, "TASK_CONTEXT_REVISION")
@@ -361,7 +381,10 @@ def main() -> int:
         "Please turn orchestration on and add the new export feature",
     )
     combined_context = context(combined)
-    if not combined_context.startswith("Begin with `Orchestration: ON for this chat`"):
+    if not combined_context.startswith(
+        "Reply in commentary exactly `Orchestration: ON for this chat`, with no other "
+        "pre-launch text"
+    ):
         raise AssertionError("combined activation does not acknowledge ON")
     if "ROUTE_AND_EXECUTE" not in combined_context:
         raise AssertionError("combined activation did not install parent-first routing")
@@ -421,7 +444,7 @@ def main() -> int:
     inherited_context = context(inherited)
     bounded_acceptance = " ".join(acceptance.split())
     for value in (
-        "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2",
+        "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v3",
         "CURRENT_ROOT_ROUTE: GPT-5.6 Terra / Max",
         bounded_acceptance,
         "PRIOR_COMPLETED_RESULT: NONE",
@@ -569,7 +592,7 @@ Add JSON export after the CSV release has been adopted.
     accepted_context = context(accepted)
     if "PRIOR_ACTIVE_ACCEPTANCE: NONE" not in accepted_context:
         raise AssertionError("accepted objective was not cleared")
-    if "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2" not in accepted_context:
+    if "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v3" not in accepted_context:
         raise AssertionError("current query did not use the compact routed turn")
     canonical_handoff = handoff.rsplit("\n\n## Route", 1)[0]
     bounded_handoff = " ".join(canonical_handoff.split())
@@ -754,7 +777,7 @@ None — no next step is needed.
         ],
     )
     legacy = context(invoke(hook, state, active_id, "Summarize that", legacy_transcript))
-    if "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2" not in legacy:
+    if "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v3" not in legacy:
         raise AssertionError("legacy follow-up did not use the compact routed turn")
     if f"PRIOR_COMPLETED_RESULT: {legacy_result}" not in legacy:
         raise AssertionError("legacy completion did not fall back to its accepted result")
@@ -830,7 +853,7 @@ None — no next step is needed.
         invoke(hook, state, active_id, current_request, stale_context_transcript)
     )
     for value in (
-        "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v2",
+        "ROOT_CONTRACT_REVISION: 0.9.0-direct-launch-v3",
         "RECENT_CONTEXT_FRESHNESS: STALE",
         agreed_scope,
         f"PRIOR_COMPLETED_RESULT: {stale_capsule}",

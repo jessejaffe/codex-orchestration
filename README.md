@@ -155,6 +155,11 @@ in the same response:
 - Why: ...
 ```
 
+The implementer receives the full private handoff: that classification, the immutable whole-chat
+bundle and its revision, prior results, workspace dependencies, root and implementation routes,
+inspection policy, and any requested cross-task continuity. None of those context fields are
+shortened or omitted by the fast-launch path.
+
 When the user explicitly asks to continue a different previous Codex task outside this chat, root
 reads it once and sends the selected implementer a continuity block of at most 6,000 characters.
 That cross-task block does not limit the concise whole-chat bundle for the current chat. Missing
@@ -220,10 +225,11 @@ Turn Orchestration off
 Orchestration off
 ```
 
-The desktop activity label stays exactly `Thinking`. Startup remains quiet after the activation
-acknowledgement; the selected child task is immediately titled with its exact model and reasoning
-lane. The router launches through the desktop subagent API directly, without an exploratory tool
-lookup, so it does not spend an extra parent turn discovering the spawn call.
+The desktop activity label stays exactly `Thinking`. For activation plus work, root says only
+`Orchestration: ON for this chat` before launching; an already-active task launches without startup
+narration. The selected child task is immediately titled with its exact model and reasoning lane.
+The router launches through the desktop subagent API directly, without an exploratory tool lookup,
+so it does not spend an extra parent turn discovering the spawn call.
 
 ## Install and verify
 
