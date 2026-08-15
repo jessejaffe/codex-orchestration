@@ -140,6 +140,18 @@ if [ -f "$repo_readme" ] && [ ! -L "$repo_readme" ]; then
     'briefly explained after' \
     'work account rather than replacing it' \
     'A request to implement locally does not itself authorize deployment' \
+    '## Deployment discipline' \
+    'final diff' \
+    'smallest safe set' \
+    'full-stack release only for a genuinely cross-service' \
+    'migrations, seed jobs, cache warmups, backfills, model downloads, and policy snapshots' \
+    'exact pushed revision and the affected live path' \
+    'deployment-only request, it does not repeat earlier implementation tests' \
+    'clean target worktree' \
+    'legacy, mode-less, or full deployment' \
+    'database tunnel' \
+    'project-specific `AGENTS.md` service/job/' \
+    'no-side-effect plan mode' \
     '## Reports' \
     'relayed verbatim to the user' \
     'Root does not summarize, condense, or add a second completion response' \

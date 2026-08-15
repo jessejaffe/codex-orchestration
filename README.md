@@ -79,6 +79,30 @@ A request to implement locally does not itself authorize deployment.
 User questions and genuine blockers still stop the task when a decision is required. Keeping one
 classifier and one routed implementer makes execution predictable and low-latency.
 
+## Deployment discipline
+
+When a task includes an authorized deployment, Codex Orchestration keeps the release as focused as
+the change permits:
+
+- It examines the final diff and traces the running services and release jobs that execute the
+  changed path. A service is not included merely because it can import the code or shares an image.
+  It deploys the smallest safe set, using a full-stack release only for a genuinely cross-service,
+  shared-runtime, or infrastructure change.
+- It runs migrations, seed jobs, cache warmups, backfills, model downloads, and policy snapshots
+  only when the change requires them. Before deploying, it states the service scope and optional
+  jobs; afterward, it verifies the exact pushed revision and the affected live path.
+- For a deployment-only request, it does not repeat earlier implementation tests. It fetches the
+  target ref once, plans from only the final changed-file list or a small diff, and preserves any
+  dirty or different local branch by using a clean target worktree. When supported, that uses
+  `~/.codex/bin/deploy-from-target-worktree --ref <ref> -- <project deployment command>`.
+- It prints the scoped deployment plan before its one production attempt, does not fall back to a
+  legacy, mode-less, or full deployment, and opens a database tunnel only when a selected release
+  job actually needs one. It reports deployment time separately from readiness verification.
+- When asked to set up deployment for a project, it inspects the repository, hosting configuration,
+  and existing release scripts itself. It then records a project-specific `AGENTS.md` service/job/
+  verification map and provides a deploy script with explicit scope, a no-side-effect plan mode,
+  exact-revision execution, and phase timings.
+
 ## Visual verification
 
 Root verification is required when the defining outcome depends on rendered appearance, user

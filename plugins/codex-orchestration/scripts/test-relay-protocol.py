@@ -90,8 +90,8 @@ def main() -> int:
     ):
         raise AssertionError(f"manifest does not use official version 0.9.0: {version!r}")
 
-    if sum(map(len, prompts.values())) > 15_000:
-        raise AssertionError("agent prompts exceed the 15,000-character single-agent budget")
+    if sum(map(len, prompts.values())) > 18_000:
+        raise AssertionError("agent prompts exceed the 18,000-character single-agent budget")
 
     require(
         prompts["codex-orchestration-luna-implementer.toml"],
@@ -256,6 +256,21 @@ def main() -> int:
             ),
             filename,
         )
+        require(
+            prompt,
+            (
+                "final diff", "runtime services/jobs", "execute changed\npaths",
+                "not importability or image sharing", "smallest safe scope",
+                "Use full-stack", "cross-service, shared-runtime, or infrastructure",
+                "migrations, seeds, cache warmups", "model downloads, and policy snapshots",
+                "State scope/jobs beforehand", "pushed revision", "Deployment-only skips implementation tests",
+                "target ref once", "final changed files/small diff", "clean target worktree",
+                "deploy-from-target-worktree", "legacy/mode-less/full fallback", "database tunnel",
+                "deploy time separately", "For\ndeployment setup", "project `AGENTS.md`",
+                "explicit-scope, plan-only", "exact-revision, timed deploy\nscript",
+            ),
+            f"{filename} deployment discipline",
+        )
         forbid(
             prompt,
             (
@@ -332,6 +347,9 @@ def main() -> int:
             "ab37dca70b29da614b3415bed1ce08fa674eac22eae6f6525fb5eb94926ea09e",
             "284e79829e13f2128898d82377f815b36f14bea95ee7c9b0c03b6b8fca08b5d5",
             "6f4a5eb3d93109728ea2cf4bc955da0f3eee58422e8baa15b8c4d98354529064",
+            "a3425035079e886c382cc61264464489c16334850a07681aaa97d28d223aa64a",
+            "247a513a1990a2853feddc2fd08be72c7571f6340fd58ecc387b6849958b01fd",
+            "0a72995921011061b31170131602b327ca16cd0b8bc037a33bd23526d88aa603",
             "Preflight every target", "refusing $state retired role",
         ),
         "profile installer",

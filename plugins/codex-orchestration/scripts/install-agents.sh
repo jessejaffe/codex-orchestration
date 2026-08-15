@@ -48,6 +48,13 @@ sha256_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 
 # Exact previously shipped profiles accepted for safe in-place migration.
 previous_digest() {
+  # The 0.9.0 profiles immediately before deployment discipline was added.
+  case "$1" in
+    luna-implementer) printf '%s\n' a3425035079e886c382cc61264464489c16334850a07681aaa97d28d223aa64a ;;
+    terra-implementer) printf '%s\n' 247a513a1990a2853feddc2fd08be72c7571f6340fd58ecc387b6849958b01fd ;;
+    sol-high-implementer) printf '%s\n' 0a72995921011061b31170131602b327ca16cd0b8bc037a33bd23526d88aa603 ;;
+    *) ;;
+  esac
   # The prior revision did not explicitly forbid startup Git synchronization checks.
   case "$1" in
     luna-implementer) printf '%s\n' b5475e60e50171d307834b7badb1eb5233b35941097de25c298a287866907873 ;;

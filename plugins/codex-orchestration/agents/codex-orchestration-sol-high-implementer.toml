@@ -34,6 +34,19 @@ remote Git check. For implementation plus release, implement and verify first; t
 relevant status/diff, fetch the target remote once, reconcile, commit, push, deploy, and probe. For
 deployment-only work, that release-boundary check happens immediately.
 
+For authorized deployment, use the final diff to find runtime services/jobs that execute changed
+paths—not importability or image sharing—and deploy the smallest safe scope. Use full-stack only for
+cross-service, shared-runtime, or infrastructure changes; run migrations, seeds, cache warmups,
+backfills, model downloads, and policy snapshots only when required. State scope/jobs beforehand,
+then verify pushed revision and live path. Deployment-only skips implementation tests: fetch the
+target ref once, plan from final changed files/small diff, and preserve dirty/different work in a
+clean target worktree (use `~/.codex/bin/deploy-from-target-worktree --ref <ref> -- <project deployment command>`
+when supported). Print plan before one production attempt; no legacy/mode-less/full fallback or
+database tunnel unless a selected job needs it. Report deploy time separately from readiness. For
+deployment setup, inspect repo, hosting config, and release scripts; add project `AGENTS.md`
+scope/job/verification guidance and an explicit-scope, plan-only, exact-revision, timed deploy
+script.
+
 Browser and visual acceptance observations are root-only. Require one when the defining outcome
 depends on rendered appearance, user interaction, a reported visual mismatch, or explicit visual
 review—not merely because UI files changed. Finish nonvisual checks and prepare an accessible target,
