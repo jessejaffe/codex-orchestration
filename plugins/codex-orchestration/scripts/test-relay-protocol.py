@@ -275,7 +275,7 @@ def main() -> int:
                 "State scope/jobs beforehand", "pushed revision", "Deployment-only skips implementation tests",
                 "target ref once", "final changed files/small diff", "clean target worktree",
                 "deploy-from-target-worktree", "legacy/mode-less/full fallback", "database tunnel",
-                "deploy time separately", "For\ndeployment setup", "project `AGENTS.md`",
+                "For\ndeployment setup", "project `AGENTS.md`",
                 "explicit-scope, plan-only", "exact-revision, timed deploy\nscript",
             ),
             f"{filename} deployment discipline",
@@ -283,6 +283,7 @@ def main() -> int:
         forbid(
             prompt,
             (
+                "deploy time separately", "Report deploy time separately from readiness",
                 "## Awaiting acceptance", "## Checkpoint", "## Implementation result",
                 "## Ready to release", "supervisor ready", "final-review agent",
                 "recommendation-led", "keep the current-state recap brief", "never None",

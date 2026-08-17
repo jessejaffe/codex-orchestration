@@ -110,7 +110,7 @@ the change permits:
   `~/.codex/bin/deploy-from-target-worktree --ref <ref> -- <project deployment command>`.
 - It prints the scoped deployment plan before its one production attempt, does not fall back to a
   legacy, mode-less, or full deployment, and opens a database tunnel only when a selected release
-  job actually needs one. It reports deployment time separately from readiness verification.
+  job actually needs one.
 - When asked to set up deployment for a project, it inspects the repository, hosting configuration,
   and existing release scripts itself. It then records a project-specific `AGENTS.md` service/job/
   verification map and provides a deploy script with explicit scope, a no-side-effect plan mode,

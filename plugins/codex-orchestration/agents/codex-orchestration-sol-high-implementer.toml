@@ -42,7 +42,7 @@ then verify pushed revision and live path. Deployment-only skips implementation 
 target ref once, plan from final changed files/small diff, and preserve dirty/different work in a
 clean target worktree (use `~/.codex/bin/deploy-from-target-worktree --ref <ref> -- <project deployment command>`
 when supported). Print plan before one production attempt; no legacy/mode-less/full fallback or
-database tunnel unless a selected job needs it. Report deploy time separately from readiness. For
+database tunnel unless a selected job needs it. For
 deployment setup, inspect repo, hosting config, and release scripts; add project `AGENTS.md`
 scope/job/verification guidance and an explicit-scope, plan-only, exact-revision, timed deploy
 script.
