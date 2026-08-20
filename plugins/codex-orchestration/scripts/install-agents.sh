@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install the three Codex Orchestration 0.9.0 implementers and retire obsolete roles safely.
+# Install the five Codex Orchestration 9.0.1 implementers and retire obsolete roles safely.
 
 set -eu
 
@@ -37,6 +37,8 @@ case "$target_dir" in /*) ;; *) fail "target directory must be absolute: $target
 
 current_roles='luna-implementer
 terra-implementer
+terra-medium-implementer
+terra-high-implementer
 sol-high-implementer'
 retired_roles='terra-orchestrator
 terra-supervisor
@@ -48,7 +50,7 @@ sha256_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 
 # Exact previously shipped profiles accepted for safe in-place migration.
 previous_digest() {
-  # The 0.9.0 profiles immediately before deployment discipline was added.
+  # The 9.0.1 profiles immediately before deployment discipline was added.
   case "$1" in
     luna-implementer) printf '%s\n' a3425035079e886c382cc61264464489c16334850a07681aaa97d28d223aa64a ;;
     terra-implementer) printf '%s\n' 247a513a1990a2853feddc2fd08be72c7571f6340fd58ecc387b6849958b01fd ;;
@@ -176,7 +178,7 @@ if [ "$check_only" -eq 1 ]; then
   for role in $retired_roles; do
     [ "$(classify_retired "$role")" = missing ] || fail "retired role remains: codex-orchestration-$role.toml"
   done
-  printf '%s\n' 'CHECK PASSED: three 0.9.0 implementers are current and obsolete roles are absent.'
+  printf '%s\n' 'CHECK PASSED: five 9.0.1 implementers are current and obsolete roles are absent.'
   exit 0
 fi
 
@@ -222,4 +224,4 @@ for role in $retired_roles; do
 done
 
 sh "$0" --target-dir "$target_dir" --check >/dev/null
-printf '%s\n' 'INSTALL PASSED: three 0.9.0 implementers are current and obsolete roles were retired.'
+printf '%s\n' 'INSTALL PASSED: five 9.0.1 implementers are current and obsolete roles were retired.'

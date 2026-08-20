@@ -1,6 +1,6 @@
 # Codex Orchestration
 
-Codex Orchestration `0.9.0` is an automated, complexity-aware model router for Codex. The parent
+Codex Orchestration `9.0.1` is an automated, complexity-aware model router for Codex. The parent
 evaluates each request's scope and complexity in its first response, assigns a work
 class, and immediately routes the task to the lightest model lane suited to it. Users get one
 workflow without having to choose a different model for every request or pay for a separate
@@ -21,8 +21,10 @@ caches, credentials, and unrelated development artifacts.
 ```mermaid
 flowchart LR
     U["User request"] --> R{"Parent evaluates scope + complexity"}
-    R -->|"Read-only, standard artifact, or small tweak"| L["Luna / Max implements"]
-    R -->|"Design artifact, big tweak, or small build"| T["Terra / Max implements"]
+    R -->|"Read-only or small tweak"| L["Luna / Medium implements"]
+    R -->|"Standard artifact"| TM["Terra / Medium implements"]
+    R -->|"Design artifact or small build"| T["Terra / Max implements"]
+    R -->|"Big tweak"| TH["Terra / High implements"]
     R -->|"Big build"| S["Sol / High implements"]
     L --> D["Completed result"]
     T --> D
@@ -36,7 +38,8 @@ flowchart LR
 Parent classification and implementer dispatch happen in one response. Execution then stays with
 one routed implementer. The desktop child is created through the native collaboration call with the
 selected lane in its task name—
-`luna_max_implementer_<objective_slug>`, `terra_max_implementer_<objective_slug>`, or
+`luna_medium_implementer_<objective_slug>`, `terra_medium_implementer_<objective_slug>`,
+`terra_max_implementer_<objective_slug>`, `terra_high_implementer_<objective_slug>`, or
 `sol_high_implementer_<objective_slug>`—so the model is visible from the main task immediately.
 The launch is not wrapped in a deferred/internal tool, so it does not create a randomly nicknamed
 child and rename it afterward.
@@ -50,11 +53,11 @@ launcher names or creates a randomly nicknamed fallback agent.
 
 | Work class | Definition | Implementation lane |
 |---|---|---|
-| `READ_ONLY` | Research, diagnosis, review, explanation, or status without mutation | Luna / Max |
-| `STANDARD_ARTIFACT` | Content- or data-led spreadsheet, document, PDF, or presentation work | Luna / Max |
+| `READ_ONLY` | Research, diagnosis, review, explanation, or status without mutation | Luna / Medium |
+| `STANDARD_ARTIFACT` | Content- or data-led spreadsheet, document, PDF, or presentation work | Terra / Medium |
 | `DESIGN_ARTIFACT` | A non-code artifact whose composition, brand, or exact look defines success | Terra / Max |
-| `SMALL_TWEAK` | One bounded existing behavior with predictable blast radius | Luna / Max |
-| `BIG_TWEAK` | Multiple existing behavior changes, a boundary crossing, or material operational risk | Terra / Max |
+| `SMALL_TWEAK` | One bounded existing behavior with predictable blast radius | Luna / Medium |
+| `BIG_TWEAK` | Multiple existing behavior changes, a boundary crossing, or material operational risk | Terra / High |
 | `SMALL_BUILD` | One bounded new capability without a new interface, runtime, or storage boundary | Terra / Max |
 | `BIG_BUILD` | Multiple new capabilities, a boundary-crossing capability, or material risk | Sol / High |
 
@@ -236,7 +239,7 @@ Orchestration off
 The desktop activity label stays exactly `Thinking`. For activation plus work, root says only
 `Orchestration: ON for this chat` before launching; an already-active task launches without startup
 narration. The child is created with a model-lane task name such as
-`luna_max_implementer_<objective_slug>`; it is not created under a random host nickname and renamed
+`luna_medium_implementer_<objective_slug>`; it is not created under a random host nickname and renamed
 later. Root calls the native collaboration agent directly as its next tool call, without a wrapper
 or exploratory tool lookup, so it does not spend an extra parent turn discovering the spawn call.
 When the current task records the legacy `v1` sub-agent interface, root does not attempt a launch;
@@ -244,7 +247,7 @@ it asks for a switch to GPT-5.6 Terra or GPT-5.6 Sol and confirms that no agent 
 
 ## Install and verify
 
-Install the three companion implementer profiles:
+Install the five companion implementer profiles:
 
 ```sh
 plugins/codex-orchestration/scripts/install-agents.sh
@@ -262,7 +265,7 @@ Install or refresh the plugin from the configured local marketplace:
 plugins/codex-orchestration/scripts/reinstall-plugin.sh
 ```
 
-The installer preflights all three active profiles, migrates exact shipped profiles, safely retires
+The installer preflights all five active profiles, migrates exact shipped profiles, safely retires
 the former stock classifier, and refuses to overwrite or delete customized agent files.
 
 ## Repository layout

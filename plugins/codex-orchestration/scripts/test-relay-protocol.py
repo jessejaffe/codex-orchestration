@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contracts for the 0.9.0 parent-routed single-agent protocol."""
+"""Static contracts for the 9.0.1 parent-routed single-agent protocol."""
 
 from __future__ import annotations
 
@@ -13,10 +13,16 @@ from pathlib import Path
 
 EXPECTED_AGENTS = {
     "codex-orchestration-luna-implementer.toml": (
-        "codex_orchestration_luna_implementer", "gpt-5.6-luna", "max"
+        "codex_orchestration_luna_implementer", "gpt-5.6-luna", "medium"
     ),
     "codex-orchestration-terra-implementer.toml": (
         "codex_orchestration_terra_implementer", "gpt-5.6-terra", "max"
+    ),
+    "codex-orchestration-terra-medium-implementer.toml": (
+        "codex_orchestration_terra_medium_implementer", "gpt-5.6-terra", "medium"
+    ),
+    "codex-orchestration-terra-high-implementer.toml": (
+        "codex_orchestration_terra_high_implementer", "gpt-5.6-terra", "high"
     ),
     "codex-orchestration-sol-high-implementer.toml": (
         "codex_orchestration_sol_high_implementer", "gpt-5.6-sol", "high"
@@ -24,11 +30,11 @@ EXPECTED_AGENTS = {
 }
 
 HUMAN_ROUTES = (
-    "Read-only: Luna / Max",
-    "Standard artifact: Luna / Max",
+    "Read-only: Luna / Medium",
+    "Standard artifact: Terra / Medium",
     "Design artifact: Terra / Max",
-    "Small tweak: Luna / Max",
-    "Big tweak: Terra / Max",
+    "Small tweak: Luna / Medium",
+    "Big tweak: Terra / High",
     "Small build: Terra / Max",
     "Big build: Sol / High",
 )
@@ -81,16 +87,16 @@ def main() -> int:
     manifest = json.loads((plugin / ".codex-plugin" / "plugin.json").read_text())
     version = manifest.get("version")
     if not isinstance(version, str) or not re.fullmatch(
-        r"0\.9\.0", version
+        r"9\.0\.1", version
     ):
-        raise AssertionError(f"manifest does not use official version 0.9.0: {version!r}")
+        raise AssertionError(f"manifest does not use official version 9.0.1: {version!r}")
 
-    if sum(map(len, prompts.values())) > 18_000:
-        raise AssertionError("agent prompts exceed the 18,000-character single-agent budget")
+    if sum(map(len, prompts.values())) > 30_000:
+        raise AssertionError("agent prompts exceed the 30,000-character lane-profile budget")
 
     require(
         prompts["codex-orchestration-luna-implementer.toml"],
-        ("You own `READ_ONLY`", "`STANDARD_ARTIFACT`", "`SMALL_TWEAK`", "never mutates"),
+        ("You own `READ_ONLY`", "`SMALL_TWEAK`", "never mutates"),
         "Luna implementer route ownership",
     )
     forbid(
@@ -100,8 +106,8 @@ def main() -> int:
     )
 
     router = (plugin / "scripts" / "prompt-router-hook.py").read_text(encoding="utf-8")
-    if root_contract_chars(router) > 6_500:
-        raise AssertionError("invariant root contract exceeds the 6,500-character budget")
+    if root_contract_chars(router) > 6_800:
+        raise AssertionError("invariant root contract exceeds the 6,800-character budget")
     required_report_ending = (
         "## Next step\n"
         "<one legitimate follow-on action, or None — no next step is needed.>\n\n"
@@ -115,8 +121,8 @@ def main() -> int:
     require(
         router,
         (
-            "CODEX_ORCHESTRATION_ROOT_CONTRACT", "0.9.0-runtime-gated-spawn-v6",
-            "Orchestration ON (0.9.0)", "Parent classifies in its first response",
+            "CODEX_ORCHESTRATION_ROOT_CONTRACT", "9.0.1-runtime-gated-spawn-v6",
+            "Orchestration ON (9.0.1)", "Parent classifies in its first response",
             "Do not spawn a classifier", "ROUTE_AND_EXECUTE",
             "classify internally from the current request and TURN",
             "immediately spawn exactly one mapped implementer",
@@ -135,8 +141,9 @@ def main() -> int:
             "Do not create a variable, code block, script, or execution-tool",
             "complete handoff text below directly in the tool's `message` argument",
             "`agent_type` to the selected mapped custom agent", "`fork_turns` to `none`",
-            "luna_max_implementer_<objective_slug>",
-            "terra_max_implementer_<objective_slug>", "sol_high_implementer_<objective_slug>",
+            "luna_medium_implementer_<objective_slug>",
+            "terra_medium_implementer_<objective_slug>", "terra_max_implementer_<objective_slug>",
+            "terra_high_implementer_<objective_slug>", "sol_high_implementer_<objective_slug>",
             "task name establishes the visible model lane at creation time",
             "native tool call itself, not written inside another tool",
             "Do not inspect tools, discover a schema", "use a deferred/internal launcher",
@@ -210,11 +217,7 @@ def main() -> int:
         "root coordinator",
     )
 
-    for filename in (
-        "codex-orchestration-luna-implementer.toml",
-        "codex-orchestration-terra-implementer.toml",
-        "codex-orchestration-sol-high-implementer.toml",
-    ):
+    for filename in EXPECTED_AGENTS:
         prompt = prompts[filename]
         if required_report_ending not in prompt:
             raise AssertionError(f"{filename} does not place Next step immediately above Route")
@@ -300,7 +303,7 @@ def main() -> int:
     terra = prompts["codex-orchestration-terra-implementer.toml"]
     require(
         terra,
-        ("`DESIGN_ARTIFACT`", "`BIG_TWEAK`", "`SMALL_BUILD`"),
+        ("`DESIGN_ARTIFACT`", "`SMALL_BUILD`"),
         "Terra end-to-end lane",
     )
 
@@ -308,7 +311,7 @@ def main() -> int:
     require(
         installer,
         (
-            "three Codex Orchestration 0.9.0 implementers",
+            "five Codex Orchestration 9.0.1 implementers",
             "Exact previously shipped profiles accepted for safe in-place migration",
             "aa0595bf14f360e7a217a7420ecce399a5393c1ce81d75abbfdbf30d8e4fe56d",
             "8abff60952e6d0610d55f966de1096a77170919a3bf8400e6186435af4df7ec7",
@@ -400,7 +403,7 @@ def main() -> int:
     if classes != expected_classes:
         raise AssertionError(f"triage fixtures do not cover every class: {classes!r}")
 
-    print("PASS: 0.9.0 parent-routed single-agent protocol")
+    print("PASS: 9.0.1 parent-routed single-agent protocol")
     return 0
 
 

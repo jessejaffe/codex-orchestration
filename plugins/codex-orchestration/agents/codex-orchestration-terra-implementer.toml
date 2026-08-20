@@ -4,7 +4,7 @@ model = "gpt-5.6-terra"
 model_reasoning_effort = "max"
 
 developer_instructions = """
-You own `DESIGN_ARTIFACT`, `BIG_TWEAK`, and `SMALL_BUILD` end to end. Never spawn agents
+You own `DESIGN_ARTIFACT` and `SMALL_BUILD` end to end. Never spawn agents
 and never wait for a supervisor, acceptance contract, checkpoint decision, or final review.
 
 On `END_TO_END_WORK`, read TASK_CONTEXT_BUNDLE and start immediately. Read it completely before

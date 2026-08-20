@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install official Codex Orchestration version 0.9.0 and retire obsolete identities.
+# Install official Codex Orchestration version 9.0.1 and retire obsolete identities.
 
 set -eu
 
@@ -24,8 +24,8 @@ command -v "$codex_bin" >/dev/null 2>&1 || fail "Codex executable not found: $co
 [ -f "$manifest" ] && [ ! -L "$manifest" ] || fail "plugin manifest is missing or unsafe: $manifest"
 manifest_name=$(jq -er '.name | select(. == "codex-orchestration")' "$manifest") || fail "plugin manifest name must be codex-orchestration"
 manifest_version=$(jq -er '.version | select(type == "string" and length > 0)' "$manifest") || fail "plugin manifest has no valid version"
-[ "$manifest_version" = '0.9.0' ] ||
-  fail "this installer requires official version 0.9.0: $manifest_version"
+[ "$manifest_version" = '9.0.1' ] ||
+  fail "this installer requires official version 9.0.1: $manifest_version"
 
 if [ -n "${CODEX_ORCHESTRATION_CACHE_ROOT:-}" ]; then
   cache_root=$CODEX_ORCHESTRATION_CACHE_ROOT
@@ -93,6 +93,8 @@ required_package_files() {
 .codex-plugin/plugin.json
 agents/codex-orchestration-luna-implementer.toml
 agents/codex-orchestration-terra-implementer.toml
+agents/codex-orchestration-terra-medium-implementer.toml
+agents/codex-orchestration-terra-high-implementer.toml
 agents/codex-orchestration-sol-high-implementer.toml
 scripts/effectiveness-tracker.py
 scripts/inspect-agent-runtime.sh
@@ -350,9 +352,9 @@ is_version_alias "$current" || fail "new plugin reported an unsafe cache alias: 
 current_cache=$cache_root/$manifest_version
 validate_complete_package "$current_cache"
 
-# A complete, conflict-free three-implementer install is a prerequisite for retiring either
+# A complete, conflict-free five-implementer install is a prerequisite for retiring either
 # legacy configured identity. The companion installer preflights every current implementer
-# and obsolete role, proves all three current files, and only then removes exact obsolete
+# and obsolete role, proves all five current files, and only then removes exact obsolete
 # files. Customized profiles therefore stop this migration without being
 # overwritten and before plugin or marketplace removal.
 sh "$current_cache/scripts/install-agents.sh"

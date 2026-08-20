@@ -44,7 +44,7 @@
     {
       "id": "traditional_version_bump",
       "expected": "SMALL_TWEAK",
-      "request": "Change the existing plugin version from 0.9.0 to 0.9.1 with no new feature."
+      "request": "Change the existing plugin version from 9.0.1 to 0.9.1 with no new feature."
     },
     {
       "id": "cross_component_bug",

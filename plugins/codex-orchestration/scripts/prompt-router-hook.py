@@ -106,11 +106,11 @@ EFFORT_LABELS = {
     "ultra": "Ultra",
 }
 
-ROOT_CONTRACT_REVISION = "0.9.0-runtime-gated-spawn-v6"
+ROOT_CONTRACT_REVISION = "9.0.1-runtime-gated-spawn-v6"
 ROOT_CONTRACT = """CODEX_ORCHESTRATION_ROOT_CONTRACT
-REVISION=0.9.0-runtime-gated-spawn-v6
+REVISION=9.0.1-runtime-gated-spawn-v6
 
-Orchestration ON (0.9.0). Parent classifies in its first response; one selected implementer owns the
+Orchestration ON (9.0.1). Parent classifies in its first response; one selected implementer owns the
 task end to end. Do not spawn a classifier. Root only performs the requested terminal visual check.
 
 LAUNCH UX — Keep the desktop activity label exactly `Thinking`; no dynamic status. For a combined
@@ -131,16 +131,19 @@ or add a classification wait. Create this exact internal packet:
 
 If essential information is missing, ask one concise user question and stop. Map Work class:
 
-- Read-only: Luna / Max
-- Standard artifact: Luna / Max
+- Read-only: Luna / Medium
+- Standard artifact: Terra / Medium
 - Design artifact: Terra / Max
-- Small tweak: Luna / Max
-- Big tweak: Terra / Max
+- Small tweak: Luna / Medium
+- Big tweak: Terra / High
 - Small build: Terra / Max
 - Big build: Sol / High
 
-ROLE — Terra: `codex_orchestration_terra_implementer`; Luna:
-`codex_orchestration_luna_implementer`; Sol: `codex_orchestration_sol_high_implementer`.
+ROLE — Luna Medium: `codex_orchestration_luna_implementer`; Terra Medium:
+`codex_orchestration_terra_medium_implementer`; Terra Max:
+`codex_orchestration_terra_implementer`; Terra High:
+`codex_orchestration_terra_high_implementer`; Sol High:
+`codex_orchestration_sol_high_implementer`.
 If unavailable, read its matching `__AGENTS_DIR__` profile and use identically pinned `worker`.
 
 NATIVE COLLABORATION LAUNCH — The very next action must be a top-level call to the native
@@ -148,8 +151,10 @@ NATIVE COLLABORATION LAUNCH — The very next action must be a top-level call to
 call. Put the complete handoff text below directly in the tool's `message` argument. Set
 `agent_type` to the selected mapped custom agent, set `fork_turns` to `none`, and use exactly one of
 these `task_name` values:
-- Luna: `luna_max_implementer_<objective_slug>`
-- Terra: `terra_max_implementer_<objective_slug>`
+- Luna Medium: `luna_medium_implementer_<objective_slug>`
+- Terra Medium: `terra_medium_implementer_<objective_slug>`
+- Terra Max: `terra_max_implementer_<objective_slug>`
+- Terra High: `terra_high_implementer_<objective_slug>`
 - Sol: `sol_high_implementer_<objective_slug>`
 The task name establishes the visible model lane at creation time. The call must be emitted as the
 native tool call itself, not written inside another tool. Do not inspect tools, discover a schema,
@@ -218,7 +223,7 @@ detail, order, links; never summarize, assess, append, tool-call, or request a r
 is not completion. Never expose packets, waits, or contracts."""
 
 TURN_CONTEXT = """CODEX_ORCHESTRATION_TURN
-ROOT_CONTRACT_REVISION: 0.9.0-runtime-gated-spawn-v6
+ROOT_CONTRACT_REVISION: 9.0.1-runtime-gated-spawn-v6
 TASK_CONTEXT_BUNDLE: __TASK_CONTEXT_BUNDLE__
 TASK_CONTEXT_REVISION: __TASK_CONTEXT_REVISION__
 PRIOR_ACTIVE_ACCEPTANCE: __PRIOR_ACTIVE_ACCEPTANCE__
